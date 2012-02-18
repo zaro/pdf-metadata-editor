@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar" name="Create Runnable Jar for Project pdf-metadata-edit with libraries in sub-folder">
+    <!--this file was created by Eclipse Runnable JAR Export Wizard-->
+    <!--ANT 1.7 is required                                        -->
+    <target name="create_run_jar">
+        <jar destfile="/home/me/dev/gwt/pdf-metadata-edit/pdf-metadata-edit.jar">
+            <manifest>
+                <attribute name="Main-Class" value="PDFMetadataEditWindow"/>
+                <attribute name="Class-Path" value=". lib/pdfbox-1.6.0.jar lib/fontbox-1.6.0.jar lib/jempbox-1.6.0.jar lib/commons-logging-1.1.1.jar lib/jcalendar-1.4.jar lib/miglayout15-swing.jar"/>
+            </manifest>
+            <fileset dir="/home/me/dev/gwt/pdf-metadata-edit/bin"/>
+        </jar>
+    </target>
+	<!--
+		// Keystore is created with :
+		 keytool -genkey -keystore keys -storepass "123456"  -alias jdc
+		// Current Cert Info :
+		CN=Zaro, OU=Earth, O=TheUniverse, L=Unknown, ST=Unknown, C=Unknown
+		
+		// Sign jar with :
+		jarsigner -keystore keys pdf-metadata-edit.jar jdc
+		// And the libs :
+		for i in lib/*jar; do jarsigner -keystore keys $i jdc; done
+	-->
+</project>

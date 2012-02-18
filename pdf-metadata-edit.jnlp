@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jnlp spec="1.0+" codebase="http://localhost/dev/gwt/pdf-metadata-edit/" href="pdf-metadata-edit.jnlp">
+    <information>
+        <title>PDF Metadata Editor</title>
+        <vendor>Zaro</vendor>
+    </information>
+    <security>
+    	<all-permissions/>
+    </security>
+    <resources>
+        <!-- Application Resources -->
+        <j2se version="1.6+"
+              href="http://java.sun.com/products/autodl/j2se"/>
+        <jar href="pdf-metadata-edit.jar" main="true" />
+        <jar href="lib/pdfbox-1.6.0.jar"/>
+        <jar href="lib/miglayout15-swing.jar" />
+        <jar href="lib/jempbox-1.6.0.jar"/>
+        <jar href="lib/jcalendar-1.4.jar"/>
+        <jar href="lib/fontbox-1.6.0.jar"/>
+        <jar href="lib/commons-logging-1.1.1.jar"/>      
+    </resources>
+    <application-desc
+         name="PDF Metadata Editor"
+		 main-class="PDFMetadataEditWindow"
+         width="300"
+         height="300"         
+		>
+     </application-desc>
+     <update check="background"/>
+</jnlp>   
