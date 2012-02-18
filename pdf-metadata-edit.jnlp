@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jnlp spec="1.0+" codebase="http://localhost/dev/gwt/pdf-metadata-edit/" href="pdf-metadata-edit.jnlp">
+<jnlp spec="1.0+" codebase="http://zaro.github.com/pdf-metadata-editor/" href="pdf-metadata-edit.jnlp">
     <information>
         <title>PDF Metadata Editor</title>
         <vendor>Zaro</vendor>
@@ -27,4 +27,4 @@
 		>
      </application-desc>
      <update check="background"/>
-</jnlp>   
+</jnlp>
