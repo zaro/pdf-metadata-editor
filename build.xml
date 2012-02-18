@@ -2,6 +2,7 @@
 <project default="create_run_jar" name="Create Runnable Jar for Project pdf-metadata-edit with libraries in sub-folder">
     <!--this file was created by Eclipse Runnable JAR Export Wizard-->
     <!--ANT 1.7 is required                                        -->
+	<target name="build" depends="create_run_jar" />
     <target name="create_run_jar">
         <jar destfile="/home/me/dev/gwt/pdf-metadata-edit/pdf-metadata-edit.jar">
             <manifest>
@@ -10,16 +11,22 @@
             </manifest>
             <fileset dir="/home/me/dev/gwt/pdf-metadata-edit/bin"/>
         </jar>
+    	<echo>
+    		Sign the jar now with:
+    		jarsigner -keystore keys pdf-metadata-edit.jar jdc
+    	</echo>
     </target>
-	<!--
-		// Keystore is created with :
-		 keytool -genkey -keystore keys -storepass "123456"  -alias jdc
-		// Current Cert Info :
-		CN=Zaro, OU=Earth, O=TheUniverse, L=Unknown, ST=Unknown, C=Unknown
-		
-		// Sign jar with :
-		jarsigner -keystore keys pdf-metadata-edit.jar jdc
-		// And the libs :
-		for i in lib/*jar; do jarsigner -keystore keys $i jdc; done
-	-->
+    <target name="signing">
+		<echo>
+			# Keystore is created with :
+			 keytool -genkey -keystore keys -storepass "123456"  -alias jdc
+			# Current Cert Info :
+			CN=Zaro, OU=Earth, O=TheUniverse, L=Unknown, ST=Unknown, C=Unknown
+			
+			# Sign jar with :
+			jarsigner -keystore keys pdf-metadata-edit.jar jdc
+			# And the libs :
+			for i in lib/*jar; do jarsigner -keystore keys $i jdc; done
+		</echo>
+	</target>
 </project>
