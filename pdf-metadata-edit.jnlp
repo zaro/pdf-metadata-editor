@@ -13,7 +13,7 @@
               href="http://java.sun.com/products/autodl/j2se"/>
         <jar href="pdf-metadata-edit.jar" main="true" />
         <jar href="lib/pdfbox-1.6.0.jar"/>
-        <jar href="lib/miglayout15-swing.jar" />
+        <jar href="lib/miglayout-4.0-swing.jar" />
         <jar href="lib/jempbox-1.6.0.jar"/>
         <jar href="lib/jcalendar-1.4.jar"/>
         <jar href="lib/fontbox-1.6.0.jar"/>
