@@ -4,12 +4,12 @@
     <!--ANT 1.7 is required                                        -->
 	<target name="build" depends="create_run_jar" />
     <target name="create_run_jar">
-        <jar destfile="/home/me/dev/gwt/pdf-metadata-edit/pdf-metadata-edit.jar">
+        <jar destfile="pdf-metadata-edit.jar">
             <manifest>
                 <attribute name="Main-Class" value="PDFMetadataEditWindow"/>
                 <attribute name="Class-Path" value=". lib/pdfbox-1.6.0.jar lib/fontbox-1.6.0.jar lib/jempbox-1.6.0.jar lib/commons-logging-1.1.1.jar lib/jcalendar-1.4.jar lib/miglayout15-swing.jar"/>
             </manifest>
-            <fileset dir="/home/me/dev/gwt/pdf-metadata-edit/bin"/>
+            <fileset dir="bin"/>
         </jar>
     	<echo>
     		Sign the jar now with:
