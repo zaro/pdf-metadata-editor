@@ -164,6 +164,9 @@ public class PDFMetadataEditWindow {
 		try {
 			document = PDDocument.load(new FileInputStream(pdfFile));
 			PDDocumentInformation info = document.getDocumentInformation();
+			// If we succeeded so far , most probably it is a valid PDF
+			// so show it as current filename
+			filename.setText(pdfFile.getAbsolutePath());
 			// Basic info
 			bTitle.setText(info.getTitle());
 			bAuthor.setText(info.getAuthor());
@@ -510,7 +513,6 @@ public class PDFMetadataEditWindow {
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					pdfFile = fc.getSelectedFile();
 					// This is where a real application would open the file.
-					filename.setText(pdfFile.getAbsolutePath());
 					loadFile();
 					// save dir as last opened
 					prefs.put("LastDir", pdfFile.getParent());
