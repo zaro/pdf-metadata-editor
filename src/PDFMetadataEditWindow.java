@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.prefs.Preferences;
 
 import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
@@ -76,14 +77,22 @@ public class PDFMetadataEditWindow {
 	private JComboBox bTrapped;
 	private JPanel basicMetaPanel;
 
+	static private Preferences prefs;
 	/**
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
+		prefs = Preferences.userRoot().node("PDFMetadataEditor");
+		final String f;
+		if( args.length > 0 ){
+			f = args[0];
+		} else {
+			f = null;
+		}
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					PDFMetadataEditWindow window = new PDFMetadataEditWindow();
+					PDFMetadataEditWindow window = new PDFMetadataEditWindow(f);
 					window.frmPdfMetadataEditor.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -95,8 +104,17 @@ public class PDFMetadataEditWindow {
 	/**
 	 * Create the application.
 	 */
-	public PDFMetadataEditWindow() {
+	public PDFMetadataEditWindow(String filePath) {
 		initialize();
+		if (filePath != null) {
+			try {
+				pdfFile = new File(filePath);
+				loadFile();
+			} catch (Exception e) {
+				JOptionPane.showMessageDialog(frmPdfMetadataEditor,
+						"Error while opening file:\n" + e.toString());
+			}
+		}
 	}
 
 	private <T> T formatItem(T s) {
@@ -480,6 +498,13 @@ public class PDFMetadataEditWindow {
 		JButton btnOpenPdf = new JButton("Open PDF");
 		btnOpenPdf.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				String dir = prefs.get("LastDir",null);
+				if(dir != null){
+					try {
+						fc.setCurrentDirectory(new File(dir));
+					} catch (Exception e){
+					}
+				}
 				int returnVal = fc.showOpenDialog(frmPdfMetadataEditor);
 
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -487,6 +512,8 @@ public class PDFMetadataEditWindow {
 					// This is where a real application would open the file.
 					filename.setText(pdfFile.getAbsolutePath());
 					loadFile();
+					// save dir as last opened
+					prefs.put("LastDir", pdfFile.getParent());
 				}
 			}
 		});
