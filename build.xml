@@ -7,7 +7,7 @@
         <jar destfile="pdf-metadata-edit.jar">
             <manifest>
                 <attribute name="Main-Class" value="PDFMetadataEditWindow"/>
-                <attribute name="Class-Path" value=". lib/pdfbox-1.6.0.jar lib/fontbox-1.6.0.jar lib/jempbox-1.6.0.jar lib/commons-logging-1.1.1.jar lib/jcalendar-1.4.jar lib/miglayout15-swing.jar"/>
+                <attribute name="Class-Path" value=". lib/pdfbox-1.6.0.jar lib/fontbox-1.6.0.jar lib/jempbox-1.6.0.jar lib/commons-logging-1.1.1.jar lib/jcalendar-1.4.jar lib/miglayout-4.0-swing.jar"/>
             </manifest>
             <fileset dir="bin"/>
         </jar>
