@@ -41,7 +41,7 @@ public class PDFMetadataEditWindow {
 	private JTextField bTitle;
 	private JTextField bAuthor;
 	private JTextField bSubject;
-	private JTextField bKeywords;
+	private JTextArea bKeywords;
 	private JTextField bCreator;
 	private JTextField bProducer;
 	final JFileChooser fc = new JFileChooser();
@@ -54,7 +54,7 @@ public class PDFMetadataEditWindow {
 	private JTextField xmpBasicNickname;
 	private JTextField xmpBasicRating;
 	private JTextField xmpBasicTitle;
-	private JTextField xmpPdfKeywords;
+	private JTextArea xmpPdfKeywords;
 	private JTextField xmpPdfVersion;
 	private JTextField xmpPdfProducer;
 	private JTextField xmpDcTitle;
@@ -106,6 +106,7 @@ public class PDFMetadataEditWindow {
 	 */
 	public PDFMetadataEditWindow(String filePath) {
 		initialize();
+		clear();
 		if (filePath != null) {
 			try {
 				pdfFile = new File(filePath);
@@ -158,9 +159,48 @@ public class PDFMetadataEditWindow {
 	private Calendar getDate(JDateChooser field) {
 		return field.getCalendar();
 	}
+
+	private void clear() {
+		bTitle.setText("");
+		bAuthor.setText("");
+		bSubject.setText("");
+		bKeywords.setText("");
+		bCreator.setText("");
+		bProducer.setText("");
+
+		filename.setText("");
+		xmpBasicCreatorTool.setText("");
+		xmpBasicBaseURL.setText("");
+		xmpBasicLabel.setText("");
+		xmpBasicNickname.setText("");
+		xmpBasicRating.setText("");
+		xmpBasicTitle.setText("");
+		xmpPdfKeywords.setText("");
+		xmpPdfVersion.setText("");
+		xmpPdfProducer.setText("");
+		xmpDcTitle.setText("");
+		xmpDcCoverage.setText("");
+		xmpDcDescription.setText("");
+		xmpDcDates.setText("");
+		xmpDcFormat.setText("");
+		xmpDcIdentifier.setText("");
+		xmpDcRights.setText("");
+		xmpDcSource.setText("");
+		xmpBasicIdentifiers.setText("");
+		xmpBasicAdvisories.setText("");
+		xmpDcCreators.setText("");
+		xmpDcContributors.setText("");
+		xmpDcLanguages.setText("");
+		xmpDcPublishers.setText("");
+		xmpDcRelationships.setText("");
+		xmpDcSubjects.setText("");
+		xmpDcTypes.setText("");
+		bTrapped.setSelectedIndex(-1);
+	}
 	
 	private void loadFile() {
 		PDDocument document = null;
+		clear();
 		try {
 			document = PDDocument.load(new FileInputStream(pdfFile));
 			PDDocumentInformation info = document.getDocumentInformation();
@@ -246,6 +286,12 @@ public class PDFMetadataEditWindow {
 	}
 
 	private String getField(JTextField field){
+		if(field.getText().length()>0){
+			return field.getText();
+		}
+		return null;
+	}
+	private String getField(JTextArea field){
 		if(field.getText().length()>0){
 			return field.getText();
 		}
@@ -455,6 +501,12 @@ public class PDFMetadataEditWindow {
 		}
 
 	}
+	private void copyField(JTextArea from, JTextArea to) {
+		if (from.getText().length() > 0) {
+			to.setText(from.getText());
+		}
+
+	}
 
 	private void copyBasicToXMP() {
 		copyField(bKeywords, xmpPdfKeywords);
@@ -562,7 +614,7 @@ public class PDFMetadataEditWindow {
 		JLabel lblKeywords = new JLabel("Keywords");
 		basicMetaPanel.add(lblKeywords, "cell 0 3,alignx trailing");
 
-		bKeywords = new JTextField();
+		bKeywords = new JTextArea();
 		basicMetaPanel.add(bKeywords, "cell 1 3,growx");
 		bKeywords.setColumns(10);
 
@@ -689,7 +741,7 @@ public class PDFMetadataEditWindow {
 		JLabel lblKeywords_1 = new JLabel("Keywords");
 		panel_2.add(lblKeywords_1, "cell 0 0,alignx trailing");
 
-		xmpPdfKeywords = new JTextField();
+		xmpPdfKeywords = new JTextArea();
 		panel_2.add(xmpPdfKeywords, "cell 1 0,growx");
 		xmpPdfKeywords.setColumns(10);
 
