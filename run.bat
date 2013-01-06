@@ -1,1 +1,1 @@
-start javaw -jar pdf-metadata-edit.jar
+start javaw -jar pdf-metadata-edit.jar %*
