@@ -112,7 +112,9 @@ public class PDFMetadataEditWindow {
 	 */
 	public PDFMetadataEditWindow(String filePath) {
 		initialize();
-
+		PdfFilter pdfFilter = new PdfFilter();
+		fc.addChoosableFileFilter(pdfFilter);
+		fc.setFileFilter(pdfFilter);
 		clear();
 		if (filePath != null) {
 			try {
