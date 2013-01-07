@@ -624,6 +624,8 @@ public class PDFMetadataEditWindow {
 		basicMetaPanel.add(lblKeywords, "cell 0 3,alignx trailing");
 
 		bKeywords = new JTextArea();
+		bKeywords.setWrapStyleWord(true);
+		bKeywords.setLineWrap(true);
 		basicMetaPanel.add(bKeywords, "cell 1 3,growx");
 		bKeywords.setColumns(10);
 
@@ -751,6 +753,8 @@ public class PDFMetadataEditWindow {
 		panel_2.add(lblKeywords_1, "cell 0 0,alignx trailing");
 
 		xmpPdfKeywords = new JTextArea();
+		xmpPdfKeywords.setWrapStyleWord(true);
+		xmpPdfKeywords.setLineWrap(true);
 		panel_2.add(xmpPdfKeywords, "cell 1 0,growx");
 		xmpPdfKeywords.setColumns(10);
 
