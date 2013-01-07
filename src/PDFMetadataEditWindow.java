@@ -1,10 +1,12 @@
 import java.awt.EventQueue;
+import java.awt.Image;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JButton;
 import net.miginfocom.swing.MigLayout;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
@@ -34,6 +36,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
 import com.toedter.calendar.JDateChooser;
+import java.awt.Toolkit;
 
 public class PDFMetadataEditWindow {
 
@@ -93,6 +96,9 @@ public class PDFMetadataEditWindow {
 			public void run() {
 				try {
 					PDFMetadataEditWindow window = new PDFMetadataEditWindow(f);
+					java.net.URL imgURL = PDFMetadataEditWindow.class.getResource("pdf-metadata-edit.png");
+					ImageIcon img = new ImageIcon(imgURL);
+					window.frmPdfMetadataEditor.setIconImage(img.getImage());
 					window.frmPdfMetadataEditor.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -106,6 +112,7 @@ public class PDFMetadataEditWindow {
 	 */
 	public PDFMetadataEditWindow(String filePath) {
 		initialize();
+
 		clear();
 		if (filePath != null) {
 			try {
