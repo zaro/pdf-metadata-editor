@@ -37,6 +37,9 @@ import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
 import com.toedter.calendar.JDateChooser;
 import java.awt.Toolkit;
+import javax.swing.JRadioButton;
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
 
 public class PDFMetadataEditWindow {
 
@@ -307,6 +310,12 @@ public class PDFMetadataEditWindow {
 		return null;
 	}
 	private void saveFile() {
+		if(onsaveCopyBasicTo.isSelected()){
+			copyBasicToXMP();
+		}
+		if(onsaveCopyXmpTo.isSelected()){
+			copyXMPToBasic();
+		}
 		PDDocument document = null;
 		try {
 			document = PDDocument.load(new FileInputStream(pdfFile));
@@ -547,6 +556,8 @@ public class PDFMetadataEditWindow {
 	private JDateChooser bCreationDate;
 	private JDateChooser bModificationDate;
 	private JDateChooser xmpBasicMetadataDate;
+	private JCheckBox onsaveCopyBasicTo;
+	private JCheckBox onsaveCopyXmpTo;
 	
 	/**
 	 * Initialize the contents of the frame.
@@ -557,7 +568,7 @@ public class PDFMetadataEditWindow {
 		frmPdfMetadataEditor.setBounds(100, 100, 640, 480);
 		frmPdfMetadataEditor.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmPdfMetadataEditor.getContentPane().setLayout(
-				new MigLayout("", "[][grow,fill]", "[][grow,fill][grow]"));
+				new MigLayout("insets 5", "[][grow,fill]", "[][grow,fill][grow]"));
 
 		JButton btnOpenPdf = new JButton("Open PDF");
 		btnOpenPdf.addActionListener(new ActionListener() {
@@ -881,9 +892,8 @@ public class PDFMetadataEditWindow {
 		panel_3.add(xmpDcTypes, "cell 1 14,grow");
 
 		JPanel panel_4 = new JPanel();
-		frmPdfMetadataEditor.getContentPane().add(panel_4, "cell 0 2 2 1,grow");
-		panel_4.setLayout(new MigLayout("",
-				"[grow,fill][grow,fill][grow,fill]", "[]"));
+		frmPdfMetadataEditor.getContentPane().add(panel_4, "cell 0 2 2 1,growx");
+		panel_4.setLayout(new MigLayout("insets 0", "[grow,fill][grow,fill][grow,fill]", "[][]"));
 
 		JButton btnCopyBasicTo = new JButton("Copy Basic To XMP");
 		btnCopyBasicTo.addActionListener(new ActionListener() {
@@ -891,7 +901,33 @@ public class PDFMetadataEditWindow {
 				copyBasicToXMP();
 			}
 		});
-		panel_4.add(btnCopyBasicTo, "cell 0 0");
+		
+		onsaveCopyBasicTo = new JCheckBox("Copy Basic To XMP on Save");
+		panel_4.add(onsaveCopyBasicTo, "cell 0 0");
+		onsaveCopyXmpTo = new JCheckBox("Copy XMP To Basic on Save");
+		panel_4.add(onsaveCopyXmpTo, "cell 1 0");
+		onsaveCopyBasicTo.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(onsaveCopyBasicTo.isSelected()){
+					onsaveCopyXmpTo.setSelected(false);
+				}
+				prefs.putBoolean("onsaveCopyXmpTo", onsaveCopyXmpTo.isSelected());
+				prefs.putBoolean("onsaveCopyBasicTo", onsaveCopyBasicTo.isSelected());
+			}
+		});
+		onsaveCopyXmpTo.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(onsaveCopyXmpTo.isSelected()){
+					onsaveCopyBasicTo.setSelected(false);
+				}
+				prefs.putBoolean("onsaveCopyXmpTo", onsaveCopyXmpTo.isSelected());
+				prefs.putBoolean("onsaveCopyBasicTo", onsaveCopyBasicTo.isSelected());
+			}
+		});
+		onsaveCopyXmpTo.setSelected(prefs.getBoolean("onsaveCopyXmpTo", false));
+		onsaveCopyBasicTo.setSelected(prefs.getBoolean("onsaveCopyBasicTo", false));
+
+		panel_4.add(btnCopyBasicTo, "cell 0 1");
 
 		JButton btnCopyXmpTo = new JButton("Copy XMP To Basic");
 		btnCopyXmpTo.addActionListener(new ActionListener() {
@@ -899,7 +935,7 @@ public class PDFMetadataEditWindow {
 				copyXMPToBasic();
 			}
 		});
-		panel_4.add(btnCopyXmpTo, "cell 1 0");
+		panel_4.add(btnCopyXmpTo, "cell 1 1");
 
 		JButton btnSave = new JButton("Save");
 		btnSave.addActionListener(new ActionListener() {
@@ -907,7 +943,7 @@ public class PDFMetadataEditWindow {
 				saveFile();
 			}
 		});
-		panel_4.add(btnSave, "cell 2 0");
+		panel_4.add(btnSave, "cell 2 1");
 	}
 
 }
