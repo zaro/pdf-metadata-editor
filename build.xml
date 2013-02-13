@@ -52,6 +52,11 @@
 	      </manifest>
 	      <fileset dir="bin"/>
 	   </jar>
+	   <signjar jar="pdf-metadata-edit.jar" 
+            alias="jdc"
+            keystore="keys"
+            storepass="123456"
+        ></signjar>  
    </target>
    <target name="create_macos_app" depends="init">
        <delete dir="dist/mac" quiet="true"/>
