@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- WARNING: Eclipse auto-generated file.
+              Any modifications will be overwritten.
+              To include a user specific buildfile here, simply create one in the same
+              directory with the processing instruction <?eclipse.ant.import?>
+              as the first entry and export the buildfile again. -->
+<project basedir="." default="build" name="pdf-metadata-editor">
+    <taskdef name="bundleapp" classname="com.oracle.appbundler.AppBundlerTask"/>
+    <property environment="env"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.6"/>
+    <property name="source" value="1.6"/>
+    <path id="pdf-metadata-editor.classpath">
+        <pathelement location="bin"/>
+        <pathelement location="lib/pdfbox-1.7.1.jar"/>
+        <pathelement location="lib/fontbox-1.7.1.jar"/>
+        <pathelement location="lib/jempbox-1.7.1.jar"/>
+        <pathelement location="lib/commons-logging-1.1.1.jar"/>
+        <pathelement location="lib/jcalendar-1.4.jar"/>
+        <pathelement location="lib/miglayout-4.0-swing.jar"/>
+    </path>
+   <fileset dir="lib" id="pdf-metadata-editor.libs">
+   </fileset>
+   <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src">
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+        <mkdir dir="dist"/>
+    </target>
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+    <target depends="clean" name="cleanall"/>
+    <target depends="build-subprojects,build-project" name="build"/>
+    <target name="build-subprojects"/>
+    <target depends="init" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeantruntime="false" source="${source}" target="${target}">
+            <src path="src"/>
+            <classpath refid="pdf-metadata-editor.classpath"/>
+        </javac>
+    </target>
+    <target name="create_run_jar">
+	    <jar destfile="pdf-metadata-edit.jar">
+	      <manifest>
+	          <attribute name="Main-Class" value="PDFMetadataEditWindow"/>
+	          <attribute name="Class-Path" value=". lib/pdfbox-1.7.1.jar lib/fontbox-1.7.1.jar lib/jempbox-1.7.1.jar lib/commons-logging-1.1.1.jar lib/jcalendar-1.4.jar lib/miglayout-4.0-swing.jar"/>
+	      </manifest>
+	      <fileset dir="bin"/>
+	   </jar>
+   </target>
+   <target name="create_macos_app" depends="init">
+       <delete dir="dist/mac" quiet="true"/>
+       <mkdir dir="dist/mac" />
+	   <bundleapp outputdirectory="dist/mac"
+	        name="Padme"
+	        displayname="Padme Pdf Metadata Editor"
+	        identifier="com.zaro.Padme"
+	        shortversion="1.0"
+	        applicationCategory="public.app-category.productivity"
+	        icon="res/pdf-metadata-edit.icns"
+	        mainclassname="PDFMetadataEditWindow">
+	        <classpath file="pdf-metadata-edit.jar"/>
+	        <classpath refid="pdf-metadata-editor.libs"/>
+	        <option value="-Dapple.laf.useScreenMenuBar=true"/>
+	    </bundleapp>
+	    <zip destfile="dist/padme_macosx.zip"
+       		 update="false"
+       		 duplicate="fail"
+       		 whenempty="fail"
+       		 encoding="UTF-8"
+       		 level="9"
+       		 useLanguageEncodingFlag="true"
+       		 createUnicodeExtraFields="always"
+       	>
+		    <zipfileset filemode="755" dir="dist/mac" includes="**"/>    
+	    </zip>
+    </target>
+</project>
