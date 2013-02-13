@@ -310,8 +310,8 @@ public class PDFMetadataEditWindow {
 		PDDocument document = null;
 		try {
 			document = PDDocument.load(new FileInputStream(pdfFile));
-			PDDocumentInformation info = document.getDocumentInformation();
 			// Basic info
+			PDDocumentInformation info = document.getDocumentInformation();
 			info.setTitle(getField(bTitle));
 			info.setAuthor(getField(bAuthor));
 			info.setSubject(getField(bSubject));
