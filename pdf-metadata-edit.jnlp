@@ -12,18 +12,18 @@
         <j2se version="1.6+"
               href="http://java.sun.com/products/autodl/j2se"/>
         <jar href="pdf-metadata-edit.jar" main="true" />
-        <jar href="lib/pdfbox-1.6.0.jar"/>
+        <jar href="lib/pdfbox-1.7.1.jar"/>
         <jar href="lib/miglayout-4.0-swing.jar" />
-        <jar href="lib/jempbox-1.6.0.jar"/>
+        <jar href="lib/jempbox-1.7.1.jar"/>
         <jar href="lib/jcalendar-1.4.jar"/>
-        <jar href="lib/fontbox-1.6.0.jar"/>
+        <jar href="lib/fontbox-1.7.1.jar"/>
         <jar href="lib/commons-logging-1.1.1.jar"/>      
     </resources>
     <application-desc
          name="PDF Metadata Editor"
 		 main-class="PDFMetadataEditWindow"
-         width="300"
-         height="300"         
+         width="640"
+         height="480"         
 		>
      </application-desc>
      <update check="background"/>
