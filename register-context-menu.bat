@@ -15,7 +15,7 @@ echo [HKEY_CLASSES_ROOT\%FTYPE%\shell\Pdf metadata editor] >> %tfile%
 echo @="&Pdf metadata editor" >> %tfile%
 echo.  >> %tfile%
 echo [HKEY_CLASSES_ROOT\%FTYPE%\shell\Pdf metadata editor\command] >> %tfile%
-echo @="WScript.exe \"%thisdir%start.vbs\" \"%%1\"" >> %tfile%
+echo @="javaw -jar \"%thisdir%pdf-metadata-edit.jar\" \"%%1\"" >> %tfile%
 
 regedit /s %tfile%
 
