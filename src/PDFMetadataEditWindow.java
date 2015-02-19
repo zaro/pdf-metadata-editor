@@ -1,9 +1,9 @@
 import java.awt.EventQueue;
-import java.awt.Image;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JButton;
+
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.ImageIcon;
@@ -12,7 +12,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+
 import java.awt.event.ActionEvent;
+
 import org.apache.jempbox.xmp.XMPMetadata;
 import org.apache.jempbox.xmp.XMPSchemaBasic;
 import org.apache.jempbox.xmp.XMPSchemaDublinCore;
@@ -25,62 +27,125 @@ import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.ArrayList;
+import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 import java.util.prefs.Preferences;
 
 import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
+
 import com.toedter.calendar.JDateChooser;
-import java.awt.Toolkit;
-import javax.swing.JRadioButton;
-import javax.swing.ButtonGroup;
+
 import javax.swing.JCheckBox;
 
-public class PDFMetadataEditWindow {
+import java.awt.Component;
 
-	private JFrame frmPdfMetadataEditor;
-	private JTextField bTitle;
-	private JTextField bAuthor;
-	private JTextField bSubject;
-	private JTextArea bKeywords;
-	private JTextField bCreator;
-	private JTextField bProducer;
+import javax.swing.Box;
+import javax.swing.ScrollPaneConstants;
+
+public class PDFMetadataEditWindow {
+	
+	public static interface FieldSetGet {
+		public void apply(Object field, FieldID anno);
+	}
+
 	final JFileChooser fc = new JFileChooser();
 
 	private File pdfFile;
+	private PDDocument document;
+	private MetadataInfo metadataInfo;
+
 	private JTextField filename;
-	private JTextField xmpBasicCreatorTool;
-	private JTextField xmpBasicBaseURL;
-	private JTextField xmpBasicLabel;
-	private JTextField xmpBasicNickname;
-	private JTextField xmpBasicRating;
-	private JTextField xmpBasicTitle;
-	private JTextArea xmpPdfKeywords;
-	private JTextField xmpPdfVersion;
-	private JTextField xmpPdfProducer;
-	private JTextField xmpDcTitle;
-	private JTextField xmpDcCoverage;
-	private JTextField xmpDcDescription;
-	private JTextField xmpDcDates;
-	private JTextField xmpDcFormat;
-	private JTextField xmpDcIdentifier;
-	private JTextField xmpDcRights;
-	private JTextField xmpDcSource;
-	private JTextArea xmpBasicIdentifiers;
-	private JTextArea xmpBasicAdvisories;
-	private JTextArea xmpDcCreators;
-	private JTextArea xmpDcContributors;
-	private JTextArea xmpDcLanguages;
-	private JTextArea xmpDcPublishers;
-	private JTextArea xmpDcRelationships;
-	private JTextArea xmpDcSubjects;
-	private JTextArea xmpDcTypes;
-	private JComboBox bTrapped;
+
+	private JFrame frmPdfMetadataEditor;
+	
+	@FieldID("basic.title")
+	public JTextField basicTitle;
+	@FieldID("basic.author")
+	public JTextField basicAuthor;
+	@FieldID("basic.subject")
+	public JTextArea basicSubject;
+	@FieldID(value="basic.keywords")
+	public JTextArea basicKeywords;
+	@FieldID("basic.creator")
+	public JTextField basicCreator;
+	@FieldID("basic.producer")
+	public JTextField basicProducer;
+	@FieldID("basic.trapped")
+	public JComboBox basicTrapped;
+	@FieldID(value="basic.creationDate", type=FieldID.FieldType.DateField)
+	public JDateChooser basicCreationDate;
+	@FieldID(value="basic.modificationDate", type=FieldID.FieldType.DateField)
+	public JDateChooser basicModificationDate;
+
+
+	@FieldID("xmpBasic.creatorTool")
+	public JTextField xmpBasicCreatorTool;
+	@FieldID("xmpBasic.baseURL")
+	public JTextField xmpBasicBaseURL;
+	@FieldID("xmpBasic.label")
+	public JTextField xmpBasicLabel;
+	@FieldID("xmpBasic.nickname")
+	public JTextField xmpBasicNickname;
+	@FieldID(value="xmpBasic.rating", type=FieldID.FieldType.IntField)
+	public JTextField xmpBasicRating;
+	@FieldID("xmpBasic.title")
+	public JTextField xmpBasicTitle;
+	@FieldID(value="xmpBasic.identifiers", type=FieldID.FieldType.TextField)
+	public JTextArea xmpBasicIdentifiers;
+	@FieldID(value="xmpBasic.advisories", type=FieldID.FieldType.TextField)
+	public JTextArea xmpBasicAdvisories;
+	@FieldID(value="xmpBasic.modifyDate", type=FieldID.FieldType.DateField)
+	public JDateChooser xmpBasicModifyDate;
+	@FieldID(value="xmpBasic.createDate", type=FieldID.FieldType.DateField)
+	public JDateChooser xmpBasicCreateDate;
+	@FieldID(value="xmpDc.metadataDate", type=FieldID.FieldType.DateField)
+	public JDateChooser xmpBasicMetadataDate;
+
+	@FieldID("xmpPdf.keywords")
+	public JTextArea xmpPdfKeywords;
+	@FieldID("xmpPdf.version")
+	public JTextField xmpPdfVersion;
+	@FieldID("xmpPdf.producer")
+	public JTextField xmpPdfProducer;
+	
+	@FieldID("xmpDc.title")
+	public JTextField xmpDcTitle;
+	@FieldID("xmpDc.coverage")
+	public JTextField xmpDcCoverage;
+	@FieldID("xmpDc.description")
+	public JTextField xmpDcDescription;
+	@FieldID("xmpDc.dates")
+	public JTextField xmpDcDates;
+	@FieldID("xmpDc.format")
+	public JTextField xmpDcFormat;
+	@FieldID("xmpDc.identifier")
+	public JTextField xmpDcIdentifier;
+	@FieldID("xmpDc.rights")
+	public JTextField xmpDcRights;
+	@FieldID("xmpDc.source")
+	public JTextField xmpDcSource;
+	@FieldID(value="xmpDc.creators", type=FieldID.FieldType.TextField)
+	public JTextArea xmpDcCreators;
+	@FieldID(value="xmpDc.contributors", type=FieldID.FieldType.TextField)
+	public JTextArea xmpDcContributors;
+	@FieldID(value="xmpDc.languages", type=FieldID.FieldType.TextField)
+	public JTextArea xmpDcLanguages;
+	@FieldID(value="xmpDc.publishers", type=FieldID.FieldType.TextField)
+	public JTextArea xmpDcPublishers;
+	@FieldID(value="xmpDc.relationships", type=FieldID.FieldType.TextField)
+	public JTextArea xmpDcRelationships;
+	@FieldID(value="xmpDc.subjects", type=FieldID.FieldType.TextField)
+	public JTextArea xmpDcSubjects;
+	@FieldID(value="xmpDc.types", type=FieldID.FieldType.TextField)
+	public JTextArea xmpDcTypes;
+
 	private JPanel basicMetaPanel;
 
 	static private Preferences prefs;
@@ -156,408 +221,209 @@ public class PDFMetadataEditWindow {
 		return itemListToText(slist, "\n");
 	}
 
-	private void setSlist(JTextArea field, List<String> slist) {
-		field.setText(stringListToText(slist));
-	}
-
-	private List<String> getSlist(JTextArea field) {
-		return Arrays.asList(field.getText().split("\n"));
-	}
-
-	private void setDate(JDateChooser field, Calendar date) {
-		field.setCalendar(date);
-	}
-	
-	private Calendar getDate(JDateChooser field) {
-		return field.getCalendar();
-	}
-
 	private void clear() {
-		bTitle.setText("");
-		bAuthor.setText("");
-		bSubject.setText("");
-		bKeywords.setText("");
-		bCreator.setText("");
-		bProducer.setText("");
 
 		filename.setText("");
-		xmpBasicCreatorTool.setText("");
-		xmpBasicBaseURL.setText("");
-		xmpBasicLabel.setText("");
-		xmpBasicNickname.setText("");
-		xmpBasicRating.setText("");
-		xmpBasicTitle.setText("");
-		xmpPdfKeywords.setText("");
-		xmpPdfVersion.setText("");
-		xmpPdfProducer.setText("");
-		xmpDcTitle.setText("");
-		xmpDcCoverage.setText("");
-		xmpDcDescription.setText("");
-		xmpDcDates.setText("");
-		xmpDcFormat.setText("");
-		xmpDcIdentifier.setText("");
-		xmpDcRights.setText("");
-		xmpDcSource.setText("");
-		xmpBasicIdentifiers.setText("");
-		xmpBasicAdvisories.setText("");
-		xmpDcCreators.setText("");
-		xmpDcContributors.setText("");
-		xmpDcLanguages.setText("");
-		xmpDcPublishers.setText("");
-		xmpDcRelationships.setText("");
-		xmpDcSubjects.setText("");
-		xmpDcTypes.setText("");
-		bTrapped.setSelectedIndex(-1);
+		traverseFields(new FieldSetGet() {
+			@Override
+			public void apply(Object field, FieldID anno) {
+        		if(field instanceof JTextField){
+        			objectToField( (JTextField)field , null);
+        		}
+        		if(field instanceof JTextArea){
+        			objectToField( (JTextArea)field , null);
+        		}
+        		if(field instanceof JComboBox){
+        			objectToField( (JComboBox)field , null);
+        		}
+        		if(field instanceof JDateChooser){
+        			objectToField( (JDateChooser)field , null);
+        		}
+			}
+		});
+	}
+	
+	private void objectToField(JTextField field, Object o) {
+		if(o instanceof String){
+			field.setText( (String)o );
+		} else if(o == null){
+			field.setText( "" );
+		} else {
+			throw new RuntimeException("Cannot store non-String object in JTextField");
+		}
+	}
+
+	private void objectToField(JTextArea field, Object o) {
+		if(o instanceof String){
+			field.setText( (String)o );
+		} else if(o instanceof List<?>){
+			field.setText(stringListToText((List<String>)o));
+		} else if(o == null){
+			field.setText( "" );
+		} else {
+			throw new RuntimeException("Cannot store non-String/List<String> object in JTextArea");
+		}
+	}
+
+	private void objectToField(JComboBox field, Object o) {
+		if(o instanceof String){
+			field.getModel().setSelectedItem(o);
+		} else if(o == null){
+			field.setSelectedIndex(-1);
+		} else {
+			throw new RuntimeException("Cannot store non-String object in JComboBox");
+		}
+	}
+
+	private void objectToField(JDateChooser field, Object o) {
+		if(o instanceof Calendar){
+			field.setCalendar((Calendar)o);
+		} else if(o == null){
+			field.setCalendar(null);
+		} else {
+			throw new RuntimeException("Cannot store non-Calendar object in JDateChooser");
+		}
+	}
+
+	private void traverseFields(FieldSetGet setGet) {
+		for (Field field : this.getClass().getFields()) {
+			FieldID annos = field.getAnnotation(FieldID.class);
+            if (annos != null) {
+            	if( annos.value() != null && annos.value().length() > 0 ) {
+            		Object f = null;
+					try {
+						f = field.get(this);
+					} catch (IllegalArgumentException e) {
+					} catch (IllegalAccessException e) {
+					}
+					setGet.apply(f, annos);
+            	}
+            }
+        }
+	}
+	
+	private void fillFromMetadata() {
+
+		traverseFields(new FieldSetGet() {
+			@Override
+			public void apply(Object field, FieldID anno) {
+            	Object value = metadataInfo.get(anno.value());
+
+        		if(field instanceof JTextField){
+        			objectToField( (JTextField)field , value);
+        		}
+        		if(field instanceof JTextArea){
+        			objectToField( (JTextArea)field , value);
+        		}
+        		if(field instanceof JComboBox){
+        			objectToField( (JComboBox)field , value);
+        		}
+        		if(field instanceof JDateChooser){
+        			objectToField( (JDateChooser)field , value);
+        		}
+			}
+		});
+		
+	}
+
+	private void copyToMetadata() {
+
+		traverseFields(new FieldSetGet() {
+			@Override
+			public void apply(Object field, FieldID anno) {
+
+        		if(field instanceof JTextField || field instanceof JTextArea){
+        			String text = (field instanceof JTextField) ? ((JTextField)field).getText() : ((JTextArea)field).getText();
+        			switch(anno.type()){
+        			case StringField:
+        				metadataInfo.set(anno.value(), text);
+        				break;
+        			case TextField:
+        				metadataInfo.set(anno.value(),Arrays.asList(text.split("\n")));
+        				break;
+        			case IntField:
+        				Integer i = null;
+        				if(text!= null && text.length() > 0){
+        					i = Integer.parseInt(text);
+        				}
+        				metadataInfo.set(anno.value(),i);
+        				break;
+        			default:
+        				throw new RuntimeException("Cannot store text in :" +anno.type());
+
+        			}
+        		}
+        		if(field instanceof JComboBox){
+        			String text = (String)((JComboBox)field).getModel().getSelectedItem();
+        			switch(anno.type()){
+        			case StringField:
+        				metadataInfo.set(anno.value(), text);
+        				break;
+        			default:
+        				throw new RuntimeException("Cannot (store (choice text) in :" +anno.type());
+
+        			}
+        		}
+        		if(field instanceof JDateChooser){
+        			switch(anno.type()){
+        			case DateField:
+        				metadataInfo.set(anno.value(), ((JDateChooser)field).getCalendar());
+        				break;
+        			default:
+        				throw new RuntimeException("Cannot store Calendar in :" +anno.type());
+
+        			}
+        		}
+			}
+		});
+		
 	}
 	
 	private void loadFile() {
-		PDDocument document = null;
+		if(document != null) {
+			try {
+				document.close();
+			} catch (IOException e) {
+			}
+			document = null;
+		}
 		clear();
 		try {
 			document = PDDocument.load(new FileInputStream(pdfFile));
-			PDDocumentInformation info = document.getDocumentInformation();
-			// If we succeeded so far , most probably it is a valid PDF
-			// so show it as current filename
 			filename.setText(pdfFile.getAbsolutePath());
-			// Basic info
-			bTitle.setText(info.getTitle());
-			bAuthor.setText(info.getAuthor());
-			bSubject.setText(info.getSubject());
-			bKeywords.setText(info.getKeywords());
-			bCreator.setText(info.getCreator());
-			bProducer.setText(info.getProducer());
-			setDate(bCreationDate, info.getCreationDate());
-			setDate(bModificationDate, info.getModificationDate());
-			bTrapped.getModel().setSelectedItem(info.getTrapped());
-			// XMP
-			PDDocumentCatalog catalog = document.getDocumentCatalog();
-			PDMetadata metadata = catalog.getMetadata();
-			if (metadata == null) {
-				document.close();
-				return;
-			}
-			// XMP Basic
-			XMPMetadata xmp = XMPMetadata.load(metadata.createInputStream());
-			XMPSchemaBasic bi = xmp.getBasicSchema();
-			if (bi != null) {
-				xmpBasicAdvisories
-						.setText(stringListToText(bi.getAdvisories()));
-				xmpBasicBaseURL.setText(bi.getBaseURL());
-				setDate(xmpBasicCreateDate, bi.getCreateDate());
-				setDate(xmpBasicModifyDate, bi.getModifyDate());
-				xmpBasicCreatorTool.setText(bi.getCreatorTool());
-				xmpBasicIdentifiers.setText(stringListToText(bi
-						.getIdentifiers()));
-				xmpBasicLabel.setText(bi.getLabel());
-				setDate(xmpBasicMetadataDate, bi.getMetadataDate());
-				xmpBasicNickname.setText(bi.getNickname());
-				if (bi.getRating() != null) {
-					xmpBasicRating.setText(String.format("%i", bi.getRating()));
-				} else {
-					xmpBasicRating.setText(null);
-				}
-				xmpBasicTitle.setText(bi.getTitle());
-			}
-			// XMP PDF
-			XMPSchemaPDF pi = xmp.getPDFSchema();
-			if (pi != null) {
-				xmpPdfVersion.setText(pi.getPDFVersion());
-				xmpPdfKeywords.setText(pi.getKeywords());
-				xmpPdfProducer.setText(pi.getProducer());
-			}
-			// XMP Dublin Core
-			XMPSchemaDublinCore dc = xmp.getDublinCoreSchema();
-			if (dc != null) {
-				xmpDcTitle.setText(dc.getTitle());
-				setSlist(xmpDcContributors, dc.getContributors());
-				setSlist(xmpDcPublishers, dc.getPublishers());
-				setSlist(xmpDcRelationships, dc.getRelationships());
-				setSlist(xmpDcSubjects, dc.getSubjects());
-				setSlist(xmpDcTypes, dc.getTypes());
-				setSlist(xmpDcLanguages, dc.getLanguages());
-				setSlist(xmpDcCreators, dc.getCreators());
-				xmpDcCoverage.setText(dc.getCoverage());
-				xmpDcFormat.setText(dc.getFormat());
-				xmpDcIdentifier.setText(dc.getIdentifier());
-				xmpDcRights.setText(dc.getRights());
-				xmpDcSource.setText(dc.getSource());
-				xmpDcDescription.setText(dc.getDescription());
-				xmpDcDates.setText(itemListToText(dc.getDates(), ","));
-			}
+			metadataInfo = new MetadataInfo();
+			metadataInfo.loadFromPDF(document);
+			
+			fillFromMetadata();
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(frmPdfMetadataEditor,
 					"Error while opening file:\n" + e.toString());
 		}
-		if (document != null) {
-			try {
-				document.close();
-			} catch (Exception e) {
-
-			}
-		}
 	}
 
-	private String getField(JTextField field){
-		if(field.getText().length()>0){
-			return field.getText();
-		}
-		return null;
-	}
-	private String getField(JTextArea field){
-		if(field.getText().length()>0){
-			return field.getText();
-		}
-		return null;
-	}
 	private void saveFile() {
 		if(onsaveCopyBasicTo.isSelected()){
-			copyBasicToXMP();
+			metadataInfo.copyBasicToXMP();
 		}
 		if(onsaveCopyXmpTo.isSelected()){
-			copyXMPToBasic();
+			metadataInfo.copyXMPToBasic();;
 		}
-		PDDocument document = null;
 		try {
-			document = PDDocument.load(new FileInputStream(pdfFile));
-			// Basic info
-			PDDocumentInformation info = document.getDocumentInformation();
-			info.setTitle(getField(bTitle));
-			info.setAuthor(getField(bAuthor));
-			info.setSubject(getField(bSubject));
-			info.setKeywords(getField(bKeywords));
-			info.setCreator(getField(bCreator));
-			info.setProducer(getField(bProducer));
-			info.setCreationDate(getDate(bCreationDate));
-			info.setModificationDate(getDate(bModificationDate));
-			info.setTrapped((String) bTrapped.getModel().getSelectedItem());
-			document.setDocumentInformation(info);
-			// XMP
-			PDDocumentCatalog catalog = document.getDocumentCatalog();
-			PDMetadata metadata = catalog.getMetadata();
-			XMPMetadata xmp = null;
-			if (metadata != null) {
-				xmp = XMPMetadata.load(metadata.createInputStream());
-			}
-			if (xmp == null) {
-				xmp = new XMPMetadata();
-			}
-			// XMP Basic
-			XMPSchemaBasic bi = xmp.getBasicSchema();
-			if (bi == null) {
-				bi = xmp.addBasicSchema();
-			}
-			if (bi.getAdvisories() != null) {
-				for (String a : bi.getAdvisories()) {
-					bi.removeAdvisory(a);
-				}
-			}
-			if (xmpBasicAdvisories.getText().length() > 0) {
-				for (String a : getSlist(xmpBasicAdvisories)) {
-					bi.addAdvisory(a);
-				}
-			}
-			bi.setBaseURL(getField(xmpBasicBaseURL));
-			if(getDate(xmpBasicCreateDate) != null){
-				bi.setCreateDate(getDate(xmpBasicCreateDate));
-			}
-			if(getDate(xmpBasicModifyDate) != null){
-				bi.setModifyDate(getDate(xmpBasicModifyDate));
-			}
-			bi.setCreatorTool(getField(xmpBasicCreatorTool));
-			if (bi.getIdentifiers() != null) {
-				for (String i : bi.getIdentifiers()) {
-					bi.removeIdentifier(i);
-				}
-			}
-			if (xmpBasicIdentifiers.getText().length() > 0) {
-				for (String i : getSlist(xmpBasicIdentifiers)) {
-					bi.addIdentifier(i);
-				}
-			}
-			bi.setLabel(getField(xmpBasicLabel));
-			if(getDate(xmpBasicMetadataDate)!=null){
-				bi.setMetadataDate(getDate(xmpBasicMetadataDate));
-			}
-			bi.setNickname(getField(xmpBasicNickname));
-			if(xmpBasicRating.getText().length()>0){
-				bi.setRating(Integer.parseInt(xmpBasicRating.getText()));
-			}else{
-				bi.setRating(null);
-			}
-			bi.setTitle(getField(xmpBasicTitle));
-			// XMP PDF
-			XMPSchemaPDF pi = xmp.getPDFSchema();
-			if (pi == null) {
-				pi = xmp.addPDFSchema();
-			}
-			pi.setKeywords(getField(xmpPdfKeywords));
-			pi.setProducer(getField(xmpPdfProducer));
-			// XMP Dublin Core
-			XMPSchemaDublinCore dc = xmp.getDublinCoreSchema();
-			if (dc == null) {
-				dc = xmp.addDublinCoreSchema();
-			}
-			dc.setTitle(getField(xmpDcTitle));
-			if (dc.getContributors() != null) {
-				for (String i : dc.getContributors()) {
-					dc.removeContributor(i);
-				}
-			}
-			if (xmpDcContributors.getText().length() > 0) {
-				for (String i : getSlist(xmpDcContributors)) {
-					dc.addContributor(i);
-				}
-			}
-			//
-			if (dc.getPublishers() != null) {
-				for (String i : dc.getPublishers()) {
-					dc.removePublisher(i);
-				}
-			}
-			if (xmpDcPublishers.getText().length() > 0) {
-				for (String i : getSlist(xmpDcPublishers)) {
-					dc.addPublisher(i);
-				}
-			}
-			//
-			if (dc.getRelationships() != null) {
-				for (String i : dc.getRelationships()) {
-					dc.removeRelation(i);
-				}
-			}
-			if (xmpDcRelationships.getText().length() > 0) {
-				for (String i : getSlist(xmpDcRelationships)) {
-					dc.addRelation(i);
-				}
-			}
-			//
-			if (dc.getSubjects() != null) {
-				for (String i : dc.getSubjects()) {
-					dc.removeSubject(i);
-				}
-			}
-			if (xmpDcSubjects.getText().length() > 0) {
-				for (String i : getSlist(xmpDcSubjects)) {
-					dc.addSubject(i);
-				}
-			}
-			//
-			// for(String i: dc.getTypes()){
-			// dc.removeType(i);
-			// }
-			if (xmpDcTypes.getText().length() > 0) {
-				for (String i : getSlist(xmpDcTypes)) {
-					dc.addType(i);
-				}
-			}
-			//
-			if (dc.getLanguages() != null) {
-				for (String i : dc.getLanguages()) {
-					dc.removeLanguage(i);
-				}
-			}
-			if (xmpDcLanguages.getText().length() > 0) {
-				for (String i : getSlist(xmpDcLanguages)) {
-					dc.addLanguage(i);
-				}
-			}
-			//
-			if (dc.getCreators() != null) {
-				for (String i : dc.getCreators()) {
-					dc.removeCreator(i);
-				}
-			}
-			if (xmpDcCreators.getText().length() > 0) {
-				for (String i : getSlist(xmpDcCreators)) {
-					dc.addCreator(i);
-				}
-			}
-			//
-			dc.setCoverage(getField(xmpDcCoverage));
-			dc.setFormat(getField(xmpDcFormat));
-			dc.setIdentifier(getField(xmpDcIdentifier));
-			dc.setRights(getField(xmpDcRights));
-			dc.setSource(getField(xmpDcSource));
-			dc.setDescription(getField(xmpDcDescription));
-			// xmpDcDates.setText(itemListToText(dc.getDates(),","));
+			metadataInfo = new MetadataInfo();
+			copyToMetadata();
+			metadataInfo.saveToPDF(document,pdfFile);
 
-			// Do the save
-			PDMetadata metadataStream = new PDMetadata(document);
-			metadataStream.importXMPMetadata(xmp);
-			catalog.setMetadata(metadataStream);
-			document.save(pdfFile.getAbsolutePath());
+			fillFromMetadata();
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(frmPdfMetadataEditor,
 					"Error while saving file:\n" + e.toString());
 		}
-		if (document != null) {
-			try {
-				document.close();
-			} catch (Exception e) {
-
-			}
-		}
 	}
 
-	private void copyField(JTextField from, JTextField to) {
-		if (from.getText().length() > 0) {
-			to.setText(from.getText());
-		}
-
-	}
-
-	private void copyField(JTextField from, JTextArea to) {
-		if (from.getText().length() > 0) {
-			to.setText(from.getText());
-		}
-
-	}
-
-	private void copyField(JTextArea from, JTextField to) {
-		if (from.getText().length() > 0) {
-			to.setText(from.getText().replace("\n", ","));
-		}
-
-	}
-	private void copyField(JTextArea from, JTextArea to) {
-		if (from.getText().length() > 0) {
-			to.setText(from.getText());
-		}
-
-	}
-
-	private void copyBasicToXMP() {
-		copyField(bKeywords, xmpPdfKeywords);
-		copyField(bProducer, xmpPdfProducer);
-
-		copyField(bCreator, xmpBasicCreatorTool);
-
-		copyField(bTitle, xmpDcTitle);
-		copyField(bSubject, xmpDcDescription);
-		copyField(bAuthor, xmpDcCreators);
-	}
-
-	private void copyXMPToBasic() {
-		copyField(xmpPdfKeywords, bKeywords);
-		copyField(xmpPdfProducer, bProducer);
-
-		copyField(xmpBasicCreatorTool, bCreator);
-
-		copyField(xmpDcTitle, bTitle);
-		copyField(xmpDcDescription, bSubject);
-		copyField(xmpDcCreators, bAuthor);
-
-	}
 	
-	private List<JTextField>  customFieldsNames = new ArrayList<JTextField>();
-	private List<JTextField>  customFieldsValues = new ArrayList<JTextField>();
-	private JDateChooser xmpBasicModifyDate;
-	private JDateChooser xmpBasicCreateDate;
-	private JDateChooser bCreationDate;
-	private JDateChooser bModificationDate;
-	private JDateChooser xmpBasicMetadataDate;
 	private JCheckBox onsaveCopyBasicTo;
 	private JCheckBox onsaveCopyXmpTo;
+	private JTabbedPane metadataEditor;
 	
 	/**
 	 * Initialize the contents of the frame.
@@ -568,117 +434,131 @@ public class PDFMetadataEditWindow {
 		frmPdfMetadataEditor.setBounds(100, 100, 640, 480);
 		frmPdfMetadataEditor.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmPdfMetadataEditor.getContentPane().setLayout(
-				new MigLayout("insets 5", "[][grow,fill]", "[][grow,fill][grow]"));
+				new MigLayout("insets 5", "[grow,fill]", "[][grow,fill][grow]"));
+		
+		JPanel panel = new JPanel();
+		frmPdfMetadataEditor.getContentPane().add(panel, "cell 0 0,growx");
+		panel.setLayout(new MigLayout("", "[][grow,fill][][]", "[]"));
+		
+				JButton btnOpenPdf = new JButton("Open PDF");
+				panel.add(btnOpenPdf, "cell 0 0,alignx left,aligny center");
+				
+						filename = new JTextField();
+						panel.add(filename, "cell 1 0,growx,aligny center");
+						filename.setEditable(false);
+						filename.setColumns(10);
+						
+						Component horizontalStrut = Box.createHorizontalStrut(20);
+						panel.add(horizontalStrut, "cell 2 0");
+						
+						JButton btnPreferences = new JButton("");
+						panel.add(btnPreferences, "cell 3 0,aligny center");
+						java.net.URL prefImgURL = PDFMetadataEditWindow.class.getResource("settings-icon.png");
+						ImageIcon img = new ImageIcon(prefImgURL);
+						btnPreferences.setIcon(img);
 
-		JButton btnOpenPdf = new JButton("Open PDF");
-		btnOpenPdf.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				String dir = prefs.get("LastDir",null);
-				if(dir != null){
-					try {
-						fc.setCurrentDirectory(new File(dir));
-					} catch (Exception e){
+						btnOpenPdf.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent arg0) {
+						String dir = prefs.get("LastDir",null);
+						if(dir != null){
+							try {
+								fc.setCurrentDirectory(new File(dir));
+							} catch (Exception e){
+							}
+						}
+						int returnVal = fc.showOpenDialog(frmPdfMetadataEditor);
+
+						if (returnVal == JFileChooser.APPROVE_OPTION) {
+							pdfFile = fc.getSelectedFile();
+							// This is where a real application would open the file.
+							loadFile();
+							// save dir as last opened
+							prefs.put("LastDir", pdfFile.getParent());
+						}
 					}
-				}
-				int returnVal = fc.showOpenDialog(frmPdfMetadataEditor);
+				});
 
-				if (returnVal == JFileChooser.APPROVE_OPTION) {
-					pdfFile = fc.getSelectedFile();
-					// This is where a real application would open the file.
-					loadFile();
-					// save dir as last opened
-					prefs.put("LastDir", pdfFile.getParent());
-				}
-			}
-		});
-		frmPdfMetadataEditor.getContentPane().add(btnOpenPdf,
-				"cell 0 0,alignx left,aligny top");
+		metadataEditor = new JTabbedPane(JTabbedPane.TOP);
+		frmPdfMetadataEditor.getContentPane().add(metadataEditor,
+				"cell 0 1,grow");
 
-		filename = new JTextField();
-		filename.setEditable(false);
-		frmPdfMetadataEditor.getContentPane().add(filename, "cell 1 0,growx");
-		filename.setColumns(10);
-
-		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		frmPdfMetadataEditor.getContentPane().add(tabbedPane,
-				"cell 0 1 2 1,grow");
-
-		JScrollPane scrollPane_5 = new JScrollPane();
-		tabbedPane.addTab("Basic Metadata", null, scrollPane_5, null);
+		JScrollPane basicScrollpane = new JScrollPane();
+		metadataEditor.addTab("Basic Metadata", null, basicScrollpane, null);
 		
 		basicMetaPanel = new JPanel();
-		scrollPane_5.setViewportView(basicMetaPanel);
+		basicScrollpane.setViewportView(basicMetaPanel);
 		basicMetaPanel.setLayout(new MigLayout("", "[][grow,fill]", "[][][][][][][][][][][]"));
 
 		JLabel lblTitle = new JLabel("Title");
 		basicMetaPanel.add(lblTitle, "cell 0 0,alignx trailing");
 
-		bTitle = new JTextField();
-		basicMetaPanel.add(bTitle, "cell 1 0,growx");
-		bTitle.setColumns(10);
+		basicTitle = new JTextField();
+		basicMetaPanel.add(basicTitle, "cell 1 0,growx");
+		basicTitle.setColumns(10);
 
 		JLabel lblNewLabel = new JLabel("Author");
 		basicMetaPanel.add(lblNewLabel, "cell 0 1,alignx trailing");
 
-		bAuthor = new JTextField();
-		basicMetaPanel.add(bAuthor, "cell 1 1,growx");
-		bAuthor.setColumns(10);
+		basicAuthor = new JTextField();
+		basicMetaPanel.add(basicAuthor, "cell 1 1,growx");
+		basicAuthor.setColumns(10);
 
 		JLabel lblSubject = new JLabel("Subject");
 		basicMetaPanel.add(lblSubject, "cell 0 2,alignx trailing");
 
-		bSubject = new JTextField();
-		basicMetaPanel.add(bSubject, "cell 1 2,growx");
-		bSubject.setColumns(10);
+		basicSubject = new JTextArea();
+		basicSubject.setWrapStyleWord(true);
+		basicMetaPanel.add(basicSubject, "cell 1 2,growx");
+		basicSubject.setColumns(10);
 
 		JLabel lblKeywords = new JLabel("Keywords");
 		basicMetaPanel.add(lblKeywords, "cell 0 3,alignx trailing");
 
-		bKeywords = new JTextArea();
-		bKeywords.setWrapStyleWord(true);
-		bKeywords.setLineWrap(true);
-		basicMetaPanel.add(bKeywords, "cell 1 3,growx");
-		bKeywords.setColumns(10);
+		basicKeywords = new JTextArea();
+		basicKeywords.setWrapStyleWord(true);
+		basicKeywords.setLineWrap(true);
+		basicMetaPanel.add(basicKeywords, "cell 1 3,growx");
+		basicKeywords.setColumns(10);
 
 		JLabel lblCreator = new JLabel("Creator");
 		basicMetaPanel.add(lblCreator, "cell 0 4,alignx trailing");
 
-		bCreator = new JTextField();
-		basicMetaPanel.add(bCreator, "cell 1 4,growx");
-		bCreator.setColumns(10);
+		basicCreator = new JTextField();
+		basicMetaPanel.add(basicCreator, "cell 1 4,growx");
+		basicCreator.setColumns(10);
 
 		JLabel lblProducer = new JLabel("Producer");
 		basicMetaPanel.add(lblProducer, "cell 0 5,alignx trailing");
 
-		bProducer = new JTextField();
-		basicMetaPanel.add(bProducer, "cell 1 5,growx");
-		bProducer.setColumns(10);
+		basicProducer = new JTextField();
+		basicMetaPanel.add(basicProducer, "cell 1 5,growx");
+		basicProducer.setColumns(10);
 
 		JLabel lblCreationDate = new JLabel("Creation Date");
 		basicMetaPanel.add(lblCreationDate, "cell 0 6,alignx trailing");
 		
-		bCreationDate = new JDateChooser();
-		basicMetaPanel.add(bCreationDate, "cell 1 6,grow");
+		basicCreationDate = new JDateChooser();
+		basicMetaPanel.add(basicCreationDate, "cell 1 6,grow");
 
 		JLabel lblModificationDate = new JLabel("Modification Date");
 		basicMetaPanel.add(lblModificationDate, "cell 0 7,alignx trailing");
 		
-		bModificationDate = new JDateChooser();
-		basicMetaPanel.add(bModificationDate, "cell 1 7,grow");
+		basicModificationDate = new JDateChooser();
+		basicMetaPanel.add(basicModificationDate, "cell 1 7,grow");
 
 		JLabel lblTrapped = new JLabel("Trapped");
 		basicMetaPanel.add(lblTrapped, "cell 0 8,alignx trailing");
 
-		bTrapped = new JComboBox();
-		bTrapped.setModel(new DefaultComboBoxModel(new String[] { "True",
+		basicTrapped = new JComboBox();
+		basicTrapped.setModel(new DefaultComboBoxModel(new String[] { "True",
 				"False", "Unknown" }));
-		basicMetaPanel.add(bTrapped, "cell 1 8,growx");
+		basicMetaPanel.add(basicTrapped, "cell 1 8");
 
-		JScrollPane scrollPane = new JScrollPane();
-		tabbedPane.addTab("XMP Basic", null, scrollPane, null);
+		JScrollPane xmpBasicScrollpane = new JScrollPane();
+		metadataEditor.addTab("XMP Basic", null, xmpBasicScrollpane, null);
 
 		JPanel panel_1 = new JPanel();
-		scrollPane.setViewportView(panel_1);
+		xmpBasicScrollpane.setViewportView(panel_1);
 		panel_1.setLayout(new MigLayout("", "[][grow,fill]", "[][][][][][][][][grow][grow][]"));
 
 		JLabel lblCreatorTool = new JLabel("Creator tool");
@@ -753,11 +633,11 @@ public class PDFMetadataEditWindow {
 		xmpBasicMetadataDate = new JDateChooser();
 		panel_1.add(xmpBasicMetadataDate, "cell 1 10,grow");
 
-		JScrollPane scrollPane_1 = new JScrollPane();
-		tabbedPane.addTab("XMP PDF", null, scrollPane_1, null);
+		JScrollPane xmpPdfScrollpane = new JScrollPane();
+		metadataEditor.addTab("XMP PDF", null, xmpPdfScrollpane, null);
 
 		JPanel panel_2 = new JPanel();
-		scrollPane_1.setViewportView(panel_2);
+		xmpPdfScrollpane.setViewportView(panel_2);
 		panel_2.setLayout(new MigLayout("", "[][grow,fill]", "[][][]"));
 
 		JLabel lblKeywords_1 = new JLabel("Keywords");
@@ -784,11 +664,11 @@ public class PDFMetadataEditWindow {
 		panel_2.add(xmpPdfProducer, "cell 1 2,growx");
 		xmpPdfProducer.setColumns(10);
 
-		JScrollPane scrollPane_2 = new JScrollPane();
-		tabbedPane.addTab("XMP Dublin Core", null, scrollPane_2, null);
+		JScrollPane xmpDcScrollpane = new JScrollPane();
+		metadataEditor.addTab("XMP Dublin Core", null, xmpDcScrollpane, null);
 
 		JPanel panel_3 = new JPanel();
-		scrollPane_2.setViewportView(panel_3);
+		xmpDcScrollpane.setViewportView(panel_3);
 		panel_3.setLayout(new MigLayout("", "[][grow,fill]",
 				"[][][grow][grow][][][][][grow][grow][grow][][][grow][grow]"));
 
@@ -892,13 +772,14 @@ public class PDFMetadataEditWindow {
 		panel_3.add(xmpDcTypes, "cell 1 14,grow");
 
 		JPanel panel_4 = new JPanel();
-		frmPdfMetadataEditor.getContentPane().add(panel_4, "cell 0 2 2 1,growx");
+		frmPdfMetadataEditor.getContentPane().add(panel_4, "cell 0 2,growx");
 		panel_4.setLayout(new MigLayout("insets 0", "[grow,fill][grow,fill][grow,fill]", "[][]"));
 
 		JButton btnCopyBasicTo = new JButton("Copy Basic To XMP");
 		btnCopyBasicTo.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				copyBasicToXMP();
+				metadataInfo.copyBasicToXMP();
+				fillFromMetadata();
 			}
 		});
 		
@@ -932,18 +813,22 @@ public class PDFMetadataEditWindow {
 		JButton btnCopyXmpTo = new JButton("Copy XMP To Basic");
 		btnCopyXmpTo.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				copyXMPToBasic();
+				metadataInfo.copyXMPToBasic();
+				fillFromMetadata();
 			}
 		});
 		panel_4.add(btnCopyXmpTo, "cell 1 1");
 
 		JButton btnSave = new JButton("Save");
+		btnSave.setIcon(new ImageIcon(PDFMetadataEditWindow.class.getResource("/com/sun/java/swing/plaf/windows/icons/FloppyDrive.gif")));
 		btnSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				saveFile();
 			}
 		});
-		panel_4.add(btnSave, "cell 2 1");
+		panel_4.add(btnSave, "cell 2 0 1 2,grow");
 	}
-
+	public JTabbedPane getMetadataEditor() {
+		return metadataEditor;
+	}
 }
