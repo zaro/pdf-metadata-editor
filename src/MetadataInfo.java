@@ -154,8 +154,8 @@ public class MetadataInfo {
 			}
 		}
 
-		System.err.println("Loaded:");
-		System.err.println(toYAML());
+		//System.err.println("Loaded:");
+		//System.err.println(toYAML());
 
 	}
 
@@ -437,34 +437,58 @@ public class MetadataInfo {
 		});
 	}
 
-	public Object get(String id) {
+	protected Object getObject(String id) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+		if (id.length() == 0 ) return null;
 		StringTokenizer st = new StringTokenizer(id, ".");
 		Object current = this;
 		while (st.hasMoreTokens()) {
 			Field group;
-			try {
-				group = current.getClass().getField(st.nextToken());
-				current = group.get(current);
-			} catch (NoSuchFieldException e) {
-				System.err.println("Metadata.get(" + id + ")");
-				e.printStackTrace();
-				return null;
-			} catch (SecurityException e) {
-				System.err.println("Metadata.get(" + id + ")");
-				e.printStackTrace();
-				return null;
-			} catch (IllegalArgumentException e) {
-				System.err.println("Metadata.get(" + id + ")");
-				e.printStackTrace();
-				return null;
-			} catch (IllegalAccessException e) {
-				System.err.println("Metadata.get(" + id + ")");
-				e.printStackTrace();
-				return null;
-			}
+			group = current.getClass().getField(st.nextToken());
+			current = group.get(current);
 
 		}
 		return current;
+	}
+	
+	public Object get(String id) {
+		try {
+			return getObject(id);
+		} catch (NoSuchFieldException e) {
+			System.err.println("Metadata.get(" + id + ")");
+			e.printStackTrace();
+			return null;
+		} catch (SecurityException e) {
+			System.err.println("Metadata.get(" + id + ")");
+			e.printStackTrace();
+			return null;
+		} catch (IllegalArgumentException e) {
+			System.err.println("Metadata.get(" + id + ")");
+			e.printStackTrace();
+			return null;
+		} catch (IllegalAccessException e) {
+			System.err.println("Metadata.get(" + id + ")");
+			e.printStackTrace();
+			return null;
+		}
+	
+	}
+	
+	public String getString(String id){
+		try {
+			Object o = getObject(id);
+			if (o != null){
+				if (o instanceof List<?>) {
+					return ",".join(",", ((List<String>) o));
+				}
+				return o.toString();
+			}
+		} catch (NoSuchFieldException e) {
+		} catch (SecurityException e) {
+		} catch (IllegalArgumentException e) {
+		} catch (IllegalAccessException e) {
+		}
+		return null;
+	
 	}
 
 	public void set(String id, Object value) {
