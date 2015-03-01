@@ -1,11 +1,15 @@
+package pmedit;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -178,8 +182,8 @@ public class MetadataInfo {
 
 	public void saveToPDF(PDDocument document, File pdfFile) throws Exception {
 
-		System.err.println("Saving:");
-		System.err.println(toYAML());
+		//System.err.println("Saving:");
+		//System.err.println(toYAML());
 		// Basic info
 		PDDocumentInformation info = document.getDocumentInformation();
 		info.setTitle(basic.title);
@@ -480,6 +484,10 @@ public class MetadataInfo {
 				if (o instanceof List<?>) {
 					return ",".join(",", ((List<String>) o));
 				}
+				if (o instanceof Calendar) {
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+					return sdf.format(((Calendar)o).getTime());
+				}
 				return o.toString();
 			}
 		} catch (NoSuchFieldException e) {
@@ -527,6 +535,36 @@ public class MetadataInfo {
 		}
 	}
 
+	public List<String> keys(){
+		ArrayList<String> ret = new ArrayList<String>();
+		for (String fieldName : new String[] { "basic", "xmpBasic", "xmpPdf",
+		"xmpDc" }) {
+			Field group;
+			Object groupObj;
+			try {
+				Field[] f = this.getClass().getFields();
+				group = this.getClass().getField(fieldName);
+				groupObj = group.get(this);
+			} catch (NoSuchFieldException e) {
+				continue;
+			} catch (SecurityException e) {
+				continue;
+			} catch (IllegalArgumentException e) {
+				continue;
+			} catch (IllegalAccessException e) {
+				continue;
+			}
+			Class klass = group.getType();
+			for (Field field : klass.getFields()) {
+				try {
+					ret.add( fieldName + "." + field.getName() );
+				} catch (IllegalArgumentException e) {
+				}
+			}
+		}
+		return ret;
+	}
+	
 	public <T> Map<String, T> asFlatMap(Function<Object, T> convertor) {
 		LinkedHashMap<String, T> map = new LinkedHashMap<String, T>();
 
@@ -567,6 +605,21 @@ public class MetadataInfo {
 		return map;
 	}
 
+	public void  fromFlatMap(Map<String, Object> map, Function<Object, Object> convertor) {
+		for (String fieldName : keys()) {
+			if(map.containsKey(fieldName)){
+				set(fieldName, convertor.apply(map.get(fieldName)));
+			}
+		}
+	}
+
+	public void copyFrom(MetadataInfo other){
+		for (String fieldName : keys()) {
+			set(fieldName, other.get(fieldName));
+		}
+		
+	}
+	
 	public String toYAML() {
 		DumperOptions options = new DumperOptions();
 		// options.setCanonical(true);
@@ -577,5 +630,73 @@ public class MetadataInfo {
 		Yaml yaml = new Yaml(options);
 		return yaml.dump(asFlatMap());
 	}
+
+	public void fromYAML(String yamlString) {
+		Yaml yaml = new Yaml();
+		Map<String, Object> map = (Map<String, Object>) yaml.load(yamlString);
+		fromFlatMap(map, new Function<Object, Object>() {
+			@Override
+			public Object apply(Object t) {
+				if(t instanceof Date){
+					  Calendar cal = Calendar.getInstance();
+					  cal.setTime((Date)t);
+					  return cal;				
+				}
+				return t;
+			}
+		});
+	}
+	
+	public static MetadataInfo getSampleMetadata(){
+		MetadataInfo md = new MetadataInfo();
+		// Spec is at : http://partners.adobe.com/public/developer/en/xmp/sdk/XMPspecification.pdf
+		md.basic.title = "Dracula"; 
+		md.basic.author = "Bram Stoker";
+		md.basic.subject = "Horror tales, Epistolary fiction, Gothic fiction (Literary genre), Vampires -- Fiction, Dracula, Count (Fictitious character) -- Fiction, Transylvania (Romania) -- Fiction, Whitby (England) -- Fiction"; 
+		md.basic.keywords = "Horror, Gothic, Vampires";
+		md.basic.creator = "Adobe InDesign CS4 (6.0.6)";
+		md.basic.producer = "Adobe PDF Library 9.0";
+		md.basic.creationDate = Calendar.getInstance();
+		md.basic.modificationDate = Calendar.getInstance(); 
+		md.basic.trapped = "True";
+
+		md.xmpBasic.creatorTool = "Adobe InDesign CS4 (6.0.6)";
+		md.xmpBasic.createDate = md.basic.creationDate;
+		md.xmpBasic.modifyDate = md.basic.modificationDate;
+		md.xmpBasic.title = md.basic.title;
+		md.xmpBasic.baseURL = "https://www.gutenberg.org/";
+		md.xmpBasic.rating = 3; 
+		md.xmpBasic.label = "Horror Fiction Collection";
+		md.xmpBasic.nickname = "dracula";
+		md.xmpBasic.identifiers = Arrays.asList("Dracula_original_edition");
+		//md.xmpBasic.advisories ; 
+		md.xmpBasic.metadataDate = Calendar.getInstance();
+
+		md.xmpPdf.pdfVersion = "1.5"; 
+		md.xmpPdf.keywords = md.basic.keywords;
+		md.xmpPdf.producer = "Adobe PDF Library 9.0";
+
+		md.xmpDc.title = md.basic.title;
+		md.xmpDc.description = "The famous Bram Stocker book"; 
+		md.xmpDc.creators = new ArrayList<String>();
+		md.xmpDc.creators.add("Bram Stocker");
+		md.xmpDc.subjects = Arrays.asList(md.basic.subject.split("\\s*,\\s*"));
+		
+		/*
+		md.xmpDc.contributors;
+		md.xmpDc.coverage 
+		md.xmpDc.dates = 
+		md.xmpDc.format = 
+		md.xmpDc.identifier = 
+		md.xmpDc.languages = 
+		md.xmpDc.publishers = 
+		md.xmpDc.relationships = 
+		md.xmpDc.rights = 
+		md.xmpDc.source = 
+		md.xmpDc.types = 
+		*/
+		return md;
+	}
+
 
 }

@@ -1,3 +1,4 @@
+package pmedit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,6 +63,8 @@ public class TemplateString {
 	
 	public void parse(){
 		entityList = new ArrayList<Entity>();
+		if (template == null)
+			return;
 		int idx = 0;
 		while(true){
 			int openIdx = template.indexOf("{", idx);
