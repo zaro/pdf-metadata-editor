@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<izpack:installation version="5.0"
+	xmlns:izpack="http://izpack.org/schema/installation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://izpack.org/schema/installation http://izpack.org/schema/5.0/izpack-installation-5.0.xsd">
+
+
+	<info>
+		<appname>Pdf Metadata Editor</appname>
+		<appversion>1.0.0</appversion>
+		<appsubpath>PdfMetadataEditor</appsubpath>
+		<uninstaller write="yes" />
+		<javaversion>1.6</javaversion>
+		<run-privileged uninstaller="yes" condition="izpack.windowsinstall" />
+	</info>
+
+	<guiprefs resizable="yes" width="640" height="480">
+		<modifier key="useHeadingPanel" value="yes" />
+	</guiprefs>
+
+	<locale>
+		<langpack iso3="eng" />
+	</locale>
+
+	<variables>
+		<variable name="javaArchitecture" value="${SYSTEM[os.arch]}" />
+	</variables>
+	<conditions>
+		<condition type="variable" id="java_64bit">
+			<name>javaArchitecture</name>
+			<value>amd64</value>
+		</condition>
+	</conditions>
+	<panels>
+		<panel classname="CheckedHelloPanel" />
+		<panel classname="TargetPanel" />
+		<panel classname="InstallPanel" />
+		<panel classname="ShortcutPanel" id="shortcutpanel" />
+		<panel classname="SimpleFinishPanel" />
+	</panels>
+
+	<resources>
+		<res src="windows_shortcuts.xml" id="shortcutSpec.xml" />
+		<res src="unix_shortcuts.xml" id="Unix_shortcutSpec.xml" />
+	</resources>
+
+	<packs>
+		<pack name="Core files" required="yes" id="pack.core">
+			<description>Pdf Metadata Editor</description>
+			<fileset dir="@{staging.dir}" override="true">
+				<include name="pdf-metadata-edit-*.jar" />
+			</fileset>
+			<fileset dir="@{staging.dir}" override="true">
+				<include name="PdfMetadataEditor.ini" />
+				<os family="windows" />
+			</fileset>
+			<singlefile src="PdfMetadataEditor.exe" target="$INSTALL_PATH/PdfMetadataEditor.exe" override="true" condition="!java_64bit">
+				<os family="windows" />
+			</singlefile>
+			<singlefile src="PdfMetadataEditor64.exe" target="$INSTALL_PATH/PdfMetadataEditor.exe" override="true" condition="java_64bit">
+				<os family="windows" />
+			</singlefile>
+			<fileset dir="@{staging.dir}" override="true">
+				<include name="pdf-metadata-edit" />
+				<include name="pdf-metadata-edit.png" />
+				<os family="unix" />
+			</fileset>
+			<executable targetfile="$INSTALL_PATH/pdf-metadata-edit">
+				<os family="unix" />
+			</executable>
+		</pack>
+		<pack name="Explorer Integration" required="no"
+			id="pack.exprorerIntegration">
+			<description>Explorer Right click menu entry</description>
+		</pack>
+	</packs>
+
+	<natives>
+		<native type="izpack" name="ShellLink.dll" />
+		<native type="izpack" name="ShellLink_x64.dll" />
+		<native type="3rdparty" name="COIOSHelper.dll" stage="both">
+			<os family="windows" />
+		</native>
+		<native type="3rdparty" name="COIOSHelper_x64.dll" stage="both">
+			<os family="windows" />
+		</native>
+	</natives>
+
+	<listeners>
+		<listener classname="RegistryInstallerListener" stage="install">
+			<os family="windows" />
+		</listener>
+		<listener classname="RegistryUninstallerListener" stage="uninstall">
+			<os family="windows" />
+		</listener>
+
+	</listeners>
+</izpack:installation>

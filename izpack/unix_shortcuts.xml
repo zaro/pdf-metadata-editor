@@ -1,0 +1,12 @@
+<shortcuts>
+	<skipIfNotSupported />
+	<programGroup defaultName="Pdf Metadata Editor" location="applications" />
+	<shortcut name="Pdf Metadata Editor" target="$INSTALL_PATH/pdf-metadata-edit"
+		commandLine="" workingDirectory="$INSTALL_PATH" description="Open Pdf Metadata Editor"
+		iconFile="$INSTALL_PATH/pdf-metadata-edit.png" iconIndex="0"
+		programGroup="yes" desktop="no" applications="no" startMenu="no"
+		startup="no" terminal="false" type="Application" encoding="UTF-8">
+
+		<createForPack name="Core files" />
+	</shortcut>
+</shortcuts>

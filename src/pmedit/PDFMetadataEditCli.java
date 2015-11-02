@@ -16,11 +16,27 @@ import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import java.util.Properties;
 // Unifinshed attemp for a coomand line tool :)
 
-public class PDFMetadataEdit {
+public class PDFMetadataEditCli {
 
 	/**
 	 * @param args
 	 */
+	
+	public static void dump(String file){
+		MetadataInfo md = new MetadataInfo();
+		try{
+			md.loadFromPDF(new File(file));
+			System.out.print(md.toYAML());
+		} catch (Exception e) {
+			System.err.println("Failed to parse: " + file);
+			System.err.println(e.toString());
+			System.exit(1);
+		}
+	}
+	
+	public static void rename(String[] files){
+		
+	}
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		if (args.length < 2) {
@@ -30,16 +46,7 @@ public class PDFMetadataEdit {
 			System.exit(1);
 		}
 		if (args[0].equals("dump")) {
-			System.out.println("Parsing document" + args[1]);
-			MetadataInfo md = new MetadataInfo();
-			try{
-				md.loadFromPDF(new File(args[1]));
-				System.out.print(md.toYAML());
-			} catch (Exception e) {
-				System.out.println("Failed to parse: " + args[1]);
-				System.out.println(e.toString());
-				System.exit(1);
-			}
+			dump(args[1]);
 		}
 		if (args[0].equals("rename")) {
 			String template = args[1];

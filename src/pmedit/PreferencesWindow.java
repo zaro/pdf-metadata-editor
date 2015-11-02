@@ -21,6 +21,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.JTextComponent;
 
 import java.awt.Color;
+import java.awt.Dimension;
 
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -34,6 +35,7 @@ import java.awt.SystemColor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.concurrent.Callable;
 import java.util.prefs.Preferences;
 
 import javax.swing.UIManager;
@@ -46,9 +48,16 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import javax.swing.JButton;
 import javax.swing.ImageIcon;
+import javax.swing.JRadioButton;
+import javax.swing.ButtonGroup;
+import javax.swing.border.EtchedBorder;
+import javax.swing.event.HyperlinkListener;
+import javax.swing.event.HyperlinkEvent;
 
 public class PreferencesWindow extends JDialog {
 
@@ -58,8 +67,13 @@ public class PreferencesWindow extends JDialog {
 	public boolean copyBasicToXmp;
 	public boolean copyXmpToBasic;
 	public String  renameTemplate;
+	public String  defaultSaveAction;
 	MetadataInfo defaultMetadata;
 	final Preferences prefs;
+	
+	Runnable onSave;
+	
+	protected boolean isWindows;
 
 	/**
 	 * Launch the application.
@@ -70,6 +84,7 @@ public class PreferencesWindow extends JDialog {
 				try {
 					PreferencesWindow frame = new PreferencesWindow(Preferences.userRoot().node("PDFMetadataEditor"), null);
 					frame.setVisible(true);
+					frame.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -77,14 +92,18 @@ public class PreferencesWindow extends JDialog {
 		});
 	}
 
+	/**
+	 * @wbp.parser.constructor
+	 */
 	public PreferencesWindow(final Preferences prefs,MetadataInfo defaultMetadata) {
 		this(prefs, defaultMetadata, null);
 	}
 	/**
 	 * Create the frame.
 	 */
-	public PreferencesWindow(final Preferences prefs,MetadataInfo defaultMetadata, Frame owner) {
+	public PreferencesWindow(final Preferences prefs,MetadataInfo defaultMetadata, final Frame owner) {
 		super(owner, true);
+		isWindows = System.getProperty("os.name").startsWith("Windows");
 		this.prefs = prefs;
 		if(defaultMetadata != null){
 			this.defaultMetadata =  defaultMetadata;
@@ -95,15 +114,19 @@ public class PreferencesWindow extends JDialog {
 			@Override
 			public void windowClosing(WindowEvent arg0) {
 				save();
+				if(onSave != null){
+					onSave.run();
+				}
 			}
 		});
 		setTitle("Preferences");
 		setBounds(100, 100, 640, 480);
+		setMinimumSize(new Dimension(640, 480));
 		contentPane = new JPanel();
 		setContentPane(contentPane);
-		contentPane.setLayout(new MigLayout("", "[grow,fill][]", "[grow,fill][][]"));
+		contentPane.setLayout(new MigLayout("", "[grow][]", "[grow][][]"));
 		
-		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.LEFT);
+		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		contentPane.add(tabbedPane, "cell 0 0 2 1,grow");
 		
 		JPanel panelGeneral = new JPanel();
@@ -139,7 +162,7 @@ public class PreferencesWindow extends JDialog {
 		});
 		panel_1.add(onsaveCopyXmpTo, "cell 0 1");
 		onsaveCopyXmpTo.setSelected(false);
-		panelGeneral.add(panel_1, "cell 0 0,alignx left,aligny top");
+		panelGeneral.add(panel_1, "flowx,cell 0 0,alignx left,aligny top");
 
 		onsaveCopyXmpTo.setSelected(prefs.getBoolean("onsaveCopyXmpTo", false));
 		onsaveCopyBasicTo.setSelected(prefs.getBoolean("onsaveCopyBasicTo",
@@ -176,6 +199,46 @@ public class PreferencesWindow extends JDialog {
 		comboBox.setEditable(true);
 		comboBox.setModel(new DefaultComboBoxModel(new String[] {"", "{basic.author} - {basic.title}.pdf", "{basic.author} - {basic.creationDate}.pdf"}));
 		panel.add(comboBox, "cell 0 0,growx");
+		
+		JPanel saveActionPanel = new JPanel();
+		saveActionPanel.setBorder(new TitledBorder(null, "Default save action", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		panelGeneral.add(saveActionPanel, "cell 0 0");
+		saveActionPanel.setLayout(new MigLayout("", "[][]", "[][]"));
+		
+		final JRadioButton rdbtnSave = new JRadioButton("Save");
+		
+		buttonGroup.add(rdbtnSave);
+		saveActionPanel.add(rdbtnSave, "flowy,cell 0 0,alignx left,aligny top");
+		
+		final JRadioButton rdbtnSaveAndRename = new JRadioButton("Save & rename");
+		rdbtnSaveAndRename.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+			}
+		});
+		buttonGroup.add(rdbtnSaveAndRename);
+
+		final JRadioButton rdbtnSaveAs = new JRadioButton("Save as ...");
+		buttonGroup.add(rdbtnSaveAs);
+
+		ActionListener onDefaultSaveAction = new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(rdbtnSave.isSelected()){
+					defaultSaveAction = "save";
+				} else  if(rdbtnSaveAndRename.isSelected()) {
+					defaultSaveAction = "saveRename";
+					
+				} else  if(rdbtnSaveAs.isSelected()){
+					defaultSaveAction = "saveAs";
+				}
+			}
+		}; 
+		rdbtnSave.addActionListener(onDefaultSaveAction);
+		rdbtnSaveAndRename.addActionListener(onDefaultSaveAction);
+		rdbtnSaveAs.addActionListener(onDefaultSaveAction);
+
+		saveActionPanel.add(rdbtnSaveAndRename, "cell 0 0,alignx left,aligny top");
+		
+		saveActionPanel.add(rdbtnSaveAs, "cell 1 0,aligny top");
 		final JTextComponent tcA = (JTextComponent) comboBox.getEditor().getEditorComponent();
 		tcA.getDocument().addDocumentListener(new DocumentListener() {
 			@Override
@@ -192,7 +255,14 @@ public class PreferencesWindow extends JDialog {
 				showPreview((String)comboBox.getEditor().getItem());
 			} 
 		});
-
+		String defaultSaveAction = prefs.get("defaultSaveAction", "save");
+		if( defaultSaveAction.equals("saveRename")) {
+			rdbtnSaveAndRename.setSelected(true);
+		} else if( defaultSaveAction.equals("saveAs")) {
+				rdbtnSaveAndRename.setSelected(true);
+		} else {
+			rdbtnSave.setSelected(true);
+		}
 		
 		JPanel panelDefaults = new JPanel();
 		tabbedPane.addTab("Defaults", null, panelDefaults, null);
@@ -208,13 +278,79 @@ public class PreferencesWindow extends JDialog {
 		defaultMetadataPane = new MetadataEditPane();
 		panelDefaults.add(defaultMetadataPane.tabbedaPane, "cell 0 1,grow");
 		
+		JPanel panelOsIntegration = new JPanel();
+		tabbedPane.addTab("Os Integration", null, panelOsIntegration, null);
+		panelOsIntegration.setLayout(new MigLayout("", "[grow]", "[grow]"));
+		
+		JPanel panel_2 = new JPanel();
+		panel_2.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Explorer context menu (Windows only)", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		panelOsIntegration.add(panel_2, "cell 0 0,grow");
+		panel_2.setLayout(new MigLayout("", "[][]", "[growprio 50,grow][growprio 50,grow]"));
+		
+		JButton btnRegister = new JButton("Add to context menu");
+		btnRegister.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					WindowsRegisterContextMenu.register();
+				} catch (Exception e1) {
+//					StringWriter sw = new StringWriter();
+//					PrintWriter pw = new PrintWriter(sw);
+//					e1.printStackTrace(pw);
+//					JOptionPane.showMessageDialog(owner,
+//							"Failed to register context menu:\n" + e1.toString() +"\n" +sw.toString());
+					JOptionPane.showMessageDialog(owner,
+					"Failed to register context menu:\n" + e1.toString());
+					e1.printStackTrace();
+				}
+
+			}
+		});
+		panel_2.add(btnRegister, "cell 0 0,growx,aligny center");
+		
+		JButton btnUnregister = new JButton("Remove from context menu");
+		btnUnregister.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				WindowsRegisterContextMenu.unregister();
+			}
+		});
+		
+		JLabel lblNewLabel_1 = new JLabel("");
+		lblNewLabel_1.setIcon(new ImageIcon(PreferencesWindow.class.getResource("/pmedit/os_integration_hint.png")));
+		panel_2.add(lblNewLabel_1, "cell 1 0 1 2");
+		
+		panel_2.add(btnUnregister, "cell 0 1,growx,aligny center");
+		
+		btnRegister.setEnabled(isWindows);
+		btnUnregister.setEnabled(isWindows);
+
 		JScrollPane scrollPane_1 = new JScrollPane();
 		tabbedPane.addTab("About", null, scrollPane_1, null);
 		
 		JTextPane txtpnDf = new JTextPane();
+		txtpnDf.addHyperlinkListener(new HyperlinkListener() {
+			public void hyperlinkUpdate(HyperlinkEvent e) {
+				if( e.getEventType() != HyperlinkEvent.EventType.ACTIVATED) {
+					return;
+				}
+		        if( !java.awt.Desktop.isDesktopSupported() ) {
+		        	return;
+		        }   
+		        java.awt.Desktop desktop = java.awt.Desktop.getDesktop();
+		        if( !desktop.isSupported( java.awt.Desktop.Action.BROWSE ) ) {
+		        	return;
+		        }
+	        
+	            try {
+	                java.net.URI uri = e.getURL().toURI();
+	                desktop.browse( uri );
+	            }catch(Exception e1){
+	            	
+	            }
+			}
+		});
 		txtpnDf.setContentType("text/html");
 		txtpnDf.setEditable(false);
-		txtpnDf.setText("<h1 align=center>PDF Metadata editor</h1>\n\n<p align=center><a href=\"http://zaro.github.io\">http://zaro.github.io</a></p>");
+		txtpnDf.setText("<h1 align=center>PDF Metadata editor</h1>\n\n<p align=center><a href=\"http://broken-by.me/pdf-metadata-editor/\">http://broken-by.me/pdf-metadata-editor/</a></p>\n<br>\n<p>This progam is free for use but <a href=\"http://broken-by.me/pdf-metadata-editor/#donate\">donations</a> are always welcome:)</p>\n<br>\n<p>For support & questions write to <b>zarrro@gmail.com</b></p>");
 		scrollPane_1.setViewportView(txtpnDf);
 		
 		JButton btnClose = new JButton("Close");
@@ -241,6 +377,10 @@ public class PreferencesWindow extends JDialog {
 			prefs.remove("renameTemplate");
 		defaultMetadataPane.copyToMetadata(defaultMetadata);
 		prefs.put("defaultMetadata", defaultMetadata.toYAML());
+		
+		prefs.put("defaultSaveAction", defaultSaveAction);
+		if (onSave != null)
+			onSave.run();
 	}
 	
 	public void load() {
@@ -251,6 +391,7 @@ public class PreferencesWindow extends JDialog {
 		if(defaultMetadataYAML != null && defaultMetadataYAML.length() > 0) {
 			defaultMetadata.fromYAML(defaultMetadataYAML);
 		}
+		defaultSaveAction = prefs.get("defaultSaveAction", "save");
 	}
 	
 	public void refresh() {
@@ -270,12 +411,16 @@ public class PreferencesWindow extends JDialog {
 		getPreviewLabel().setText("Preview:" + ts.process(MetadataInfo.getSampleMetadata()));
 	}
 	
+	public void onSaveAction(Runnable newAction){
+		onSave = newAction;
+	}
 	
 	private String desc = "";
 	private JLabel lblNewLabel;
 	private JComboBox comboBox;
 	private JCheckBox onsaveCopyBasicTo;
 	private JCheckBox onsaveCopyXmpTo;
+	private final ButtonGroup buttonGroup = new ButtonGroup();
 	protected JLabel getPreviewLabel() {
 		return lblNewLabel;
 	}

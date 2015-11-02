@@ -1,0 +1,6 @@
+#!/bin/bash
+
+THIS_DIR=$(cd "$(dirname "$0")"; pwd)
+JAR_FILE=$(cd "$THIS_DIR"; for i in pdf-metadata-edit*.jar; do [ -e $i ] && echo $i; done | sort -r -g | head -n1)
+
+exec java -jar "$THIS_DIR/$JAR_FILE" "$@"

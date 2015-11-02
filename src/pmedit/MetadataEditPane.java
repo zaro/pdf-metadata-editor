@@ -178,13 +178,15 @@ public class MetadataEditPane {
 		basicMetaPanel.add(lblCreationDate, "cell 0 6,alignx trailing");
 
 		basicCreationDate = new JDateChooser();
-		basicMetaPanel.add(basicCreationDate, "cell 1 6");
+		basicCreationDate.setDateFormatString("yyyy-MM-dd HH:mm:ss");
+		basicMetaPanel.add(basicCreationDate, "cell 1 6,alignx left");
 
 		JLabel lblModificationDate = new JLabel("Modification Date");
 		basicMetaPanel.add(lblModificationDate, "cell 0 7,alignx trailing");
 
 		basicModificationDate = new JDateChooser();
-		basicMetaPanel.add(basicModificationDate, "cell 1 7");
+		basicModificationDate.setDateFormatString("yyyy-MM-dd HH:mm:ss");
+		basicMetaPanel.add(basicModificationDate, "cell 1 7,alignx left");
 
 		JLabel lblTrapped = new JLabel("Trapped");
 		basicMetaPanel.add(lblTrapped, "cell 0 8,alignx trailing");
@@ -215,12 +217,14 @@ public class MetadataEditPane {
 		xmlBasicMetaPanel.add(lblCreateDate, "cell 0 1,alignx trailing");
 
 		xmpBasicCreateDate = new JDateChooser();
+		xmpBasicCreateDate.setDateFormatString("yyyy-MM-dd HH:mm:ss");
 		xmlBasicMetaPanel.add(xmpBasicCreateDate, "cell 1 1");
 
 		JLabel lblModifyDate = new JLabel("Modify Date");
 		xmlBasicMetaPanel.add(lblModifyDate, "cell 0 2,alignx trailing");
 
 		xmpBasicModifyDate = new JDateChooser();
+		xmpBasicModifyDate.setDateFormatString("yyyy-MM-dd HH:mm:ss");
 		xmlBasicMetaPanel.add(xmpBasicModifyDate, "cell 1 2");
 
 		JLabel lblTitle_1 = new JLabel("Title");
@@ -275,6 +279,7 @@ public class MetadataEditPane {
 		xmlBasicMetaPanel.add(lblMetadataDate, "cell 0 10,alignx trailing");
 
 		xmpBasicMetadataDate = new JDateChooser();
+		xmpBasicMetadataDate.setDateFormatString("yyyy-MM-dd HH:mm:ss");
 		xmlBasicMetaPanel.add(xmpBasicMetadataDate, "cell 1 10");
 
 		JScrollPane xmpPdfScrollpane = new JScrollPane();
