@@ -3,21 +3,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.function.Function;
 
-import javax.swing.JOptionPane;
 import javax.xml.transform.TransformerException;
 
 import org.apache.jempbox.xmp.XMPMetadata;
@@ -29,14 +25,15 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
-import org.apache.pdfbox.util.StringUtil;
 import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.DumperOptions.FlowStyle;
-import org.yaml.snakeyaml.DumperOptions.ScalarStyle;
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.DumperOptions.LineBreak;
 
 public class MetadataInfo {
+
+	// Copy of java.util.functions.Function from Java8
+	public interface Function<T, R> {
+	    R apply(T t);
+	}
 
 	public static class Basic {
 		public String title;
@@ -88,10 +85,18 @@ public class MetadataInfo {
 		public List<String> types;
 	};
 
-	public Basic basic = new Basic();
-	public XmpBasic xmpBasic = new XmpBasic();
-	public XmpPdf xmpPdf = new XmpPdf();
-	public XmpDublinCore xmpDc = new XmpDublinCore();
+	public Basic basic ;
+	public XmpBasic xmpBasic ;
+	public XmpPdf xmpPdf ;
+	public XmpDublinCore xmpDc;
+
+	public MetadataInfo() {
+		super();
+		this.basic =  new Basic();
+		this.xmpBasic = new XmpBasic();
+		this.xmpPdf = new XmpPdf();
+		this.xmpDc  = new XmpDublinCore();
+	}
 
 	public void loadFromPDF(PDDocument document) throws IOException {
 		PDDocumentInformation info = document.getDocumentInformation();
@@ -617,9 +622,16 @@ public class MetadataInfo {
 		for (String fieldName : keys()) {
 			set(fieldName, other.get(fieldName));
 		}
-		
 	}
 	
+	public void copyUnset(MetadataInfo other){
+		for (String fieldName : keys()) {
+			Object o = get(fieldName);
+			if( o == null){
+				set(fieldName, other.get(fieldName));
+			}
+		}		
+	}
 	public String toYAML() {
 		DumperOptions options = new DumperOptions();
 		// options.setCanonical(true);

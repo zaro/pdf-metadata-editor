@@ -72,12 +72,12 @@ public class PDFMetadataEditWindow {
 		public void apply(Object field, FieldID anno);
 	}
 
-	final JFileChooser fc = new JFileChooser();
+	final JFileChooser fc;
 
 	private File pdfFile;
 	private PDDocument document;
 	private MetadataInfo metadataInfo;
-	private MetadataInfo defaultMetadata = new MetadataInfo();
+	private MetadataInfo defaultMetadata;
 
 	private JTextField filename;
 
@@ -127,6 +127,8 @@ public class PDFMetadataEditWindow {
 	 * Create the application.
 	 */
 	public PDFMetadataEditWindow(String filePath) {
+		fc = new JFileChooser();
+		defaultMetadata = new MetadataInfo();
 		initialize();
 		PdfFilter pdfFilter = new PdfFilter();
 		fc.addChoosableFileFilter(pdfFilter);
@@ -167,6 +169,7 @@ public class PDFMetadataEditWindow {
 			metadataInfo = new MetadataInfo();
 			metadataInfo.copyFrom(defaultMetadata);
 			metadataInfo.loadFromPDF(document);
+			metadataInfo.copyUnset(defaultMetadata);
 
 			metadataEditor.fillFromMetadata(metadataInfo);
 		} catch (Exception e) {

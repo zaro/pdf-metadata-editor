@@ -1,14 +1,9 @@
 package pmedit;
 
-import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Frame;
-import java.awt.Rectangle;
-
-import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
 import javax.swing.JTabbedPane;
 
 import net.miginfocom.swing.MigLayout;
@@ -26,16 +21,7 @@ import java.awt.Dimension;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JTextField;
 import javax.swing.JTextArea;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
-
-import java.awt.SystemColor;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.concurrent.Callable;
 import java.util.prefs.Preferences;
 
 import javax.swing.UIManager;
@@ -48,9 +34,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
 import javax.swing.JButton;
 import javax.swing.ImageIcon;
 import javax.swing.JRadioButton;

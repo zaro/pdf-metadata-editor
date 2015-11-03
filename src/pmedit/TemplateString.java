@@ -120,7 +120,11 @@ public class TemplateString {
 					chunks.set(i, "");
 			}
 		}
-		return String.join("", chunks);
+		StringBuilder result = new StringBuilder();
+		for(String chunk:chunks){
+			result.append(chunk);
+		}
+		return result.toString();
 	}
 
 }
