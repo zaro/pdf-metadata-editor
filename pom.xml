@@ -134,7 +134,7 @@
 					<baseDir>${staging.dir}</baseDir>
 					<mkdirs>true</mkdirs>
 					<outputDirectory>${project.build.directory}/izpack</outputDirectory>
-					<finalName>pdf-metadata-edit-${version}-installer</finalName>
+					<finalName>pdf-metadata-edit-${project.version}-installer</finalName>
 					<autoIncludeUrl>true</autoIncludeUrl>
 					<autoIncludeDevelopers>true</autoIncludeDevelopers>
 					<comprLevel>9</comprLevel>
@@ -152,7 +152,7 @@
 
 			<plugin>
 				<artifactId>maven-resources-plugin</artifactId>
-				<version>2.4.2</version>
+				<version>2.7</version>
 				<executions>
 					<execution>
 						<id>copy-resources</id>
@@ -172,6 +172,23 @@
 								</resource>
 							</resources>
 						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<descriptor>izpack/assembly-zip.xml</descriptor>
+					<finalName>pdf-metadata-edit-${project.version}</finalName>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>
