@@ -69,10 +69,6 @@
 				<os family="unix" />
 			</executable>
 		</pack>
-		<pack name="Explorer Integration" required="no"
-			id="pack.exprorerIntegration">
-			<description>Explorer Right click menu entry</description>
-		</pack>
 	</packs>
 
 	<natives>
