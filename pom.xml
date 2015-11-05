@@ -23,6 +23,8 @@
 	<properties>
 		<staging.dir>${project.build.directory}</staging.dir>
 		<izpack.dir.app>${project.build.directory}/izpack</izpack.dir.app>
+    <version.template.file>src/pmedit/Version.java.template</version.template.file>
+	<version.file>src/pmedit/Version.java</version.file>		
 	</properties>
 
 	<build>
@@ -104,6 +106,30 @@
 				</executions>
 			</plugin>
 
+			<plugin>
+				<groupId>com.google.code.maven-replacer-plugin</groupId>
+				<artifactId>maven-replacer-plugin</artifactId>
+				<version>1.4.0</version>
+				<executions>
+					<execution>
+						<phase>process-sources</phase>
+						<goals>
+							<goal>replace</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<file>${version.template.file}</file>
+					<outputFile>${version.file}</outputFile>
+					<replacements>
+						<replacement>
+							<token>@version@</token>
+							<value>${project.version}</value>
+						</replacement>
+					</replacements>
+				</configuration>
+			</plugin>
+			
 			<plugin>
 				<groupId>sh.tak.appbundler</groupId>
 				<artifactId>appbundle-maven-plugin</artifactId>
@@ -232,5 +258,16 @@
 			<artifactId>jna-platform</artifactId>
 			<version>4.2.1</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpasyncclient</artifactId>
+			<version>4.1</version>
+		</dependency>
+
 	</dependencies>
 </project>

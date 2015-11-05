@@ -62,6 +62,8 @@ import java.awt.Color;
 
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.plaf.basic.BasicArrowButton;
 
 import java.awt.FlowLayout;
@@ -107,7 +109,7 @@ public class PDFMetadataEditWindow {
 		// } catch (IllegalAccessException e1) {
 		// } catch (UnsupportedLookAndFeelException e1) {
 		// }
-		EventQueue.invokeLater(new Runnable() {
+		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				try {
 					PDFMetadataEditWindow window = new PDFMetadataEditWindow(f);
@@ -376,18 +378,25 @@ public class PDFMetadataEditWindow {
 				}
 			}
 		};
-		
+		updateSaveButton.run();
+
 		btnPreferences.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (preferencesWindow == null){
-					preferencesWindow = new PreferencesWindow(prefs, defaultMetadata, frmPdfMetadataEditor);
-					preferencesWindow.onSaveAction(updateSaveButton);
-				}
-				preferencesWindow.setVisible(true);
+				SwingUtilities.invokeLater(new Runnable() {
+
+					@Override
+					public void run() {
+						if (preferencesWindow == null){
+							preferencesWindow = new PreferencesWindow(prefs, defaultMetadata, frmPdfMetadataEditor);
+							preferencesWindow.onSaveAction(updateSaveButton);
+						}
+						preferencesWindow.setVisible(true);
+					}
+				});
+
 			}
 		});
 
-		updateSaveButton.run();
 	}
 
 	public MetadataEditPane createMetadataEditor() {
