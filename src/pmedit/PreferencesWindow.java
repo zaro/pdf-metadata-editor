@@ -429,22 +429,34 @@ public class PreferencesWindow extends JDialog {
 		refresh();
 		contentPane.doLayout();
 
-		showUpdatesStatus(status);
+		if( status.isDone() ){
+			showUpdatesStatus(status);
+		} else {
+			(new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					showUpdatesStatus(status);					
+				}
+			})).start();
+		}
+
 	}
 
 	private Future<HttpResponse> checkForUpdates() {
 		CloseableHttpAsyncClient httpclient = HttpAsyncClients.createDefault();
 		httpclient.start();
 		HttpHead request = new HttpHead("http://broken-by.me/download/pdf-metadata-editor/");
-		// HttpHead request = new HttpHead("http://localhost:1337/");
 		Future<HttpResponse> future = httpclient.execute(request, null);
 		return future;
 	}
+
 
 	private void showUpdatesStatus(Future<HttpResponse> status) {
 		String versionMsg = "<h3 align=center>Cannot get version information </h3>";
 		try {
 			HttpResponse response = status.get();
+			updateStatusLabel.setText("");
 			String file = null;
 			for (Header header : response.getHeaders("Content-Disposition")) {
 				Matcher matcher = Pattern.compile("filename=\"([^\"]+)\"").matcher(header.getValue());
@@ -462,7 +474,6 @@ public class PreferencesWindow extends JDialog {
 					updateStatusLabel.setText("Newer version available:"+ latest.getAsString());
 				} else {
 					versionMsg = "<h3 align=center>Version " + latest.getAsString() + " is the latest version</h3>";
-					updateStatusLabel.setText("");
 				}
 			}
 		} catch (InterruptedException e1) {
