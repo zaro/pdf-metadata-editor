@@ -7,7 +7,7 @@
 
 	<info>
 		<appname>Pdf Metadata Editor</appname>
-		<appversion>1.1.1</appversion>
+		<appversion>1.1.2</appversion>
 		<appsubpath>PdfMetadataEditor</appsubpath>
 		<uninstaller write="yes" />
 		<javaversion>1.6</javaversion>

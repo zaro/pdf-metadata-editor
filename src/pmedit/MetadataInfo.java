@@ -228,12 +228,16 @@ public class MetadataInfo {
 			}
 		}
 		bi.setBaseURL(xmpBasic.baseURL);
+
 		if (xmpBasic.createDate != null) {
+			bi.setCreateDate(null); //Workaround for some PDFs where date is not saved
 			bi.setCreateDate(xmpBasic.createDate);
 		}
 		if (xmpBasic.modifyDate != null) {
+			bi.setModifyDate(null); //Workaround for some PDFs where date is not saved
 			bi.setModifyDate(xmpBasic.modifyDate);
 		}
+
 		bi.setCreatorTool(xmpBasic.creatorTool);
 		if (bi.getIdentifiers() != null) {
 			for (String i : bi.getIdentifiers()) {
@@ -247,6 +251,7 @@ public class MetadataInfo {
 		}
 		bi.setLabel(xmpBasic.label);
 		if (xmpBasic.metadataDate != null) {
+			bi.setMetadataDate(null); //Workaround for some PDFs where date is not saved
 			bi.setMetadataDate(xmpBasic.metadataDate);
 		}
 		bi.setNickname(xmpBasic.nickname);
@@ -349,10 +354,11 @@ public class MetadataInfo {
 		dc.setDescription(xmpDc.description);
 		// xmpDcDates.setText(itemListToText(dc.getDates(),","));
 
+		//System.out.println(new String(xmp.asByteArray()));
 		// Do the save
 		PDMetadata metadataStream = new PDMetadata(document);
 		try {
-			metadataStream.importXMPMetadata(xmp);
+			metadataStream.importXMPMetadata(xmp.asByteArray());
 		} catch (TransformerException e) {
 			throw new Exception("Failed to save document:" + e.getMessage());
 		}

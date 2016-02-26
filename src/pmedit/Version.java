@@ -3,7 +3,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Version {
-    public static final String version="1.1.1";
+    public static final String version="1.1.2";
     public static class VersionTuple {
     	public int major;
     	public int minor;
