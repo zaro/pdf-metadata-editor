@@ -1,15 +1,13 @@
 package pmedit;
 
 import java.io.File;
-import java.lang.management.ManagementFactory;
 import java.net.URISyntaxException;
-
-import javax.swing.JOptionPane;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import com.sun.jna.platform.win32.Advapi32Util;
-import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.WinReg;
-import com.sun.jna.win32.W32APIFunctionMapper;
 
 public class WindowsRegisterContextMenu {
 
@@ -29,8 +27,20 @@ public class WindowsRegisterContextMenu {
 		return pdfFileType;
 	}
 	
-	public static String shellKey(String pdfFileType){
+	public static String applicationKey(){
+		return "SOFTWARE\\Classes\\PdfMetadataEditor";
+	}
+	
+	public static String editCmdShellKey(String pdfFileType){
 		return "SOFTWARE\\Classes\\" + pdfFileType + "\\shell\\Pdf metadata edit";		
+	}
+
+	public static String batchMenuShellKey(String pdfFileType){
+		return "SOFTWARE\\Classes\\" + pdfFileType + "\\shell\\PME.Batch.Menu";		
+	}
+
+	public static String batchCmdShellKey(String pdfFileType){
+		return "SOFTWARE\\Classes\\" + pdfFileType + "\\Batch.Menu\\shell";		
 	}
 	
 	public static void createRegistryKey(String keyToCreate){
@@ -51,18 +61,17 @@ public class WindowsRegisterContextMenu {
 		String current = "";
 		for(String key: keys){
 			current += key;
-			System.out.printf("\nCheck key: %s : ", current);
+			//System.out.printf("\nCheck key: %s : ", current);
 			if(!Advapi32Util.registryKeyExists(root, current)){
-				System.out.printf("false\n");
+				//System.out.printf("false\n");
 				return false;
 			}
 			current += "\\";
 		}
 		current = current.substring(0,current.length()-1);
-		System.out.printf("\nCheck key: %s\n", Advapi32Util.registryValueExists(root, current, ""));
+		//System.out.printf("\nCheck key: %s\n", Advapi32Util.registryValueExists(root, current, ""));
 		return Advapi32Util.registryValueExists(root, current,"");
 	}
-
 
 	public static void register() throws Exception{
 			String pdfFileType = pdfFileType(true);
@@ -73,26 +82,74 @@ public class WindowsRegisterContextMenu {
 			} catch (URISyntaxException e) {
 				throw new Exception("Cannot find the path to current jar");
 			}
-			String shellKey = shellKey(pdfFileType);
+			String exePath = "\"" + thisJarDir +File.separator + "PdfMetadataEditor.exe\"";
+			String shellKey = editCmdShellKey(pdfFileType);
 			String shellCommandKey = shellKey +"\\command";
+			String shellDdeExecKey = shellKey +"\\ddeexec";
+			String shellDdeExecApplicationKey = shellDdeExecKey +"\\application";
+
 			createRegistryKey(shellCommandKey);
+			createRegistryKey(shellDdeExecKey);
+			createRegistryKey(shellDdeExecApplicationKey);
 			Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, shellKey, "", "Pdf metadata editor");
-			Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, shellCommandKey, "", "\"" + thisJarDir +File.separator +"PdfMetadataEditor.exe\" \"%1\"");		
+			Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, shellCommandKey, "", exePath );
+			Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, shellDdeExecKey, "", "\"%1\"");
+			Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, shellDdeExecApplicationKey, "", "PdfMetadataEditor");
+			
+			// Add batch commands
+			String batchMenuShellKey = batchMenuShellKey(pdfFileType);
+			createRegistryKey(batchMenuShellKey);
+			Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, batchMenuShellKey, "MUIVerb", "Pdf metadata batch");
+			Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, batchMenuShellKey, "ExtendedSubCommandsKey", pdfFileType + "\\Batch.Menu");
+			List<CommandDescription> reverseCmdList = Arrays.asList(CommandDescription.batchCommands);
+			Collections.reverse(reverseCmdList);
+			for(CommandDescription desc:  reverseCmdList){
+				String batchShellKey = batchCmdShellKey(pdfFileType) + "\\" + desc.regKey;
+				String batchShellCommandKey = batchShellKey + "\\command";
+				String batchShellDdeExecKey = batchShellKey +"\\ddeexec";
+				String batchShellDdeExecApplicationKey = shellDdeExecKey +"\\application";
+				createRegistryKey(batchShellCommandKey);
+				createRegistryKey(batchShellDdeExecKey);
+				createRegistryKey(batchShellDdeExecApplicationKey);
+				Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, batchShellKey, "MUIVerb", desc.description);
+				Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, batchShellCommandKey, "", exePath + " " + desc.name);
+				Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, batchShellDdeExecKey, "", desc.name +" \"%1\"");
+				Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, batchShellDdeExecApplicationKey, "", "PdfMetadataEditor");
+			}
 	}
 	
 	public static void unregister() {
 		String pdfFileType = pdfFileType(false);
 		if(pdfFileType != null){
-			String shellKey = shellKey(pdfFileType);
+			String shellKey = editCmdShellKey(pdfFileType);
 			String shellCommandKey = shellKey +"\\command";
+			String shellDdeExecKey = shellKey +"\\ddeexec";
+			String shellDdeExecApplicationKey = shellDdeExecKey +"\\application";
+
+			Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, shellDdeExecApplicationKey);			
+			Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, shellDdeExecKey);
 			Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, shellCommandKey);
 			Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, shellKey);
+
+			// Batch commands
+			for(CommandDescription desc:  CommandDescription.batchCommands){
+				String batchShellKey = batchCmdShellKey(pdfFileType) + "\\" + desc.regKey;
+				String batchShellCommandKey = batchShellKey + "\\command";
+				String batchShellDdeExecKey = batchShellKey +"\\ddeexec";
+				String batchShellDdeExecApplicationKey = shellDdeExecKey +"\\application";
+
+				Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecApplicationKey);
+				Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecKey);
+				Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, batchShellCommandKey);
+				Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, batchShellKey);
+			}
+			Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, batchMenuShellKey(pdfFileType));
 		}
 	}
 	
 	public static void main(String[] args) {
 		if(args.length == 0 ){
-			System.out.println("Specify register or unregister as furst argument");
+			System.out.println("Specify register or unregister as first argument");
 			return;
 		}
 		if(args[0].toLowerCase().equals("register")){
