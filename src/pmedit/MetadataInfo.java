@@ -15,8 +15,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import javax.swing.JCheckBox;
-import javax.xml.bind.annotation.XmlInlineBinaryData;
 import javax.xml.transform.TransformerException;
 
 import org.apache.jempbox.xmp.XMPMetadata;
@@ -37,13 +35,6 @@ public class MetadataInfo {
 
 	protected static final String[] MD_FIELD_GROUPS = new String[] { "basic", "xmpBasic", "xmpPdf",
 			"xmpDc" };
-
-	public static interface FieldSetGet {
-		public void apply(Object field, FieldID anno);
-	}
-	public static interface FieldEnabledCheckBox {
-		public void apply(JCheckBox field, FieldEnabled anno);
-	}
 
 	// Copy of java.util.functions.Function from Java8
 	public interface Function<T, R> {
@@ -703,7 +694,6 @@ public class MetadataInfo {
 			public String apply(Object t) {
 				if (t != null){
 					if(t instanceof Calendar) {
-						SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 						return isoDateFormat.format(((Calendar)t).getTime());
 					}
 					return t.toString();
@@ -797,6 +787,72 @@ public class MetadataInfo {
 			}
 
 		}
+	}
+	
+	public void setAppend(String id, Object value) {
+		StringTokenizer st = new StringTokenizer(id, ".");
+		Object current = this;
+		while (current != null) {
+			try {
+				Field field = current.getClass().getField(st.nextToken());
+				if (!st.hasMoreTokens()) {
+					if(field.getType().isAssignableFrom(List.class)){
+						List<Object> l = (List<Object>) field.get(current);
+						if(l != null){
+							l.add(value);
+						} else {
+							l = new ArrayList<Object>();
+							l.add(value);
+							field.set(current, l);
+						}
+					} else {
+						field.set(current, value);
+					}
+					return;
+				}
+				current = field.get(current);
+			} catch (NoSuchFieldException e) {
+				System.err.println("Metadata.set(" + id + ", "+ value.toString() + ")");
+				throw new RuntimeException(e);
+			} catch (SecurityException e) {
+				System.err.println("Metadata.set(" + id + ", "+ value.toString() + ")");
+				throw new RuntimeException(e);
+			} catch (IllegalArgumentException e) {
+				System.err.println("Metadata.set(" + id + ", "+ value.toString() + ")");
+				throw new RuntimeException(e);
+			} catch (IllegalAccessException e) {
+				System.err.println("Metadata.set(" + id + ", "+ value.toString() + ")");
+				throw new RuntimeException(e);
+			}
+
+		}
+	}
+	
+	public Class<?> getFieldType(String id){
+		StringTokenizer st = new StringTokenizer(id, ".");
+		Object current = this;
+		while (current != null) {
+			try {
+				Field field = current.getClass().getField(st.nextToken());
+				if (!st.hasMoreTokens()) {
+					return field.getType();
+				}
+				current = field.get(current);
+			} catch (NoSuchFieldException e) {
+				System.err.println("Metadata.getFieldType(" + id + ")");
+				throw new RuntimeException(e);
+			} catch (SecurityException e) {
+				System.err.println("Metadata.getFieldType(" + id + ")");
+				throw new RuntimeException(e);
+			} catch (IllegalArgumentException e) {
+				System.err.println("Metadata.getFieldType(" + id  + ")");
+				throw new RuntimeException(e);
+			} catch (IllegalAccessException e) {
+				System.err.println("Metadata.getFieldType(" + id  + ")");
+				throw new RuntimeException(e);
+			}
+		}
+		return null;
 	}
 	
 	public void setEnabled(boolean value){

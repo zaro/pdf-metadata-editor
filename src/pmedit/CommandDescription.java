@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-class CommandDescription {
+public class CommandDescription {
 	protected static int regKeyCount = 1;
 	
 	String name;

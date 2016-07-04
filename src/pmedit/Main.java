@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.prefs.Preferences;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -17,9 +18,9 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-public class Main {
+import pmedit.CommandLine.ParseError;
 
-	public static boolean ddeEnabled = "yes".equals(System.getProperty("pmeditUseDDE"));
+public class Main {
 	
 	protected static int batchGuiCounter = 0;
 	public static String getBatchGuiCommand(){
@@ -40,53 +41,32 @@ public class Main {
 		bs.setVisible(true);
 	}
 	
-	public static void executeCommand(List<String> args){
-		StringBuffer sb = new StringBuffer();
-		String delim = "'";
-		for (String i : args) {
-		    sb.append(delim).append(i);
-		    delim = "', '";
-		}
-		logLine("executeCommand", sb.toString());
-		final List<String> fileList= new ArrayList<String>(args);
+	public static void executeCommand(final CommandLine cmdLine){
+		logLine("executeCommand", cmdLine.toString());
 	
-		if( fileList.size() > 0) {
-			final String commandName = fileList.get(0);
-			final CommandDescription command = CommandDescription.getBatchCommand(commandName);
-			if(command != null) {
-				fileList.remove(0);
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						try {
-							BatchOperationWindow bs = batchInstances.get(command.name);
-							if(bs != null){
-								bs.appendFiles(PDFMetadataEditBatch.fileList(fileList));
-							} else {
-								if(command.is("rename")){
-									String renameTemplate =  PDFMetadataEditWindow.getPreferences().get("renameTemplate", null);
-									if(renameTemplate == null){
-										JOptionPane.showMessageDialog(null, "Configure a rename template first, to be able to do a batch rename", "Error", JOptionPane.ERROR_MESSAGE);
-										return;
-									}
-								}
-								makeBatchWindow(command.name, command, fileList);
-
-							}
-						} catch (Exception e) {
-							e.printStackTrace();
+		if( cmdLine.hasCommand()) {
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					try {
+						BatchOperationWindow bs = batchInstances.get(cmdLine.command.name);
+						if(bs != null){
+							bs.appendFiles(PDFMetadataEditBatch.fileList(cmdLine.fileList));
+						} else {
+							makeBatchWindow(cmdLine.command.name, cmdLine.command, cmdLine.fileList);
 						}
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-				});
-				return;
-			}
-			if(commandName.startsWith("batch-gui")){
-				fileList.remove(0);
-				makeBatchWindow(commandName, null, fileList);
-				return;
-			}
+				}
+			});
+			return;
+		}
+		if(cmdLine.batchGui){
+			makeBatchWindow(getBatchGuiCommand(), null, cmdLine.fileList);
+			return;
 		}
 	
-		final String fileName = fileList.size() > 0 ?  fileList.get(0) : null;
+		final String fileName = cmdLine.fileList.size() > 0 ?  cmdLine.fileList.get(0) : null;
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -147,14 +127,33 @@ public class Main {
 	}
 
 	public static void main(final String[] args) {
+		CommandLine cmdLine = null; 
+	    try {
+	    	cmdLine = CommandLine.parse(args);
+		} catch (ParseError e) {
+			System.err.println(e);
+		}
+	    System.out.println(cmdLine);
+	    if(cmdLine.noGui){
+	    	MainCli.main(cmdLine);
+	    	return;
+	    }
 //	    try {
-//	    	UIManager.setLookAndFeel(
-//	    			UIManager.getCrossPlatformLookAndFeelClassName());
-//	    } 
-//	    catch (UnsupportedLookAndFeelException e) {}
-//	    catch (ClassNotFoundException e) {}
-//	    catch (InstantiationException e) {}
-//	    catch (IllegalAccessException e) {}		
-	    executeCommand(Arrays.asList(args));
+//    	UIManager.setLookAndFeel(
+//    			UIManager.getCrossPlatformLookAndFeelClassName());
+//    } 
+//    catch (UnsupportedLookAndFeelException e) {}
+//    catch (ClassNotFoundException e) {}
+//    catch (InstantiationException e) {}
+//    catch (IllegalAccessException e) {}
+		executeCommand(cmdLine);
+	}
+
+	static Preferences _prefs;
+	public static Preferences getPreferences() {
+		if(_prefs == null){
+			_prefs = Preferences.userRoot().node("PDFMetadataEditor");
+		}
+		return _prefs;
 	}
 }

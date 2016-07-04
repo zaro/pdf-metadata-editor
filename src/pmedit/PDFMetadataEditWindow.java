@@ -80,16 +80,6 @@ public class PDFMetadataEditWindow extends JFrame{
 
 	private PreferencesWindow preferencesWindow;
 
-
-	static private Preferences _prefs;
-
-	public static Preferences getPreferences() {
-		if(_prefs == null){
-			_prefs = Preferences.userRoot().node("PDFMetadataEditor");
-		}
-		return _prefs;
-	}
-
 	/**
 	 * Create the application.
 	 */
@@ -125,7 +115,7 @@ public class PDFMetadataEditWindow extends JFrame{
 				for(File file: files){
 					fileNames.add(file.getAbsolutePath());
 				}
-				Main.executeCommand(fileNames);
+				Main.executeCommand(new CommandLine(fileNames, true));
 			}
 
 			@Override
@@ -241,7 +231,7 @@ public class PDFMetadataEditWindow extends JFrame{
 
 		btnOpenPdf.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				String dir = getPreferences().get("LastDir", null);
+				String dir = Main.getPreferences().get("LastDir", null);
 				if (dir != null) {
 					try {
 						fc.setCurrentDirectory(new File(dir));
@@ -255,7 +245,7 @@ public class PDFMetadataEditWindow extends JFrame{
 					// This is where a real application would open the file.
 					loadFile();
 					// save dir as last opened
-					getPreferences().put("LastDir", pdfFile.getParent());
+					Main.getPreferences().put("LastDir", pdfFile.getParent());
 				}
 			}
 		});
@@ -304,7 +294,7 @@ public class PDFMetadataEditWindow extends JFrame{
 				final ActionListener saveRenameAction = new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						saveFile();
-						String renameTemplate =  getPreferences().get("renameTemplate", null);
+						String renameTemplate =  Main.getPreferences().get("renameTemplate", null);
 						if(renameTemplate == null){
 							return;
 						}
@@ -320,7 +310,7 @@ public class PDFMetadataEditWindow extends JFrame{
 					public void actionPerformed(ActionEvent e) {
 						final JFileChooser fcSaveAs = new JFileChooser();
 
-						String dir = getPreferences().get("LastDir", null);
+						String dir = Main.getPreferences().get("LastDir", null);
 						if (dir != null) {
 							try {
 								fcSaveAs.setCurrentDirectory(new File(dir));
@@ -336,7 +326,7 @@ public class PDFMetadataEditWindow extends JFrame{
 							loadFile();
 
 							// save dir as last opened
-							getPreferences().put("LastDir", pdfFile.getParent());
+							Main.getPreferences().put("LastDir", pdfFile.getParent());
 						}
 					}
 				}; 
@@ -382,7 +372,7 @@ public class PDFMetadataEditWindow extends JFrame{
 			
 			@Override
 			public void run() {
-				String saveActionS = getPreferences().get("defaultSaveAction", "save");
+				String saveActionS = Main.getPreferences().get("defaultSaveAction", "save");
 
 				for(ActionListener l : btnSave.getActionListeners()){
 					btnSave.removeActionListener(l);
@@ -410,7 +400,7 @@ public class PDFMetadataEditWindow extends JFrame{
 					@Override
 					public void run() {
 						if (preferencesWindow == null){
-							preferencesWindow = new PreferencesWindow(getPreferences(), defaultMetadata, PDFMetadataEditWindow.this);
+							preferencesWindow = new PreferencesWindow(Main.getPreferences(), defaultMetadata, PDFMetadataEditWindow.this);
 							preferencesWindow.onSaveAction(updateSaveButton);
 						}
 						preferencesWindow.setVisible(true);

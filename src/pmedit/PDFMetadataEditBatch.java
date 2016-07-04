@@ -2,28 +2,13 @@ package pmedit;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.List;
-
-import org.apache.jempbox.xmp.XMPMetadata;
-import org.apache.jempbox.xmp.XMPSchemaBasic;
-import org.apache.jempbox.xmp.XMPSchemaDublinCore;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
-import org.apache.pdfbox.pdmodel.PDDocumentInformation;
-import org.apache.pdfbox.pdmodel.common.PDMetadata;
-
-import java.util.Properties;
-import java.util.Vector;
-// Unifinshed attemp for a coomand line tool :)
 
 public class PDFMetadataEditBatch {
 
@@ -260,9 +245,10 @@ public class PDFMetadataEditBatch {
 		return fileList(Arrays.asList(fileNames));
 	}
 
-	
 	public void runCommand(CommandDescription command, List<File> batchFileList, ActionStatus actionStatus){
-		if( command.is("rename")){
+		if( !BatchMan.hasBatch() ){
+			actionStatus.addError("*", "Invalid license, you can get a license at http://broken-by.me/pdf-metadata-editor/");
+		} else if( command.is("rename") ){
 			rename(batchFileList, actionStatus);
 		} else if( command.is("rename")){
 			edit(batchFileList, actionStatus);
@@ -277,61 +263,4 @@ public class PDFMetadataEditBatch {
 		}
 	}
 	
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		if (args.length < 2) {
-			System.out.println("Available commands:");
-			System.out.println("dump - dump metadata");
-			System.out.println("rename - rename file accorfing to metadata");
-			System.exit(1);
-		}
-		
-		ActionStatus status = new ActionStatus() {
-			@Override
-			public void addStatus(String filename, String message) {
-				System.out.println(filename + " -> " + message);
-			}
-
-			@Override
-			public void addError(String filename, String error) {
-				System.err.println(filename + " -> " + error);
-			}
-		};
-		
-		final PDFMetadataEditBatch cli = new PDFMetadataEditBatch();
-
-		if (args[0].equals("clear")) {
-			cli.clear(fileList(args), status);
-		}
-		if (args[0].equals("rename")) {
-			String template = args[1];
-			if(!template.toLowerCase().endsWith(".pdf"))
-				template += ".pdf";
-			TemplateString ts = new TemplateString(template);
-			try{
-				for(int i=2; i < args.length; ++i){
-					MetadataInfo md = new MetadataInfo();
-					File from = new File(args[i]);
-					md.loadFromPDF(from);
-					String toName = ts.process(md);
-					System.out.print(from.toString() + " -> " + toName);
-					String toDir= from.getParent();
-					File to = new File(toDir,toName);
-					boolean success =  from.renameTo(to);
-					System.out.println(success? " OK" : " FAIL");
-					
-				}
-			} catch (IOException e) {
-				System.out.println("Failed to parse: " + args[1]);
-				System.out.println(e.toString());
-				System.exit(1);
-			}
-		}
-		if(args[0].equals("list")){
-			for(File f:new File(args[1]).listFiles()){
-				System.out.println(f.getPath());
-			}
-		}
-	}
-
 }

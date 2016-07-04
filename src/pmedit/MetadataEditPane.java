@@ -18,8 +18,8 @@ import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SpinnerNumberModel;
 
-import pmedit.MetadataInfo.FieldEnabledCheckBox;
-import pmedit.MetadataInfo.FieldSetGet;
+import pmedit.MetadataEditPane.FieldEnabledCheckBox;
+import pmedit.MetadataEditPane.FieldSetGet;
 import net.miginfocom.swing.MigLayout;
 
 import com.toedter.calendar.JDateChooser;
@@ -31,6 +31,14 @@ import javax.swing.JCheckBox;
 import javax.swing.SwingConstants;
 
 public class MetadataEditPane {
+
+	public static interface FieldSetGet {
+		public void apply(Object field, FieldID anno);
+	}
+
+	public static interface FieldEnabledCheckBox {
+		public void apply(JCheckBox field, FieldEnabled anno);
+	}
 
 	private static final long serialVersionUID = 6994489903939856136L;
 	public JPanel basicMetaPanel;
@@ -1314,7 +1322,7 @@ public class MetadataEditPane {
 
 	}
 
-	private void traverseFields(MetadataInfo.FieldSetGet setGet, MetadataInfo.FieldEnabledCheckBox fieldEnabled) {
+	private void traverseFields(MetadataEditPane.FieldSetGet setGet, MetadataEditPane.FieldEnabledCheckBox fieldEnabled) {
 		for (Field field : this.getClass().getFields()) {
 			if(setGet != null){
 				FieldID annos = field.getAnnotation(FieldID.class);
@@ -1358,7 +1366,7 @@ public class MetadataEditPane {
 	
 	
 	public void showEnabled(final boolean show) {
-		traverseFields(null, new MetadataInfo.FieldEnabledCheckBox() {
+		traverseFields(null, new MetadataEditPane.FieldEnabledCheckBox() {
 			
 			@Override
 			public void apply(JCheckBox field, FieldEnabled anno) {
@@ -1370,7 +1378,7 @@ public class MetadataEditPane {
 	}
 
 	public void disableEdit() {
-		traverseFields(new FieldSetGet() {
+		traverseFields(new MetadataEditPane.FieldSetGet() {
 			@Override
 			public void apply(Object field, FieldID anno) {
 				if (field instanceof JComponent) {
@@ -1381,7 +1389,7 @@ public class MetadataEditPane {
 	}
 
 	void clear() {
-		traverseFields(new MetadataInfo.FieldSetGet() {
+		traverseFields(new MetadataEditPane.FieldSetGet() {
 			@Override
 			public void apply(Object field, FieldID anno) {
 				if (field instanceof JTextField) {
@@ -1400,7 +1408,7 @@ public class MetadataEditPane {
 					objectToField((JSpinner) field, null);
 				}
 			}
-		}, new MetadataInfo.FieldEnabledCheckBox() {			
+		}, new MetadataEditPane.FieldEnabledCheckBox() {			
 			@Override
 			public void apply(JCheckBox field, FieldEnabled anno) {
 				field.setSelected(true);
@@ -1411,7 +1419,7 @@ public class MetadataEditPane {
 
 	void fillFromMetadata(final MetadataInfo metadataInfo) {
 
-		traverseFields(new MetadataInfo.FieldSetGet() {
+		traverseFields(new MetadataEditPane.FieldSetGet() {
 			@Override
 			public void apply(Object field, FieldID anno) {
 				Object value = metadataInfo.get(anno.value());
@@ -1432,7 +1440,7 @@ public class MetadataEditPane {
 					objectToField((JSpinner) field, value);
 				}
 			}
-		}, new MetadataInfo.FieldEnabledCheckBox() {			
+		}, new MetadataEditPane.FieldEnabledCheckBox() {			
 			@Override
 			public void apply(JCheckBox field, FieldEnabled anno) {
 				field.setSelected(metadataInfo.isEnabled(anno.value()));
@@ -1444,7 +1452,7 @@ public class MetadataEditPane {
 
 	void copyToMetadata(final MetadataInfo metadataInfo) {
 
-		traverseFields(new MetadataInfo.FieldSetGet() {
+		traverseFields(new MetadataEditPane.FieldSetGet() {
 			@Override
 			public void apply(Object field, FieldID anno) {
 
@@ -1502,7 +1510,7 @@ public class MetadataEditPane {
 					}
 				}
 			}
-		}, new MetadataInfo.FieldEnabledCheckBox() {			
+		}, new MetadataEditPane.FieldEnabledCheckBox() {			
 			@Override
 			public void apply(JCheckBox field, FieldEnabled anno) {
 				metadataInfo.setEnabled(anno.value(), field.isSelected());
