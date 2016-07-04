@@ -58,6 +58,7 @@ import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.BorderLayout;
+import javax.swing.JTextField;
 
 public class PreferencesWindow extends JDialog {
 
@@ -322,6 +323,99 @@ public class PreferencesWindow extends JDialog {
 
 		btnRegister.setEnabled(isWindows);
 		btnUnregister.setEnabled(isWindows);
+		
+		JPanel panelBatchLicense = new JPanel();
+		tabbedPane.addTab("License", null, panelBatchLicense, null);
+		GridBagLayout gbl_panelBatchLicense = new GridBagLayout();
+		gbl_panelBatchLicense.columnWidths = new int[]{0, 0, 0};
+		gbl_panelBatchLicense.rowHeights = new int[]{0, 0, 0, 0, 0};
+		gbl_panelBatchLicense.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
+		gbl_panelBatchLicense.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		panelBatchLicense.setLayout(gbl_panelBatchLicense);
+		
+		JLabel lblNewLabel_3 = new JLabel("Enter license iformation below to use batch operations");
+		GridBagConstraints gbc_lblNewLabel_3 = new GridBagConstraints();
+		gbc_lblNewLabel_3.gridwidth = 2;
+		gbc_lblNewLabel_3.insets = new Insets(15, 15, 5, 15);
+		gbc_lblNewLabel_3.gridx = 0;
+		gbc_lblNewLabel_3.gridy = 0;
+		panelBatchLicense.add(lblNewLabel_3, gbc_lblNewLabel_3);
+		
+		JLabel lblNewLabel_2 = new JLabel("Email");
+		GridBagConstraints gbc_lblNewLabel_2 = new GridBagConstraints();
+		gbc_lblNewLabel_2.insets = new Insets(15, 15, 5, 5);
+		gbc_lblNewLabel_2.anchor = GridBagConstraints.EAST;
+		gbc_lblNewLabel_2.gridx = 0;
+		gbc_lblNewLabel_2.gridy = 1;
+		panelBatchLicense.add(lblNewLabel_2, gbc_lblNewLabel_2);
+		
+		emailField = new JTextField();
+		GridBagConstraints gbc_emailField = new GridBagConstraints();
+		gbc_emailField.insets = new Insets(15, 0, 5, 15);
+		gbc_emailField.fill = GridBagConstraints.HORIZONTAL;
+		gbc_emailField.gridx = 1;
+		gbc_emailField.gridy = 1;
+		panelBatchLicense.add(emailField, gbc_emailField);
+		emailField.setColumns(10);
+		emailField.setText(Main.getPreferences().get("email", ""));
+		emailField.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				updateLicense();
+			}
+			
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				updateLicense();
+			}
+			
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+
+			}
+		});
+		
+		JLabel lblLicenseKey = new JLabel("License key");
+		GridBagConstraints gbc_lblLicenseKey = new GridBagConstraints();
+		gbc_lblLicenseKey.anchor = GridBagConstraints.EAST;
+		gbc_lblLicenseKey.insets = new Insets(0, 15, 5, 5);
+		gbc_lblLicenseKey.gridx = 0;
+		gbc_lblLicenseKey.gridy = 2;
+		panelBatchLicense.add(lblLicenseKey, gbc_lblLicenseKey);
+		
+		keyField = new JTextField();
+		GridBagConstraints gbc_keyField = new GridBagConstraints();
+		gbc_keyField.insets = new Insets(0, 0, 5, 15);
+		gbc_keyField.fill = GridBagConstraints.HORIZONTAL;
+		gbc_keyField.gridx = 1;
+		gbc_keyField.gridy = 2;
+		panelBatchLicense.add(keyField, gbc_keyField);
+		keyField.setColumns(10);
+		keyField.setText(Main.getPreferences().get("key", ""));
+		keyField.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				updateLicense();
+			}
+			
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				updateLicense();
+			}
+			
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+
+			}
+		});
+		
+		labelLicenseStatus = new JLabel("No License");
+		GridBagConstraints gbc_labelLicenseStatus = new GridBagConstraints();
+		gbc_labelLicenseStatus.gridwidth = 2;
+		gbc_labelLicenseStatus.insets = new Insets(30, 15, 0, 15);
+		gbc_labelLicenseStatus.gridx = 0;
+		gbc_labelLicenseStatus.gridy = 3;
+		panelBatchLicense.add(labelLicenseStatus, gbc_labelLicenseStatus);
 
 		JScrollPane scrollPane_1 = new JScrollPane();
 		tabbedPane.addTab("About", null, scrollPane_1, null);
@@ -533,6 +627,21 @@ public class PreferencesWindow extends JDialog {
 		onSave = newAction;
 	}
 
+	protected void updateLicense() {
+		String key = keyField.getText();
+		String email = emailField.getText();
+		if(key.isEmpty()&& email.isEmpty()){
+			labelLicenseStatus.setText("Valid license");
+		}else if(BatchMan.maybeHasBatch(key, email)){
+			Main.getPreferences().put("key", keyField.getText());
+			Main.getPreferences().put("email", emailField.getText());
+			labelLicenseStatus.setText("Valid license");
+		} else {
+			labelLicenseStatus.setText("Invalid license");
+		}
+		
+	}
+	
 	private String desc = "";
 	private JLabel lblNewLabel;
 	private JComboBox comboBox;
@@ -542,6 +651,9 @@ public class PreferencesWindow extends JDialog {
 	private String aboutMsg;
 	private JTextPane txtpnDf;
 	private JLabel updateStatusLabel;
+	private JTextField emailField;
+	private JTextField keyField;
+	private JLabel labelLicenseStatus;
 
 	protected JLabel getPreviewLabel() {
 		return lblNewLabel;

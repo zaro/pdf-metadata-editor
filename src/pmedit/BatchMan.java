@@ -5,9 +5,7 @@ import java.security.NoSuchAlgorithmException;
 
 public class BatchMan {
 	
-	public static boolean hasBatch(){
-		String moto = Main.getPreferences().get("key", null);
-		String boto = Main.getPreferences().get("email", null);
+	public static boolean maybeHasBatch(String moto,String boto){
 		if( moto != null && boto != null){
 			try {
 				MessageDigest md = MessageDigest.getInstance("SHA-1");
@@ -17,7 +15,13 @@ public class BatchMan {
 			} catch (NoSuchAlgorithmException e) {
 			}
 		}
-		return false;
+		return false;		
+	}
+	
+	public static boolean hasBatch(){
+		String moto = Main.getPreferences().get("key", null);
+		String boto = Main.getPreferences().get("email", null);
+		return maybeHasBatch(moto, boto);
 	}
 
 }
