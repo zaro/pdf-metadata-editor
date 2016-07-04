@@ -53,7 +53,7 @@ public class BatchParametersEdit extends BatchParametersWindow {
 		JPanel panel = new JPanel();
 		GridBagConstraints gbc_panel = new GridBagConstraints();
 		gbc_panel.fill = GridBagConstraints.BOTH;
-		gbc_panel.insets = new Insets(0, 0, 5, 0);
+		gbc_panel.insets = new Insets(5, 5, 5, 5);
 		gbc_panel.gridx = 0;
 		gbc_panel.gridy = 0;
 		contentPane.add(panel, gbc_panel);
@@ -103,6 +103,7 @@ public class BatchParametersEdit extends BatchParametersWindow {
 		GridBagConstraints gbc_md = new GridBagConstraints();
 		gbc_md.weightx = 1.0;
 		gbc_md.weighty = 1.0;
+		gbc_md.insets = new Insets(5, 5, 5, 5);
 		gbc_md.anchor = GridBagConstraints.NORTH;
 		gbc_md.fill = GridBagConstraints.BOTH;
 		gbc_md.gridx = 0;
@@ -115,6 +116,7 @@ public class BatchParametersEdit extends BatchParametersWindow {
 						
 		JButton btnClose = new JButton("Close");
 		GridBagConstraints gbc_btnClose = new GridBagConstraints();
+		gbc_btnClose.insets = new Insets(0, 0, 5, 5);
 		gbc_btnClose.anchor = GridBagConstraints.NORTHEAST;
 		gbc_btnClose.gridx = 0;
 		gbc_btnClose.gridy = 2;

@@ -473,7 +473,7 @@ public class PreferencesWindow extends JDialog {
 							+ latest.getAsString() + "</a> , current: " + current.getAsString() + "</h3>";
 					updateStatusLabel.setText("Newer version available:"+ latest.getAsString());
 				} else {
-					versionMsg = "<h3 align=center>Version " + latest.getAsString() + " is the latest version</h3>";
+					versionMsg = "<h3 align=center>Version " + current.getAsString() + " is the latest version</h3>";
 				}
 			}
 		} catch (InterruptedException e1) {

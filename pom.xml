@@ -23,8 +23,8 @@
 	<properties>
 		<staging.dir>${project.build.directory}</staging.dir>
 		<izpack.dir.app>${project.build.directory}/izpack</izpack.dir.app>
-    <version.template.file>src/pmedit/Version.java.template</version.template.file>
-	<version.file>src/pmedit/Version.java</version.file>		
+		<version.template.file>src/pmedit/Version.java.template</version.template.file>
+		<version.file>src/pmedit/Version.java</version.file>
 	</properties>
 
 	<build>
@@ -34,7 +34,15 @@
 				<directory>src</directory>
 				<excludes>
 					<exclude>**/*.java</exclude>
+					<exclude>**/*.properties</exclude>					
 				</excludes>
+			</resource>
+			<resource>
+				<directory>src/pmedit</directory>
+				<includes>
+					<include>*.properties</include>
+				</includes>
+				<filtering>true</filtering>
 			</resource>
 		</resources>
 		<plugins>
@@ -107,35 +115,11 @@
 			</plugin>
 
 			<plugin>
-				<groupId>com.google.code.maven-replacer-plugin</groupId>
-				<artifactId>maven-replacer-plugin</artifactId>
-				<version>1.4.0</version>
-				<executions>
-					<execution>
-						<phase>process-sources</phase>
-						<goals>
-							<goal>replace</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<file>${version.template.file}</file>
-					<outputFile>${version.file}</outputFile>
-					<replacements>
-						<replacement>
-							<token>@version@</token>
-							<value>${project.version}</value>
-						</replacement>
-					</replacements>
-				</configuration>
-			</plugin>
-			
-			<plugin>
 				<groupId>sh.tak.appbundler</groupId>
 				<artifactId>appbundle-maven-plugin</artifactId>
-				<version>1.0.4</version>
+				<version>1.1.0</version>
 				<configuration>
-					<mainClass>pmedit.PDFMetadataEditWindow</mainClass>
+					<mainClass>pmedit.Main</mainClass>
 					<iconFile>pmedit/pdf-metadata-edit.icns</iconFile>
 					<bundleName>PdfMetadataEditor</bundleName>
 					<generateDiskImageFile>true</generateDiskImageFile>
@@ -196,6 +180,13 @@
 										<exclude>izpack-install.xml</exclude>
 									</excludes>
 								</resource>
+								<resource>
+									<directory>izpack/</directory>
+									<includes>
+										<include>*.ini</include>
+									</includes>
+									<filtering>true</filtering>
+								</resource>
 							</resources>
 						</configuration>
 					</execution>
@@ -244,9 +235,9 @@
 			<version>1.14</version>
 		</dependency>
 		<dependency>
-    		<groupId>com.googlecode.json-simple</groupId>
-    		<artifactId>json-simple</artifactId>
-    		<version>1.1.1</version>
+			<groupId>com.googlecode.json-simple</groupId>
+			<artifactId>json-simple</artifactId>
+			<version>1.1.1</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-cli</groupId>

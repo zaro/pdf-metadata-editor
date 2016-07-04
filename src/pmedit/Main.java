@@ -12,11 +12,19 @@ import java.util.Map;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.LookAndFeel;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
 public class Main {
 
 	public static boolean ddeEnabled = "yes".equals(System.getProperty("pmeditUseDDE"));
+	
+	protected static int batchGuiCounter = 0;
+	public static String getBatchGuiCommand(){
+		return "batch-gui-"+ batchGuiCounter++;
+	}
 	
 	public static void makeBatchWindow(final String commandName, CommandDescription command, List<String> fileList){
 		BatchOperationWindow bs = new BatchOperationWindow(command);
@@ -139,6 +147,14 @@ public class Main {
 	}
 
 	public static void main(final String[] args) {
-		executeCommand(Arrays.asList(args));
+//	    try {
+//	    	UIManager.setLookAndFeel(
+//	    			UIManager.getCrossPlatformLookAndFeelClassName());
+//	    } 
+//	    catch (UnsupportedLookAndFeelException e) {}
+//	    catch (ClassNotFoundException e) {}
+//	    catch (InstantiationException e) {}
+//	    catch (IllegalAccessException e) {}		
+	    executeCommand(Arrays.asList(args));
 	}
 }

@@ -39,8 +39,12 @@ public class WindowsRegisterContextMenu {
 		return "SOFTWARE\\Classes\\" + pdfFileType + "\\shell\\PME.Batch.Menu";		
 	}
 
+	public static String batchMenuKey(String pdfFileType){
+		return "SOFTWARE\\Classes\\" + pdfFileType + "\\Batch.Menu";		
+	}
+
 	public static String batchCmdShellKey(String pdfFileType){
-		return "SOFTWARE\\Classes\\" + pdfFileType + "\\Batch.Menu\\shell";		
+		return batchMenuKey(pdfFileType) + "\\shell";		
 	}
 	
 	public static void createRegistryKey(String keyToCreate){
@@ -72,6 +76,15 @@ public class WindowsRegisterContextMenu {
 		//System.out.printf("\nCheck key: %s\n", Advapi32Util.registryValueExists(root, current, ""));
 		return Advapi32Util.registryValueExists(root, current,"");
 	}
+	
+	public static void deleteRegistryKey(com.sun.jna.platform.win32.WinReg.HKEY root, String key){
+		System.out.println("Registry Delete: " + key);
+		try {
+			Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, key);			
+		} catch(com.sun.jna.platform.win32.Win32Exception e){
+			System.out.println(e);
+		}
+	}
 
 	public static void register() throws Exception{
 			String pdfFileType = pdfFileType(true);
@@ -82,7 +95,7 @@ public class WindowsRegisterContextMenu {
 			} catch (URISyntaxException e) {
 				throw new Exception("Cannot find the path to current jar");
 			}
-			String exePath = "\"" + thisJarDir +File.separator + "PdfMetadataEditor.exe\"";
+			String exePath = "\"" + thisJarDir + File.separator + "PdfMetadataEditor.exe\"";
 			String shellKey = editCmdShellKey(pdfFileType);
 			String shellCommandKey = shellKey +"\\command";
 			String shellDdeExecKey = shellKey +"\\ddeexec";
@@ -101,13 +114,12 @@ public class WindowsRegisterContextMenu {
 			createRegistryKey(batchMenuShellKey);
 			Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, batchMenuShellKey, "MUIVerb", "Pdf metadata batch");
 			Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, batchMenuShellKey, "ExtendedSubCommandsKey", pdfFileType + "\\Batch.Menu");
-			List<CommandDescription> reverseCmdList = Arrays.asList(CommandDescription.batchCommands);
-			Collections.reverse(reverseCmdList);
-			for(CommandDescription desc:  reverseCmdList){
+
+			for(CommandDescription desc:  CommandDescription.batchCommands){
 				String batchShellKey = batchCmdShellKey(pdfFileType) + "\\" + desc.regKey;
 				String batchShellCommandKey = batchShellKey + "\\command";
 				String batchShellDdeExecKey = batchShellKey +"\\ddeexec";
-				String batchShellDdeExecApplicationKey = shellDdeExecKey +"\\application";
+				String batchShellDdeExecApplicationKey = batchShellKey +"\\application";
 				createRegistryKey(batchShellCommandKey);
 				createRegistryKey(batchShellDdeExecKey);
 				createRegistryKey(batchShellDdeExecApplicationKey);
@@ -126,24 +138,25 @@ public class WindowsRegisterContextMenu {
 			String shellDdeExecKey = shellKey +"\\ddeexec";
 			String shellDdeExecApplicationKey = shellDdeExecKey +"\\application";
 
-			Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, shellDdeExecApplicationKey);			
-			Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, shellDdeExecKey);
-			Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, shellCommandKey);
-			Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, shellKey);
+			deleteRegistryKey(WinReg.HKEY_CURRENT_USER, shellDdeExecApplicationKey);			
+			deleteRegistryKey(WinReg.HKEY_CURRENT_USER, shellDdeExecKey);
+			deleteRegistryKey(WinReg.HKEY_CURRENT_USER, shellCommandKey);
+			deleteRegistryKey(WinReg.HKEY_CURRENT_USER, shellKey);
 
 			// Batch commands
 			for(CommandDescription desc:  CommandDescription.batchCommands){
 				String batchShellKey = batchCmdShellKey(pdfFileType) + "\\" + desc.regKey;
 				String batchShellCommandKey = batchShellKey + "\\command";
 				String batchShellDdeExecKey = batchShellKey +"\\ddeexec";
-				String batchShellDdeExecApplicationKey = shellDdeExecKey +"\\application";
+				String batchShellDdeExecApplicationKey = batchShellKey +"\\application";
 
-				Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecApplicationKey);
-				Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecKey);
-				Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, batchShellCommandKey);
-				Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, batchShellKey);
+				deleteRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecApplicationKey);
+				deleteRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecKey);
+				deleteRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellCommandKey);
+				deleteRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellKey);
 			}
-			Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, batchMenuShellKey(pdfFileType));
+			deleteRegistryKey(WinReg.HKEY_CURRENT_USER, batchMenuShellKey(pdfFileType));
+			deleteRegistryKey(WinReg.HKEY_CURRENT_USER, batchMenuKey(pdfFileType));
 		}
 	}
 	

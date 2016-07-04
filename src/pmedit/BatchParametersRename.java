@@ -137,6 +137,7 @@ public class BatchParametersRename extends BatchParametersWindow {
 				});
 				GridBagConstraints gbc_button = new GridBagConstraints();
 				gbc_button.anchor = GridBagConstraints.EAST;
+				gbc_button.insets = new Insets(0, 0, 5, 5);
 				gbc_button.gridx = 0;
 				gbc_button.gridy = 1;
 				getContentPane().add(button, gbc_button);

@@ -82,7 +82,6 @@ public class PDFMetadataEditWindow extends JFrame{
 
 
 	static private Preferences _prefs;
-	static private int dropCounter = 0;
 
 	public static Preferences getPreferences() {
 		if(_prefs == null){
@@ -120,7 +119,7 @@ public class PDFMetadataEditWindow extends JFrame{
 
 				List<String> fileNames = new ArrayList<String>();
 				if(fdm.isBatchOperation()){
-					fileNames.add("batch-gui-"+ dropCounter++);
+					fileNames.add(Main.getBatchGuiCommand());
 				}
 
 				for(File file: files){
