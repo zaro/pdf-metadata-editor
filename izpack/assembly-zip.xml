@@ -15,6 +15,7 @@
 				<include>PdfMetadataEditor.ini</include>
 				<include>PdfMetadataEditor.exe</include>
 				<include>PdfMetadataEditor64.exe</include>
+				<include>pmedit-cli*</include>
 			</includes>
 		</fileSet>
 		<fileSet>
@@ -22,6 +23,7 @@
 			<outputDirectory>pdf-metadata-edit</outputDirectory>
 			<includes>
 				<include>pdf-metadata-edit</include>
+				<include>pmedit-cli</include>
 			</includes>
 			<fileMode>0755</fileMode>
 		</fileSet>
@@ -32,5 +34,9 @@
 			<outputDirectory>pdf-metadata-edit</outputDirectory>
 			<destName>PdfMetadataEditor64.ini</destName>
 		</file>
-	</files>
+		<file>
+			<source>target/pmedit-cli.ini</source>
+			<outputDirectory>pdf-metadata-edit</outputDirectory>
+			<destName>pmedit-cli64.ini</destName>
+		</file>	</files>
 </assembly>

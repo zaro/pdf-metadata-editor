@@ -333,14 +333,39 @@ public class PreferencesWindow extends JDialog {
 		gbl_panelBatchLicense.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		panelBatchLicense.setLayout(gbl_panelBatchLicense);
 		
-		JLabel lblNewLabel_3 = new JLabel("Enter license iformation below to use batch operations");
-		GridBagConstraints gbc_lblNewLabel_3 = new GridBagConstraints();
-		gbc_lblNewLabel_3.gridwidth = 2;
-		gbc_lblNewLabel_3.insets = new Insets(15, 15, 5, 15);
-		gbc_lblNewLabel_3.gridx = 0;
-		gbc_lblNewLabel_3.gridy = 0;
-		panelBatchLicense.add(lblNewLabel_3, gbc_lblNewLabel_3);
-		
+		JTextPane txtpnEnterLicenseInformation = new JTextPane();
+		txtpnEnterLicenseInformation.setEditable(false);
+		txtpnEnterLicenseInformation.setBackground(UIManager.getColor("Panel.background"));
+		txtpnEnterLicenseInformation.setContentType("text/html");
+		txtpnEnterLicenseInformation.setText("<h3 align='center'>Enter license information below to use batch operations.</h3><p align='center'>You can get license at <a href=\"http://broken-by.me/pdf-metadata-editor/\">http://broken-by.me/pdf-metadata-editor/</a></p>");
+		GridBagConstraints gbc_txtpnEnterLicenseInformation = new GridBagConstraints();
+		gbc_txtpnEnterLicenseInformation.gridwidth = 2;
+		gbc_txtpnEnterLicenseInformation.insets = new Insets(15, 0, 5, 0);
+		gbc_txtpnEnterLicenseInformation.fill = GridBagConstraints.HORIZONTAL;
+		gbc_txtpnEnterLicenseInformation.gridx = 0;
+		gbc_txtpnEnterLicenseInformation.gridy = 0;
+		panelBatchLicense.add(txtpnEnterLicenseInformation, gbc_txtpnEnterLicenseInformation);
+		txtpnEnterLicenseInformation.addHyperlinkListener(new HyperlinkListener() {
+			public void hyperlinkUpdate(HyperlinkEvent e) {
+				if (e.getEventType() != HyperlinkEvent.EventType.ACTIVATED) {
+					return;
+				}
+				if (!java.awt.Desktop.isDesktopSupported()) {
+					return;
+				}
+				java.awt.Desktop desktop = java.awt.Desktop.getDesktop();
+				if (!desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
+					return;
+				}
+
+				try {
+					java.net.URI uri = e.getURL().toURI();
+					desktop.browse(uri);
+				} catch (Exception e1) {
+
+				}
+			}
+		});		
 		JLabel lblNewLabel_2 = new JLabel("Email");
 		GridBagConstraints gbc_lblNewLabel_2 = new GridBagConstraints();
 		gbc_lblNewLabel_2.insets = new Insets(15, 15, 5, 5);
@@ -534,7 +559,7 @@ public class PreferencesWindow extends JDialog {
 				}
 			})).start();
 		}
-
+		updateLicense();
 	}
 
 	private Future<HttpResponse> checkForUpdates() {
@@ -631,7 +656,7 @@ public class PreferencesWindow extends JDialog {
 		String key = keyField.getText();
 		String email = emailField.getText();
 		if(key.isEmpty()&& email.isEmpty()){
-			labelLicenseStatus.setText("Valid license");
+			labelLicenseStatus.setText("No license");
 		}else if(BatchMan.maybeHasBatch(key, email)){
 			Main.getPreferences().put("key", keyField.getText());
 			Main.getPreferences().put("email", emailField.getText());
