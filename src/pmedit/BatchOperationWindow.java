@@ -19,11 +19,14 @@ import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.awt.event.ActionEvent;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -79,7 +82,7 @@ public class BatchOperationWindow extends JFrame {
 			selectedBatchOperation.setModel(new DefaultComboBoxModel<CommandDescription>(new CommandDescription[]{ command }));
 		} else {
 			selectedBatchOperation.setModel(new DefaultComboBoxModel<CommandDescription>(CommandDescription.batchCommands));
-			String lastUsedCommand = PDFMetadataEditWindow.getPreferences().get(LAST_USED_COMMAND_KEY, null);
+			String lastUsedCommand = Main.getPreferences().get(LAST_USED_COMMAND_KEY, null);
 			if(lastUsedCommand != null){
 				CommandDescription lastCommand = CommandDescription.getBatchCommand(lastUsedCommand);
 				if(lastCommand != null){
@@ -137,7 +140,7 @@ public class BatchOperationWindow extends JFrame {
 		
 		createBatchParametersWindowButton();
 		
-		String defaultMetadataYAML = PDFMetadataEditWindow.getPreferences().get("defaultMetadata", null);
+		String defaultMetadataYAML = Main.getPreferences().get("defaultMetadata", null);
 		if (defaultMetadataYAML != null && defaultMetadataYAML.length() > 0) {
 			MetadataInfo editMetadata = new MetadataInfo();
 			editMetadata.fromYAML(defaultMetadataYAML);
@@ -202,6 +205,20 @@ public class BatchOperationWindow extends JFrame {
 	      exc.printStackTrace();
 	   }
 	}
+	public void appendError(Throwable e) {
+		  hasErrors = true;
+		   try {
+			  StringWriter sw = new StringWriter();
+			  PrintWriter pw = new PrintWriter(sw);
+			  e.printStackTrace(pw);
+			  sw.toString(); // stack trace as a string		      
+			  StyledDocument doc = statusText.getStyledDocument();
+		      doc.insertString(doc.getLength(), sw.toString(), statusText.getStyle("ERROR"));
+		      statusScrollPane.getVerticalScrollBar().setValue(statusScrollPane.getVerticalScrollBar().getMaximum());
+		   } catch(BadLocationException exc) {
+		      exc.printStackTrace();
+		   }
+		}	
 	public void appendFiles(List<File> files){
 		if(batchFileList.isEmpty() && files.size() > 0){
 	      Document doc = fileList.getDocument();
@@ -229,7 +246,7 @@ public class BatchOperationWindow extends JFrame {
 
 	public void runBatch(){
 		final CommandDescription command = ((CommandDescription) selectedBatchOperation.getSelectedItem());
-		PDFMetadataEditWindow.getPreferences().put(LAST_USED_COMMAND_KEY, command.name);
+		Main.getPreferences().put(LAST_USED_COMMAND_KEY, command.name);
 
 		(new Worker(){
 			ActionStatus actionStatus = new ActionStatus() {
@@ -254,7 +271,14 @@ public class BatchOperationWindow extends JFrame {
 			}
 	       @Override
 	       protected void done() {
-	    	   onDone();
+				try {
+				   get();
+				} catch (InterruptedException e) {
+					appendError(e);
+				} catch (ExecutionException e) {
+					appendError(e);
+ 				}
+ 			    onDone();
 	       }
 		}).execute();
 	}

@@ -3,6 +3,8 @@ package pmedit;
 import java.util.ArrayList;
 import java.util.List;
 
+import pmedit.CommandLine.ParseError;
+
 public class DDE {
 	
 	static DdeEvent handler;
@@ -17,7 +19,12 @@ public class DDE {
     		handler.ddeExecute(DDE.splitCommand(command));
     		return;
     	} else {
-    		Main.executeCommand(DDE.splitCommand(command));
+    		try {
+				Main.executeCommand(CommandLine.parse(DDE.splitCommand(command)));
+			} catch (ParseError e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
     	}
     }
 
@@ -27,7 +34,12 @@ public class DDE {
     		handler.ddeActivate(DDE.splitCommand(command));
     		return;
     	} else {
-    		Main.executeCommand(DDE.splitCommand(command));
+    		try {
+				Main.executeCommand(CommandLine.parse(DDE.splitCommand(command)));
+			} catch (ParseError e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
     	}
     }
 

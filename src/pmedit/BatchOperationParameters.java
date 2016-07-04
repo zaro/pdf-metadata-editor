@@ -1,7 +1,7 @@
 package pmedit;
 
 public class BatchOperationParameters {
-	MetadataInfo metadata = new MetadataInfo();
-	String renameTemplate;
+	public MetadataInfo metadata = new MetadataInfo();
+	public String renameTemplate;
 
 }
