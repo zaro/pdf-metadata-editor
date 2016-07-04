@@ -190,6 +190,8 @@
 									<directory>izpack/</directory>
 									<includes>
 										<include>*.ini</include>
+										<include>pmedit-cli</include>
+										<include>pdf-metadata-edit</include>
 									</includes>
 									<filtering>true</filtering>
 								</resource>

@@ -129,7 +129,7 @@ public class Main {
 		} catch (ParseError e) {
 			System.err.println(e);
 		}
-	    System.out.println(cmdLine);
+	    //System.out.println(cmdLine);
 	    if(cmdLine.noGui){
 	    	MainCli.main(cmdLine);
 	    	return;

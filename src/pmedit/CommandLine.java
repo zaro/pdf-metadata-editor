@@ -128,6 +128,9 @@ public class CommandLine {
 			cmdLine.command = CommandDescription.getBatchCommand(args.get(i));
 			if( cmdLine.command != null) {
 				++i;
+			} else if(args.get(i).matches("^batch-gui-\\w+$")){
+				cmdLine.batchGui = true;
+				++i;
 			}
 		}
 		while(i < args.size() ){

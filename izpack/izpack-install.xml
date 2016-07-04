@@ -54,18 +54,32 @@
 				<include name="PdfMetadataEditor.ini" />
 				<os family="windows" />
 			</fileset>
+			<fileset dir="@{staging.dir}" override="true">
+				<include name="pmedit-cli.ini" />
+				<os family="windows" />
+			</fileset>
 			<singlefile src="PdfMetadataEditor.exe" target="$INSTALL_PATH/PdfMetadataEditor.exe" override="true" condition="!java_64bit">
 				<os family="windows" />
 			</singlefile>
 			<singlefile src="PdfMetadataEditor64.exe" target="$INSTALL_PATH/PdfMetadataEditor.exe" override="true" condition="java_64bit">
 				<os family="windows" />
 			</singlefile>
+			<singlefile src="pmedit-cli.exe" target="$INSTALL_PATH/pmedit-cli.exe" override="true" condition="!java_64bit">
+				<os family="windows" />
+			</singlefile>
+			<singlefile src="pmedit-cli64.exe" target="$INSTALL_PATH/pmedit-cli.exe" override="true" condition="java_64bit">
+				<os family="windows" />
+			</singlefile>
 			<fileset dir="@{staging.dir}" override="true">
 				<include name="pdf-metadata-edit" />
+				<include name="pmedit-cli" />
 				<include name="pdf-metadata-edit.png" />
 				<os family="unix" />
 			</fileset>
 			<executable targetfile="$INSTALL_PATH/pdf-metadata-edit">
+				<os family="unix" />
+			</executable>
+			<executable targetfile="$INSTALL_PATH/pmedit-cli">
 				<os family="unix" />
 			</executable>
 		</pack>
