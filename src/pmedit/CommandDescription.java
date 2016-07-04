@@ -1,13 +1,19 @@
 package pmedit;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 class CommandDescription {
+	protected static int regKeyCount = 1;
+	
 	String name;
 	String description;
 	String regKey;
 	
-	public CommandDescription(String command, String name) {
+	protected CommandDescription(String command, String name) {
 		this.name = command;
-		this.regKey = "pme." + command;
+		this.regKey = "pme."  + (regKeyCount++) + command;
 		this.description = name;
 	}
 	public String toString(){
