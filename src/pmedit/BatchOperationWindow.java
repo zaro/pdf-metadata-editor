@@ -101,6 +101,7 @@ public class BatchOperationWindow extends JFrame {
 		getContentPane().add(scrollPane_1, "cell 0 1 2 1,grow");
 		
 		fileList = new JTextPane();
+		fileList.setText("Drop files here to batch process them ...");
 		scrollPane_1.setViewportView(fileList);
 		fileList.setEditable(false);
 		
@@ -202,6 +203,12 @@ public class BatchOperationWindow extends JFrame {
 	   }
 	}
 	public void appendFiles(List<File> files){
+		if(batchFileList.isEmpty() && files.size() > 0){
+	      Document doc = fileList.getDocument();
+	      try {
+			doc.remove(0, doc.getLength());
+			} catch (BadLocationException e) {}
+		}
 		for(File file:files){
 		   try {
 		      Document doc = fileList.getDocument();
