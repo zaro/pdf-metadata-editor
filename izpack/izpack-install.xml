@@ -11,7 +11,7 @@
 		<appsubpath>PdfMetadataEditor</appsubpath>
 		<uninstaller write="yes" />
 		<javaversion>1.6</javaversion>
-		<run-privileged uninstaller="yes" condition="izpack.windowsinstall" />
+		<run-privileged condition="izpack.windowsinstall" />
 	</info>
 
 	<guiprefs resizable="yes" width="640" height="480">
