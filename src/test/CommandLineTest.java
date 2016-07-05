@@ -16,14 +16,14 @@ import pmedit.MetadataInfo;
 
 public class CommandLineTest {
 
-	List<String> mdFieldList = Arrays.asList(new String[] { "basic.title", "basic.author", "basic.subject", "basic.keywords",
-			"basic.creator", "basic.producer", "basic.creationDate", "basic.modificationDate", "basic.trapped",
-			"xmpBasic.creatorTool", "xmpBasic.createDate", "xmpBasic.modifyDate", "xmpBasic.title", "xmpBasic.baseURL",
-			"xmpBasic.rating", "xmpBasic.label", "xmpBasic.nickname", "xmpBasic.identifiers", "xmpBasic.advisories",
-			"xmpBasic.metadataDate", "xmpPdf.pdfVersion", "xmpPdf.keywords", "xmpPdf.producer", "xmpDc.title",
-			"xmpDc.description", "xmpDc.creators", "xmpDc.contributors", "xmpDc.coverage", "xmpDc.dates",
-			"xmpDc.format", "xmpDc.identifier", "xmpDc.languages", "xmpDc.publishers", "xmpDc.relationships",
-			"xmpDc.rights", "xmpDc.source", "xmpDc.subjects", "xmpDc.types" });
+	List<String> mdFieldList = Arrays.asList(new String[] { "doc.title", "doc.author", "doc.subject", "doc.keywords",
+			"doc.creator", "doc.producer", "doc.creationDate", "doc.modificationDate", "doc.trapped",
+			"basic.creatorTool", "basic.createDate", "basic.modifyDate", "basic.baseURL",
+			"basic.rating", "basic.label", "basic.nickname", "basic.identifiers", "basic.advisories",
+			"basic.metadataDate", "pdf.pdfVersion", "pdf.keywords", "pdf.producer", "dc.title",
+			"dc.description", "dc.creators", "dc.contributors", "dc.coverage", "dc.dates",
+			"dc.format", "dc.identifier", "dc.languages", "dc.publishers", "dc.relationships",
+			"dc.rights", "dc.source", "dc.subjects", "dc.types" });
 
 	
 	@Test
@@ -95,14 +95,14 @@ public class CommandLineTest {
 		List<String> args = new ArrayList<String>();
 		args.add("clear");
 		args.add("all");
-		args.add("!basic.title");
+		args.add("!doc.title");
 		c = CommandLine.parse(args);
 		assertNotNull(c);
 		assertFalse(c.noGui);
 		assertNotNull(c.command);
 		assertTrue(c.command.is("clear"));
 		for(String field: mdFieldList){
-			if( field.equals("basic.title") ){
+			if( field.equals("doc.title") ){
 				assertFalse(c.params.metadata.isEnabled(field));				
 			} else {
 				assertTrue(c.params.metadata.isEnabled(field));
@@ -127,7 +127,7 @@ public class CommandLineTest {
 				genList.add(field + "=" + dateString );
 			} else if(field.endsWith(".rating")){
 				genList.add(field + "=17");
-			} else if(md.getFieldType(field).isAssignableFrom(List.class)){
+			} else if(md.getFieldDescription(field).isList){
 				genList.add(field + "=" + field );
 				genList.add(field + "=" + field );
 			} else {
@@ -147,15 +147,15 @@ public class CommandLineTest {
 		for(String field: mdFieldList){
 			assertTrue(c.params.metadata.isEnabled(field));
 			if(field.endsWith("Date")){
-				assertEquals(((Calendar) c.params.metadata.get(field)), cal);
+				assertEquals(cal, ((Calendar) c.params.metadata.get(field)));
 			} else  if(field.endsWith(".dates")){
-				assertEquals(c.params.metadata.get(field), Arrays.asList(cal, cal));
+				assertEquals(Arrays.asList(cal, cal), c.params.metadata.get(field));
 			} else if(field.endsWith(".rating")){
-				assertEquals(c.params.metadata.get(field), 17);
-			} else if(md.getFieldType(field).isAssignableFrom(List.class)){
-				assertEquals(c.params.metadata.get(field), Arrays.asList(field, field));
+				assertEquals(17, c.params.metadata.get(field));
+			} else if(md.getFieldDescription(field).isList){
+				assertEquals(Arrays.asList(field, field), c.params.metadata.get(field));
 			} else {
-				assertEquals(c.params.metadata.get(field), field);
+				assertEquals(field, c.params.metadata.get(field));
 			}
 		}
 		assertTrue(c.fileList.isEmpty());
@@ -167,19 +167,19 @@ public class CommandLineTest {
 	public void testValid2() throws ParseError {
 		CommandLine c;
 		c = CommandLine.parse(new String[]{
-				 "basic.title=title"
+				 "doc.title=title"
 		});
 		assertNotNull(c);
 		assertFalse(c.noGui);
 		assertNull(c.command);
-		assertEquals(c.params.metadata.basic.title, "title");
+		assertEquals(c.params.metadata.doc.title, "title");
 	}
 
 	@Test(expected = ParseError.class)
 	public void testInvalid1() throws ParseError {
 		CommandLine c;
 		c = CommandLine.parse(new String[]{
-				 "--something", "editv", "basic.creationDate"
+				 "--something", "editv", "doc.creationDate"
 		});
 	}
 

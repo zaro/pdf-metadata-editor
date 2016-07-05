@@ -18,10 +18,7 @@ public class TemplateString {
 
 		@Override
 		public String get(MetadataInfo md){
-			String value =  md.getString(name) ;
-			if(value != null)
-				return value;
-			return "";
+			return  md.getString(name, "") ;
 		}
 
 		@Override

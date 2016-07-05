@@ -157,7 +157,7 @@ public class PDFMetadataEditBatch {
 							status.addError(file.getName(), "Failed to rename to" + to.getName());
 						}
 					}
-				} catch (IOException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 					status.addError(file.getName(), "Failed: "  + e.toString());
 				}
@@ -188,7 +188,7 @@ public class PDFMetadataEditBatch {
 					out.write(md.toJson(2));
 					out.close();
 					status.addStatus(file.getName(), outFile);
-				} catch (IOException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 					status.addError(file.getName(), "Failed: "  + e.toString());
 				}
@@ -218,7 +218,7 @@ public class PDFMetadataEditBatch {
 					out.write(md.toYAML(true));
 					out.close();
 					status.addStatus(file.getName(), outFile);
-				} catch (IOException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 					status.addError(file.getName(), "Failed: "  + e.toString());
 				}

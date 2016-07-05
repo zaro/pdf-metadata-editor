@@ -77,44 +77,7 @@ public class CommandLine {
 		}
 		return i;
 	}
-    private static final SimpleDateFormat isoDateFormat[] = new SimpleDateFormat[]{
-    		new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"),
-      		new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"),
-      		new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"),
-      		new SimpleDateFormat("yyyy-MM-dd"),
-    };
   
-	public static Object mdFieldFromString(String id, Class<?> type, String value) throws ParseError{
-		if(type.equals(String.class)){
-			return value;
-		}
-		if(type.equals(Calendar.class) || id.equals("xmpDc.dates")){
-			Date d = null;
-			for(SimpleDateFormat df:isoDateFormat){
-				try {
-					d = df.parse(value);
-				} catch (ParseException e) {
-				}
-			}
-			if(d != null){
-				  Calendar cal = Calendar.getInstance();
-				  cal.setTime(d);
-				  return cal;
-			}
-			throw new ParseError("Invalid date format: "+ value);
-		}
-		if(type.equals(Integer.class)){
-			try{
-				return Integer.parseInt(value);
-			}catch(NumberFormatException e){
-				throw new ParseError("Invalid inreger format: "+ value);
-			}
-		}
-		if(type.equals(List.class)){
-			return value;
-		}
-		return value;
-	}
 	
 	public static CommandLine parse(String[] args) throws ParseError{
 		return parse(Arrays.asList(args));
@@ -145,7 +108,7 @@ public class CommandLine {
 				String id = arg.substring(0, eqIndex);
 				if(validMdNames.contains(id)){
 					String value = arg.substring(eqIndex+1);
-					cmdLine.params.metadata.setAppend(id, mdFieldFromString(id,cmdLine.params.metadata.getFieldType(id), value));
+					cmdLine.params.metadata.setAppendFromString(id, value);
 					cmdLine.params.metadata.setEnabled(id, enable);
 				}
 			} else if(validMdNames.contains(arg)){
