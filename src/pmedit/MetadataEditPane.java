@@ -1,6 +1,7 @@
 package pmedit;
 
 import java.lang.reflect.Field;
+import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
@@ -29,6 +30,11 @@ import java.awt.Insets;
 import javax.swing.JEditorPane;
 import javax.swing.JCheckBox;
 import javax.swing.SwingConstants;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter;
+import javax.swing.text.PlainDocument;
+import javax.swing.JFormattedTextField;
 
 public class MetadataEditPane {
 
@@ -43,84 +49,82 @@ public class MetadataEditPane {
 	private static final long serialVersionUID = 6994489903939856136L;
 	public JPanel basicMetaPanel;
 
-	@FieldID("basic.title")
+	@FieldID("doc.title")
 	public JTextField basicTitle;
-	@FieldID("basic.author")
+	@FieldID("doc.author")
 	public JTextField basicAuthor;
-	@FieldID("basic.subject")
+	@FieldID("doc.subject")
 	public JTextArea basicSubject;
-	@FieldID(value = "basic.keywords")
+	@FieldID(value = "doc.keywords")
 	public JTextArea basicKeywords;
-	@FieldID("basic.creator")
+	@FieldID("doc.creator")
 	public JTextField basicCreator;
-	@FieldID("basic.producer")
+	@FieldID("doc.producer")
 	public JTextField basicProducer;
-	@FieldID("basic.trapped")
+	@FieldID("doc.trapped")
 	public JComboBox basicTrapped;
-	@FieldID(value = "basic.creationDate", type = FieldID.FieldType.DateField)
+	@FieldID(value = "doc.creationDate", type = FieldID.FieldType.DateField)
 	public JDateChooser basicCreationDate;
-	@FieldID(value = "basic.modificationDate", type = FieldID.FieldType.DateField)
+	@FieldID(value = "doc.modificationDate", type = FieldID.FieldType.DateField)
 	public JDateChooser basicModificationDate;
 
-	@FieldID("xmpBasic.creatorTool")
+	@FieldID("basic.creatorTool")
 	public JTextField xmpBasicCreatorTool;
-	@FieldID("xmpBasic.baseURL")
+	@FieldID("basic.baseURL")
 	public JTextField xmpBasicBaseURL;
-	@FieldID("xmpBasic.label")
+	@FieldID("basic.rating")
+	public JTextField xmpBasicRating;
+	@FieldID("basic.label")
 	public JTextField xmpBasicLabel;
-	@FieldID("xmpBasic.nickname")
+	@FieldID("basic.nickname")
 	public JTextField xmpBasicNickname;
-	@FieldID(value = "xmpBasic.rating", type = FieldID.FieldType.IntField)
-	public JSpinner xmpBasicRating;
-	@FieldID("xmpBasic.title")
-	public JTextField xmpBasicTitle;
-	@FieldID(value = "xmpBasic.identifiers", type = FieldID.FieldType.TextField)
+	@FieldID(value = "basic.identifiers", type = FieldID.FieldType.TextField)
 	public JTextArea xmpBasicIdentifiers;
-	@FieldID(value = "xmpBasic.advisories", type = FieldID.FieldType.TextField)
+	@FieldID(value = "basic.advisories", type = FieldID.FieldType.TextField)
 	public JTextArea xmpBasicAdvisories;
-	@FieldID(value = "xmpBasic.modifyDate", type = FieldID.FieldType.DateField)
+	@FieldID(value = "basic.modifyDate", type = FieldID.FieldType.DateField)
 	public JDateChooser xmpBasicModifyDate;
-	@FieldID(value = "xmpBasic.createDate", type = FieldID.FieldType.DateField)
+	@FieldID(value = "basic.createDate", type = FieldID.FieldType.DateField)
 	public JDateChooser xmpBasicCreateDate;
-	@FieldID(value = "xmpBasic.metadataDate", type = FieldID.FieldType.DateField)
+	@FieldID(value = "basic.metadataDate", type = FieldID.FieldType.DateField)
 	public JDateChooser xmpBasicMetadataDate;
 
-	@FieldID("xmpPdf.keywords")
+	@FieldID("pdf.keywords")
 	public JTextArea xmpPdfKeywords;
-	@FieldID("xmpPdf.pdfVersion")
+	@FieldID("pdf.pdfVersion")
 	public JTextField xmpPdfVersion;
-	@FieldID("xmpPdf.producer")
+	@FieldID("pdf.producer")
 	public JTextField xmpPdfProducer;
 
-	@FieldID("xmpDc.title")
+	@FieldID("dc.title")
 	public JTextField xmpDcTitle;
-	@FieldID("xmpDc.coverage")
+	@FieldID("dc.coverage")
 	public JTextField xmpDcCoverage;
-	@FieldID("xmpDc.description")
+	@FieldID("dc.description")
 	public JTextField xmpDcDescription;
-	@FieldID(value = "xmpDc.dates", type = FieldID.FieldType.TextField)
+	@FieldID(value = "dc.dates", type = FieldID.FieldType.TextField)
 	public JTextArea xmpDcDates;
-	@FieldID("xmpDc.format")
+	@FieldID("dc.format")
 	public JTextField xmpDcFormat;
-	@FieldID("xmpDc.identifier")
+	@FieldID("dc.identifier")
 	public JTextField xmpDcIdentifier;
-	@FieldID("xmpDc.rights")
+	@FieldID("dc.rights")
 	public JTextField xmpDcRights;
-	@FieldID("xmpDc.source")
+	@FieldID("dc.source")
 	public JTextField xmpDcSource;
-	@FieldID(value = "xmpDc.creators", type = FieldID.FieldType.TextField)
+	@FieldID(value = "dc.creators", type = FieldID.FieldType.TextField)
 	public JTextArea xmpDcCreators;
-	@FieldID(value = "xmpDc.contributors", type = FieldID.FieldType.TextField)
+	@FieldID(value = "dc.contributors", type = FieldID.FieldType.TextField)
 	public JTextArea xmpDcContributors;
-	@FieldID(value = "xmpDc.languages", type = FieldID.FieldType.TextField)
+	@FieldID(value = "dc.languages", type = FieldID.FieldType.TextField)
 	public JTextArea xmpDcLanguages;
-	@FieldID(value = "xmpDc.publishers", type = FieldID.FieldType.TextField)
+	@FieldID(value = "dc.publishers", type = FieldID.FieldType.TextField)
 	public JTextArea xmpDcPublishers;
-	@FieldID(value = "xmpDc.relationships", type = FieldID.FieldType.TextField)
+	@FieldID(value = "dc.relationships", type = FieldID.FieldType.TextField)
 	public JTextArea xmpDcRelationships;
-	@FieldID(value = "xmpDc.subjects", type = FieldID.FieldType.TextField)
+	@FieldID(value = "dc.subjects", type = FieldID.FieldType.TextField)
 	public JTextArea xmpDcSubjects;
-	@FieldID(value = "xmpDc.types", type = FieldID.FieldType.TextField)
+	@FieldID(value = "dc.types", type = FieldID.FieldType.TextField)
 	public JTextArea xmpDcTypes;
 	public JPanel xmlBasicMetaPanel;
 	public JPanel xmlPdfMetaPanel;
@@ -131,84 +135,82 @@ public class MetadataEditPane {
 	private JScrollPane scrollPane_1;
 	private JScrollPane scrollPane_2;
 
-	@FieldEnabled("basic.title")
+	@FieldEnabled("doc.title")
 	public JCheckBox basicTitleEnabled;
-	@FieldEnabled("basic.author")
+	@FieldEnabled("doc.author")
 	public JCheckBox basicAuthorEnabled;
-	@FieldEnabled("basic.subject")
+	@FieldEnabled("doc.subject")
 	public JCheckBox basicSubjectEnabled;
-	@FieldEnabled("basic.keywords")
+	@FieldEnabled("doc.keywords")
 	public JCheckBox basicKeywordsEnabled;
-	@FieldEnabled("basic.creator")
+	@FieldEnabled("doc.creator")
 	public JCheckBox basicCreatorEnabled;
-	@FieldEnabled("basic.producer")
+	@FieldEnabled("doc.producer")
 	public JCheckBox basicProducerEnabled;
-	@FieldEnabled("basic.creationDate")
+	@FieldEnabled("doc.creationDate")
 	public JCheckBox basicCreationDateEnabled;
-	@FieldEnabled("basic.modificationDate")
+	@FieldEnabled("doc.modificationDate")
 	public JCheckBox basicModificationDateEnabled;
-	@FieldEnabled("basic.trapped")
+	@FieldEnabled("doc.trapped")
 	public JCheckBox basicTrappedEnabled;
 	
-	@FieldEnabled("xmpBasic.creatorTool")
+	@FieldEnabled("basic.creatorTool")
 	public JCheckBox xmpBasicCreatorToolEnabled;
-	@FieldEnabled("xmpBasic.createDate")
+	@FieldEnabled("basic.createDate")
 	public JCheckBox xmpBasicCreateDateEnabled;
-	@FieldEnabled("xmpBasic.modifyDate")
+	@FieldEnabled("basic.modifyDate")
 	public JCheckBox xmpBasicModifyDateEnabled;
-	@FieldEnabled("xmpBasic.title")
-	public JCheckBox xmpBasicTitleEnabled;
-	@FieldEnabled("xmpBasic.baseURL")
+	@FieldEnabled("basic.baseURL")
 	public JCheckBox xmpBasicBaseURLEnabled;
-	@FieldEnabled("xmpBasic.rating")
+	@FieldEnabled("basic.rating")
 	public JCheckBox xmpBasicRatingEnable;
-	@FieldEnabled("xmpBasic.label")
+	@FieldEnabled("basic.label")
 	public JCheckBox xmpBasicLabelEnabled;
-	@FieldEnabled("xmpBasic.nickname")
+	@FieldEnabled("basic.nickname")
 	public JCheckBox xmpBasicNicknameEnabled;
-	@FieldEnabled("xmpBasic.identifiers")
+	@FieldEnabled("basic.identifiers")
 	public JCheckBox xmpBasicIdentifiersEnabled;
-	@FieldEnabled("xmpBasic.advisories")
+	@FieldEnabled("basic.advisories")
 	public JCheckBox xmpBasicAdvisoriesEnabled;
-	@FieldEnabled("xmpBasic.metadataDate")
+	@FieldEnabled("basic.metadataDate")
 	public JCheckBox xmpBasicMetadataDateEnabled;
 	
-	@FieldEnabled("xmpPdf.keywords")
+	@FieldEnabled("pdf.keywords")
 	public JCheckBox xmpPdfKeywordsEnabled;
-	@FieldEnabled("xmpPdf.pdfVersion")
+	@FieldEnabled("pdf.pdfVersion")
 	public JCheckBox xmpPdfVersionEnabled;
-	@FieldEnabled("xmpPdf.producer")
+	@FieldEnabled("pdf.producer")
 	public JCheckBox xmpPdfProducerEnabled;
 
-	@FieldEnabled("xmpDc.title")
+	@FieldEnabled("dc.title")
 	public JCheckBox xmlDcTitleEnabled;
-	@FieldEnabled("xmpDc.description")
+	@FieldEnabled("dc.description")
 	public JCheckBox xmpDcDescriptionEnabled;
-	@FieldEnabled("xmpDc.creators")
+	@FieldEnabled("dc.creators")
 	public JCheckBox xmpDcCreatorsEnabled;
-	@FieldEnabled("xmpDc.contributors")
+	@FieldEnabled("dc.contributors")
 	public JCheckBox xmpDcContributorsEnabled;
-	@FieldEnabled("xmpDc.coverage")
+	@FieldEnabled("dc.coverage")
 	public JCheckBox xmpDcCoverageEnabled;
-	@FieldEnabled("xmpDc.dates")
+	@FieldEnabled("dc.dates")
 	public JCheckBox xmpDcDatesEnabled;
-	@FieldEnabled("xmpDc.format")
+	@FieldEnabled("dc.format")
 	public JCheckBox xmpDcFormatEnabled;
-	@FieldEnabled("xmpDc.identifier")
+	@FieldEnabled("dc.identifier")
 	public JCheckBox xmpDcIdentifierEnabled;
-	@FieldEnabled("xmpDc.languages")
+	@FieldEnabled("dc.languages")
 	public JCheckBox xmpDcLanguagesEnabled;
-	@FieldEnabled("xmpDc.publishers")
+	@FieldEnabled("dc.publishers")
 	public JCheckBox xmpDcPublishersEnabled;
-	@FieldEnabled("xmpDc.relationships")
+	@FieldEnabled("dc.relationships")
 	public JCheckBox xmpDcRelationshipsEnabled;
-	@FieldEnabled("xmpDc.rights")
+	@FieldEnabled("dc.rights")
 	public JCheckBox xmpDcRightsEnabled;
-	@FieldEnabled("xmpDc.source")
+	@FieldEnabled("dc.source")
 	public JCheckBox xmpDcSourceEnabled;
-	@FieldEnabled("xmpDc.subjects")
+	@FieldEnabled("dc.subjects")
 	public JCheckBox xmpDcSubjectsEnabled;
-	@FieldEnabled("xmpDc.types")
+	@FieldEnabled("dc.types")
 	public JCheckBox xmpDcTypesEnabled;
 
 	public MetadataEditPane() {
@@ -495,9 +497,9 @@ public class MetadataEditPane {
 		xmpBasicScrollpane.setViewportView(xmlBasicMetaPanel);
 		GridBagLayout gbl_xmlBasicMetaPanel = new GridBagLayout();
 		gbl_xmlBasicMetaPanel.columnWidths = new int[] {112, 0, 284, 0};
-		gbl_xmlBasicMetaPanel.rowHeights = new int[] { 26, 26, 26, 26, 26, 26, 26, 26, 16, 16, 26, 0 };
-		gbl_xmlBasicMetaPanel.columnWeights = new double[] { 0.0, 0.0, 0.0, Double.MIN_VALUE };
-		gbl_xmlBasicMetaPanel.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		gbl_xmlBasicMetaPanel.rowHeights = new int[] { 26, 26, 26, 26, 26, 26, 26, 16, 16, 26, 0 };
+		gbl_xmlBasicMetaPanel.columnWeights = new double[] { 0.0, 0.0, 1.0, Double.MIN_VALUE };
+		gbl_xmlBasicMetaPanel.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 				Double.MIN_VALUE };
 		xmlBasicMetaPanel.setLayout(gbl_xmlBasicMetaPanel);
 
@@ -581,39 +583,12 @@ public class MetadataEditPane {
 		gbc_xmpBasicModifyDate.gridy = 2;
 		xmlBasicMetaPanel.add(xmpBasicModifyDate, gbc_xmpBasicModifyDate);
 
-		JLabel lblTitle_1 = new JLabel("Title");
-		GridBagConstraints gbc_lblTitle_1 = new GridBagConstraints();
-		gbc_lblTitle_1.anchor = GridBagConstraints.EAST;
-		gbc_lblTitle_1.insets = new Insets(0, 0, 5, 5);
-		gbc_lblTitle_1.gridx = 0;
-		gbc_lblTitle_1.gridy = 3;
-		xmlBasicMetaPanel.add(lblTitle_1, gbc_lblTitle_1);
-		
-		xmpBasicTitleEnabled = new JCheckBox("");
-		xmpBasicTitleEnabled.setEnabled(false);
-		xmpBasicTitleEnabled.setSelected(true);
-		GridBagConstraints gbc_xmpBasicTitleEnabled = new GridBagConstraints();
-		gbc_xmpBasicTitleEnabled.insets = new Insets(0, 0, 5, 5);
-		gbc_xmpBasicTitleEnabled.gridx = 1;
-		gbc_xmpBasicTitleEnabled.gridy = 3;
-		xmlBasicMetaPanel.add(xmpBasicTitleEnabled, gbc_xmpBasicTitleEnabled);
-
-		xmpBasicTitle = new JTextField();
-		GridBagConstraints gbc_xmpBasicTitle = new GridBagConstraints();
-		gbc_xmpBasicTitle.anchor = GridBagConstraints.WEST;
-		gbc_xmpBasicTitle.fill = GridBagConstraints.HORIZONTAL;
-		gbc_xmpBasicTitle.insets = new Insets(0, 0, 5, 0);
-		gbc_xmpBasicTitle.gridx = 2;
-		gbc_xmpBasicTitle.gridy = 3;
-		xmlBasicMetaPanel.add(xmpBasicTitle, gbc_xmpBasicTitle);
-		xmpBasicTitle.setColumns(10);
-
 		JLabel lblBaseUrl = new JLabel("Base URL");
 		GridBagConstraints gbc_lblBaseUrl = new GridBagConstraints();
 		gbc_lblBaseUrl.anchor = GridBagConstraints.EAST;
 		gbc_lblBaseUrl.insets = new Insets(0, 0, 5, 5);
 		gbc_lblBaseUrl.gridx = 0;
-		gbc_lblBaseUrl.gridy = 4;
+		gbc_lblBaseUrl.gridy = 3;
 		xmlBasicMetaPanel.add(lblBaseUrl, gbc_lblBaseUrl);
 		
 		xmpBasicBaseURLEnabled = new JCheckBox("");
@@ -622,7 +597,7 @@ public class MetadataEditPane {
 		GridBagConstraints gbc_xmpBasicBaseURLEnabled = new GridBagConstraints();
 		gbc_xmpBasicBaseURLEnabled.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpBasicBaseURLEnabled.gridx = 1;
-		gbc_xmpBasicBaseURLEnabled.gridy = 4;
+		gbc_xmpBasicBaseURLEnabled.gridy = 3;
 		xmlBasicMetaPanel.add(xmpBasicBaseURLEnabled, gbc_xmpBasicBaseURLEnabled);
 
 		xmpBasicBaseURL = new JTextField();
@@ -631,7 +606,7 @@ public class MetadataEditPane {
 		gbc_xmpBasicBaseURL.fill = GridBagConstraints.HORIZONTAL;
 		gbc_xmpBasicBaseURL.insets = new Insets(0, 0, 5, 0);
 		gbc_xmpBasicBaseURL.gridx = 2;
-		gbc_xmpBasicBaseURL.gridy = 4;
+		gbc_xmpBasicBaseURL.gridy = 3;
 		xmlBasicMetaPanel.add(xmpBasicBaseURL, gbc_xmpBasicBaseURL);
 		xmpBasicBaseURL.setColumns(10);
 
@@ -640,7 +615,7 @@ public class MetadataEditPane {
 		gbc_lblRating.anchor = GridBagConstraints.EAST;
 		gbc_lblRating.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRating.gridx = 0;
-		gbc_lblRating.gridy = 5;
+		gbc_lblRating.gridy = 4;
 		xmlBasicMetaPanel.add(lblRating, gbc_lblRating);
 		
 		xmpBasicRatingEnable = new JCheckBox("");
@@ -649,17 +624,15 @@ public class MetadataEditPane {
 		GridBagConstraints gbc_xmpBasicRatingEnable = new GridBagConstraints();
 		gbc_xmpBasicRatingEnable.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpBasicRatingEnable.gridx = 1;
-		gbc_xmpBasicRatingEnable.gridy = 5;
+		gbc_xmpBasicRatingEnable.gridy = 4;
 		xmlBasicMetaPanel.add(xmpBasicRatingEnable, gbc_xmpBasicRatingEnable);
-
-		xmpBasicRating = new JSpinner();
-		xmpBasicRating.setModel(new SpinnerNumberModel(new Integer(0), null, null, new Integer(1)));
+		
+		xmpBasicRating = new JTextField();
 		GridBagConstraints gbc_xmpBasicRating = new GridBagConstraints();
-		gbc_xmpBasicRating.fill = GridBagConstraints.HORIZONTAL;
-		gbc_xmpBasicRating.anchor = GridBagConstraints.WEST;
 		gbc_xmpBasicRating.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpBasicRating.fill = GridBagConstraints.HORIZONTAL;
 		gbc_xmpBasicRating.gridx = 2;
-		gbc_xmpBasicRating.gridy = 5;
+		gbc_xmpBasicRating.gridy = 4;
 		xmlBasicMetaPanel.add(xmpBasicRating, gbc_xmpBasicRating);
 
 		JLabel lblLabel = new JLabel("Label");
@@ -667,7 +640,7 @@ public class MetadataEditPane {
 		gbc_lblLabel.anchor = GridBagConstraints.EAST;
 		gbc_lblLabel.insets = new Insets(0, 0, 5, 5);
 		gbc_lblLabel.gridx = 0;
-		gbc_lblLabel.gridy = 6;
+		gbc_lblLabel.gridy = 5;
 		xmlBasicMetaPanel.add(lblLabel, gbc_lblLabel);
 		
 		xmpBasicLabelEnabled = new JCheckBox("");
@@ -676,7 +649,7 @@ public class MetadataEditPane {
 		GridBagConstraints gbc_xmpBasicLabelEnabled = new GridBagConstraints();
 		gbc_xmpBasicLabelEnabled.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpBasicLabelEnabled.gridx = 1;
-		gbc_xmpBasicLabelEnabled.gridy = 6;
+		gbc_xmpBasicLabelEnabled.gridy = 5;
 		xmlBasicMetaPanel.add(xmpBasicLabelEnabled, gbc_xmpBasicLabelEnabled);
 
 		xmpBasicLabel = new JTextField();
@@ -685,7 +658,7 @@ public class MetadataEditPane {
 		gbc_xmpBasicLabel.fill = GridBagConstraints.HORIZONTAL;
 		gbc_xmpBasicLabel.insets = new Insets(0, 0, 5, 0);
 		gbc_xmpBasicLabel.gridx = 2;
-		gbc_xmpBasicLabel.gridy = 6;
+		gbc_xmpBasicLabel.gridy = 5;
 		xmlBasicMetaPanel.add(xmpBasicLabel, gbc_xmpBasicLabel);
 		xmpBasicLabel.setColumns(10);
 
@@ -694,7 +667,7 @@ public class MetadataEditPane {
 		gbc_lblNickname.anchor = GridBagConstraints.EAST;
 		gbc_lblNickname.insets = new Insets(0, 0, 5, 5);
 		gbc_lblNickname.gridx = 0;
-		gbc_lblNickname.gridy = 7;
+		gbc_lblNickname.gridy = 6;
 		xmlBasicMetaPanel.add(lblNickname, gbc_lblNickname);
 		
 		xmpBasicNicknameEnabled = new JCheckBox("");
@@ -703,7 +676,7 @@ public class MetadataEditPane {
 		GridBagConstraints gbc_xmpBasicNicknameEnabled = new GridBagConstraints();
 		gbc_xmpBasicNicknameEnabled.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpBasicNicknameEnabled.gridx = 1;
-		gbc_xmpBasicNicknameEnabled.gridy = 7;
+		gbc_xmpBasicNicknameEnabled.gridy = 6;
 		xmlBasicMetaPanel.add(xmpBasicNicknameEnabled, gbc_xmpBasicNicknameEnabled);
 
 		xmpBasicNickname = new JTextField();
@@ -712,7 +685,7 @@ public class MetadataEditPane {
 		gbc_xmpBasicNickname.fill = GridBagConstraints.HORIZONTAL;
 		gbc_xmpBasicNickname.insets = new Insets(0, 0, 5, 0);
 		gbc_xmpBasicNickname.gridx = 2;
-		gbc_xmpBasicNickname.gridy = 7;
+		gbc_xmpBasicNickname.gridy = 6;
 		xmlBasicMetaPanel.add(xmpBasicNickname, gbc_xmpBasicNickname);
 		xmpBasicNickname.setColumns(10);
 
@@ -721,7 +694,7 @@ public class MetadataEditPane {
 		gbc_label_1.anchor = GridBagConstraints.NORTHEAST;
 		gbc_label_1.insets = new Insets(0, 0, 5, 5);
 		gbc_label_1.gridx = 0;
-		gbc_label_1.gridy = 8;
+		gbc_label_1.gridy = 7;
 		xmlBasicMetaPanel.add(label_1, gbc_label_1);
 		
 		xmpBasicIdentifiersEnabled = new JCheckBox("");
@@ -730,7 +703,7 @@ public class MetadataEditPane {
 		GridBagConstraints gbc_xmpBasicIdentifiersEnabled = new GridBagConstraints();
 		gbc_xmpBasicIdentifiersEnabled.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpBasicIdentifiersEnabled.gridx = 1;
-		gbc_xmpBasicIdentifiersEnabled.gridy = 8;
+		gbc_xmpBasicIdentifiersEnabled.gridy = 7;
 		xmlBasicMetaPanel.add(xmpBasicIdentifiersEnabled, gbc_xmpBasicIdentifiersEnabled);
 
 		xmpBasicIdentifiers = new JTextArea();
@@ -740,7 +713,7 @@ public class MetadataEditPane {
 		gbc_xmpBasicIdentifiers.fill = GridBagConstraints.BOTH;
 		gbc_xmpBasicIdentifiers.insets = new Insets(0, 0, 5, 0);
 		gbc_xmpBasicIdentifiers.gridx = 2;
-		gbc_xmpBasicIdentifiers.gridy = 8;
+		gbc_xmpBasicIdentifiers.gridy = 7;
 		xmlBasicMetaPanel.add(xmpBasicIdentifiers, gbc_xmpBasicIdentifiers);
 
 		JLabel label = new JLabel("Advisories");
@@ -748,7 +721,7 @@ public class MetadataEditPane {
 		gbc_label.anchor = GridBagConstraints.NORTHEAST;
 		gbc_label.insets = new Insets(0, 0, 5, 5);
 		gbc_label.gridx = 0;
-		gbc_label.gridy = 9;
+		gbc_label.gridy = 8;
 		xmlBasicMetaPanel.add(label, gbc_label);
 		
 		xmpBasicAdvisoriesEnabled = new JCheckBox("");
@@ -757,7 +730,7 @@ public class MetadataEditPane {
 		GridBagConstraints gbc_xmpBasicAdvisoriesEnabled = new GridBagConstraints();
 		gbc_xmpBasicAdvisoriesEnabled.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpBasicAdvisoriesEnabled.gridx = 1;
-		gbc_xmpBasicAdvisoriesEnabled.gridy = 9;
+		gbc_xmpBasicAdvisoriesEnabled.gridy = 8;
 		xmlBasicMetaPanel.add(xmpBasicAdvisoriesEnabled, gbc_xmpBasicAdvisoriesEnabled);
 
 		xmpBasicAdvisories = new JTextArea();
@@ -767,7 +740,7 @@ public class MetadataEditPane {
 		gbc_xmpBasicAdvisories.fill = GridBagConstraints.BOTH;
 		gbc_xmpBasicAdvisories.insets = new Insets(0, 0, 5, 0);
 		gbc_xmpBasicAdvisories.gridx = 2;
-		gbc_xmpBasicAdvisories.gridy = 9;
+		gbc_xmpBasicAdvisories.gridy = 8;
 		xmlBasicMetaPanel.add(xmpBasicAdvisories, gbc_xmpBasicAdvisories);
 
 		JLabel lblMetadataDate = new JLabel("Metadata Date");
@@ -775,7 +748,7 @@ public class MetadataEditPane {
 		gbc_lblMetadataDate.anchor = GridBagConstraints.WEST;
 		gbc_lblMetadataDate.insets = new Insets(0, 0, 0, 5);
 		gbc_lblMetadataDate.gridx = 0;
-		gbc_lblMetadataDate.gridy = 10;
+		gbc_lblMetadataDate.gridy = 9;
 		xmlBasicMetaPanel.add(lblMetadataDate, gbc_lblMetadataDate);
 		
 		xmpBasicMetadataDateEnabled = new JCheckBox("");
@@ -784,7 +757,7 @@ public class MetadataEditPane {
 		GridBagConstraints gbc_xmpBasicMetadataDateEnabled = new GridBagConstraints();
 		gbc_xmpBasicMetadataDateEnabled.insets = new Insets(0, 0, 0, 5);
 		gbc_xmpBasicMetadataDateEnabled.gridx = 1;
-		gbc_xmpBasicMetadataDateEnabled.gridy = 10;
+		gbc_xmpBasicMetadataDateEnabled.gridy = 9;
 		xmlBasicMetaPanel.add(xmpBasicMetadataDateEnabled, gbc_xmpBasicMetadataDateEnabled);
 
 		xmpBasicMetadataDate = new JDateChooser();
@@ -793,7 +766,7 @@ public class MetadataEditPane {
 		gbc_xmpBasicMetadataDate.anchor = GridBagConstraints.WEST;
 		gbc_xmpBasicMetadataDate.fill = GridBagConstraints.HORIZONTAL;
 		gbc_xmpBasicMetadataDate.gridx = 2;
-		gbc_xmpBasicMetadataDate.gridy = 10;
+		gbc_xmpBasicMetadataDate.gridy = 9;
 		xmlBasicMetaPanel.add(xmpBasicMetadataDate, gbc_xmpBasicMetadataDate);
 
 		JScrollPane xmpPdfScrollpane = new JScrollPane();
@@ -934,7 +907,7 @@ public class MetadataEditPane {
 		gbc_xmpDcTitle.weightx = 1.0;
 		gbc_xmpDcTitle.anchor = GridBagConstraints.WEST;
 		gbc_xmpDcTitle.fill = GridBagConstraints.HORIZONTAL;
-		gbc_xmpDcTitle.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpDcTitle.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpDcTitle.gridx = 2;
 		gbc_xmpDcTitle.gridy = 0;
 		xmpDcMetaPanel.add(xmpDcTitle, gbc_xmpDcTitle);
@@ -961,7 +934,7 @@ public class MetadataEditPane {
 		GridBagConstraints gbc_xmpDcDescription = new GridBagConstraints();
 		gbc_xmpDcDescription.anchor = GridBagConstraints.WEST;
 		gbc_xmpDcDescription.fill = GridBagConstraints.HORIZONTAL;
-		gbc_xmpDcDescription.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpDcDescription.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpDcDescription.gridx = 2;
 		gbc_xmpDcDescription.gridy = 1;
 		xmpDcMetaPanel.add(xmpDcDescription, gbc_xmpDcDescription);
@@ -989,7 +962,7 @@ public class MetadataEditPane {
 		gbc_xmpDcCreators.weighty = 0.125;
 		gbc_xmpDcCreators.anchor = GridBagConstraints.WEST;
 		gbc_xmpDcCreators.fill = GridBagConstraints.BOTH;
-		gbc_xmpDcCreators.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpDcCreators.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpDcCreators.gridx = 2;
 		gbc_xmpDcCreators.gridy = 2;
 		xmpDcMetaPanel.add(xmpDcCreators, gbc_xmpDcCreators);
@@ -1016,7 +989,7 @@ public class MetadataEditPane {
 		gbc_xmpDcContributors.weighty = 0.125;
 		gbc_xmpDcContributors.anchor = GridBagConstraints.WEST;
 		gbc_xmpDcContributors.fill = GridBagConstraints.BOTH;
-		gbc_xmpDcContributors.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpDcContributors.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpDcContributors.gridx = 2;
 		gbc_xmpDcContributors.gridy = 3;
 		xmpDcMetaPanel.add(xmpDcContributors, gbc_xmpDcContributors);
@@ -1042,7 +1015,7 @@ public class MetadataEditPane {
 		GridBagConstraints gbc_xmpDcCoverage = new GridBagConstraints();
 		gbc_xmpDcCoverage.anchor = GridBagConstraints.WEST;
 		gbc_xmpDcCoverage.fill = GridBagConstraints.HORIZONTAL;
-		gbc_xmpDcCoverage.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpDcCoverage.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpDcCoverage.gridx = 2;
 		gbc_xmpDcCoverage.gridy = 4;
 		xmpDcMetaPanel.add(xmpDcCoverage, gbc_xmpDcCoverage);
@@ -1071,7 +1044,7 @@ public class MetadataEditPane {
 		gbc_xmpDcDates.weighty = 0.125;
 		gbc_xmpDcDates.anchor = GridBagConstraints.WEST;
 		gbc_xmpDcDates.fill = GridBagConstraints.HORIZONTAL;
-		gbc_xmpDcDates.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpDcDates.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpDcDates.gridx = 2;
 		gbc_xmpDcDates.gridy = 5;
 		xmpDcMetaPanel.add(xmpDcDates, gbc_xmpDcDates);
@@ -1098,7 +1071,7 @@ public class MetadataEditPane {
 		GridBagConstraints gbc_xmpDcFormat = new GridBagConstraints();
 		gbc_xmpDcFormat.anchor = GridBagConstraints.WEST;
 		gbc_xmpDcFormat.fill = GridBagConstraints.HORIZONTAL;
-		gbc_xmpDcFormat.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpDcFormat.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpDcFormat.gridx = 2;
 		gbc_xmpDcFormat.gridy = 6;
 		xmpDcMetaPanel.add(xmpDcFormat, gbc_xmpDcFormat);
@@ -1125,7 +1098,7 @@ public class MetadataEditPane {
 		GridBagConstraints gbc_xmpDcIdentifier = new GridBagConstraints();
 		gbc_xmpDcIdentifier.anchor = GridBagConstraints.WEST;
 		gbc_xmpDcIdentifier.fill = GridBagConstraints.HORIZONTAL;
-		gbc_xmpDcIdentifier.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpDcIdentifier.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpDcIdentifier.gridx = 2;
 		gbc_xmpDcIdentifier.gridy = 7;
 		xmpDcMetaPanel.add(xmpDcIdentifier, gbc_xmpDcIdentifier);
@@ -1153,7 +1126,7 @@ public class MetadataEditPane {
 		gbc_xmpDcLanguages.weighty = 0.125;
 		gbc_xmpDcLanguages.anchor = GridBagConstraints.WEST;
 		gbc_xmpDcLanguages.fill = GridBagConstraints.BOTH;
-		gbc_xmpDcLanguages.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpDcLanguages.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpDcLanguages.gridx = 2;
 		gbc_xmpDcLanguages.gridy = 8;
 		xmpDcMetaPanel.add(xmpDcLanguages, gbc_xmpDcLanguages);
@@ -1180,7 +1153,7 @@ public class MetadataEditPane {
 		gbc_xmpDcPublishers.weighty = 0.125;
 		gbc_xmpDcPublishers.anchor = GridBagConstraints.WEST;
 		gbc_xmpDcPublishers.fill = GridBagConstraints.BOTH;
-		gbc_xmpDcPublishers.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpDcPublishers.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpDcPublishers.gridx = 2;
 		gbc_xmpDcPublishers.gridy = 9;
 		xmpDcMetaPanel.add(xmpDcPublishers, gbc_xmpDcPublishers);
@@ -1208,7 +1181,7 @@ public class MetadataEditPane {
 		gbc_xmpDcRelationships.weighty = 0.125;
 		gbc_xmpDcRelationships.anchor = GridBagConstraints.WEST;
 		gbc_xmpDcRelationships.fill = GridBagConstraints.BOTH;
-		gbc_xmpDcRelationships.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpDcRelationships.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpDcRelationships.gridx = 2;
 		gbc_xmpDcRelationships.gridy = 10;
 		xmpDcMetaPanel.add(xmpDcRelationships, gbc_xmpDcRelationships);
@@ -1234,7 +1207,7 @@ public class MetadataEditPane {
 		GridBagConstraints gbc_xmpDcRights = new GridBagConstraints();
 		gbc_xmpDcRights.anchor = GridBagConstraints.WEST;
 		gbc_xmpDcRights.fill = GridBagConstraints.HORIZONTAL;
-		gbc_xmpDcRights.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpDcRights.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpDcRights.gridx = 2;
 		gbc_xmpDcRights.gridy = 11;
 		xmpDcMetaPanel.add(xmpDcRights, gbc_xmpDcRights);
@@ -1261,7 +1234,7 @@ public class MetadataEditPane {
 		GridBagConstraints gbc_xmpDcSource = new GridBagConstraints();
 		gbc_xmpDcSource.anchor = GridBagConstraints.WEST;
 		gbc_xmpDcSource.fill = GridBagConstraints.HORIZONTAL;
-		gbc_xmpDcSource.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpDcSource.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpDcSource.gridx = 2;
 		gbc_xmpDcSource.gridy = 12;
 		xmpDcMetaPanel.add(xmpDcSource, gbc_xmpDcSource);
@@ -1289,7 +1262,7 @@ public class MetadataEditPane {
 		gbc_xmpDcSubjects.weighty = 0.125;
 		gbc_xmpDcSubjects.anchor = GridBagConstraints.WEST;
 		gbc_xmpDcSubjects.fill = GridBagConstraints.BOTH;
-		gbc_xmpDcSubjects.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpDcSubjects.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpDcSubjects.gridx = 2;
 		gbc_xmpDcSubjects.gridy = 13;
 		xmpDcMetaPanel.add(xmpDcSubjects, gbc_xmpDcSubjects);
@@ -1313,6 +1286,7 @@ public class MetadataEditPane {
 
 		xmpDcTypes = new JTextArea();
 		GridBagConstraints gbc_xmpDcTypes = new GridBagConstraints();
+		gbc_xmpDcTypes.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpDcTypes.weighty = 0.125;
 		gbc_xmpDcTypes.anchor = GridBagConstraints.WEST;
 		gbc_xmpDcTypes.fill = GridBagConstraints.BOTH;
@@ -1320,6 +1294,24 @@ public class MetadataEditPane {
 		gbc_xmpDcTypes.gridy = 14;
 		xmpDcMetaPanel.add(xmpDcTypes, gbc_xmpDcTypes);
 
+		// Make rating digits only
+		PlainDocument doc = new PlainDocument();
+		doc.setDocumentFilter(new DocumentFilter() {
+		    @Override
+		    public void insertString(FilterBypass fb, int off, String str, AttributeSet attr) 
+		        throws BadLocationException 
+		    {
+		        fb.insertString(off, str.replaceAll("\\D++", ""), attr);  // remove non-digits
+		    } 
+		    @Override
+		    public void replace(FilterBypass fb, int off, int len, String str, AttributeSet attr) 
+		        throws BadLocationException 
+		    {
+		        fb.replace(off, len, str.replaceAll("\\D++", ""), attr);  // remove non-digits
+		    }
+		});
+
+		xmpBasicRating.setDocument(doc);
 	}
 
 	private void traverseFields(MetadataEditPane.FieldSetGet setGet, MetadataEditPane.FieldEnabledCheckBox fieldEnabled) {
@@ -1464,7 +1456,7 @@ public class MetadataEditPane {
 					}
 					switch (anno.type()) {
 					case StringField:
-						metadataInfo.set(anno.value(), text);
+						metadataInfo.setFromString(anno.value(), text);
 						break;
 					case TextField:
 						metadataInfo.set(anno.value(), text == null ? null : Arrays.asList(text.split("\n")));
@@ -1523,10 +1515,12 @@ public class MetadataEditPane {
 	private void objectToField(JTextField field, Object o) {
 		if (o instanceof String) {
 			field.setText((String) o);
+		} else if (o instanceof Integer) {
+			field.setText(((Integer)o).toString());
 		} else if (o == null) {
 			field.setText("");
 		} else {
-			throw new RuntimeException("Cannot store non-String object in JTextField");
+			throw new RuntimeException("Cannot store non-String/Integer object in JTextField");
 		}
 	}
 

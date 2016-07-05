@@ -1,27 +1,37 @@
 package pmedit;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.function.Function;
 
+import javax.swing.JCheckBox;
 import javax.xml.transform.TransformerException;
 
-import org.apache.jempbox.xmp.XMPMetadata;
-import org.apache.jempbox.xmp.XMPSchemaBasic;
-import org.apache.jempbox.xmp.XMPSchemaDublinCore;
-import org.apache.jempbox.xmp.XMPSchemaPDF;
-import org.apache.pdfbox.exceptions.COSVisitorException;
+
+
+import org.apache.xmpbox.XMPMetadata;
+import org.apache.xmpbox.schema.AdobePDFSchema;
+import org.apache.xmpbox.schema.DublinCoreSchema;
+import org.apache.xmpbox.schema.XMPBasicSchema;
+import org.apache.xmpbox.xml.DomXmpParser;
+import org.apache.xmpbox.xml.XmpParsingException;
+import org.apache.xmpbox.xml.XmpSerializer;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
@@ -31,10 +41,12 @@ import org.json.simple.JSONValue;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
+import pmedit.CommandLine.ParseError;
+import pmedit.MdStruct.StructType;
+
 public class MetadataInfo {
 
-	protected static final String[] MD_FIELD_GROUPS = new String[] { "basic", "xmpBasic", "xmpPdf",
-			"xmpDc" };
+	protected static final String[] MD_FIELD_GROUPS = new String[] { "doc", "basic", "pdf", "dc" };
 
 	// Copy of java.util.functions.Function from Java8
 	public interface Function<T, R> {
@@ -64,7 +76,7 @@ public class MetadataInfo {
 		public boolean modificationDate = true;
 		public boolean trapped = true;
 
-		public boolean atLaestOne() {
+		public boolean atLeastOne() {
 			return title || author || subject || keywords || creator || producer || creationDate || modificationDate
 					|| trapped;
 		}
@@ -86,7 +98,6 @@ public class MetadataInfo {
 		public String creatorTool;
 		public Calendar createDate;
 		public Calendar modifyDate;
-		public String title;
 		public String baseURL;
 		public Integer rating;
 		public String label;
@@ -100,7 +111,6 @@ public class MetadataInfo {
 		public boolean creatorTool = true;
 		public boolean createDate = true;
 		public boolean modifyDate = true;
-		public boolean title = true;
 		public boolean baseURL = true;
 		public boolean rating = true;
 		public boolean label = true;
@@ -110,7 +120,7 @@ public class MetadataInfo {
 		public boolean metadataDate = true;
 
 		public boolean atLeastOne() {
-			return creatorTool || createDate || modifyDate || title || baseURL || rating || label || nickname
+			return creatorTool || createDate || modifyDate || baseURL || rating || label || nickname
 					|| identifiers || advisories || metadataDate;
 		}
 		
@@ -118,7 +128,6 @@ public class MetadataInfo {
 			creatorTool = value;
 			createDate = value;
 			modifyDate = value;
-			title = value;
 			baseURL = value;
 			rating = value;
 			label = value;
@@ -155,6 +164,7 @@ public class MetadataInfo {
 		public List<String> creators;
 		public List<String> contributors;
 		public String coverage;
+		@FieldID(value = "dates", type= FieldID.FieldType.DateField)
 		public List<Calendar> dates;
 		public String format;
 		public String identifier;
@@ -206,15 +216,24 @@ public class MetadataInfo {
 			types = value;	
 		}
 	};
-	public Basic basic ;
-	public XmpBasic xmpBasic ;
-	public XmpPdf xmpPdf ;
-	public XmpDublinCore xmpDc;
 
-	public BasicEnabled basicEnabled ;
-	public XmpBasicEnabled xmpBasicEnabled ;
-	public XmpPdfEnabled xmpPdfEnabled ;
-	public XmpDublinCoreEnabled xmpDcEnabled;
+	@MdStruct
+	public Basic doc;
+	@MdStruct
+	public XmpBasic basic ;
+	@MdStruct
+	public XmpPdf pdf ;
+	@MdStruct
+	public XmpDublinCore dc;
+
+	@MdStruct(name="doc", type=MdStruct.StructType.MdEnableStruct)
+	public BasicEnabled docEnabled ;
+	@MdStruct(name="basic", type=MdStruct.StructType.MdEnableStruct)
+	public XmpBasicEnabled basicEnabled ;
+	@MdStruct(name="pdf", type=MdStruct.StructType.MdEnableStruct)
+	public XmpPdfEnabled pdfEnabled ;
+	@MdStruct(name="dc", type=MdStruct.StructType.MdEnableStruct)
+	public XmpDublinCoreEnabled dcEnabled;
 
 	public MetadataInfo() {
 		super();
@@ -222,79 +241,79 @@ public class MetadataInfo {
 	}
 	
 	public void clear() {
-		this.basic =  new Basic();
-		this.xmpBasic = new XmpBasic();
-		this.xmpPdf = new XmpPdf();
-		this.xmpDc  = new XmpDublinCore();	
+		this.doc =  new Basic();
+		this.basic = new XmpBasic();
+		this.pdf = new XmpPdf();
+		this.dc  = new XmpDublinCore();	
 		
-		this.basicEnabled = new BasicEnabled();
-		this.xmpBasicEnabled = new XmpBasicEnabled();
-		this.xmpPdfEnabled = new XmpPdfEnabled();
-		this.xmpDcEnabled = new XmpDublinCoreEnabled();
+		this.docEnabled = new BasicEnabled();
+		this.basicEnabled = new XmpBasicEnabled();
+		this.pdfEnabled = new XmpPdfEnabled();
+		this.dcEnabled = new XmpDublinCoreEnabled();
 	}
 
-	public void loadFromPDF(PDDocument document) throws IOException {
+	public void loadFromPDF(PDDocument document) throws IOException, XmpParsingException {
 		PDDocumentInformation info = document.getDocumentInformation();
 
 		// Basic info
-		basic.title = info.getTitle();
-		basic.author = info.getAuthor();
-		basic.subject = info.getSubject();
-		basic.keywords = info.getKeywords();
-		basic.creator = info.getCreator();
-		basic.producer = info.getProducer();
-		basic.creationDate = info.getCreationDate();
-		basic.modificationDate = info.getModificationDate();
-		basic.trapped = info.getTrapped();
+		doc.title = info.getTitle();
+		doc.author = info.getAuthor();
+		doc.subject = info.getSubject();
+		doc.keywords = info.getKeywords();
+		doc.creator = info.getCreator();
+		doc.producer = info.getProducer();
+		doc.creationDate = info.getCreationDate();
+		doc.modificationDate = info.getModificationDate();
+		doc.trapped = info.getTrapped();
 
 		// Load XMP catalog
 		PDDocumentCatalog catalog = document.getDocumentCatalog();
-		PDMetadata metadata = catalog.getMetadata();
-		if (metadata != null) {
+		PDMetadata meta = catalog.getMetadata();
+		if (meta != null) {
+			DomXmpParser xmpParser = new DomXmpParser();
+			XMPMetadata metadata = xmpParser.parse(meta.createInputStream());
 			// XMP Basic
-			XMPMetadata xmp = XMPMetadata.load(metadata.createInputStream());
-			XMPSchemaBasic bi = xmp.getBasicSchema();
+			XMPBasicSchema bi = metadata.getXMPBasicSchema();
 			if (bi != null) {
 
-				xmpBasic.creatorTool = bi.getCreatorTool();
-				xmpBasic.createDate = bi.getCreateDate();
-				xmpBasic.modifyDate = bi.getModifyDate();
-				xmpBasic.title = bi.getTitle();
-				xmpBasic.baseURL = bi.getBaseURL();
-				xmpBasic.rating = bi.getRating();
-				xmpBasic.label = bi.getLabel();
-				xmpBasic.nickname = bi.getNickname();
-				xmpBasic.identifiers = bi.getIdentifiers();
-				xmpBasic.advisories = bi.getAdvisories();
-				xmpBasic.metadataDate = bi.getMetadataDate();
+				basic.creatorTool = bi.getCreatorTool();
+				basic.createDate = bi.getCreateDate();
+				basic.modifyDate = bi.getModifyDate();
+				basic.baseURL = bi.getBaseURL();
+				basic.rating = bi.getRating();
+				basic.label = bi.getLabel();
+				basic.nickname = bi.getNickname();
+				basic.identifiers = bi.getIdentifiers();
+				basic.advisories = bi.getAdvisory();
+				basic.metadataDate = bi.getMetadataDate();
 			}
 
 			// XMP PDF
-			XMPSchemaPDF pi = xmp.getPDFSchema();
+			AdobePDFSchema pi = metadata.getAdobePDFSchema();
 			if (pi != null) {
-				xmpPdf.pdfVersion = pi.getPDFVersion();
-				xmpPdf.keywords = pi.getKeywords();
-				xmpPdf.producer = pi.getProducer();
+				pdf.pdfVersion = pi.getPDFVersion();
+				pdf.keywords = pi.getKeywords();
+				pdf.producer = pi.getProducer();
 			}
 
 			// XMP Dublin Core
-			XMPSchemaDublinCore dc = xmp.getDublinCoreSchema();
-			if (dc != null) {
-				xmpDc.title = dc.getTitle();
-				xmpDc.description = dc.getDescription();
-				xmpDc.creators = dc.getCreators();
-				xmpDc.contributors = dc.getContributors();
-				xmpDc.coverage = dc.getCoverage();
-				xmpDc.dates = dc.getDates();
-				xmpDc.format = dc.getFormat();
-				xmpDc.identifier = dc.getIdentifier();
-				xmpDc.languages = dc.getLanguages();
-				xmpDc.publishers = dc.getPublishers();
-				xmpDc.relationships = dc.getRelationships();
-				xmpDc.rights = dc.getRights();
-				xmpDc.source = dc.getSource();
-				xmpDc.subjects = dc.getSubjects();
-				xmpDc.types = dc.getTypes();
+			DublinCoreSchema dcS = metadata.getDublinCoreSchema();
+			if (dcS != null) {
+				dc.title = dcS.getTitle();
+				dc.description = dcS.getDescription();
+				dc.creators = dcS.getCreators();
+				dc.contributors = dcS.getContributors();
+				dc.coverage = dcS.getCoverage();
+				dc.dates = dcS.getDates();
+				dc.format = dcS.getFormat();
+				dc.identifier = dcS.getIdentifier();
+				dc.languages = dcS.getLanguages();
+				dc.publishers = dcS.getPublishers();
+				dc.relationships = dcS.getRelations();
+				dc.rights = dcS.getRights();
+				dc.source = dcS.getSource();
+				dc.subjects = dcS.getSubjects();
+				dc.types = dcS.getTypes();
 			}
 		}
 
@@ -304,7 +323,7 @@ public class MetadataInfo {
 	}
 
 	public void loadFromPDF(File pdfFile) throws FileNotFoundException,
-			IOException {
+			IOException, XmpParsingException {
 		PDDocument document = null;
 
 		document = PDDocument.load(new FileInputStream(pdfFile));
@@ -321,279 +340,496 @@ public class MetadataInfo {
 	}
 
 	public void saveToPDF(PDDocument document, File pdfFile) throws Exception {
-		if(!(basicEnabled.atLaestOne() || xmpBasicEnabled.atLeastOne() || xmpPdfEnabled.atLeastOne() || xmpDcEnabled.atLeastOne())){
+		if(!(docEnabled.atLeastOne() || basicEnabled.atLeastOne() || pdfEnabled.atLeastOne() || dcEnabled.atLeastOne())){
 			return;
 		}
 		//System.err.println("Saving:");
 		//System.err.println(toYAML());
 		// Basic info
-		if(basicEnabled.atLaestOne()){
+		if(docEnabled.atLeastOne()){
 			PDDocumentInformation info = document.getDocumentInformation();
-			if(basicEnabled.title){
-				info.setTitle(basic.title);
+			if(docEnabled.title){
+				info.setTitle(doc.title);
 			}
-			if(basicEnabled.author){
-				info.setAuthor(basic.author);
+			if(docEnabled.author){
+				info.setAuthor(doc.author);
 			}
-			if(basicEnabled.subject){
-				info.setSubject(basic.subject);
+			if(docEnabled.subject){
+				info.setSubject(doc.subject);
 			}
-			if(basicEnabled.keywords){
-				info.setKeywords(basic.keywords);
+			if(docEnabled.keywords){
+				info.setKeywords(doc.keywords);
 			}
-			if(basicEnabled.creator){
-				info.setCreator(basic.creator);
+			if(docEnabled.creator){
+				info.setCreator(doc.creator);
 			}
-			if(basicEnabled.producer){
-				info.setProducer(basic.producer);
+			if(docEnabled.producer){
+				info.setProducer(doc.producer);
 			}
-			if(basicEnabled.creationDate){
-				info.setCreationDate(basic.creationDate);
+			if(docEnabled.creationDate){
+				info.setCreationDate(doc.creationDate);
 			}
-			if(basicEnabled.modificationDate){
-				info.setModificationDate(basic.modificationDate);
+			if(docEnabled.modificationDate){
+				info.setModificationDate(doc.modificationDate);
 			}
-			if(basicEnabled.trapped){
-				info.setTrapped(basic.trapped);
+			if(docEnabled.trapped){
+				info.setTrapped(doc.trapped);
 			}
 			document.setDocumentInformation(info);
 		}
 		
 		// XMP
 		PDDocumentCatalog catalog = document.getDocumentCatalog();
-		PDMetadata metadata = catalog.getMetadata();
-		XMPMetadata xmp = null;
-		if (metadata != null) {
-			xmp = XMPMetadata.load(metadata.createInputStream());
+		PDMetadata meta = catalog.getMetadata();
+		
+		XMPMetadata xmpOld = null;
+		if (meta != null) {
+			DomXmpParser xmpParser = new DomXmpParser();
+			xmpOld = xmpParser.parse(meta.createInputStream());
 		}
-		if (xmp == null) {
-			xmp = new XMPMetadata();
-		}
+		XMPMetadata xmpNew = XMPMetadata.createXMPMetadata();
 		// XMP Basic
-		if(xmpBasicEnabled.atLeastOne()){
-			XMPSchemaBasic bi = xmp.getBasicSchema();
-			if (bi == null) {
-				bi = xmp.addBasicSchema();
-			}
-			if(xmpBasicEnabled.advisories){
-				if (bi.getAdvisories() != null) {
-					for (String a : bi.getAdvisories()) {
-						bi.removeAdvisory(a);
-					}
-				}
-				if (xmpBasic.advisories != null) {
-					for (String a : xmpBasic.advisories) {
+		XMPBasicSchema biOld = xmpOld != null ? xmpOld.getXMPBasicSchema() : null;
+		boolean atLeastOneXmpBasicSet = false;
+		if(basicEnabled.atLeastOne() || (biOld != null)) {
+			XMPBasicSchema bi = xmpNew.createAndAddXMPBasicSchema();
+			
+			if(basicEnabled.advisories){
+				if(basic.advisories != null){
+					for (String a : basic.advisories) {
 						bi.addAdvisory(a);
+						atLeastOneXmpBasicSet = true;
+					}
+				}
+			} else if(biOld != null){
+				List<String> old = biOld.getAdvisory(); 
+				if(old != null){
+					for(String a: old){
+						bi.addAdvisory(a);
+						atLeastOneXmpBasicSet = true;
 					}
 				}
 			}
-			if(xmpBasicEnabled.baseURL){
-				bi.setBaseURL(xmpBasic.baseURL);
-			}
-			if(xmpBasicEnabled.createDate){
-				bi.setCreateDate(null); //Workaround for some PDFs where date is not saved
-				bi.setCreateDate(xmpBasic.createDate);
-			}
-			if(xmpBasicEnabled.modifyDate){
-				bi.setModifyDate(null); //Workaround for some PDFs where date is not saved
-				bi.setModifyDate(xmpBasic.modifyDate);
-			}
-			if(xmpBasicEnabled.creatorTool){
-				bi.setCreatorTool(xmpBasic.creatorTool);
-			}
-			if(xmpBasicEnabled.identifiers){
-				if (bi.getIdentifiers() != null) {
-					for (String i : bi.getIdentifiers()) {
-						bi.removeIdentifier(i);
-					}
+			
+			if(basicEnabled.baseURL){
+				if(basic.baseURL != null){
+					bi.setBaseURL(basic.baseURL);
+					atLeastOneXmpBasicSet = true;
 				}
-				if (xmpBasic.identifiers != null) {
-					for (String i : xmpBasic.identifiers) {
+			} else if(biOld != null){
+				String baseUrl = biOld.getBaseURL();
+				if(baseUrl != null){
+					bi.setBaseURL(baseUrl);
+					atLeastOneXmpBasicSet = true;
+				}
+			}
+			
+			if(basicEnabled.createDate){
+				if(basic.createDate != null){
+					bi.setCreateDate(basic.createDate);
+					atLeastOneXmpBasicSet = true;
+				}
+			} else if(biOld != null){
+				Calendar old = biOld.getCreateDate();
+				if(old != null){
+					bi.setCreateDate(old);
+					atLeastOneXmpBasicSet = true;
+				}
+			}
+			
+			if(basicEnabled.modifyDate){
+				if(basic.modifyDate != null){
+					bi.setModifyDate(basic.modifyDate);
+					atLeastOneXmpBasicSet = true;
+				}
+			} else if(biOld != null){
+				Calendar old = biOld.getModifyDate();
+				if(old != null){
+					bi.setModifyDate(old);
+					atLeastOneXmpBasicSet = true;
+				}
+			} 
+			
+			if(basicEnabled.creatorTool){
+				if(basic.creatorTool != null){
+					bi.setCreatorTool(basic.creatorTool);
+					atLeastOneXmpBasicSet = true;
+				}
+			} else if(biOld != null){
+				String old = biOld.getCreatorTool();
+				if(old != null){
+					bi.setCreatorTool(old);
+					atLeastOneXmpBasicSet = true;
+				}
+			}
+			
+			if(basicEnabled.identifiers){
+				if (basic.identifiers != null) {
+					for (String i : basic.identifiers) {
 						bi.addIdentifier(i);
+						atLeastOneXmpBasicSet = true;
+					}
+				}
+			} else if(biOld != null){
+				List<String> old=biOld.getIdentifiers();
+				if(old != null){
+					for(String a: old){
+						bi.addIdentifier(a);
+						atLeastOneXmpBasicSet = true;
 					}
 				}
 			}
-			if(xmpBasicEnabled.label){
-				bi.setLabel(xmpBasic.label);
+			
+			if(basicEnabled.label){
+				if(basic.label != null){
+					bi.setLabel(basic.label);
+					atLeastOneXmpBasicSet = true;
+				}
+			} else if(biOld != null){
+				String old = biOld.getLabel();
+				if(old != null){
+					bi.setLabel(old);
+					atLeastOneXmpBasicSet = true;
+				}
 			}
-			if(xmpBasicEnabled.metadataDate){
-				bi.setMetadataDate(null); //Workaround for some PDFs where date is not saved
-				bi.setMetadataDate(xmpBasic.metadataDate);
+			
+			if(basicEnabled.metadataDate){
+				if(basic.metadataDate != null){
+					bi.setMetadataDate(basic.metadataDate);
+					atLeastOneXmpBasicSet = true;
+				}
+			} else if(biOld != null){
+				Calendar old = biOld.getMetadataDate();
+				if(old != null){
+					bi.setMetadataDate(old);
+					atLeastOneXmpBasicSet = true;
+				}
 			}
-			if(xmpBasicEnabled.nickname){
-				bi.setNickname(xmpBasic.nickname);
+			
+			if(basicEnabled.nickname){
+				if(basic.nickname != null){
+					bi.setNickname(basic.nickname);
+					atLeastOneXmpBasicSet = true;
+				}
+			} else if(biOld != null){
+				String old = biOld.getNickname();
+				if(old != null){
+					bi.setNickname(old);
+					atLeastOneXmpBasicSet = true;
+				}
 			}
-			if(xmpBasicEnabled.rating){
-				bi.setRating(xmpBasic.rating);
-			}
-			if(xmpBasicEnabled.title){
-				bi.setTitle(xmpBasic.title);
+			if(basicEnabled.rating){
+				if(basic.rating != null){
+					bi.setRating(basic.rating);
+					atLeastOneXmpBasicSet = true;
+				}
+			} else if(biOld != null){
+				Integer old = biOld.getRating();
+				if(old != null){
+					bi.setRating(old);
+					atLeastOneXmpBasicSet = true;
+				}
 			}
 		}
 		// XMP PDF
-		if(xmpPdfEnabled.atLeastOne()){
-			XMPSchemaPDF pi = xmp.getPDFSchema();
-			if (pi == null) {
-				pi = xmp.addPDFSchema();
+		AdobePDFSchema piOld = xmpOld != null ? xmpOld.getAdobePDFSchema() : null;
+		boolean atLeastOneXmpPdfSet = false;
+		if(pdfEnabled.atLeastOne() || (piOld != null)){
+			AdobePDFSchema pi = xmpNew.createAndAddAdobePDFSchema();
+
+			if(pdfEnabled.keywords){
+				if(pdf.keywords != null){
+					pi.setKeywords(pdf.keywords);
+					atLeastOneXmpPdfSet = true;
+				}
+			} else if(piOld != null){
+				String old = piOld.getKeywords();
+				if(old != null){
+					pi.setKeywords(old);
+					atLeastOneXmpPdfSet = true;
+				}
 			}
-			if(xmpPdfEnabled.keywords){
-				pi.setKeywords(xmpPdf.keywords);
+			
+			if(pdfEnabled.producer){
+				if(pdf.producer != null){
+					pi.setProducer(pdf.producer);
+					atLeastOneXmpPdfSet = true;
+				}
+			} else if(piOld != null){
+				String old = piOld.getProducer();
+				if(old != null){
+					pi.setProducer(old);
+					atLeastOneXmpPdfSet = true;
+				}
 			}
-			if(xmpPdfEnabled.producer){
-				pi.setProducer(xmpPdf.producer);
-			}
-			if(xmpPdfEnabled.pdfVersion){
-				pi.setPDFVersion(xmpPdf.pdfVersion);
+			
+			if(pdfEnabled.pdfVersion){
+				if(pdf.pdfVersion != null){
+					pi.setPDFVersion(pdf.pdfVersion);
+					atLeastOneXmpPdfSet = true;
+				}
+			} else if(piOld != null){
+				String old = piOld.getPDFVersion();
+				if(old != null){
+					pi.setPDFVersion(old);
+					atLeastOneXmpPdfSet = true;
+				}
 			}
 		}
+		
 		// XMP Dublin Core
-		if(xmpDcEnabled.atLeastOne()){
-			XMPSchemaDublinCore dc = xmp.getDublinCoreSchema();
-			if (dc == null) {
-				dc = xmp.addDublinCoreSchema();
-			}
-			if(xmpDcEnabled.title){
-				dc.setTitle(xmpDc.title);
+		DublinCoreSchema dcOld = xmpOld != null ? xmpOld.getDublinCoreSchema() : null;
+		boolean atLeastOneXmpDcSet = false;
+		if(dcEnabled.atLeastOne() || (dcOld != null)){
+			DublinCoreSchema dcS = xmpNew.createAndAddDublinCoreSchema();
+			
+			if(dcEnabled.title){
+				if(dc.title != null){
+					dcS.setTitle(dc.title);
+					atLeastOneXmpDcSet = true;
+				}
+			} else if(dcOld != null){
+				String old = dcOld.getTitle();
+				if(old != null){
+					dcS.setTitle(old);
+					atLeastOneXmpDcSet = true;
+				}
 			}
 			// 
-			if(xmpDcEnabled.contributors){
-				if (dc.getContributors() != null) {
-					for (String i : dc.getContributors()) {
-						dc.removeContributor(i);
+			if(dcEnabled.contributors){
+				if(dc.contributors != null){
+					for (String i : dc.contributors) {
+						dcS.addContributor(i);
+						atLeastOneXmpDcSet = true;
 					}
 				}
-				if (xmpDc.contributors != null) {
-					for (String i : xmpDc.contributors) {
-						dc.addContributor(i);
-					}
-				}
-			}
-			//
-			if(xmpDcEnabled.publishers){
-				if (dc.getPublishers() != null) {
-					for (String i : dc.getPublishers()) {
-						dc.removePublisher(i);
-					}
-				}
-				if (xmpDc.publishers != null) {
-					for (String i : xmpDc.publishers) {
-						dc.addPublisher(i);
+			}else if(dcOld != null){
+				List<String> old= dcOld.getContributors();
+				if(old != null){
+					for(String a: old){
+						dcS.addContributor(a);;
+						atLeastOneXmpDcSet = true;
 					}
 				}
 			}
 			//
-			if(xmpDcEnabled.relationships){
-				if (dc.getRelationships() != null) {
-					for (String i : dc.getRelationships()) {
-						dc.removeRelation(i);
+			if(dcEnabled.publishers){
+				if(dc.publishers != null){
+					for (String i : dc.publishers) {
+						dcS.addPublisher(i);
+						atLeastOneXmpDcSet = true;
 					}
 				}
-				if (xmpDc.relationships != null) {
-					for (String i : xmpDc.relationships) {
-						dc.addRelation(i);
-					}
-				}
-			}
-			//
-			if(xmpDcEnabled.subjects){
-				if (dc.getSubjects() != null) {
-					for (String i : dc.getSubjects()) {
-						dc.removeSubject(i);
-					}
-				}
-				if (xmpDc.subjects != null) {
-					for (String i : xmpDc.subjects) {
-						dc.addSubject(i);
-					}
-				}
-			}
-			if(xmpDcEnabled.types){
-				// dc.removeType is undefined!
-				//if(dc.getTypes() != null){
-				//	for(String i: dc.getTypes()){
-				//		dc.removeType(i);
-				//	}
-				//}
-				if (xmpDc.types != null) {
-					for (String i : xmpDc.types) {
-						dc.addType(i);
+			}else if(dcOld != null) {
+				List<String> old= dcOld.getPublishers();
+				if(old != null){
+					for(String a: old){
+						dcS.addPublisher(a);;
+						atLeastOneXmpDcSet = true;
 					}
 				}
 			}
 			//
-			if(xmpDcEnabled.languages){
-				if (dc.getLanguages() != null) {
-					for (String i : dc.getLanguages()) {
-						dc.removeLanguage(i);
+			if(dcEnabled.relationships){
+				if(dc.relationships != null){
+					for (String i : dc.relationships) {
+						dcS.addRelation(i);
+						atLeastOneXmpDcSet = true;
 					}
 				}
-				if (xmpDc.languages != null) {
-					for (String i : xmpDc.languages) {
-						dc.addLanguage(i);
-					}
-				}
-			}
-			//
-			if(xmpDcEnabled.creators){
-				if (dc.getCreators() != null) {
-					for (String i : dc.getCreators()) {
-						dc.removeCreator(i);
-					}
-				}
-				if (xmpDc.creators != null) {
-					for (String i : xmpDc.creators) {
-						dc.addCreator(i);
+			}else if(dcOld != null) {
+				List<String> old= dcOld.getRelations();
+				if(old != null){
+					for(String a: old){
+						dcS.addRelation(a);;
+						atLeastOneXmpDcSet = true;
 					}
 				}
 			}
 			//
-			if(xmpDcEnabled.coverage){
-				dc.setCoverage(xmpDc.coverage);
-			}
-			if(xmpDcEnabled.format){
-				dc.setFormat(xmpDc.format);
-			}
-			if(xmpDcEnabled.identifier){
-				dc.setIdentifier(xmpDc.identifier);
-			}
-			if(xmpDcEnabled.rights){
-				dc.setRights(xmpDc.rights);
-			}
-			if(xmpDcEnabled.source){
-				dc.setSource(xmpDc.source);
-			}
-			if(xmpDcEnabled.description){
-				dc.setDescription(xmpDc.description);
-			}
-			if(xmpDcEnabled.dates){
-				if (dc.getDates() != null) {
-					for (Calendar date : dc.getDates()) {
-						dc.removeDate(date);
+			if(dcEnabled.subjects){
+				if(dc.subjects != null){
+					for (String i : dc.subjects) {
+						dcS.addSubject(i);
+						atLeastOneXmpDcSet = true;
 					}
 				}
-				if (xmpDc.dates != null) {
-					for (Calendar date : xmpDc.dates) {
-						dc.addDate(date);
+			} else if(dcOld != null) {
+				List<String> old= dcOld.getSubjects();
+				if(old != null){
+					for(String a: old){
+						dcS.addSubject(a);;
+						atLeastOneXmpDcSet = true;
+					}
+				}
+			}
+			//
+			if(dcEnabled.types){
+				if (dc.types != null){
+					for (String i : dc.types) {
+						dcS.addType(i);
+						atLeastOneXmpDcSet = true;
+					}
+				}
+			} else if(dcOld != null) {
+				List<String> old= dcOld.getTypes();
+				if(old != null){
+					for(String a: old){
+						dcS.addType(a);;
+						atLeastOneXmpDcSet = true;
+					}
+				}
+			}
+			//
+			if(dcEnabled.languages){
+				if(dc.languages != null){
+					for (String i : dc.languages) {
+						dcS.addLanguage(i);
+						atLeastOneXmpDcSet = true;
+					}
+				}
+			} else if(dcOld != null) {
+				List<String> old= dcOld.getLanguages();
+				if(old != null){
+					for(String a: old){
+						dcS.addLanguage(a);;
+						atLeastOneXmpDcSet = true;
+					}
+				}
+			}
+			//
+			if(dcEnabled.creators ){
+				if (dc.creators != null) {
+					for (String i : dc.creators) {
+						dcS.addCreator(i);
+						atLeastOneXmpDcSet = true;
+					}
+				}
+			} else if(dcOld != null) {
+				List<String> old= dcOld.getCreators();
+				if(old != null){
+					for(String a: old){
+						dcS.addCreator(a);;
+						atLeastOneXmpDcSet = true;
+					}
+				}
+			}
+			//
+			if(dcEnabled.coverage){
+				if(dc.coverage != null){
+					dcS.setCoverage(dc.coverage);
+					atLeastOneXmpDcSet = true;
+				}
+			} else if(dcOld != null){
+				String old = dcOld.getCoverage();
+				if(old != null){
+					dcS.setCoverage(old);
+					atLeastOneXmpDcSet = true;
+				}
+			}
+			
+			if(dcEnabled.format){
+				if(dc.format != null){
+					dcS.setFormat(dc.format);
+					atLeastOneXmpDcSet = true;
+				}
+			} else if(dcOld != null){
+				String old = dcOld.getFormat();
+				if(old != null){
+					dcS.setFormat(old);
+					atLeastOneXmpDcSet = true;
+				}
+			}
+			
+			if(dcEnabled.identifier){
+				if(dc.identifier != null){
+					dcS.setIdentifier(dc.identifier);
+					atLeastOneXmpDcSet = true;
+				}
+			} else if(dcOld != null){
+				String old = dcOld.getIdentifier();
+				if(old != null){
+					dcS.setIdentifier(old);
+					atLeastOneXmpDcSet = true;
+				}
+			}
+			
+			if(dcEnabled.rights){
+				if(dc.rights != null){
+					dcS.addRights(null, dc.rights);
+					atLeastOneXmpDcSet = true;
+				}
+			} else if(dcOld != null){
+				List<String> rll = dcOld.getRightsLanguages();
+				if(rll != null){
+					for(String rl: rll){
+						String rights = dcOld.getRights(rl);
+						if(rights != null){
+							dcS.addRights(rl, rights);
+							atLeastOneXmpDcSet = true;
+						}
+					}
+				}
+			}
+			
+			if(dcEnabled.source){
+				if(dc.source != null){
+					dcS.setSource(dc.source);
+					atLeastOneXmpDcSet = true;
+				}
+			} else if(dcOld != null){
+				String old = dcOld.getSource();
+				if(old != null){
+					dcS.setSource(old);
+					atLeastOneXmpDcSet = true;
+				}
+			}
+			
+			if(dcEnabled.description){
+				if(dc.description != null){
+					dcS.setDescription(dc.description);
+					atLeastOneXmpDcSet = true;
+				}
+			} else if(dcOld != null){
+				String old = dcOld.getDescription();
+				if(old != null){
+					dcS.setDescription(old);
+					atLeastOneXmpDcSet = true;
+				}
+			}
+			
+			if(dcEnabled.dates){
+				if (dc.dates != null) {
+					for (Calendar date : dc.dates) {
+						dcS.addDate(date);
+						atLeastOneXmpDcSet = true;
+					}
+				}
+			} else if(dcOld != null) {
+				List<Calendar> old= dcOld.getDates();
+				if(old != null){
+					for(Calendar a: old){
+						dcS.addDate(a);;
+						atLeastOneXmpDcSet = true;
 					}
 				}
 			}
 		}
 		// Do the save
-		if( xmpBasicEnabled.atLeastOne() || xmpPdfEnabled.atLeastOne() || xmpDcEnabled.atLeastOne()){
+		if( basicEnabled.atLeastOne() || pdfEnabled.atLeastOne() || dcEnabled.atLeastOne() ||
+				atLeastOneXmpBasicSet || atLeastOneXmpPdfSet || atLeastOneXmpDcSet){
 			PDMetadata metadataStream = new PDMetadata(document);
 			try {
-				metadataStream.importXMPMetadata(xmp.asByteArray());
+                XmpSerializer serializer = new XmpSerializer();
+ 	            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+ 	            serializer.serialize(xmpNew, baos, true);
+				metadataStream.importXMPMetadata(baos.toByteArray());
 			} catch (TransformerException e) {
 				throw new Exception("Failed to save document:" + e.getMessage());
 			}
 			catalog.setMetadata(metadataStream);
 		}
-		try {
-			document.save(pdfFile.getAbsolutePath());
-		} catch (COSVisitorException e) {
-			throw new Exception("Failed to save document:" + e.getMessage());
-		}
-
+		document.save(pdfFile.getAbsolutePath());
 	}
 
 	public void saveToPDF(File pdfFile) throws Exception {
@@ -613,70 +849,79 @@ public class MetadataInfo {
 
 	}
 
-	public void copyBasicToXMP() {
-		xmpPdf.keywords = basic.keywords;
-		xmpPdf.producer = basic.producer;
-		xmpPdfEnabled.keywords = basicEnabled.keywords;
-		xmpPdfEnabled.producer = basicEnabled.producer;
+	public void copyDocToXMP() {
+		pdf.keywords = doc.keywords;
+		pdf.producer = doc.producer;
+		pdfEnabled.keywords = docEnabled.keywords;
+		pdfEnabled.producer = docEnabled.producer;
 		
 
-		xmpBasic.creatorTool = basic.creator;
-		xmpBasicEnabled.creatorTool = basicEnabled.creator;
+		basic.creatorTool = doc.creator;
+		basicEnabled.creatorTool = docEnabled.creator;
 
-		xmpDc.title = basic.title;
-		xmpDc.description = basic.subject;
-		xmpDc.creators = Arrays.asList(new String[] { basic.author });
-		xmpDcEnabled.title = basicEnabled.title;
-		xmpDcEnabled.description = basicEnabled.subject;
-		xmpDcEnabled.creators = basicEnabled.author;
+		dc.title = doc.title;
+		dc.description = doc.subject;
+		dc.creators = Arrays.asList(new String[] { doc.author });
+		dcEnabled.title = docEnabled.title;
+		dcEnabled.description = docEnabled.subject;
+		dcEnabled.creators = docEnabled.author;
 	}
 
-	public void copyXMPToBasic() {
-		basic.keywords = xmpPdf.keywords;
-		basic.producer = xmpPdf.producer;
-		basicEnabled.keywords = xmpPdfEnabled.keywords;
-		basicEnabled.producer = xmpPdfEnabled.producer;
+	public void copyXMPToDoc() {
+		doc.keywords = pdf.keywords;
+		doc.producer = pdf.producer;
+		docEnabled.keywords = pdfEnabled.keywords;
+		docEnabled.producer = pdfEnabled.producer;
 
-		basic.creator = xmpBasic.creatorTool;
-		basicEnabled.creator = xmpBasicEnabled.creatorTool;
+		doc.creator = basic.creatorTool;
+		docEnabled.creator = basicEnabled.creatorTool;
 
-		basic.title = xmpDc.title;
-		basic.subject = xmpDc.description;
+		doc.title = dc.title;
+		doc.subject = dc.description;
 		String author = "";
-		if( xmpDc.creators != null){
+		if( dc.creators != null){
 			String delim = "";
-			for(String creator: xmpDc.creators){
+			for(String creator: dc.creators){
 				author += delim + creator;
 				delim = ", ";
 			}
 		} else {
 			author = null;
 		}
-		basic.author = author;
-		basicEnabled.title = xmpDcEnabled.title;
-		basicEnabled.subject = xmpDcEnabled.description;
-		basicEnabled.author = xmpDcEnabled.creators;
+		doc.author = author;
+		docEnabled.title = dcEnabled.title;
+		docEnabled.subject = dcEnabled.description;
+		docEnabled.author = dcEnabled.creators;
 
 	}
-
-	private <T> T formatItem(T s) {
-		return s;
+		
+	public void setEnabled(boolean value){
+		docEnabled.setAll(value);
+		basicEnabled.setAll(value);
+		pdfEnabled.setAll(value);
+		dcEnabled.setAll(value);
+	}
+	
+	public void setEnabled(String id, boolean value) {
+		_setObjectEnabled(id, value);
+	}
+	public boolean isEnabled(String id) {
+		return _getObjectEnabled(id);
 	}
 
-	private <T> String itemListToText(List<T> slist, String separator) {
-		if (slist == null) {
-			return null;
+	public static List<String> keys(){
+		return new ArrayList<String>(_mdFields.keySet());
+	}
+	
+	public <T> Map<String, T> asFlatMap(Function<Object, T> convertor) {
+		LinkedHashMap<String, T> map = new LinkedHashMap<String, T>();
+
+		for (String fieldName : keys()) {
+				Object o = get(fieldName);
+				map.put(fieldName ,convertor.apply(o));
 		}
-		StringBuilder b = new StringBuilder();
-		for (int i = 0; i < slist.size(); ++i) {
-			b.append(formatItem(slist.get(i)));
-			if (i < (slist.size() - 1)) {
-				b.append(separator);
-			}
-		}
-		return b.toString();
+		return map;
 	}
-
 
 	public Map<String, Object> asFlatMap() {
 		return asFlatMap(new Function<Object, Object>() {
@@ -687,301 +932,16 @@ public class MetadataInfo {
 		});
 	}
 
-    private static final SimpleDateFormat isoDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 	public Map<String, String> asFlatStringMap() {
-		return asFlatMap(new Function<Object, String>() {
-			@Override
-			public String apply(Object t) {
-				if (t != null){
-					if(t instanceof Calendar) {
-						return isoDateFormat.format(((Calendar)t).getTime());
-					}
-					return t.toString();
-				}
-				return null;
-			}
-		});
-	}
+		LinkedHashMap<String, String> map = new LinkedHashMap<String, String>();
 
-	protected Object getObject(String id) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
-		if (id.length() == 0 ) return null;
-		StringTokenizer st = new StringTokenizer(id, ".");
-		Object current = this;
-		while (st.hasMoreTokens()) {
-			Field group;
-			group = current.getClass().getField(st.nextToken());
-			current = group.get(current);
-
-		}
-		return current;
-	}
-	
-	public Object get(String id) {
-		try {
-			return getObject(id);
-		} catch (NoSuchFieldException e) {
-			System.err.println("Metadata.get(" + id + ")");
-			e.printStackTrace();
-			return null;
-		} catch (SecurityException e) {
-			System.err.println("Metadata.get(" + id + ")");
-			e.printStackTrace();
-			return null;
-		} catch (IllegalArgumentException e) {
-			System.err.println("Metadata.get(" + id + ")");
-			e.printStackTrace();
-			return null;
-		} catch (IllegalAccessException e) {
-			System.err.println("Metadata.get(" + id + ")");
-			e.printStackTrace();
-			return null;
-		}
-	
-	}
-	
-	public String getString(String id){
-		try {
-			Object o = getObject(id);
-			if (o != null){
-				if (o instanceof List<?>) {
-					return ",".join(",", ((List<String>) o));
-				}
-				if (o instanceof Calendar) {
-					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-					return sdf.format(((Calendar)o).getTime());
-				}
-				return o.toString();
-			}
-		} catch (NoSuchFieldException e) {
-		} catch (SecurityException e) {
-		} catch (IllegalArgumentException e) {
-		} catch (IllegalAccessException e) {
-		}
-		return null;
-	
-	}
-
-	public void set(String id, Object value) {
-		StringTokenizer st = new StringTokenizer(id, ".");
-		Object current = this;
-		while (current != null) {
-			try {
-				Field field = current.getClass().getField(st.nextToken());
-				if (!st.hasMoreTokens()) {
-					field.set(current, value);
-					return;
-				}
-				current = field.get(current);
-			} catch (NoSuchFieldException e) {
-				System.err.println("Metadata.set(" + id + ", "+ value.toString() + ")");
-				throw new RuntimeException(e);
-			} catch (SecurityException e) {
-				System.err.println("Metadata.set(" + id + ", "+ value.toString() + ")");
-				throw new RuntimeException(e);
-			} catch (IllegalArgumentException e) {
-				System.err.println("Metadata.set(" + id + ", "+ value.toString() + ")");
-				throw new RuntimeException(e);
-			} catch (IllegalAccessException e) {
-				System.err.println("Metadata.set(" + id + ", "+ value.toString() + ")");
-				throw new RuntimeException(e);
-			}
-
-		}
-	}
-	
-	public void setAppend(String id, Object value) {
-		StringTokenizer st = new StringTokenizer(id, ".");
-		Object current = this;
-		while (current != null) {
-			try {
-				Field field = current.getClass().getField(st.nextToken());
-				if (!st.hasMoreTokens()) {
-					if(field.getType().isAssignableFrom(List.class)){
-						List<Object> l = (List<Object>) field.get(current);
-						if(l != null){
-							l.add(value);
-						} else {
-							l = new ArrayList<Object>();
-							l.add(value);
-							field.set(current, l);
-						}
-					} else {
-						field.set(current, value);
-					}
-					return;
-				}
-				current = field.get(current);
-			} catch (NoSuchFieldException e) {
-				System.err.println("Metadata.set(" + id + ", "+ value.toString() + ")");
-				throw new RuntimeException(e);
-			} catch (SecurityException e) {
-				System.err.println("Metadata.set(" + id + ", "+ value.toString() + ")");
-				throw new RuntimeException(e);
-			} catch (IllegalArgumentException e) {
-				System.err.println("Metadata.set(" + id + ", "+ value.toString() + ")");
-				throw new RuntimeException(e);
-			} catch (IllegalAccessException e) {
-				System.err.println("Metadata.set(" + id + ", "+ value.toString() + ")");
-				throw new RuntimeException(e);
-			}
-
-		}
-	}
-	
-	public Class<?> getFieldType(String id){
-		StringTokenizer st = new StringTokenizer(id, ".");
-		Object current = this;
-		while (current != null) {
-			try {
-				Field field = current.getClass().getField(st.nextToken());
-				if (!st.hasMoreTokens()) {
-					return field.getType();
-				}
-				current = field.get(current);
-			} catch (NoSuchFieldException e) {
-				System.err.println("Metadata.getFieldType(" + id + ")");
-				throw new RuntimeException(e);
-			} catch (SecurityException e) {
-				System.err.println("Metadata.getFieldType(" + id + ")");
-				throw new RuntimeException(e);
-			} catch (IllegalArgumentException e) {
-				System.err.println("Metadata.getFieldType(" + id  + ")");
-				throw new RuntimeException(e);
-			} catch (IllegalAccessException e) {
-				System.err.println("Metadata.getFieldType(" + id  + ")");
-				throw new RuntimeException(e);
-			}
-		}
-		return null;
-	}
-	
-	public void setEnabled(boolean value){
-		basicEnabled.setAll(value);
-		xmpBasicEnabled.setAll(value);
-		xmpPdfEnabled.setAll(value);
-		xmpDcEnabled.setAll(value);
-	}
-	
-	public void setEnabled(String id, boolean value) {
-		StringTokenizer st = new StringTokenizer(id, ".");
-		Object current = this;
-		String name = st.nextToken() + "Enabled";
-		while (current != null) {
-			try {
-				Field field = current.getClass().getField(name);
-				if (!st.hasMoreTokens()) {
-					field.set(current, value);
-					return;
-				}
-				current = field.get(current);
-				name = st.nextToken();
-			} catch (NoSuchFieldException e) {
-				System.err.println("Metadata.setEnabled(" + id + ", "+ value + ")");
-				throw new RuntimeException(e);
-			} catch (SecurityException e) {
-				System.err.println("Metadata.setEnabled(" + id + ", "+ value + ")");
-				throw new RuntimeException(e);
-			} catch (IllegalArgumentException e) {
-				System.err.println("Metadata.setEnabled(" + id + ", "+ value + ")");
-				throw new RuntimeException(e);
-			} catch (IllegalAccessException e) {
-				System.err.println("Metadata.setEnabled(" + id + ", "+ value + ")");
-				throw new RuntimeException(e);
-			}
-
-		}
-	}
-	public boolean isEnabled(String id) {
-		StringTokenizer st = new StringTokenizer(id, ".");
-		Object current = this;
-		String name = st.nextToken() + "Enabled";
-		while (current != null) {
-			try {
-				Field field = current.getClass().getField(name);
-				current = field.get(current);
-				if (!st.hasMoreTokens()) {
-					return (Boolean)current;
-				}
-				name = st.nextToken();
-			} catch (NoSuchFieldException e) {
-				System.err.println("Metadata.isEnabled(" + id + ")");
-				throw new RuntimeException(e);
-			} catch (SecurityException e) {
-				System.err.println("Metadata.isEnabled(" + id + ")");
-				throw new RuntimeException(e);
-			} catch (IllegalArgumentException e) {
-				System.err.println("Metadata.isEnabled(" + id + ")");
-				throw new RuntimeException(e);
-			} catch (IllegalAccessException e) {
-				System.err.println("Metadata.isEnabled(" + id + ")");
-				throw new RuntimeException(e);
-			}
-		}
-		return false;
-	}
-
-	public List<String> keys(){
-		ArrayList<String> ret = new ArrayList<String>();
-		for (String fieldName : MD_FIELD_GROUPS) {
-			Field group;
-			Object groupObj;
-			try {
-				Field[] f = this.getClass().getFields();
-				group = this.getClass().getField(fieldName);
-				groupObj = group.get(this);
-			} catch (NoSuchFieldException e) {
-				continue;
-			} catch (SecurityException e) {
-				continue;
-			} catch (IllegalArgumentException e) {
-				continue;
-			} catch (IllegalAccessException e) {
-				continue;
-			}
-			Class klass = group.getType();
-			for (Field field : klass.getFields()) {
-				try {
-					ret.add( fieldName + "." + field.getName() );
-				} catch (IllegalArgumentException e) {
-				}
-			}
-		}
-		return ret;
-	}
-	
-	public <T> Map<String, T> asFlatMap(Function<Object, T> convertor) {
-		LinkedHashMap<String, T> map = new LinkedHashMap<String, T>();
-
-		for (String fieldName : MD_FIELD_GROUPS) {
-			Field group;
-			Object groupObj;
-			try {
-				Field[] f = this.getClass().getFields();
-				group = this.getClass().getField(fieldName);
-				groupObj = group.get(this);
-			} catch (NoSuchFieldException e) {
-				continue;
-			} catch (SecurityException e) {
-				continue;
-			} catch (IllegalArgumentException e) {
-				continue;
-			} catch (IllegalAccessException e) {
-				continue;
-			}
-			Class klass = group.getType();
-			for (Field field : klass.getFields()) {
-				try {
-					Object o = field.get(groupObj);
-					map.put(fieldName + "." + field.getName(),
-							convertor.apply(o));
-				} catch (IllegalArgumentException e) {
-				} catch (IllegalAccessException e) {
-				}
-			}
+		for (String fieldName : keys()) {
+				map.put(fieldName ,getString(fieldName));
 		}
 		return map;
 	}
 
+	
 	public void  fromFlatMap(Map<String, Object> map, Function<Object, Object> convertor) {
 		for (String fieldName : keys()) {
 			if(map.containsKey(fieldName)){
@@ -1007,10 +967,10 @@ public class MetadataInfo {
 	
 	public void enableOnlyNonNull(){
 		Map<String, Object> values = asFlatMap();
+		docEnabled.setAll(false);
 		basicEnabled.setAll(false);
-		xmpBasicEnabled.setAll(false);
-		xmpPdfEnabled.setAll(false);
-		xmpDcEnabled.setAll(false);
+		pdfEnabled.setAll(false);
+		dcEnabled.setAll(false);
 		for(Map.Entry<String, Object> entry: values.entrySet()){
 			if( entry.getValue() != null){
 				setEnabled(entry.getKey(), true);
@@ -1029,7 +989,7 @@ public class MetadataInfo {
 			public Object apply(Object t) {
 				if (t != null){
 					if(t instanceof Calendar) {
-						return isoDateFormat.format(((Calendar)t).getTime());
+						return DateFormat.formatDateTimeFull((Calendar)t);
 					}
 				}
 				return t;
@@ -1092,54 +1052,337 @@ public class MetadataInfo {
 		});
 	}
 	
+	public boolean isEquvalent(MetadataInfo other){
+ 		for(Entry<String, List<FieldDescription>> e: _mdFields.entrySet()){
+			// Skip "dc.dates" for now as loading them from PDF is broken in xmpbox
+			if("dc.dates".equals(e.getKey())){
+				continue;
+			}
+			Object t = get(e.getKey());
+			Object o = other.get(e.getKey());
+			FieldDescription fd = e.getValue().get(e.getValue().size()-1);
+			if(t == null){
+				if(o == null){
+					continue;
+				}else {
+					return false;
+				}
+			}
+			if( fd.isList && (fd.type == FieldID.FieldType.DateField)){
+				List<Calendar> tl = (List<Calendar>) t;
+				List<Calendar> ol = (List<Calendar>) o;
+				if(tl.size() != ol.size()){
+					return false;
+				}
+				for(int i=0; i< tl.size(); ++i) {
+					Calendar tc = tl.get(i);
+					Calendar oc = ol.get(i);
+					if(tc == null){
+						if(oc == null){
+							continue;
+						}else {
+							return false;
+						}
+					}
+					if( (tc.getTimeInMillis()/1000) != (oc.getTimeInMillis()/1000) ){
+						return false;
+					}
+				}
+					
+			} else if(t instanceof Calendar && o instanceof Calendar){
+				if( (((Calendar)t).getTimeInMillis()/1000) != (((Calendar)o).getTimeInMillis()/1000) ){
+					return false;
+				}
+			}else if( !t.equals(o) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	//////////////////////////////
+	public static class FieldDescription {
+		public final String name;
+		final Field field;
+		public final FieldID.FieldType type;
+		public final boolean isList;
+		public FieldDescription(String name, Field field, FieldID.FieldType type){
+			this.name = name;
+			this.field = field;
+			this.type = type;
+			isList = List.class.isAssignableFrom(field.getType());
+		}
+
+		public FieldDescription(String name, Field field){
+			Class<?> klass = field.getType();
+			if(Calendar.class.isAssignableFrom(klass)){
+				this.type = FieldID.FieldType.DateField;
+			}else if(Integer.class.isAssignableFrom(klass)){
+				this.type = FieldID.FieldType.IntField;
+			} else  {
+				this.type = FieldID.FieldType.StringField;
+			}
+			this.name = name;
+			this.field = field;
+			isList = List.class.isAssignableFrom(klass);
+		}
+		
+		public String makeStringFromValue(Object value){
+			if(isList){
+				return ListFormat.humanReadable((List)value);
+			} else if(type == FieldID.FieldType.DateField){
+				return DateFormat.formatDateTime((Calendar)value);
+			} else {
+				return value.toString();
+			}
+		}
+		
+		public Object makeValueFromString(String value){
+			if(value == null){
+				return null;
+			}
+			if(isList){
+				if(type == FieldID.FieldType.StringField){
+					return Arrays.asList(value);
+				} else if(type == FieldID.FieldType.TextField){
+					return Arrays.asList(value.split("\n"));
+				} else if(type == FieldID.FieldType.IntField ){
+					// TODO: possible allow comma separated interger list
+					return Arrays.asList(Integer.parseInt(value));
+				} else if(type == FieldID.FieldType.DateField){
+					List<Calendar> rval = new ArrayList<Calendar>();
+					for(String line:value.split("\n")){
+						try {
+							rval.add(DateFormat.parseDate(line.trim()));
+						} catch (ParseError e) {
+							throw new RuntimeException("makeValueFromString() Invalid date format:" + line);
+						}
+					}
+					return rval;
+				}
+			} else {
+				if(type == FieldID.FieldType.StringField){
+					return value;
+				} else if(type == FieldID.FieldType.TextField){
+					return value;
+				} else if(type == FieldID.FieldType.IntField ){
+					return Integer.parseInt(value);
+				} else if(type == FieldID.FieldType.DateField){
+					try {
+						return DateFormat.parseDate(value);
+					} catch (ParseError e) {
+						throw new RuntimeException("makeValueFromString() Invalid date format:" + value);
+					}
+				}
+			}
+			throw new RuntimeException("makeValueFromString() :Don't know how to convert to type:" + type);
+		}
+	}
+	protected static void traverseFields(List<FieldDescription> ancestors, boolean all, Class<?> klass, MdStruct.StructType mdType,  Function<List<FieldDescription>, Void> f) {
+		for (Field field : klass.getFields()) {
+			MdStruct mdStruct = field.getAnnotation(MdStruct.class);
+			if (mdStruct != null && mdStruct.type() == mdType) {
+				String prefix = ancestors.size() > 0 ? ancestors.get(ancestors.size()-1).name : "";
+				if(prefix.length() > 0){
+					prefix += ".";
+				}
+				String name = mdStruct.name().length() > 0 ? mdStruct.name() : field.getName();
+				FieldDescription t = new FieldDescription(prefix + name, field, null);
+				List<FieldDescription> a = new ArrayList<FieldDescription>(ancestors);
+				a.add(t);
+				traverseFields(a, true, field.getType(), mdType, f);
+			} else {
+				FieldID fieldId = field.getAnnotation(FieldID.class);
+				if(fieldId != null){
+					String prefix = ancestors.size() > 0 ? ancestors.get(ancestors.size()-1).name : "";
+					if(prefix.length() > 0){
+						prefix += ".";
+					}
+					FieldDescription t =new FieldDescription(prefix + fieldId.value(), field, fieldId.type());
+					List<FieldDescription> a = new ArrayList<FieldDescription>(ancestors);
+					a.add(t);
+					f.apply(a);
+				} else if( all ) {
+					String prefix = ancestors.size() > 0 ? ancestors.get(ancestors.size()-1).name : "";
+					if(prefix.length() > 0){
+						prefix += ".";
+					}
+					FieldDescription t =new FieldDescription(prefix + field.getName(), field);
+					List<FieldDescription> a = new ArrayList<FieldDescription>(ancestors);
+					a.add(t);
+					f.apply(a);
+				}
+			}
+		}
+	}
+	
+	final static Map<String, List<FieldDescription>> _mdFields;
+	final static Map<String, List<FieldDescription>> _mdEnabledFields;
+	static {
+		_mdFields = new HashMap<String, List<FieldDescription>>();
+		_mdEnabledFields = new HashMap<String, List<FieldDescription>>();
+		traverseFields(new ArrayList<FieldDescription>(), false, MetadataInfo.class, StructType.MdStruct, new Function<List<FieldDescription>, Void>() {
+			@Override
+			public Void apply(List<FieldDescription> t) {
+				if(t.size()>0){
+					_mdFields.put(t.get(t.size()-1).name, t);
+				}
+				return null;
+			}
+		});
+		traverseFields(new ArrayList<FieldDescription>(), false, MetadataInfo.class, StructType.MdEnableStruct, new Function<List<FieldDescription>, Void>() {
+			@Override
+			public Void apply(List<FieldDescription> t) {
+				if(t.size()>0){
+					_mdEnabledFields.put(t.get(t.size()-1).name, t);
+				}
+				return null;
+			}
+		});
+	}
+	
+	protected Object _getStructObject(String id,  Map<String, List<FieldDescription>> mdFields, boolean parent, boolean toString, boolean useDefault, Object defaultValue) {
+		List<FieldDescription> fields = mdFields.get(id);
+		if(fields == null || fields.size() == 0){
+			if(useDefault){
+				return defaultValue;
+			}
+			throw new RuntimeException("_getStructObject('"+id+"') No such field");
+		}
+		Object current = this;
+		FieldDescription fieldD = null;
+		for(int i=0 ; i < fields.size() - (parent?1:0); ++i){
+			try {
+				fieldD = fields.get(i);
+				current = fieldD.field.get(current);
+			} catch (IllegalArgumentException e) {
+				if(useDefault){
+					return defaultValue;
+				}
+				throw new RuntimeException("_getStructObject('"+id+"') IllegalArgumentException:" + e.toString());
+			} catch (IllegalAccessException e) {
+				if(useDefault){
+					return defaultValue;
+				}
+				throw new RuntimeException("_getStructObject('"+id+"') IllegalAccessException" + e.toString());
+			}
+		}
+		if(toString){
+			return fieldD.makeStringFromValue(current);
+		}
+		return current;
+	}
+	public Object get(String id) {
+		return _getStructObject(id, _mdFields, false, false, false, null);
+	}
+	public String getString(String id) {
+		return (String) _getStructObject(id, _mdFields, false, true, false, null);
+	}
+
+	public Object get(String id, Object defaultValue) {
+		return _getStructObject(id, _mdFields, false, false, true, defaultValue);
+	}
+	public String getString(String id, String defaultValue) {
+		return (String) _getStructObject(id, _mdFields, false, true, true, defaultValue);
+	}
+
+	protected boolean _getObjectEnabled(String id) {
+		return (Boolean)_getStructObject(id, _mdEnabledFields, false, false, true, false);
+	}
+
+	protected void _setStructObject(String id,  Object value, boolean append, boolean fromString, Map<String, List<FieldDescription>> mdFields) {
+		List<FieldDescription> fields = mdFields.get(id);
+		if(fields == null || fields.size() == 0){
+			throw new RuntimeException("_setStructObject('"+id+"') No such field");
+		}
+		Object current = _getStructObject(id, mdFields, true, false, false, null);
+		try {
+			FieldDescription fieldD = fields.get(fields.size()-1);
+			if(fromString && (value != null)){
+				value = fieldD.makeValueFromString(value.toString());
+			}
+			if(fieldD.isList && append){
+				List<Object> l = (List<Object>) fieldD.field.get(current);
+				if(l == null){
+					l = new ArrayList<Object>();
+				} 
+				if(List.class.isAssignableFrom(value.getClass())){
+					l.addAll((List)value);
+				} else {
+					l.add(value);
+				}
+				fieldD.field.set(current, l);
+			} else {
+				fieldD.field.set(current, value);
+			}
+		} catch (IllegalArgumentException e) {
+			throw new RuntimeException("_setStructObject('"+id+"') IllegalArgumentException:" + e.toString());
+		} catch (IllegalAccessException e) {
+			throw new RuntimeException("_setStructObject('"+id+"') IllegalAccessException" + e.toString());
+		}
+	}
+
+	public void set(String id, Object value) {
+		_setStructObject(id, value, false, false, _mdFields);
+	}
+	public void setAppend(String id, Object value) {
+		_setStructObject(id, value, true, false, _mdFields);
+	}
+
+	public void setFromString(String id, String value) {
+		_setStructObject(id, value, false, true, _mdFields);
+	}
+	public void setAppendFromString(String id, String value) {
+		_setStructObject(id, value, true, true, _mdFields);
+	}
+
+	protected void _setObjectEnabled(String id, boolean value) {
+		_setStructObject(id, value, false, false, _mdEnabledFields);
+	}
+
+	public static FieldDescription getFieldDescription(String id){
+		List<FieldDescription> fields = _mdFields.get(id);
+		if( fields.size() > 0){
+			return fields.get(fields.size()-1);
+		}
+		return null;
+	}
+	//////////////////////////////
+	
 	public static MetadataInfo getSampleMetadata(){
 		MetadataInfo md = new MetadataInfo();
 		// Spec is at : http://partners.adobe.com/public/developer/en/xmp/sdk/XMPspecification.pdf
-		md.basic.title = "Dracula"; 
-		md.basic.author = "Bram Stoker";
-		md.basic.subject = "Horror tales, Epistolary fiction, Gothic fiction (Literary genre), Vampires -- Fiction, Dracula, Count (Fictitious character) -- Fiction, Transylvania (Romania) -- Fiction, Whitby (England) -- Fiction"; 
-		md.basic.keywords = "Horror, Gothic, Vampires";
-		md.basic.creator = "Adobe InDesign CS4 (6.0.6)";
-		md.basic.producer = "Adobe PDF Library 9.0";
-		md.basic.creationDate = Calendar.getInstance();
-		md.basic.modificationDate = Calendar.getInstance(); 
-		md.basic.trapped = "True";
+		md.doc.title = "Dracula"; 
+		md.doc.author = "Bram Stoker";
+		md.doc.subject = "Horror tales, Epistolary fiction, Gothic fiction (Literary genre), Vampires -- Fiction, Dracula, Count (Fictitious character) -- Fiction, Transylvania (Romania) -- Fiction, Whitby (England) -- Fiction"; 
+		md.doc.keywords = "Horror, Gothic, Vampires";
+		md.doc.creator = "Adobe InDesign CS4 (6.0.6)";
+		md.doc.producer = "Adobe PDF Library 9.0";
+		md.doc.creationDate = DateFormat.parseDateOrNull("2012-12-12 00:00:00");
+		md.doc.modificationDate = DateFormat.parseDateOrNull("2012-12-13 00:00:00");
+		md.doc.trapped = "True";
 
-		md.xmpBasic.creatorTool = "Adobe InDesign CS4 (6.0.6)";
-		md.xmpBasic.createDate = md.basic.creationDate;
-		md.xmpBasic.modifyDate = md.basic.modificationDate;
-		md.xmpBasic.title = md.basic.title;
-		md.xmpBasic.baseURL = "https://www.gutenberg.org/";
-		md.xmpBasic.rating = 3; 
-		md.xmpBasic.label = "Horror Fiction Collection";
-		md.xmpBasic.nickname = "dracula";
-		md.xmpBasic.identifiers = Arrays.asList("Dracula_original_edition");
+		md.basic.creatorTool = "Adobe InDesign CS4 (6.0.6)";
+		md.basic.createDate = md.doc.creationDate;
+		md.basic.modifyDate = md.doc.modificationDate;
+		md.basic.baseURL = "https://www.gutenberg.org/";
+		md.basic.rating = 3; 
+		md.basic.label = "Horror Fiction Collection";
+		md.basic.nickname = "dracula";
+		md.basic.identifiers = Arrays.asList("Dracula_original_edition");
 		//md.xmpBasic.advisories ; 
-		md.xmpBasic.metadataDate = Calendar.getInstance();
+		md.basic.metadataDate = DateFormat.parseDateOrNull("2012-12-14 00:00:00");
 
-		md.xmpPdf.pdfVersion = "1.5"; 
-		md.xmpPdf.keywords = md.basic.keywords;
-		md.xmpPdf.producer = "Adobe PDF Library 9.0";
+		md.pdf.pdfVersion = "1.5"; 
+		md.pdf.keywords = md.doc.keywords;
+		md.pdf.producer = "Adobe PDF Library 9.0";
 
-		md.xmpDc.title = md.basic.title;
-		md.xmpDc.description = "The famous Bram Stocker book"; 
-		md.xmpDc.creators = new ArrayList<String>();
-		md.xmpDc.creators.add("Bram Stocker");
-		md.xmpDc.subjects = Arrays.asList(md.basic.subject.split("\\s*,\\s*"));
+		md.dc.title = md.doc.title;
+		md.dc.description = "The famous Bram Stocker book"; 
+		md.dc.creators = new ArrayList<String>();
+		md.dc.creators.add("Bram Stocker");
+		md.dc.subjects = Arrays.asList(md.doc.subject.split("\\s*,\\s*"));
 		
-		/*
-		md.xmpDc.contributors;
-		md.xmpDc.coverage 
-		md.xmpDc.dates = 
-		md.xmpDc.format = 
-		md.xmpDc.identifier = 
-		md.xmpDc.languages = 
-		md.xmpDc.publishers = 
-		md.xmpDc.relationships = 
-		md.xmpDc.rights = 
-		md.xmpDc.source = 
-		md.xmpDc.types = 
-		*/
 		return md;
 	}
 

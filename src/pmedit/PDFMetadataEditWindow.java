@@ -1,10 +1,7 @@
 package pmedit;
-import java.awt.EventQueue;
-import java.awt.Frame;
 import java.awt.Point;
 
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JButton;
 
 import net.miginfocom.swing.MigLayout;
@@ -14,58 +11,24 @@ import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
-import javax.swing.JTabbedPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-
 import java.awt.event.ActionEvent;
 
-import org.apache.jempbox.xmp.XMPMetadata;
-import org.apache.jempbox.xmp.XMPSchemaBasic;
-import org.apache.jempbox.xmp.XMPSchemaDublinCore;
-import org.apache.jempbox.xmp.XMPSchemaPDF;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
-import org.apache.pdfbox.pdmodel.PDDocumentInformation;
-import org.apache.pdfbox.pdmodel.common.PDMetadata;
-
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
 import java.util.List;
-import java.util.Map;
-import java.util.prefs.Preferences;
-
-import javax.swing.JTextArea;
-import javax.swing.JScrollPane;
-import javax.swing.JComboBox;
-import javax.swing.DefaultComboBoxModel;
-
-import com.toedter.calendar.JDateChooser;
-
 import java.awt.Component;
 import java.awt.Dimension;
 
 import javax.swing.Box;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.border.LineBorder;
-
-import java.awt.Color;
-
-import javax.swing.JSpinner;
-import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 import javax.swing.plaf.basic.BasicArrowButton;
 
-import java.awt.FlowLayout;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
@@ -383,7 +346,7 @@ public class PDFMetadataEditWindow extends JFrame{
 			public void actionPerformed(ActionEvent e) {
 				if(metadataInfo != null){
 					metadataEditor.copyToMetadata(metadataInfo);
-					metadataInfo.copyXMPToBasic();
+					metadataInfo.copyXMPToDoc();
 					metadataEditor.fillFromMetadata(metadataInfo);
 				}
 			}
@@ -401,7 +364,7 @@ public class PDFMetadataEditWindow extends JFrame{
 					public void actionPerformed(ActionEvent arg0) {
 						if(metadataInfo != null){
 							metadataEditor.copyToMetadata(metadataInfo);
-							metadataInfo.copyBasicToXMP();
+							metadataInfo.copyDocToXMP();
 							metadataEditor.fillFromMetadata(metadataInfo);
 						}
 					}
