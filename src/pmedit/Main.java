@@ -61,46 +61,51 @@ public class Main {
 			makeBatchWindow(getBatchGuiCommand(), null, cmdLine.fileList);
 			return;
 		}
-	
-		final String fileName = cmdLine.fileList.size() > 0 ?  cmdLine.fileList.get(0) : null;
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					String fileAbsPath = fileName != null ? new File(fileName).getAbsolutePath() : null;
-					// If we have file, and a single open empty window, load the file in it
-					if(fileAbsPath != null && editorInstances.size() == 1 && editorInstances.get(0).getCurrentFile() == null){
-						editorInstances.get(0).loadFile(fileAbsPath);
-						return;
-					}
-			    	logLine("executeCommand fileName", fileAbsPath);
-					for(PDFMetadataEditWindow window: editorInstances){
-						File wFile = window.getCurrentFile();
-				    	logLine("check ", wFile != null ? wFile.getAbsolutePath() : null);
-						if( (fileAbsPath == null && wFile == null)  || (wFile != null && wFile.getAbsolutePath().equals(fileAbsPath)) ){
-							logLine("match", null);
-							if(window.getState() == JFrame.ICONIFIED){
-								window.setState(JFrame.NORMAL);
-							}
-							window.toFront();
-							window.repaint();
+		List<String> files = new ArrayList<String>(cmdLine.fileList);
+		if( files.size() == 0){
+			files.add(null);
+		}
+		for(final String file: files){
+			SwingUtilities.invokeLater(new Runnable() {
+				final String fileName = file;
+				public void run() {
+					try {
+						String fileAbsPath = fileName != null ? new File(fileName).getAbsolutePath() : null;
+						// If we have file, and a single open empty window, load the file in it
+						if(fileAbsPath != null && editorInstances.size() == 1 && editorInstances.get(0).getCurrentFile() == null){
+							editorInstances.get(0).loadFile(fileAbsPath);
 							return;
 						}
+				    	logLine("executeCommand fileName", fileAbsPath);
+						for(PDFMetadataEditWindow window: editorInstances){
+							File wFile = window.getCurrentFile();
+					    	logLine("check ", wFile != null ? wFile.getAbsolutePath() : null);
+							if( (fileAbsPath == null && wFile == null)  || (wFile != null && wFile.getAbsolutePath().equals(fileAbsPath)) ){
+								logLine("match", null);
+								if(window.getState() == JFrame.ICONIFIED){
+									window.setState(JFrame.NORMAL);
+								}
+								window.toFront();
+								window.repaint();
+								return;
+							}
+						}
+				    	logLine("open editor", fileName);
+						final PDFMetadataEditWindow window = new PDFMetadataEditWindow(fileName);
+						window.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+						window.addWindowListener(new java.awt.event.WindowAdapter() {
+					        public void windowClosing(WindowEvent winEvt) {
+					        	editorInstances.remove(window);
+					        	maybeExit();
+					        }
+					    });
+						editorInstances.add(window);
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-			    	logLine("open editor", fileName);
-					final PDFMetadataEditWindow window = new PDFMetadataEditWindow(fileName);
-					window.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-					window.addWindowListener(new java.awt.event.WindowAdapter() {
-				        public void windowClosing(WindowEvent winEvt) {
-				        	editorInstances.remove(window);
-				        	maybeExit();
-				        }
-				    });
-					editorInstances.add(window);
-				} catch (Exception e) {
-					e.printStackTrace();
 				}
-			}
-		});
+			});
+		}
 	}
 
 	protected static void logLine(String context, String line){
