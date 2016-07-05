@@ -66,6 +66,9 @@ import javax.swing.SwingWorker;
 import javax.swing.plaf.basic.BasicArrowButton;
 
 import java.awt.FlowLayout;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
 
 public class PDFMetadataEditWindow extends JFrame{
 
@@ -108,14 +111,11 @@ public class PDFMetadataEditWindow extends JFrame{
 				repaint();
 
 				List<String> fileNames = new ArrayList<String>();
-				if(fdm.isBatchOperation()){
-					fileNames.add(Main.getBatchGuiCommand());
-				}
 
 				for(File file: files){
 					fileNames.add(file.getAbsolutePath());
 				}
-				Main.executeCommand(new CommandLine(fileNames, true));
+				Main.executeCommand(new CommandLine(fileNames, fdm.isBatchOperation()));
 			}
 
 			@Override
@@ -194,9 +194,75 @@ public class PDFMetadataEditWindow extends JFrame{
 	}
 	private MetadataEditPane metadataEditor;
 
-	/**
-	 * Initialize the contents of the frame.
-	 */
+	final ActionListener saveAction = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			saveFile();
+		}
+	}; 
+
+	final ActionListener saveRenameAction = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			saveFile();
+			String renameTemplate =  Main.getPreferences().get("renameTemplate", null);
+			if(renameTemplate == null){
+				return;
+			}
+			TemplateString ts = new TemplateString(renameTemplate); 
+			String toName = ts.process(metadataInfo);
+			String toDir= pdfFile.getParent();
+			File to = new File(toDir,toName);
+			pdfFile.renameTo(to);
+		}
+	}; 
+
+	final ActionListener saveAsAction = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			final JFileChooser fcSaveAs = new JFileChooser();
+
+			String dir = Main.getPreferences().get("LastDir", null);
+			if (dir != null) {
+				try {
+					fcSaveAs.setCurrentDirectory(new File(dir));
+				} catch (Exception e1) {
+				}
+			}
+			int returnVal = fcSaveAs.showSaveDialog(PDFMetadataEditWindow.this);
+
+			if (returnVal == JFileChooser.APPROVE_OPTION) {
+				pdfFile = fcSaveAs.getSelectedFile();
+
+				saveFile();
+				loadFile();
+
+				// save dir as last opened
+				Main.getPreferences().put("LastDir", pdfFile.getParent());
+			}
+		}
+	}; 
+	final Runnable updateSaveButton = new Runnable() {
+		
+		@Override
+		public void run() {
+			String saveActionS = Main.getPreferences().get("defaultSaveAction", "save");
+
+			for(ActionListener l : btnSave.getActionListeners()){
+				btnSave.removeActionListener(l);
+			}
+
+			if(saveActionS.equals("saveRename")){
+				btnSave.setText("Save & rename");
+				btnSave.addActionListener(saveRenameAction);
+			} else  if(saveActionS.equals("saveAs")){
+				btnSave.setText("Save As ...");
+				btnSave.addActionListener(saveAsAction);
+			} else {
+				btnSave.setText("Save");
+				btnSave.addActionListener(saveAction);
+				
+			}
+		}
+	};
+	private JButton btnSave;
 	private void initialize() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setTitle("PDF Metadata Editor");
@@ -208,47 +274,89 @@ public class PDFMetadataEditWindow extends JFrame{
 
 		JPanel panel = new JPanel();
 		getContentPane().add(panel, "cell 0 0,growx");
-		panel.setLayout(new MigLayout("", "[][grow,fill][][]", "[]"));
+		GridBagLayout gbl_panel = new GridBagLayout();
+		gbl_panel.columnWidths = new int[]{105, 421, 20, 40, 0};
+		gbl_panel.rowHeights = new int[]{36, 0};
+		gbl_panel.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel.rowWeights = new double[]{0.0, Double.MIN_VALUE};
+		panel.setLayout(gbl_panel);
+		
+				JButton btnOpenPdf = new JButton("Open PDF");
+				GridBagConstraints gbc_btnOpenPdf = new GridBagConstraints();
+				gbc_btnOpenPdf.anchor = GridBagConstraints.WEST;
+				gbc_btnOpenPdf.insets = new Insets(0, 0, 0, 5);
+				gbc_btnOpenPdf.gridx = 0;
+				gbc_btnOpenPdf.gridy = 0;
+				panel.add(btnOpenPdf, gbc_btnOpenPdf);
+				
+						btnOpenPdf.addActionListener(new ActionListener() {
+							public void actionPerformed(ActionEvent arg0) {
+								String dir = Main.getPreferences().get("LastDir", null);
+								if (dir != null) {
+									try {
+										fc.setCurrentDirectory(new File(dir));
+									} catch (Exception e) {
+									}
+								}
+								int returnVal = fc.showOpenDialog(PDFMetadataEditWindow.this);
+				
+								if (returnVal == JFileChooser.APPROVE_OPTION) {
+									pdfFile = fc.getSelectedFile();
+									// This is where a real application would open the file.
+									loadFile();
+									// save dir as last opened
+									Main.getPreferences().put("LastDir", pdfFile.getParent());
+								}
+							}
+						});
+				
+						filename = new JTextField();
+						GridBagConstraints gbc_filename = new GridBagConstraints();
+						gbc_filename.fill = GridBagConstraints.HORIZONTAL;
+						gbc_filename.insets = new Insets(0, 0, 0, 5);
+						gbc_filename.gridx = 1;
+						gbc_filename.gridy = 0;
+						panel.add(filename, gbc_filename);
+						filename.setEditable(false);
+						filename.setColumns(10);
+				
+						Component horizontalStrut = Box.createHorizontalStrut(20);
+						GridBagConstraints gbc_horizontalStrut = new GridBagConstraints();
+						gbc_horizontalStrut.anchor = GridBagConstraints.WEST;
+						gbc_horizontalStrut.insets = new Insets(0, 0, 0, 5);
+						gbc_horizontalStrut.gridx = 2;
+						gbc_horizontalStrut.gridy = 0;
+						panel.add(horizontalStrut, gbc_horizontalStrut);
 
-		JButton btnOpenPdf = new JButton("Open PDF");
-		panel.add(btnOpenPdf, "cell 0 0,alignx left,aligny center");
-
-		filename = new JTextField();
-		panel.add(filename, "cell 1 0,growx,aligny center");
-		filename.setEditable(false);
-		filename.setColumns(10);
-
-		Component horizontalStrut = Box.createHorizontalStrut(20);
-		panel.add(horizontalStrut, "cell 2 0");
-
-		JButton btnPreferences = new JButton("");
-
-		panel.add(btnPreferences, "cell 3 0,aligny center");
-		java.net.URL prefImgURL = PDFMetadataEditWindow.class
-				.getResource("settings-icon.png");
-		ImageIcon img = new ImageIcon(prefImgURL);
-		btnPreferences.setIcon(img);
-
-		btnOpenPdf.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				String dir = Main.getPreferences().get("LastDir", null);
-				if (dir != null) {
-					try {
-						fc.setCurrentDirectory(new File(dir));
-					} catch (Exception e) {
-					}
-				}
-				int returnVal = fc.showOpenDialog(PDFMetadataEditWindow.this);
-
-				if (returnVal == JFileChooser.APPROVE_OPTION) {
-					pdfFile = fc.getSelectedFile();
-					// This is where a real application would open the file.
-					loadFile();
-					// save dir as last opened
-					Main.getPreferences().put("LastDir", pdfFile.getParent());
-				}
-			}
-		});
+						java.net.URL prefImgURL = PDFMetadataEditWindow.class
+								.getResource("settings-icon.png");
+						ImageIcon img = new ImageIcon(prefImgURL);
+		
+				JButton btnPreferences = new JButton("");
+				
+						GridBagConstraints gbc_btnPreferences = new GridBagConstraints();
+						gbc_btnPreferences.anchor = GridBagConstraints.WEST;
+						gbc_btnPreferences.gridx = 3;
+						gbc_btnPreferences.gridy = 0;
+						panel.add(btnPreferences, gbc_btnPreferences);
+						btnPreferences.setIcon(img);
+						
+								btnPreferences.addActionListener(new ActionListener() {
+									public void actionPerformed(ActionEvent e) {
+										SwingUtilities.invokeLater(new Runnable() {
+						
+											@Override
+											public void run() {
+												if (preferencesWindow == null){
+													preferencesWindow = new PreferencesWindow(Main.getPreferences(), defaultMetadata, PDFMetadataEditWindow.this);
+													preferencesWindow.onSaveAction(updateSaveButton);
+												}
+												preferencesWindow.setVisible(true);
+											}
+										});
+						
+									}
+								});
 		
 		metadataEditor = new MetadataEditPane();
 		getContentPane().add(metadataEditor.tabbedaPane, "cell 0 1,grow");
@@ -262,97 +370,13 @@ public class PDFMetadataEditWindow extends JFrame{
 
 		JPanel panel_4 = new JPanel();
 		getContentPane().add(panel_4, "cell 0 2,growx");
-		panel_4.setLayout(new MigLayout("insets 0", "[grow,fill][grow,fill]", "[][][]"));
-
-		JButton btnCopyBasicTo = new JButton("Copy Basic To XMP");
-		btnCopyBasicTo.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				if(metadataInfo != null){
-					metadataEditor.copyToMetadata(metadataInfo);
-					metadataInfo.copyBasicToXMP();
-					metadataEditor.fillFromMetadata(metadataInfo);
-				}
-			}
-		});
+		GridBagLayout gbl_panel_4 = new GridBagLayout();
+		gbl_panel_4.columnWidths = new int[]{340, 286, 0};
+		gbl_panel_4.rowHeights = new int[]{33, 29, 0};
+		gbl_panel_4.columnWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel_4.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		panel_4.setLayout(gbl_panel_4);
 		
-		JPanel panel_1 = new JPanel();
-		panel_4.add(panel_1, "cell 1 0 1 3,grow");
-				panel_1.setLayout(new MigLayout("", "[grow,fill]0[]", "[grow,fill]"));
-		
-				final JButton btnSave = new JButton("Save");
-				panel_1.add(btnSave, "cell 0 0,alignx left,aligny top, gapright 0");
-				btnSave.setIcon(new ImageIcon(
-						PDFMetadataEditWindow.class
-								.getResource("/com/sun/java/swing/plaf/windows/icons/FloppyDrive.gif")));
-				
-				final ActionListener saveAction = new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						saveFile();
-					}
-				}; 
-
-				final ActionListener saveRenameAction = new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						saveFile();
-						String renameTemplate =  Main.getPreferences().get("renameTemplate", null);
-						if(renameTemplate == null){
-							return;
-						}
-						TemplateString ts = new TemplateString(renameTemplate); 
-						String toName = ts.process(metadataInfo);
-						String toDir= pdfFile.getParent();
-						File to = new File(toDir,toName);
-						pdfFile.renameTo(to);
-					}
-				}; 
-
-				final ActionListener saveAsAction = new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						final JFileChooser fcSaveAs = new JFileChooser();
-
-						String dir = Main.getPreferences().get("LastDir", null);
-						if (dir != null) {
-							try {
-								fcSaveAs.setCurrentDirectory(new File(dir));
-							} catch (Exception e1) {
-							}
-						}
-						int returnVal = fcSaveAs.showSaveDialog(PDFMetadataEditWindow.this);
-
-						if (returnVal == JFileChooser.APPROVE_OPTION) {
-							pdfFile = fcSaveAs.getSelectedFile();
-
-							saveFile();
-							loadFile();
-
-							// save dir as last opened
-							Main.getPreferences().put("LastDir", pdfFile.getParent());
-						}
-					}
-				}; 
-				
-				final BasicArrowButton btnSaveMenu = new BasicArrowButton(BasicArrowButton.SOUTH);
-				btnSaveMenu.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						JPopupMenu menu = new JPopupMenu();
-						JMenuItem save = menu.add("Save");
-						save.addActionListener(saveAction);;
-						JMenuItem saveRename = menu.add("Save & rename");
-						saveRename.addActionListener(saveRenameAction);
-						JMenuItem saveAs = menu.add("Save As ...");
-						saveAs.addActionListener(saveAsAction);
-						
-						int x,y;
-						Point pos = btnSaveMenu.getLocationOnScreen();
-						x = pos.x;
-						y = pos.y + btnSaveMenu.getHeight();
-
-						menu.show(btnSaveMenu, btnSaveMenu.getWidth() - (int)menu.getPreferredSize().getWidth(), btnSaveMenu.getHeight());
-						
-					}
-				});
-				panel_1.add(btnSaveMenu, "cell 1 0,growx,aligny center, gapleft 0");
-				
 		
 		JButton button = new JButton("Copy XMP To Basic");
 		button.addActionListener(new ActionListener() {
@@ -364,51 +388,73 @@ public class PDFMetadataEditWindow extends JFrame{
 				}
 			}
 		});
-		panel_4.add(button, "cell 0 1");
-
-		panel_4.add(btnCopyBasicTo, "cell 0 2");
-
-		final Runnable updateSaveButton = new Runnable() {
-			
-			@Override
-			public void run() {
-				String saveActionS = Main.getPreferences().get("defaultSaveAction", "save");
-
-				for(ActionListener l : btnSave.getActionListeners()){
-					btnSave.removeActionListener(l);
-				}
-
-				if(saveActionS.equals("saveRename")){
-					btnSave.setText("Save & rename");
-					btnSave.addActionListener(saveRenameAction);
-				} else  if(saveActionS.equals("saveAs")){
-					btnSave.setText("Save As ...");
-					btnSave.addActionListener(saveAsAction);
-				} else {
-					btnSave.setText("Save");
-					btnSave.addActionListener(saveAction);
-					
-				}
-			}
-		};
-		updateSaveButton.run();
-
-		btnPreferences.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				SwingUtilities.invokeLater(new Runnable() {
-
-					@Override
-					public void run() {
-						if (preferencesWindow == null){
-							preferencesWindow = new PreferencesWindow(Main.getPreferences(), defaultMetadata, PDFMetadataEditWindow.this);
-							preferencesWindow.onSaveAction(updateSaveButton);
+		GridBagConstraints gbc_button = new GridBagConstraints();
+		gbc_button.anchor = GridBagConstraints.SOUTH;
+		gbc_button.fill = GridBagConstraints.HORIZONTAL;
+		gbc_button.insets = new Insets(0, 0, 5, 5);
+		gbc_button.gridx = 0;
+		gbc_button.gridy = 0;
+		panel_4.add(button, gbc_button);
+		
+				JButton btnCopyBasicTo = new JButton("Copy Basic To XMP");
+				btnCopyBasicTo.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent arg0) {
+						if(metadataInfo != null){
+							metadataEditor.copyToMetadata(metadataInfo);
+							metadataInfo.copyBasicToXMP();
+							metadataEditor.fillFromMetadata(metadataInfo);
 						}
-						preferencesWindow.setVisible(true);
 					}
 				});
+						
+						JPanel panel_1 = new JPanel();
+						GridBagConstraints gbc_panel_1 = new GridBagConstraints();
+						gbc_panel_1.fill = GridBagConstraints.BOTH;
+						gbc_panel_1.gridheight = 2;
+						gbc_panel_1.gridx = 1;
+						gbc_panel_1.gridy = 0;
+						panel_4.add(panel_1, gbc_panel_1);
+						panel_1.setLayout(new MigLayout("", "[grow,fill]0[]", "[grow,fill]"));
+						
+								btnSave = new JButton("Save");
+								panel_1.add(btnSave, "cell 0 0,alignx left,aligny top, gapright 0");
+								btnSave.setIcon(new ImageIcon(
+										PDFMetadataEditWindow.class
+												.getResource("/com/sun/java/swing/plaf/windows/icons/FloppyDrive.gif")));
+								
+								final BasicArrowButton btnSaveMenu = new BasicArrowButton(BasicArrowButton.SOUTH);
+								btnSaveMenu.addActionListener(new ActionListener() {
+									public void actionPerformed(ActionEvent e) {
+										JPopupMenu menu = new JPopupMenu();
+										JMenuItem save = menu.add("Save");
+										save.addActionListener(saveAction);;
+										JMenuItem saveRename = menu.add("Save & rename");
+										saveRename.addActionListener(saveRenameAction);
+										JMenuItem saveAs = menu.add("Save As ...");
+										saveAs.addActionListener(saveAsAction);
+										
+										int x,y;
+										Point pos = btnSaveMenu.getLocationOnScreen();
+										x = pos.x;
+										y = pos.y + btnSaveMenu.getHeight();
 
-			}
-		});
+										menu.show(btnSaveMenu, btnSaveMenu.getWidth() - (int)menu.getPreferredSize().getWidth(), btnSaveMenu.getHeight());
+										
+									}
+								});
+								panel_1.add(btnSaveMenu, "cell 1 0,growx,aligny center, gapleft 0");
+				
+						GridBagConstraints gbc_btnCopyBasicTo = new GridBagConstraints();
+						gbc_btnCopyBasicTo.anchor = GridBagConstraints.NORTH;
+						gbc_btnCopyBasicTo.fill = GridBagConstraints.HORIZONTAL;
+						gbc_btnCopyBasicTo.insets = new Insets(0, 0, 0, 5);
+						gbc_btnCopyBasicTo.gridx = 0;
+						gbc_btnCopyBasicTo.gridy = 1;
+						panel_4.add(btnCopyBasicTo, gbc_btnCopyBasicTo);
+				
+
+
+		updateSaveButton.run();
 		
 		java.net.URL imgURL = PDFMetadataEditWindow.class
 				.getResource("pdf-metadata-edit.png");
@@ -419,5 +465,8 @@ public class PDFMetadataEditWindow extends JFrame{
 
 	public MetadataEditPane createMetadataEditor() {
 		return new MetadataEditPane();
+	}
+	protected JButton getBtnSave() {
+		return btnSave;
 	}
 }

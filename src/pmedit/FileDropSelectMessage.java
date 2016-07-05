@@ -48,39 +48,40 @@ public class FileDropSelectMessage extends JComponent {
     	int textWidth1 = metrics.stringWidth(openFilesText);
     	int textWidth2 = metrics.stringWidth(batchOperationText);
     	int x = 3, y = 3;
-    	int width = d.width - 6, height = (d.height - 6)/2;
-    	int y2  = y + height;
+    	int width = d.width - 6, height1 = (d.height - 6)/3, height2 = (d.height - 6) - height1;
+    	int y2  = y + height1;
 
     	g.setColor(new Color(255, 255, 255, 170));
     	int inset = 3;
 	
     	// Draw background rectangles
     	if(mousePos != null) {
-    		isOpenFile = mousePos.x >= x && mousePos.x <= width && mousePos.y >= y && mousePos.y <= height;
-    		isBatchOperation = mousePos.x >= x && mousePos.x <= width && mousePos.y >= y2 && mousePos.y <= (y2 + height);
+    		isOpenFile = mousePos.x >= x && mousePos.x <= width && mousePos.y >= y && mousePos.y <= height1;
+    		isBatchOperation = mousePos.x >= x && mousePos.x <= width && mousePos.y >= y2 && mousePos.y <= (y2 + height2);
     	}
+
     	if(isOpenFile){
-        	g.fill(new RoundRectangle2D.Float(x, y, width, height, 5, 5));
+        	g.fill(new RoundRectangle2D.Float(x, y, width, height1, 5, 5));
     	} else {
-    		g.fill(new RoundRectangle2D.Float((width - textWidth1)/2 - inset, (height - textHeight)/2 - textAscent - inset, textWidth1 + 2*inset, textHeight+ 2*inset, 3, 3));
+    		g.fill(new RoundRectangle2D.Float((width - textWidth1)/2 - inset, (height1 - textHeight)/2 - textAscent - inset, textWidth1 + 2*inset, textHeight+ 2*inset, 3, 3));
     	}
     	if(isBatchOperation){
-        	g.fill(new RoundRectangle2D.Float(x, y2, width, height, 5, 5));
+        	g.fill(new RoundRectangle2D.Float(x, y2, width, height2, 5, 5));
     	}else{
-    		g.fill(new RoundRectangle2D.Float((width - textWidth2)/2 - inset, y2 + (height - textHeight)/2 - textAscent - inset, textWidth2 + 2*inset, textHeight+ 2*inset, 3, 3));
+    		g.fill(new RoundRectangle2D.Float((width - textWidth2)/2 - inset, y2 + (height2 - textHeight)/2 - textAscent - inset, textWidth2 + 2*inset, textHeight+ 2*inset, 3, 3));
     	}
     	
     	// Draw borders
     	g.setColor(new Color(64, 64, 64, 192));
     	g.setStroke(new BasicStroke(3));
-    	g.draw(new RoundRectangle2D.Float(x, y, width, height, 5, 5));
-    	g.draw(new RoundRectangle2D.Float(x, y2, width, height, 5, 5));
+    	g.draw(new RoundRectangle2D.Float(x, y, width, height1, 5, 5));
+    	g.draw(new RoundRectangle2D.Float(x, y2, width, height2, 5, 5));
     	
     	
     	// Finally draw text
     	g.setColor(new Color(64, 64, 64, 192));
-    	g.drawString(openFilesText, (width - textWidth1)/2, (height - textHeight)/2);
-    	g.drawString(batchOperationText, (width - textWidth2)/2, y2 + (height - textHeight)/2);
+    	g.drawString(openFilesText, (width - textWidth1)/2, (height1 - textHeight)/2);
+    	g.drawString(batchOperationText, (width - textWidth2)/2, y2 + (height2 - textHeight)/2);
 
 
     }
