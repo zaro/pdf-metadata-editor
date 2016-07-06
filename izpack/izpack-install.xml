@@ -32,7 +32,7 @@
 		</condition>
 	</conditions>
 	<panels>
-		<panel classname="CheckedHelloPanel" />
+		<panel classname="HelloPanel" />
 		<panel classname="TargetPanel" />
 		<panel classname="InstallPanel" />
 		<panel classname="ShortcutPanel" id="shortcutpanel" />
