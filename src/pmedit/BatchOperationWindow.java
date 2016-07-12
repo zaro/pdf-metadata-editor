@@ -154,7 +154,7 @@ public class BatchOperationWindow extends JFrame {
 		txtpnnoBatchLicense.setEditable(false);
 		txtpnnoBatchLicense.setBackground(UIManager.getColor("Panel.background"));
 		txtpnnoBatchLicense.setContentType("text/html");
-		txtpnnoBatchLicense.setText("<p align=center>No batch license. In order to use batch operations please get a license from <a href='http://broken-by.me/pdf-metadata-editor/'>http://broken-by.me/pdf-metadata-editor/<a></p>");
+		txtpnnoBatchLicense.setText("<p align=center>No batch license. In order to use batch operations please get a license from <a href='" + Constants.batchLicenseUrl+ "'>" + Constants.batchLicenseUrl+ "<a></p>");
 		GridBagConstraints gbc_txtpnnoBatchLicense = new GridBagConstraints();
 		gbc_txtpnnoBatchLicense.fill = GridBagConstraints.BOTH;
 		gbc_txtpnnoBatchLicense.insets = new Insets(0, 10, 5, 10);
