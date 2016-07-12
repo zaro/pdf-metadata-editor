@@ -13,4 +13,4 @@ It uses maven , so just type:
 ## Download
 
 Prebuilt installer can be found
-[here](http://broken-by.me/blog/pdf-metadata-editor/)
+[here](http://broken-by.me/pdf-metadata-editor/)

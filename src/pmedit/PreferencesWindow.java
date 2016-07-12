@@ -337,7 +337,7 @@ public class PreferencesWindow extends JDialog {
 		txtpnEnterLicenseInformation.setEditable(false);
 		txtpnEnterLicenseInformation.setBackground(UIManager.getColor("Panel.background"));
 		txtpnEnterLicenseInformation.setContentType("text/html");
-		txtpnEnterLicenseInformation.setText("<h3 align='center'>Enter license information below to use batch operations.</h3><p align='center'>You can get license at <a href=\"http://broken-by.me/pdf-metadata-editor/\">http://broken-by.me/pdf-metadata-editor/</a></p>");
+		txtpnEnterLicenseInformation.setText("<h3 align='center'>Enter license information below to use batch operations.</h3><p align='center'>You can get license at <a href=\""+ Constants.batchLicenseUrl +"\">" + Constants.batchLicenseUrl +"</a></p>");
 		GridBagConstraints gbc_txtpnEnterLicenseInformation = new GridBagConstraints();
 		gbc_txtpnEnterLicenseInformation.gridwidth = 2;
 		gbc_txtpnEnterLicenseInformation.insets = new Insets(15, 0, 5, 0);
@@ -470,7 +470,7 @@ public class PreferencesWindow extends JDialog {
 		txtpnDf.setContentType("text/html");
 		txtpnDf.setEditable(false);
 		txtpnDf.setText(
-				aboutMsg = "<h1 align=center>PDF Metadata editor</h1>\n\n<p align=center><a href=\"http://broken-by.me/pdf-metadata-editor/\">http://broken-by.me/pdf-metadata-editor/</a></p>\n<br>\n<p>This progam is free for use but <a href=\"http://broken-by.me/pdf-metadata-editor/#donate\">donations</a> are always welcome:)</p>\n<br>\n<p>If you have suggestions, found bugs or just want to share some idea about it you can open an issue at <a href=\"https://github.com/zaro/pdf-metadata-editor/issues\">https://github.com/zaro/pdf-metadata-editor/issues</a></p>\n<br>");
+				aboutMsg="<h1 align=center>Pdf Metadata editor</h1>\n\n<p align=center><a href=\"http://broken-by.me/pdf-metadata-editor/\">http://broken-by.me/pdf-metadata-editor/</a></p>\n<br>\n<p align=center>If you have suggestions, found bugs or just want to share some idea about it you can write me at : <a href=\"mailto:zarrro@gmail.com\"/>zarrro@gmail.com</a></p>\n<br>");
 		scrollPane_1.setViewportView(txtpnDf);
 		
 		JPanel panel_3 = new JPanel();
