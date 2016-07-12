@@ -15,6 +15,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import pmedit.CommandLine.ParseError;
+import pmedit.prefs.FilePreferencesFactory;
 
 public class Main {
 	
@@ -25,7 +26,7 @@ public class Main {
 	
 	public static void makeBatchWindow(final String commandName, CommandDescription command, List<String> fileList){
 		BatchOperationWindow bs = new BatchOperationWindow(command);
-		bs.appendFiles(PDFMetadataEditBatch.fileList(fileList));
+		bs.appendFiles(FileList.fileList(fileList));
 		bs.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		bs.addWindowListener(new java.awt.event.WindowAdapter() {
 	        public void windowClosing(WindowEvent winEvt) {
@@ -46,7 +47,7 @@ public class Main {
 					try {
 						BatchOperationWindow bs = batchInstances.get(cmdLine.command.name);
 						if(bs != null){
-							bs.appendFiles(PDFMetadataEditBatch.fileList(cmdLine.fileList));
+							bs.appendFiles(FileList.fileList(cmdLine.fileList));
 						} else {
 							makeBatchWindow(cmdLine.command.name, cmdLine.command, cmdLine.fileList);
 						}
@@ -153,6 +154,7 @@ public class Main {
 	static Preferences _prefs;
 	public static Preferences getPreferences() {
 		if(_prefs == null){
+		    System.setProperty("java.util.prefs.PreferencesFactory", FilePreferencesFactory.class.getName());
 			_prefs = Preferences.userRoot().node("PDFMetadataEditor");
 		}
 		return _prefs;

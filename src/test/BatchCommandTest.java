@@ -13,6 +13,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import pmedit.CommandLine;
+import pmedit.FileList;
 import pmedit.MetadataInfo;
 import pmedit.PDFMetadataEditBatch;
 import pmedit.PDFMetadataEditBatch.ActionStatus;
@@ -41,7 +42,7 @@ public class BatchCommandTest {
 		
 		CommandLine c = CommandLine.parse(args);
 		PDFMetadataEditBatch batch =new PDFMetadataEditBatch(c.params);
-		batch.runCommand(c.command, PDFMetadataEditBatch.fileList(c.fileList), new ActionStatus(){
+		batch.runCommand(c.command, FileList.fileList(c.fileList), new ActionStatus(){
 			@Override
 			public void addStatus(String filename, String message) {
 			}
@@ -75,7 +76,7 @@ public class BatchCommandTest {
 		
 		CommandLine c = CommandLine.parse(args);
 		PDFMetadataEditBatch batch =new PDFMetadataEditBatch(c.params);
-		batch.runCommand(c.command, PDFMetadataEditBatch.fileList(c.fileList), new ActionStatus(){
+		batch.runCommand(c.command, FileList.fileList(c.fileList), new ActionStatus(){
 			@Override
 			public void addStatus(String filename, String message) {
 			}

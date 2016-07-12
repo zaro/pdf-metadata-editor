@@ -6,8 +6,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class PDFMetadataEditBatch {
@@ -37,11 +35,17 @@ public class PDFMetadataEditBatch {
 	
 	public void forFiles(File file, FileFilter filter, FileAction action){
 		if(file.isFile()){
-			action.apply(file);
+			if(isPdfExtension(file)){
+				action.apply(file);
+			} else {
+				action.ignore(file);
+			}
 		} else if( file.isDirectory() ){
 			for(File f:file.listFiles(filter)){
 				action.apply(f);
 			}			
+		} else {
+			action.ignore(file);
 		}
 	}
 	
@@ -86,7 +90,7 @@ public class PDFMetadataEditBatch {
 				MetadataInfo md = params != null ? params.metadata : new MetadataInfo();
 				try {
 					md.saveToPDF(file);
-					status.addStatus(file.getName(), "Cleared");
+					status.addStatus(file.getName(), "Done");
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -96,7 +100,7 @@ public class PDFMetadataEditBatch {
 
 			@Override
 			public void ignore(File file) {
-				status.addError(file.getName(), "Invalid file!");				
+				status.addError(file.getName(), "Invalid file:" + file.getAbsolutePath());				
 			}
 		});
 	}
@@ -119,7 +123,7 @@ public class PDFMetadataEditBatch {
 
 			@Override
 			public void ignore(File file) {
-				status.addError(file.getName(), "Invalid file!");				
+				status.addError(file.getName(), "Invalid file:" + file.getAbsolutePath());				
 			}
 		});
 	}
@@ -165,7 +169,7 @@ public class PDFMetadataEditBatch {
 			
 			@Override
 			public void ignore(File file) {
-				status.addError(file.getName(), "Invalid file!");				
+				status.addError(file.getName(), "Invalid file:" + file.getAbsolutePath());				
 			}
 		});	
 	}
@@ -196,7 +200,7 @@ public class PDFMetadataEditBatch {
 			
 			@Override
 			public void ignore(File file) {
-				status.addError(file.getName(), "Invalid file!");				
+				status.addError(file.getName(), "Invalid file:" + file.getAbsolutePath());				
 			}
 		});	
 	}
@@ -226,23 +230,9 @@ public class PDFMetadataEditBatch {
 			
 			@Override
 			public void ignore(File file) {
-				status.addError(file.getName(), "Invalid file!");				
+				status.addError(file.getName(), "Invalid file:" + file.getAbsolutePath());				
 			}
 		});	
-	}
-
-	public static List<File> fileList(List<String> fileNames){
-		ArrayList<File> rval = new ArrayList<File>();
-		for(String fileName: fileNames){
-			File file =  new File(fileName);
-			if(file.exists()){
-				rval.add(file);
-			}
-		}
-		return rval;
-	}
-	public static List<File> fileList(String[] fileNames){
-		return fileList(Arrays.asList(fileNames));
 	}
 
 	public void runCommand(CommandDescription command, List<File> batchFileList, ActionStatus actionStatus){
@@ -250,7 +240,7 @@ public class PDFMetadataEditBatch {
 			actionStatus.addError("*", "Invalid license, you can get a license at " + Constants.batchLicenseUrl);
 		} else if( command.is("rename") ){
 			rename(batchFileList, actionStatus);
-		} else if( command.is("rename")){
+		} else if( command.is("edit")){
 			edit(batchFileList, actionStatus);
 		} else if( command.is("clear")){
 			clear(batchFileList, actionStatus);
