@@ -1219,8 +1219,8 @@ public class MetadataInfo {
 	final static Map<String, List<FieldDescription>> _mdFields;
 	final static Map<String, List<FieldDescription>> _mdEnabledFields;
 	static {
-		_mdFields = new HashMap<String, List<FieldDescription>>();
-		_mdEnabledFields = new HashMap<String, List<FieldDescription>>();
+		_mdFields = new LinkedHashMap<String, List<FieldDescription>>();
+		_mdEnabledFields = new LinkedHashMap<String, List<FieldDescription>>();
 		traverseFields(new ArrayList<FieldDescription>(), false, MetadataInfo.class, StructType.MdStruct, new Function<List<FieldDescription>, Void>() {
 			@Override
 			public Void apply(List<FieldDescription> t) {

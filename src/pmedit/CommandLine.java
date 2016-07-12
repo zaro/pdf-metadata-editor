@@ -18,6 +18,29 @@ public class CommandLine {
 		}
 	}
 	
+	public static String mdFieldsHelpMessage(int lineLen){
+		int maxLen=0;
+		for(String s: validMdNames){
+			if(s.length() > maxLen){
+				maxLen = s.length();
+			}
+		}
+		int ll = 0;
+		StringBuilder sb = new StringBuilder();
+		for(String s: validMdNames){
+			sb.append(String.format("  %1$-" + maxLen + "s",s));
+			ll += maxLen + 2;
+			if(ll >= lineLen){
+				sb.append('\n');
+				ll=0;
+			}
+		}
+		if( ll != 0 ){
+			sb.append('\n');			
+		}
+		return sb.toString();
+	}
+	
 	static Set<String> validMdNames = new MetadataInfo().asFlatMap().keySet();
 	public List<String> fileList = new ArrayList<String>();
 	
@@ -25,6 +48,7 @@ public class CommandLine {
 	public CommandDescription command;
 	public BatchOperationParameters params = new BatchOperationParameters();
 	public boolean batchGui = false;
+	public boolean showHelp = false;
 	
 	public CommandLine(){
 	}
@@ -70,6 +94,8 @@ public class CommandLine {
 				} else {
 					throw new ParseError("Missing argument for renameTemplate");
 				}
+			} else if(arg.equalsIgnoreCase("h") || arg.equalsIgnoreCase("help") ){
+				cmdLine.showHelp = true;
 			} else {
 				throw new ParseError("Invalid option: " + arg);
 			}
@@ -107,7 +133,7 @@ public class CommandLine {
 			if(eqIndex >= 0){
 				String id = arg.substring(0, eqIndex);
 				if(validMdNames.contains(id)){
-					String value = arg.substring(eqIndex+1);
+					String value = arg.substring(eqIndex+1).trim();
 					cmdLine.params.metadata.setAppendFromString(id, value);
 					cmdLine.params.metadata.setEnabled(id, enable);
 				}
