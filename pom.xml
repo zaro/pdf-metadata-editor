@@ -188,6 +188,8 @@
 									<directory>izpack/</directory>
 									<includes>
 										<include>*.ini</include>
+										<include>*.txt</include>
+										<include>*.hta</include>
 										<include>pmedit-cli</include>
 										<include>pdf-metadata-edit</include>
 									</includes>
@@ -215,6 +217,41 @@
 					</execution>
 				</executions>
 			</plugin>
+			
+			<plugin>
+  				<artifactId>maven-antrun-plugin</artifactId>
+  				   <executions>
+					     <execution>
+					      <id>create-exe</id>
+					      <phase>install</phase>
+					      <goals>
+					       <goal>run</goal>
+					      </goals>
+					      <configuration>
+					       <tasks>
+					        <exec executable="7z">
+					         <arg value="a" />
+					         <arg value="-m0=lzma" />
+					         <arg value="-mx=9" />
+					         <arg value="-ms=on" />
+					         <arg value="${project.build.directory}/installer.7z" />
+					         <arg value="${project.build.directory}/dist/pdf-metadata-edit-${project.version}-installer.jar" />
+					         <arg value="${project.build.directory}/installer.hta" />
+					        </exec>
+					        <concat
+					         	destfile="${project.build.directory}/dist/pdf-metadata-edit-${project.version}-installer.exe"
+				         		binary="yes">
+						         <path>
+						          <filelist dir="${basedir}" files="${project.build.directory}/7zsd-pmedit.exe,${project.build.directory}/config.txt,${project.build.directory}/installer.7z" />
+						         </path>
+					        </concat>
+					       </tasks>
+					      </configuration>
+					     </execution>
+					    </executions>
+			</plugin>
+
+			
 		</plugins>
 
 

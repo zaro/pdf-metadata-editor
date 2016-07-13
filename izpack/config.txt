@@ -1,0 +1,9 @@
+ ;!@Install@!UTF-8!
+ Title="Pdf Metadata Editor Installer"
+ ExtractDialogText="Please, wait..."
+ ExtractTitle="Extracting..."
+ InstallPath="%TMP%\\pmedit"
+ OverwriteMode="0"
+ ExecuteFile= "%TMP%\\pmedit\\installer.hta"
+ ExecuteParameters="%TMP%\\pmedit\\${project.build.finalName}-installer.jar"
+ ;!@InstallEnd@!
