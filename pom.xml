@@ -20,9 +20,28 @@
 			</properties>
 		</developer>
 	</developers>
+
 	<properties>
+	     <dollar>$</dollar> 
 		<staging.dir>${project.build.directory}</staging.dir>
+		<appbudle.jre>${java.home}/../../../</appbudle.jre>
+		<vm.location></vm.location>
 	</properties>
+
+
+	<profiles>
+		<profile>
+			<activation>
+				<os>
+					<family>Windows</family>
+				</os>
+			</activation>
+			<properties>
+				<appbudle.jre></appbudle.jre>
+			</properties>
+		</profile>
+	</profiles>
+
 
 	<build>
 		<sourceDirectory>src</sourceDirectory>
@@ -31,7 +50,7 @@
 				<directory>src</directory>
 				<excludes>
 					<exclude>**/*.java</exclude>
-					<exclude>**/*.properties</exclude>					
+					<exclude>**/*.properties</exclude>
 				</excludes>
 			</resource>
 			<resource>
@@ -52,11 +71,9 @@
 				</configuration>
 			</plugin>
 
-			
-			<!--  
-				appbundler should run before shade, plugin so that it 
-				includes the original and not shaded jar
-			-->
+
+			<!-- appbundler should run before shade, plugin so that it includes the 
+				original and not shaded jar -->
 			<plugin>
 				<groupId>sh.tak.appbundler</groupId>
 				<artifactId>appbundle-maven-plugin</artifactId>
@@ -69,7 +86,7 @@
 					<includeApplicationsSymlink>true</includeApplicationsSymlink>
 					<buildDirectory>${project.build.directory}/macos</buildDirectory>
 					<diskImageFile>${project.build.directory}/dist/${project.build.finalName}.dmg</diskImageFile>
-					<jrePath>${java.home}/../../../</jrePath>
+					<jrePath>${appbudle.jre}</jrePath>
 				</configuration>
 				<executions>
 					<execution>
@@ -80,7 +97,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
@@ -171,7 +188,7 @@
 				<version>2.7</version>
 				<executions>
 					<execution>
-						<id>copy-resources</id>
+						<id>copy-resources-1</id>
 						<phase>validate</phase>
 						<goals>
 							<goal>copy-resources</goal>
@@ -200,6 +217,25 @@
 							</resources>
 						</configuration>
 					</execution>
+					<execution>
+						<id>copy-resources-2</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<encoding>UTF-8</encoding>
+							<outputDirectory>${staging.dir}/win</outputDirectory>
+							<resources>
+								<resource>
+									<directory>izpack/</directory>
+									<excludes>
+										<exclude>izpack-install.xml</exclude>
+									</excludes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 
@@ -219,41 +255,59 @@
 					</execution>
 				</executions>
 			</plugin>
-			
+
 			<plugin>
-  				<artifactId>maven-antrun-plugin</artifactId>
-  				   <executions>  				   
-					     <execution>
-					      <id>create-exe</id>
-					      <phase>install</phase>
-					      <goals>
-					       <goal>run</goal>
-					      </goals>
-					      <configuration>
-					       <tasks>
-					        <exec executable="7z">
-					         <arg value="a" />
-					         <arg value="-m0=lzma" />
-					         <arg value="-mx=9" />
-					         <arg value="-ms=on" />
-					         <arg value="${project.build.directory}/installer.7z" />
-					         <arg value="${project.build.directory}/dist/pdf-metadata-edit-${project.version}-installer.jar" />
-					         <arg value="${project.build.directory}/installer.hta" />
-					        </exec>
-					        <concat
-					         	destfile="${project.build.directory}/dist/pdf-metadata-edit-${project.version}-installer.exe"
-				         		binary="yes">
-						         <path>
-						          <filelist dir="${basedir}" files="${project.build.directory}/7zsd-pmedit.exe,${project.build.directory}/config.txt,${project.build.directory}/installer.7z" />
-						         </path>
-					        </concat>
-					       </tasks>
-					      </configuration>
-					     </execution>
-					    </executions>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>create-exe</id>
+						<phase>none</phase>
+						<!--  <phase>install</phase> -->
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<tasks>
+								<delete file="${project.build.directory}/installer.7z" />
+								<replace dir="${staging.dir}/win/" value=".\bin\client\jvm.dll">
+								 	<include name="*.ini"/>
+									<replacetoken>@vm.location@</replacetoken>
+								</replace>
+								<replace dir="${staging.dir}/win/" value="${project.build.finalName}">
+								 	<include name="*.ini"/>
+									<replacetoken>@project.build.finalName@</replacetoken>
+								</replace>
+								
+								<exec executable="7z">
+									<arg value="a" />
+									<arg value="-m0=lzma" />
+									<arg value="-mx=0" />
+									<arg value="-ms=on" />
+									<arg value="-mfb=64" />
+									<arg value="-md=64m" />
+									<arg value="${project.build.directory}/installer.7z" />
+									<arg value="${java.home}/*" />
+									<arg value="${project.build.directory}/win/PdfMetadataEditor.exe" />
+									<arg value="${project.build.directory}/win/PdfMetadataEditor.ini" />
+									<arg value="${project.build.directory}/win/pmedit-cli.exe" />
+									<arg value="${project.build.directory}/win/pmedit-cli.ini" />
+									<arg value="${project.build.directory}/pdf-metadata-edit-${project.version}.jar" />
+								</exec>
+								<concat
+									destfile="${project.build.directory}/dist/pdf-metadata-edit-${project.version}-installer.exe"
+									binary="yes">
+									<path>
+										<filelist dir="${basedir}"
+											files="${project.build.directory}/7zsd-pmedit.exe,${project.build.directory}/config.txt,${project.build.directory}/installer.7z" />
+									</path>
+								</concat>
+							</tasks>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 
-			
+
 		</plugins>
 
 
