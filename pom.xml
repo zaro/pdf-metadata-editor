@@ -51,6 +51,7 @@
 					<target>1.6</target>
 				</configuration>
 			</plugin>
+
 			
 			<!--  
 				appbundler should run before shade, plugin so that it 
@@ -68,6 +69,7 @@
 					<includeApplicationsSymlink>true</includeApplicationsSymlink>
 					<buildDirectory>${project.build.directory}/macos</buildDirectory>
 					<diskImageFile>${project.build.directory}/dist/${project.build.finalName}.dmg</diskImageFile>
+					<jrePath>${java.home}/../../../</jrePath>
 				</configuration>
 				<executions>
 					<execution>
@@ -220,7 +222,7 @@
 			
 			<plugin>
   				<artifactId>maven-antrun-plugin</artifactId>
-  				   <executions>
+  				   <executions>  				   
 					     <execution>
 					      <id>create-exe</id>
 					      <phase>install</phase>
