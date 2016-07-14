@@ -2,6 +2,8 @@ package pmedit;
 
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,18 +26,23 @@ public class Main {
 		return "batch-gui-"+ batchGuiCounter++;
 	}
 	
-	public static void makeBatchWindow(final String commandName, CommandDescription command, List<String> fileList){
-		BatchOperationWindow bs = new BatchOperationWindow(command);
-		bs.appendFiles(FileList.fileList(fileList));
-		bs.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		bs.addWindowListener(new java.awt.event.WindowAdapter() {
-	        public void windowClosing(WindowEvent winEvt) {
-	        	batchInstances.remove(commandName);
-	        	maybeExit();
-	        }
-	    });
-		batchInstances.put(commandName, bs);
-		bs.setVisible(true);
+	public static void makeBatchWindow(final String commandName, final CommandDescription command, final List<String> fileList){
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				logLine("makeBatchWindow", commandName);
+				BatchOperationWindow bs = new BatchOperationWindow(command);
+				bs.appendFiles(FileList.fileList(fileList));
+				bs.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				bs.addWindowListener(new java.awt.event.WindowAdapter() {
+			        public void windowClosing(WindowEvent winEvt) {
+			        	batchInstances.remove(commandName);
+			        	maybeExit();
+			        }
+			    });
+				batchInstances.put(commandName, bs);
+				bs.setVisible(true);
+			}
+		});
 	}
 	
 	public static void executeCommand(final CommandLine cmdLine){
@@ -110,13 +117,13 @@ public class Main {
 	}
 
 	protected static void logLine(String context, String line){
-//		System.out.println(context+":: " + line);
-//		try{
-//			PrintWriter output = new PrintWriter(new FileWriter("log.txt",true));
-//	
-//		    output.printf("%s:: %s\r\n", context, line == null ? "null" : line);
-//		    output.close();
-//		}  catch (Exception e) {} 	
+		System.out.println(context+":: " + line);
+		try{
+			PrintWriter output = new PrintWriter(new FileWriter(System.getProperty("java.io.tmpdir") + File.separator + "pdf-metada-editor-log.txt",true));
+	
+		    output.printf("%s:: %s\r\n", context, line == null ? "null" : line);
+		    output.close();
+		}  catch (Exception e) {} 	
 	}
 	
 	static Map<String, BatchOperationWindow> batchInstances= new HashMap<String, BatchOperationWindow>();

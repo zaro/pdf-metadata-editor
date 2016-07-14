@@ -7,7 +7,7 @@
 
 	<info>
 		<appname>Pdf Metadata Editor</appname>
-		<appversion>2.0.0-beta</appversion>
+		<appversion>@{version.izpack}</appversion>
 		<appsubpath>PdfMetadataEditor</appsubpath>
 		<uninstaller write="yes" />
 		<javaversion>1.6</javaversion>
@@ -48,7 +48,7 @@
 		<pack name="Core files" required="yes" id="pack.core">
 			<description>Pdf Metadata Editor</description>
 			<fileset dir="@{staging.dir}" override="true">
-				<include name="pdf-metadata-edit-*.jar" />
+				<include name="pdf-metadata-edit-@{version.izpack}.jar" />
 			</fileset>
 			<fileset dir="@{staging.dir}" override="true">
 				<include name="PdfMetadataEditor.ini" />
@@ -88,10 +88,10 @@
 	<natives>
 		<native type="izpack" name="ShellLink.dll" />
 		<native type="izpack" name="ShellLink_x64.dll" />
-		<native type="3rdparty" name="COIOSHelper.dll" stage="both">
+		<native type="3rdparty" name="COIOSHelper.dll" uninstaller="true">
 			<os family="windows" />
 		</native>
-		<native type="3rdparty" name="COIOSHelper_x64.dll" stage="both">
+		<native type="3rdparty" name="COIOSHelper_x64.dll" uninstaller="true">
 			<os family="windows" />
 		</native>
 	</natives>

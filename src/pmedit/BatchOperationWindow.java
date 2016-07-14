@@ -232,16 +232,6 @@ public class BatchOperationWindow extends JFrame {
 		
 		createBatchParametersWindowButton();
 		
-		String defaultMetadataYAML = Main.getPreferences().get("defaultMetadata", null);
-		if (defaultMetadataYAML != null && defaultMetadataYAML.length() > 0) {
-			MetadataInfo editMetadata = new MetadataInfo();
-			editMetadata.fromYAML(defaultMetadataYAML);
-			editMetadata.enableOnlyNonNull();
-			BatchOperationParameters params = new BatchOperationParameters();
-			params.metadata = editMetadata;
-			
-			batchParameters.put("edit", params);
-		}
 
 		new FileDrop( this, new FileDrop.Listener() {   
 			public void filesDropped( java.io.File[] files, Point where ) {
@@ -360,7 +350,8 @@ public class BatchOperationWindow extends JFrame {
 			};
 			@Override
 			protected Void doInBackground() throws Exception {
-				BatchOperationParameters params = batchParameters.get(command.name);
+				BatchOperationParameters params =getBatchParameters(command);
+				params.storeForCommand(command);
 
 				PDFMetadataEditBatch batch = new PDFMetadataEditBatch(params);	
 				batch.runCommand(command, batchFileList, actionStatus);
@@ -392,6 +383,7 @@ public class BatchOperationWindow extends JFrame {
 			btnAction.setText("Close");
 			btnAction.addActionListener(closeWindowActionListener);
 			btnCancel.setVisible(false);
+			FileDrop.remove(this);
        } catch (Exception ignore) {
        }		
 	}
@@ -420,6 +412,16 @@ public class BatchOperationWindow extends JFrame {
     }
 
 	
+	protected BatchOperationParameters getBatchParameters(CommandDescription command){
+		BatchOperationParameters params = batchParameters.get(command.name);
+		if( params == null){
+			params = BatchOperationParameters.loadForCommand(command);
+			batchParameters.put(command.name, params);
+		}
+		return params;
+	}
+	
+	
 	public void createBatchParametersWindow(){
 		final CommandDescription command = ((CommandDescription) selectedBatchOperation.getSelectedItem());
 
@@ -429,11 +431,7 @@ public class BatchOperationWindow extends JFrame {
 			parametersWindow = null;
 		}
 
-		BatchOperationParameters params = batchParameters.get(command.name);
-		if( params == null){
-			params = new BatchOperationParameters();
-			batchParameters.put(command.name, params);
-		}
+		BatchOperationParameters params =getBatchParameters(command);
 		
 		if( command.is("clear") ){	
 			parametersWindow = new BatchParametersClear(params, this);

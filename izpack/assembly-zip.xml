@@ -11,7 +11,7 @@
 			<directory>target</directory>
 			<outputDirectory>pdf-metadata-edit</outputDirectory>
 			<includes>
-				<include>pdf-metadata-edit-*.jar</include>
+				<include>pdf-metadata-edit-${project.version}.jar</include>
 				<include>PdfMetadataEditor.ini</include>
 				<include>PdfMetadataEditor.exe</include>
 				<include>PdfMetadataEditor64.exe</include>

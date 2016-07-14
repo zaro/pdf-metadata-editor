@@ -106,6 +106,7 @@ public class PreferencesWindow extends JDialog {
 	 */
 	public PreferencesWindow(final Preferences prefs, MetadataInfo defaultMetadata, final Frame owner) {
 		super(owner, true);
+		setLocationRelativeTo(owner);
 		long startTime = System.nanoTime();
 
 		final Future<HttpResponse> status=checkForUpdates();
@@ -205,7 +206,7 @@ public class PreferencesWindow extends JDialog {
 		scrollPane.setViewportView(txtpnAaa);
 		txtpnAaa.setContentType("text/html");
 		txtpnAaa.setText(
-				"Supported fields:<br>\n<pre>\n<i>{basic.title}</i>      <i>{basic.producer}</i> \n<i>{basic.author}</i>     <i>{basic.trapped}</i> \n<i>{basic.subject}</i>    <i>{basic.creationDate}</i> \n<i>{basic.keywords}</i>   <i>{basic.modificationDate}</i> \n<i>{basic.creator}</i> \n\n<i>{xmpBasic.creatorTool}</i>   <i>{xmpBasic.identifiers}</i> \n<i>{xmpBasic.baseURL}</i>       <i>{xmpBasic.advisories}</i> \n<i>{xmpBasic.label}</i>         <i>{xmpBasic.modifyDate}</i> \n<i>{xmpBasic.nickname}</i>      <i>{xmpBasic.createDate}</i> \n<i>{xmpBasic.rating}</i>        <i>{xmpBasic.metadataDate}</i> \n<i>{xmpBasic.title}</i> \n\n<i>{xmpPdf.keywords}</i> \n<i>{xmpPdf.pdfVersion}</i> \n<i>{xmpPdf.producer}</i> \n\n<i>{xmpDc.title}</i>         <i>{xmpDc.creators}</i> \n<i>{xmpDc.coverage}</i>      <i>{xmpDc.contributors}</i> \n<i>{xmpDc.description}</i>   <i>{xmpDc.languages}</i> \n<i>{xmpDc.dates}</i>         <i>{xmpDc.publishers}</i> \n<i>{xmpDc.format}</i>        <i>{xmpDc.relationships}</i> \n<i>{xmpDc.identifier}</i>    <i>{xmpDc.subjects}</i> \n<i>{xmpDc.rights}</i>        <i>{xmpDc.types}</i> \n<i>{xmpDc.source}</i> \n</pre>");
+				"Supported fields:<br>\n<pre>\n<i>" + CommandLine.mdFieldsHelpMessage(60,"  {","}") + "</i></pre>");
 		txtpnAaa.setFont(UIManager.getFont("TextPane.font"));
 		txtpnAaa.setCaretPosition(0);
 
@@ -216,8 +217,8 @@ public class PreferencesWindow extends JDialog {
 			}
 		});
 		comboBox.setEditable(true);
-		comboBox.setModel(new DefaultComboBoxModel(new String[] { "", "{basic.author} - {basic.title}.pdf",
-				"{basic.author} - {basic.creationDate}.pdf" }));
+		comboBox.setModel(new DefaultComboBoxModel(new String[] { "", "{doc.author} - {doc.title}.pdf",
+				"{doc.author} - {doc.creationDate}.pdf" }));
 		panel.add(comboBox, "cell 0 0,growx");
 
 		JPanel saveActionPanel = new JPanel();

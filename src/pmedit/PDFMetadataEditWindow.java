@@ -20,6 +20,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.awt.Component;
@@ -134,7 +135,6 @@ public class PDFMetadataEditWindow extends JFrame{
 			metadataInfo = new MetadataInfo();
 			metadataInfo.copyFrom(defaultMetadata);
 			metadataInfo.loadFromPDF(document);
-			metadataInfo.copyUnset(defaultMetadata);
 
 			metadataEditor.fillFromMetadata(metadataInfo);
 		} catch (Exception e) {
@@ -146,6 +146,7 @@ public class PDFMetadataEditWindow extends JFrame{
 	private void saveFile() {
 		try {
 			metadataEditor.copyToMetadata(metadataInfo);
+			metadataInfo.copyUnset(defaultMetadata);
 			metadataInfo.saveToPDF(document, pdfFile);
 
 			metadataEditor.fillFromMetadata(metadataInfo);
@@ -174,7 +175,13 @@ public class PDFMetadataEditWindow extends JFrame{
 			String toName = ts.process(metadataInfo);
 			String toDir= pdfFile.getParent();
 			File to = new File(toDir,toName);
-			pdfFile.renameTo(to);
+			try {
+				Files.move(pdfFile.toPath(), to.toPath());
+			} catch (IOException e1) {
+				JOptionPane.showMessageDialog(PDFMetadataEditWindow.this,
+						"Error while renaming file:\n" + e1.toString());
+			}
+			loadFile();
 		}
 	}; 
 
@@ -192,7 +199,11 @@ public class PDFMetadataEditWindow extends JFrame{
 			int returnVal = fcSaveAs.showSaveDialog(PDFMetadataEditWindow.this);
 
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
-				pdfFile = fcSaveAs.getSelectedFile();
+				File selected = fcSaveAs.getSelectedFile();
+				if(!selected.getName().toLowerCase().endsWith(".pdf")){
+					selected = new File(selected.getAbsolutePath() + ".pdf");
+				}
+				pdfFile = selected;
 
 				saveFile();
 				loadFile();

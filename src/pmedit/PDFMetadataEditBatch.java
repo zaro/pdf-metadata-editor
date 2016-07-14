@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.file.Files;
 import java.util.List;
 
 public class PDFMetadataEditBatch {
@@ -153,12 +154,13 @@ public class PDFMetadataEditBatch {
 					String toDir= file.getParent();
 					File to = new File(toDir,toName);
 					if (to.exists()){
-						status.addError(file.getName(), "Destination file already exists" + to.getName());
+						status.addError(file.getName(), "Destination file already exists:  " + to.getName());
 					} else {
-						if(file.renameTo(to)){
+						try {
+							Files.move(file.toPath(), to.toPath());
 							status.addStatus(file.getName(), to.getName());
-						} else {
-							status.addError(file.getName(), "Failed to rename to" + to.getName());
+						} catch (IOException e) {
+							status.addError(file.getName(), "Rename failed with " + to.getName() +" : " + e);
 						}
 					}
 				} catch (Exception e) {

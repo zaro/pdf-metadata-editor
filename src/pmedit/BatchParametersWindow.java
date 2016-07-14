@@ -29,6 +29,7 @@ public abstract class BatchParametersWindow extends JDialog {
 	 */
 	public BatchParametersWindow(BatchOperationParameters parameters, final Frame owner) {
 		super(owner, true);
+		setLocationRelativeTo(owner);
 
 		if (parameters != null) {
 			this.parameters = parameters;
