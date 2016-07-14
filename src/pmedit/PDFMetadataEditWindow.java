@@ -341,8 +341,8 @@ public class PDFMetadataEditWindow extends JFrame{
 		panel_4.setLayout(gbl_panel_4);
 		
 		
-		JButton button = new JButton("Copy XMP To Basic");
-		button.addActionListener(new ActionListener() {
+		JButton btnCopyXmpTo = new JButton("Copy XMP To Document");
+		btnCopyXmpTo.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if(metadataInfo != null){
 					metadataEditor.copyToMetadata(metadataInfo);
@@ -351,16 +351,16 @@ public class PDFMetadataEditWindow extends JFrame{
 				}
 			}
 		});
-		GridBagConstraints gbc_button = new GridBagConstraints();
-		gbc_button.anchor = GridBagConstraints.SOUTH;
-		gbc_button.fill = GridBagConstraints.HORIZONTAL;
-		gbc_button.insets = new Insets(0, 0, 5, 5);
-		gbc_button.gridx = 0;
-		gbc_button.gridy = 0;
-		panel_4.add(button, gbc_button);
+		GridBagConstraints gbc_btnCopyXmpTo = new GridBagConstraints();
+		gbc_btnCopyXmpTo.anchor = GridBagConstraints.SOUTH;
+		gbc_btnCopyXmpTo.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnCopyXmpTo.insets = new Insets(0, 0, 5, 5);
+		gbc_btnCopyXmpTo.gridx = 0;
+		gbc_btnCopyXmpTo.gridy = 0;
+		panel_4.add(btnCopyXmpTo, gbc_btnCopyXmpTo);
 		
-				JButton btnCopyBasicTo = new JButton("Copy Basic To XMP");
-				btnCopyBasicTo.addActionListener(new ActionListener() {
+				JButton btnCopyDocumentTo = new JButton("Copy Document To XMP");
+				btnCopyDocumentTo.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent arg0) {
 						if(metadataInfo != null){
 							metadataEditor.copyToMetadata(metadataInfo);
@@ -407,13 +407,13 @@ public class PDFMetadataEditWindow extends JFrame{
 								});
 								panel_1.add(btnSaveMenu, "cell 1 0,growx,aligny center, gapleft 0");
 				
-						GridBagConstraints gbc_btnCopyBasicTo = new GridBagConstraints();
-						gbc_btnCopyBasicTo.anchor = GridBagConstraints.NORTH;
-						gbc_btnCopyBasicTo.fill = GridBagConstraints.HORIZONTAL;
-						gbc_btnCopyBasicTo.insets = new Insets(0, 0, 0, 5);
-						gbc_btnCopyBasicTo.gridx = 0;
-						gbc_btnCopyBasicTo.gridy = 1;
-						panel_4.add(btnCopyBasicTo, gbc_btnCopyBasicTo);
+						GridBagConstraints gbc_btnCopyDocumentTo = new GridBagConstraints();
+						gbc_btnCopyDocumentTo.anchor = GridBagConstraints.NORTH;
+						gbc_btnCopyDocumentTo.fill = GridBagConstraints.HORIZONTAL;
+						gbc_btnCopyDocumentTo.insets = new Insets(0, 0, 0, 5);
+						gbc_btnCopyDocumentTo.gridx = 0;
+						gbc_btnCopyDocumentTo.gridy = 1;
+						panel_4.add(btnCopyDocumentTo, gbc_btnCopyDocumentTo);
 				
 
 

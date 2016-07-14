@@ -156,26 +156,26 @@ public class PreferencesWindow extends JDialog {
 				TitledBorder.LEADING, TitledBorder.TOP, null, new Color(51, 51, 51)));
 		panel_1.setLayout(new MigLayout("", "[]", "[][]"));
 
-		onsaveCopyBasicTo = new JCheckBox("Copy Basic To XMP");
-		onsaveCopyBasicTo.addActionListener(new ActionListener() {
+		onsaveCopyDocumentTo = new JCheckBox("Copy Document To XMP");
+		onsaveCopyDocumentTo.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if (onsaveCopyBasicTo.isSelected()) {
+				if (onsaveCopyDocumentTo.isSelected()) {
 					onsaveCopyXmpTo.setSelected(false);
 				}
-				copyBasicToXmp = onsaveCopyBasicTo.isSelected();
+				copyBasicToXmp = onsaveCopyDocumentTo.isSelected();
 				copyXmpToBasic = onsaveCopyXmpTo.isSelected();
 			}
 		});
-		panel_1.add(onsaveCopyBasicTo, "cell 0 0,alignx left,aligny top");
-		onsaveCopyBasicTo.setSelected(false);
+		panel_1.add(onsaveCopyDocumentTo, "cell 0 0,alignx left,aligny top");
+		onsaveCopyDocumentTo.setSelected(false);
 
-		onsaveCopyXmpTo = new JCheckBox("Copy XMP To Basic");
+		onsaveCopyXmpTo = new JCheckBox("Copy XMP To Document");
 		onsaveCopyXmpTo.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (onsaveCopyXmpTo.isSelected()) {
-					onsaveCopyBasicTo.setSelected(false);
+					onsaveCopyDocumentTo.setSelected(false);
 				}
-				copyBasicToXmp = onsaveCopyBasicTo.isSelected();
+				copyBasicToXmp = onsaveCopyDocumentTo.isSelected();
 				copyXmpToBasic = onsaveCopyXmpTo.isSelected();
 			}
 		});
@@ -184,7 +184,7 @@ public class PreferencesWindow extends JDialog {
 		panelGeneral.add(panel_1, "flowx,cell 0 0,alignx left,aligny top");
 
 		onsaveCopyXmpTo.setSelected(prefs.getBoolean("onsaveCopyXmpTo", false));
-		onsaveCopyBasicTo.setSelected(prefs.getBoolean("onsaveCopyBasicTo", false));
+		onsaveCopyDocumentTo.setSelected(prefs.getBoolean("onsaveCopyBasicTo", false));
 
 		JPanel panel = new JPanel();
 		panel.setBorder(new TitledBorder(new LineBorder(new Color(184, 207, 229)), "Rename template",
@@ -632,7 +632,7 @@ public class PreferencesWindow extends JDialog {
 	}
 
 	public void refresh() {
-		onsaveCopyBasicTo.setSelected(copyBasicToXmp);
+		onsaveCopyDocumentTo.setSelected(copyBasicToXmp);
 		onsaveCopyXmpTo.setSelected(copyXmpToBasic);
 
 		comboBox.setSelectedItem(renameTemplate);
@@ -670,7 +670,7 @@ public class PreferencesWindow extends JDialog {
 	private String desc = "";
 	private JLabel lblNewLabel;
 	private JComboBox comboBox;
-	private JCheckBox onsaveCopyBasicTo;
+	private JCheckBox onsaveCopyDocumentTo;
 	private JCheckBox onsaveCopyXmpTo;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
 	private String aboutMsg;
