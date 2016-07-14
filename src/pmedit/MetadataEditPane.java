@@ -223,7 +223,7 @@ public class MetadataEditPane {
 		tabbedaPane = new JTabbedPane(JTabbedPane.TOP);
 		JScrollPane basicScrollpane = new JScrollPane();
 		basicScrollpane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		tabbedaPane.addTab("Basic Metadata", null, basicScrollpane, null);
+		tabbedaPane.addTab("Document", null, basicScrollpane, null);
 
 		basicMetaPanel = new JPanel();
 		basicScrollpane.setViewportView(basicMetaPanel);
