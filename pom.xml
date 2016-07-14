@@ -22,10 +22,10 @@
 	</developers>
 
 	<properties>
-	     <dollar>$</dollar> 
 		<staging.dir>${project.build.directory}</staging.dir>
 		<appbudle.jre>${java.home}/../../../</appbudle.jre>
 		<vm.location></vm.location>
+		<version.izpack>${project.version}</version.izpack>
 	</properties>
 
 

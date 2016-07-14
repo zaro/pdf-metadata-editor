@@ -19,17 +19,21 @@ public class CommandLine {
 	}
 	
 	public static String mdFieldsHelpMessage(int lineLen){
+		return mdFieldsHelpMessage(lineLen, "  ", "");
+	}
+	public static String mdFieldsHelpMessage(int lineLen, String pre, String post){
 		int maxLen=0;
 		for(String s: validMdNames){
 			if(s.length() > maxLen){
-				maxLen = s.length();
+				maxLen = s.length() +  post.length();
 			}
 		}
 		int ll = 0;
 		StringBuilder sb = new StringBuilder();
 		for(String s: validMdNames){
-			sb.append(String.format("  %1$-" + maxLen + "s",s));
-			ll += maxLen + 2;
+			sb.append(pre);
+			sb.append(String.format("%1$-" + maxLen + "s",s + post));
+			ll += maxLen + pre.length();
 			if(ll >= lineLen){
 				sb.append('\n');
 				ll=0;
@@ -64,6 +68,8 @@ public class CommandLine {
 		StringBuilder sb = new StringBuilder();
 		sb.append("CommandLine(");
 		sb.append("noGui="); sb.append(noGui) ; sb.append(", ");
+		sb.append("batchGui="); sb.append(batchGui) ; sb.append(", ");
+		sb.append("showHelp="); sb.append(showHelp) ; sb.append(", ");
 		sb.append("command="); sb.append(command != null ? command.name: "") ; sb.append(", ");
 		sb.append("files=[");
 		Iterator<String> it = fileList.iterator();

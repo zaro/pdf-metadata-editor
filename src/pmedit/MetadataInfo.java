@@ -855,6 +855,10 @@ public class MetadataInfo {
 		pdfEnabled.keywords = docEnabled.keywords;
 		pdfEnabled.producer = docEnabled.producer;
 		
+		basic.createDate = doc.creationDate;
+		basic.modifyDate = doc.modificationDate;
+		basicEnabled.createDate = docEnabled.creationDate;
+		basicEnabled.modifyDate = docEnabled.modificationDate;
 
 		basic.creatorTool = doc.creator;
 		basicEnabled.creatorTool = docEnabled.creator;
@@ -873,6 +877,12 @@ public class MetadataInfo {
 		docEnabled.keywords = pdfEnabled.keywords;
 		docEnabled.producer = pdfEnabled.producer;
 
+		doc.creationDate= basic.createDate;
+		doc.modificationDate = basic.modifyDate;
+		docEnabled.creationDate = basicEnabled.createDate;
+		docEnabled.modificationDate = basicEnabled.modifyDate;
+		
+		
 		doc.creator = basic.creatorTool;
 		docEnabled.creator = basicEnabled.creatorTool;
 
@@ -1100,6 +1110,52 @@ public class MetadataInfo {
 		return true;
 	}
 	
+	public String asPersistenceString(){
+		Map<String, Object> map = asFlatMap();
+		// Don't store null values as they are the default
+		for(String key: _mdFields.keySet()){
+			if( map.get(key) == null){
+				map.remove(key);
+			}
+		}
+		Map<String, Boolean> enabledMap = new LinkedHashMap<String, Boolean>();
+		// Don't store true values as they are the default
+		for(String keyEnabled: _mdEnabledFields.keySet()){
+			if(!isEnabled(keyEnabled)){
+				enabledMap.put(keyEnabled, false);
+			}
+		}
+		if(enabledMap.size() > 0) {
+			map.put("_enabled", enabledMap);
+		}
+		
+		DumperOptions options = new DumperOptions();
+
+		options.setWidth(0xFFFF);
+		Yaml yaml = new Yaml(options);
+		return yaml.dump(map);
+	}
+	
+	public static MetadataInfo fromPersistenceString(String yamlString) {
+		Yaml yaml = new Yaml();
+		Map<String, Object> map = (Map<String, Object>) yaml.load(yamlString);
+		MetadataInfo md =new MetadataInfo();
+		md.fromYAML(yamlString);
+
+		Object enMap = map.get("_enabled");
+		if(enMap != null && Map.class.isAssignableFrom(enMap.getClass())) {
+			Map<String, Object> enabledMap = (Map<String, Object>) enMap;
+			
+			for (String fieldName : _mdEnabledFields.keySet()) {
+				if(enabledMap.containsKey(fieldName)){
+					md.setEnabled(fieldName, (Boolean) enabledMap.get(fieldName));
+				}
+			}
+		}
+		
+		return md;
+	}
+	
 	//////////////////////////////
 	public static class FieldDescription {
 		public final String name;
@@ -1128,6 +1184,9 @@ public class MetadataInfo {
 		}
 		
 		public String makeStringFromValue(Object value){
+			if( value == null){
+				return "";
+			}
 			if(isList){
 				return ListFormat.humanReadable((List)value);
 			} else if(type == FieldID.FieldType.DateField){

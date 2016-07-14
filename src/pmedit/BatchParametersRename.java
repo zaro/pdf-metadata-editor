@@ -29,29 +29,7 @@ import java.awt.Insets;
 
 public class BatchParametersRename extends BatchParametersWindow {
 	private JLabel previewLabel;
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					BatchParametersRename frame = new BatchParametersRename(null);
-					frame.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-					frame.onCloseAction(new Runnable() {
-						@Override
-						public void run() {
-							System.exit(0);
-							
-						}
-					});
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
+
 	public BatchParametersRename(BatchOperationParameters parameters, final Frame owner) {
 		super(parameters, owner);
 						
@@ -93,8 +71,8 @@ public class BatchParametersRename extends BatchParametersWindow {
 				panel.setLayout(gbl_panel);
 				
 				final JComboBox comboBox = new JComboBox();
-				comboBox.setModel(new DefaultComboBoxModel(new String[] { "", "{basic.author} - {basic.title}.pdf",
-				"{basic.author} - {basic.creationDate}.pdf" }));
+				comboBox.setModel(new DefaultComboBoxModel(new String[] { "", "{doc.author} - {doc.title}.pdf",
+				"{doc.author} - {doc.creationDate}.pdf" }));
 				comboBox.setEditable(true);
 				GridBagConstraints gbc_comboBox = new GridBagConstraints();
 				gbc_comboBox.anchor = GridBagConstraints.NORTH;
@@ -124,7 +102,7 @@ public class BatchParametersRename extends BatchParametersWindow {
 				txtpnSupportedFieldsbasictitle_1.setEditable(false);
 				txtpnSupportedFieldsbasictitle_1.setBackground(UIManager.getColor("Panel.background"));
 				txtpnSupportedFieldsbasictitle_1.setContentType("text/html");
-				txtpnSupportedFieldsbasictitle_1.setText("Supported fields:<br>\n<pre>\n<i>{basic.title}</i>      <i>{basic.producer}</i> \n<i>{basic.author}</i>     <i>{basic.trapped}</i> \n<i>{basic.subject}</i>    <i>{basic.creationDate}</i> \n<i>{basic.keywords}</i>   <i>{basic.modificationDate}</i> \n<i>{basic.creator}</i> \n\n<i>{xmpBasic.creatorTool}</i>   <i>{xmpBasic.identifiers}</i> \n<i>{xmpBasic.baseURL}</i>       <i>{xmpBasic.advisories}</i> \n<i>{xmpBasic.label}</i>         <i>{xmpBasic.modifyDate}</i> \n<i>{xmpBasic.nickname}</i>      <i>{xmpBasic.createDate}</i> \n<i>{xmpBasic.rating}</i>        <i>{xmpBasic.metadataDate}</i> \n<i>{xmpBasic.title}</i> \n\n<i>{xmpPdf.keywords}</i> \n<i>{xmpPdf.pdfVersion}</i> \n<i>{xmpPdf.producer}</i> \n\n<i>{xmpDc.title}</i>         <i>{xmpDc.creators}</i> \n<i>{xmpDc.coverage}</i>      <i>{xmpDc.contributors}</i> \n<i>{xmpDc.description}</i>   <i>{xmpDc.languages}</i> \n<i>{xmpDc.dates}</i>         <i>{xmpDc.publishers}</i> \n<i>{xmpDc.format}</i>        <i>{xmpDc.relationships}</i> \n<i>{xmpDc.identifier}</i>    <i>{xmpDc.subjects}</i> \n<i>{xmpDc.rights}</i>        <i>{xmpDc.types}</i> \n<i>{xmpDc.source}</i> \n</pre>");
+				txtpnSupportedFieldsbasictitle_1.setText("Supported fields:<br>\n<pre>\n<i>" + CommandLine.mdFieldsHelpMessage(60,"  {","}") + "</i></pre>");
 				scrollPane.setViewportView(txtpnSupportedFieldsbasictitle_1);
 				txtpnSupportedFieldsbasictitle_1.setCaretPosition(0);
 				
@@ -159,6 +137,10 @@ public class BatchParametersRename extends BatchParametersWindow {
 						showPreview((String) comboBox.getEditor().getItem());
 					}
 				});
+				
+				if(parameters.renameTemplate != null){
+					comboBox.setSelectedItem(parameters.renameTemplate);
+				}
 				showPreview((String) comboBox.getEditor().getItem());
 
 	}
