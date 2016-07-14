@@ -1,0 +1,2 @@
+- create proper windows installer, either with javapackager from JDK or with WiX toolkit directly
+- better DMG on mac os X with javapackager
