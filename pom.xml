@@ -74,6 +74,7 @@
 
 			<!-- appbundler should run before shade, plugin so that it includes the 
 				original and not shaded jar -->
+			<!-- 
 			<plugin>
 				<groupId>sh.tak.appbundler</groupId>
 				<artifactId>appbundle-maven-plugin</artifactId>
@@ -97,7 +98,7 @@
 					</execution>
 				</executions>
 			</plugin>
-
+			 -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
@@ -236,6 +237,22 @@
 							</resources>
 						</configuration>
 					</execution>
+					<execution>
+						<id>copy-dmg-resources</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<encoding>UTF-8</encoding>
+							<outputDirectory>${project.build.directory}</outputDirectory>
+							<resources>
+								<resource>
+									<directory>package/</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 
@@ -259,6 +276,36 @@
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<executions>
+					<execution>
+						<id>create-dmg</id>
+						<phase>install</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<tasks>
+								<exec executable="javapackager">
+									<arg value="-deploy" />
+									<arg value="-v" />
+									<arg value='-Bruntime=jre_to_bundle/' />
+									<arg value="-native" />
+									<arg value="dmg" />
+									<arg value="-outdir" />
+									<arg value="${project.build.directory}/dist/" />
+									<arg value="-outfile" />
+									<arg value="Pdf Metadata Editor.app" />
+									<arg value="-srcfiles" />
+									<arg value="${project.build.directory}/pdf-metadata-edit-${project.version}.jar" />
+									<arg value="-appclass" />
+									<arg value="pmedit.Main" />
+									<arg value="-name" />
+									<arg value="Pdf Metadata Editor" />
+									<arg value="-title" />
+									<arg value="Pdf Metadata Editor" />
+								</exec>
+							</tasks>
+						</configuration>
+					</execution>
 					<execution>
 						<id>create-exe</id>
 						<phase>none</phase>
