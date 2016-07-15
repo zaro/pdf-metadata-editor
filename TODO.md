@@ -1,3 +1,3 @@
 - create proper windows installer, either with javapackager from JDK or with WiX toolkit directly
-- better DMG on mac os X with javapackager
 - Allow finer grained Explorer context menu, editing
+- Investigate moving the whole thing to javascript useing one of  :https://github.com/jashkenas/coffeescript/wiki/list-of-languages-that-compile-to-js#javajvm
