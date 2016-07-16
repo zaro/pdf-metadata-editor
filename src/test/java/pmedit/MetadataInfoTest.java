@@ -1,9 +1,8 @@
-package test;
+package pmedit;
 
 import static org.junit.Assert.*;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -23,6 +22,7 @@ import pmedit.FieldID;
 import pmedit.MetadataInfo;
 
 public class MetadataInfoTest {
+	static int NUM_FILES = 5;
 	
 	public static class PMTuple{
 		final File file;
@@ -122,7 +122,7 @@ public class MetadataInfoTest {
 	
 	@Test
 	public void testFuzzing() throws Exception {
-		for(PMTuple t: randomFiles(100)){
+		for(PMTuple t: randomFiles(NUM_FILES)){
 			MetadataInfo loaded = new MetadataInfo();
 			loaded.loadFromPDF(t.file);
 			//System.out.println(pdf.getAbsolutePath());

@@ -11,8 +11,8 @@
 
 		<createForPack name="Core files" />
 	</shortcut>
-	<shortcut name="Pdf Metadata Editor (Batch Mode)" target="$INSTALL_PATH/pdf-metadata-edit"
-		commandLine="batch-gui-cmdline" workingDirectory="$INSTALL_PATH" description="Open Pdf Metadata Editor"
+	<shortcut name="Batch Pdf Metadata Editor" target="$INSTALL_PATH/pdf-metadata-edit"
+		commandLine="batch-gui-cmdline" workingDirectory="$INSTALL_PATH" description="Open Batch Pdf Metadata Editor"
 		iconFile="$INSTALL_PATH/pdf-metadata-edit.png" iconIndex="0"
 		programGroup="yes" desktop="no" applications="no" startMenu="no"
 		startup="no" terminal="false" type="Application" encoding="UTF-8">

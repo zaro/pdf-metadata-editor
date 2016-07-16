@@ -40,8 +40,8 @@
 	</panels>
 
 	<resources>
-		<res src="windows_shortcuts.xml" id="shortcutSpec.xml" />
-		<res src="unix_shortcuts.xml" id="Unix_shortcutSpec.xml" />
+		<res src="izpack/windows_shortcuts.xml" id="shortcutSpec.xml" />
+		<res src="izpack/unix_shortcuts.xml" id="Unix_shortcutSpec.xml" />
 	</resources>
 
 	<packs>
@@ -50,27 +50,27 @@
 			<fileset dir="@{staging.dir}" override="true">
 				<include name="pdf-metadata-edit-@{version.izpack}.jar" />
 			</fileset>
-			<fileset dir="@{staging.dir}" override="true">
+			<fileset dir="@{staging.dir}/zip/" override="true">
 				<include name="PdfMetadataEditor.ini" />
 				<os family="windows" />
 			</fileset>
-			<fileset dir="@{staging.dir}" override="true">
+			<fileset dir="@{staging.dir}/zip/" override="true">
 				<include name="pmedit-cli.ini" />
 				<os family="windows" />
 			</fileset>
-			<singlefile src="PdfMetadataEditor.exe" target="$INSTALL_PATH/PdfMetadataEditor.exe" override="true" condition="!java_64bit">
+			<singlefile src="zip/PdfMetadataEditor.exe" target="$INSTALL_PATH/PdfMetadataEditor.exe" override="true" condition="!java_64bit">
 				<os family="windows" />
 			</singlefile>
-			<singlefile src="PdfMetadataEditor64.exe" target="$INSTALL_PATH/PdfMetadataEditor.exe" override="true" condition="java_64bit">
+			<singlefile src="zip/PdfMetadataEditor64.exe" target="$INSTALL_PATH/PdfMetadataEditor.exe" override="true" condition="java_64bit">
 				<os family="windows" />
 			</singlefile>
-			<singlefile src="pmedit-cli.exe" target="$INSTALL_PATH/pmedit-cli.exe" override="true" condition="!java_64bit">
+			<singlefile src="zip/pmedit-cli.exe" target="$INSTALL_PATH/pmedit-cli.exe" override="true" condition="!java_64bit">
 				<os family="windows" />
 			</singlefile>
-			<singlefile src="pmedit-cli64.exe" target="$INSTALL_PATH/pmedit-cli.exe" override="true" condition="java_64bit">
+			<singlefile src="zip/pmedit-cli64.exe" target="$INSTALL_PATH/pmedit-cli.exe" override="true" condition="java_64bit">
 				<os family="windows" />
 			</singlefile>
-			<fileset dir="@{staging.dir}" override="true">
+			<fileset dir="@{staging.dir}/zip/" override="true">
 				<include name="pdf-metadata-edit" />
 				<include name="pmedit-cli" />
 				<include name="pdf-metadata-edit.png" />

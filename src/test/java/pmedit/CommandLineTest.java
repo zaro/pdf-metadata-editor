@@ -1,4 +1,4 @@
-package test;
+package pmedit;
 
 import static org.junit.Assert.*;
 

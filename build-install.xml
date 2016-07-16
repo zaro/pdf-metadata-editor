@@ -1,0 +1,55 @@
+<project name="auto-pay-rev" default="deploy-bundle" basedir="." xmlns:fx="javafx:com.sun.javafx.tools.ant">
+    <target name="deploy-bundle">
+        <taskdef resource="com/sun/javafx/tools/ant/antlib.xml" uri="javafx:com.sun.javafx.tools.ant" classpath="${java.home}\..\lib\ant-javafx.jar:${staging.dir}"/>
+
+        <fx:application id="pmedit" name="${app.name}" mainClass="${app.main.class}"  toolkit="swing" version="${app.version}" />
+
+    	<fx:resources id="pmeditDeploy" >
+    	    <fx:fileset dir="${dist.dir}/" includes="${app.main.jar} "/>
+    	    <fx:fileset os="windows" dir="${dist.dir}/win/app/" includes="*" />
+    	    <fx:fileset os="windows" dir="${dist.dir}/win/com/pretty_tools/dde" includes="*.dll" />
+    	</fx:resources> 
+	    	
+
+    	<!--
+    	<fx:resources id="pmeditRes">
+    	    <fx:fileset dir="${dist.dir}/win/app/" includes="*" />
+    	    <fx:fileset type="native" dir="${dist.dir}/win/" includes="jdde-native.jar" />
+    	</fx:resources> 
+        	    	
+		<fx:jar destfile="${dist.dir}/aaa-${app.main.jar}">
+        	<fx:application refid="pmedit" />
+    	    <fx:fileset dir="${dist.dir}/" includes="${app.main.jar} "/>
+    		<fx:resources refid="pmeditRes"/>
+		</fx:jar>
+		-->
+    	
+
+        <fx:deploy verbose="true" nativeBundles="${native.bundle}" outdir="${dist.dir}" outfile="${app.bundle.name}">
+            <fx:application refId="pmedit" />
+
+        	<fx:info title="${app.title}">
+            	<fx:association extension="pdf" mimetype="application/pdf" description="PDF file" />
+        	</fx:info>
+        	
+
+        	<fx:preferences menu="true" shortcut="true"/>
+
+
+    		<fx:resources refid="pmeditDeploy"/>
+        	
+        	<fx:platform j2se="1.6">
+        	    <fx:jvmarg value="-Djava.library.path=$APPDIR\app"/>
+        	</fx:platform>
+
+        	<fx:bundleArgument arg="win.menuGroup" value="Pdf Metadata Editor"/>
+        	
+
+        	<fx:secondaryLauncher appDescription="Batch Pdf metadata editoring" title="Batch ${app.title}" name="Batch${app.name}" mainClass="${app.main.class}"  toolkit="swing" version="${app.version}" menu="true">
+        	    <fx:argument>batch-gui-cmdline</fx:argument>
+			</fx:secondaryLauncher>
+        </fx:deploy>
+            	
+
+    </target>
+</project>

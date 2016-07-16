@@ -8,6 +8,7 @@ import javax.swing.JLabel;
 import javax.swing.JTextPane;
 import javax.swing.JPanel;
 import javax.swing.SpringLayout;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
@@ -39,6 +40,8 @@ import java.awt.Color;
 import javax.swing.JScrollPane;
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.ImageIcon;
+
 import java.awt.GridLayout;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
@@ -72,7 +75,6 @@ public class BatchOperationWindow extends JFrame {
 	
 	final static String LAST_USED_COMMAND_KEY = "lastUsedBatchCommand";
 	public BatchOperationWindow( CommandDescription command) {
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setTitle("Batch PDF metadata edit");
 		setBounds(100, 100, 640, 480);
 		setMinimumSize(new Dimension(640, 480));
@@ -267,6 +269,11 @@ public class BatchOperationWindow extends JFrame {
 			gridBagLayout.removeLayoutComponent(txtpnnoBatchLicense);
 			txtpnnoBatchLicense = null;
 		}
+		
+		java.net.URL imgURL = PDFMetadataEditWindow.class
+				.getResource("pdf-metadata-edit.png");
+		ImageIcon icoImg = new ImageIcon(imgURL);
+		setIconImage(icoImg.getImage());
 	}
 	
 	
@@ -306,22 +313,27 @@ public class BatchOperationWindow extends JFrame {
 		      exc.printStackTrace();
 		   }
 		}	
-	public void appendFiles(List<File> files){
-		if(batchFileList.isEmpty() && files.size() > 0){
-	      Document doc = fileList.getDocument();
-	      try {
-			doc.remove(0, doc.getLength());
-			} catch (BadLocationException e) {}
-		}
-		for(File file:files){
-		   try {
-		      Document doc = fileList.getDocument();
-		      doc.insertString(doc.getLength(), file.getAbsolutePath() +"\n", null);
-		   } catch(BadLocationException exc) {
-		      exc.printStackTrace();
-		   }
-		}
-		batchFileList.addAll(files);
+	public void appendFiles(final List<File> files){
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+		
+				if(batchFileList.isEmpty() && files.size() > 0){
+			      Document doc = fileList.getDocument();
+			      try {
+					doc.remove(0, doc.getLength());
+					} catch (BadLocationException e) {}
+				}
+				for(File file:files){
+				   try {
+				      Document doc = fileList.getDocument();
+				      doc.insertString(doc.getLength(), file.getAbsolutePath() +"\n", null);
+				   } catch(BadLocationException exc) {
+				      exc.printStackTrace();
+				   }
+				}
+				batchFileList.addAll(files);
+			}
+		});
 	}
 
 	

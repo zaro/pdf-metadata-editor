@@ -11,6 +11,25 @@ import com.sun.jna.platform.win32.WinReg;
 
 public class WindowsRegisterContextMenu {
 
+	public static String exePath() throws Exception {
+		String thisJarDir;
+		try {
+			thisJarDir = new File(PreferencesWindow.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).getParentFile().getAbsolutePath();
+			
+		} catch (URISyntaxException e) {
+			throw new Exception("Cannot find the path to current jar");
+		}
+		String exePath = thisJarDir + File.separator + "PdfMetadataEditor.exe";
+		if(new File(exePath).exists()){
+			return exePath;
+		}
+		exePath = thisJarDir + File.separator + "..\\PdfMetadataEditor.exe";
+		if(new File(exePath).exists()){
+			return exePath;
+		}
+		throw new Exception("Cannot find the path to current exe");
+	}
+	
 
 	public static String pdfFileType(boolean create){
 		String pdfFileType = null ;
@@ -85,17 +104,13 @@ public class WindowsRegisterContextMenu {
 			System.out.println(e);
 		}
 	}
+	
 
 	public static void register() throws Exception{
 			String pdfFileType = pdfFileType(true);
-			String thisJarDir;
-			try {
-				thisJarDir = new File(PreferencesWindow.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).getParentFile().getAbsolutePath();
-				
-			} catch (URISyntaxException e) {
-				throw new Exception("Cannot find the path to current jar");
-			}
-			String exePath = "\"" + thisJarDir + File.separator + "PdfMetadataEditor.exe\"";
+
+			
+			String exePath = "\"" + exePath() + "\"";
 			String shellKey = editCmdShellKey(pdfFileType);
 			String shellCommandKey = shellKey +"\\command";
 			String shellDdeExecKey = shellKey +"\\ddeexec";
