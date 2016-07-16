@@ -53,7 +53,7 @@
 				</os>
 			</activation>
 			<properties>
-				<native.bundle>dmg</native.bundle>
+				<native.bundle>msi</native.bundle>
 				<appbudle.jre></appbudle.jre>
 			</properties>
 		</profile>
@@ -346,6 +346,38 @@
 	                      </tasks>
 						</configuration>
 					</execution>
+					<execution>
+						<id>create-dmg</id>
+						<phase>install</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<tasks>
+								<exec executable="javapackager">
+									<arg value="-deploy" />
+									<arg value="-v" />
+									<arg value='-Bruntime=jre_to_bundle/' />
+									<arg value='-BappVersion=${project.version}' />
+									<arg value='-Bmac.CFBundleIdentifier=pmedit.pdf-metadata-editor' />
+									<arg value="-native" />
+									<arg value="dmg" />
+									<arg value="-outdir" />
+									<arg value="${project.build.directory}" />
+									<arg value="-outfile" />
+									<arg value="${project.name}.app" />
+									<arg value="-srcfiles" />
+									<arg value="${project.build.directory}/pdf-metadata-edit-${project.version}.jar" />
+									<arg value="-appclass" />
+									<arg value="pmedit.Main" />
+									<arg value="-name" />
+									<arg value="${app.filename}" />
+									<arg value="-title" />
+									<arg value="${project.name}" />
+								</exec>
+							</tasks>
+						</configuration>
+					</execution>					
 				</executions>
 			</plugin>
 			

@@ -38,6 +38,7 @@
 
     		<fx:resources refid="pmeditDeploy"/>
         	
+        	<!-- <fx:platform j2se="1.6" basedir="${jre.bundle}" > -->
         	<fx:platform j2se="1.6">
         	    <fx:jvmarg value="-Djava.library.path=$APPDIR\app"/>
         	</fx:platform>
