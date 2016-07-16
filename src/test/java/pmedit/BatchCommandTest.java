@@ -1,4 +1,4 @@
-package test;
+package pmedit;
 
 import static org.junit.Assert.*;
 
@@ -15,9 +15,9 @@ import org.junit.Test;
 import pmedit.CommandLine;
 import pmedit.FileList;
 import pmedit.MetadataInfo;
+import pmedit.MetadataInfoTest.PMTuple;
 import pmedit.PDFMetadataEditBatch;
 import pmedit.PDFMetadataEditBatch.ActionStatus;
-import test.MetadataInfoTest.PMTuple;
 
 public class BatchCommandTest {
 
@@ -28,10 +28,10 @@ public class BatchCommandTest {
 	@After
 	public void tearDown() throws Exception {
 	}
-
+	static int NUM_FILES = 5;
 	@Test
 	public void testClearAll() throws FileNotFoundException, IOException, XmpParsingException, Exception {
-		List<PMTuple> fileList = MetadataInfoTest.randomFiles(100);
+		List<PMTuple> fileList = MetadataInfoTest.randomFiles(NUM_FILES);
 		List<String> args = new ArrayList<String>();
 		args.add("clear");
 		args.add("all");
@@ -65,7 +65,7 @@ public class BatchCommandTest {
 
 	@Test
 	public void testClearNone() throws FileNotFoundException, IOException, XmpParsingException, Exception {
-		List<PMTuple> fileList = MetadataInfoTest.randomFiles(100);
+		List<PMTuple> fileList = MetadataInfoTest.randomFiles(NUM_FILES);
 		List<String> args = new ArrayList<String>();
 		args.add("clear");
 		args.add("none");

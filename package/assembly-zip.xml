@@ -9,18 +9,34 @@
 	<fileSets>
 		<fileSet>
 			<directory>target</directory>
-			<outputDirectory>pdf-metadata-edit</outputDirectory>
+			<outputDirectory>${app.filename}</outputDirectory>
 			<includes>
 				<include>pdf-metadata-edit-${project.version}.jar</include>
+			</includes>
+		</fileSet>
+		<fileSet>
+			<directory>target/zip/</directory>
+			<outputDirectory>${app.filename}</outputDirectory>
+			<includes>
 				<include>PdfMetadataEditor.ini</include>
 				<include>PdfMetadataEditor.exe</include>
 				<include>PdfMetadataEditor64.exe</include>
+				<include>JavaDDE.dll</include>
+				<include>JavaDDEx64.dll</include>
 				<include>pmedit-cli*</include>
 			</includes>
 		</fileSet>
 		<fileSet>
+			<directory>target/win/com/pretty_tools/dde/</directory>
+			<outputDirectory>${app.filename}</outputDirectory>
+			<includes>
+				<include>JavaDDE.dll</include>
+				<include>JavaDDEx64.dll</include>
+			</includes>
+		</fileSet>
+		<fileSet>
 			<directory>target</directory>
-			<outputDirectory>pdf-metadata-edit</outputDirectory>
+			<outputDirectory>${app.filename}</outputDirectory>
 			<includes>
 				<include>pdf-metadata-edit</include>
 				<include>pmedit-cli</include>
@@ -30,13 +46,13 @@
 	</fileSets>
 	<files>
 		<file>
-			<source>target/PdfMetadataEditor.ini</source>
-			<outputDirectory>pdf-metadata-edit</outputDirectory>
+			<source>target/zip/PdfMetadataEditor.ini</source>
+			<outputDirectory>${app.filename}</outputDirectory>
 			<destName>PdfMetadataEditor64.ini</destName>
 		</file>
 		<file>
-			<source>target/pmedit-cli.ini</source>
-			<outputDirectory>pdf-metadata-edit</outputDirectory>
+			<source>target/zip/pmedit-cli.ini</source>
+			<outputDirectory>${app.filename}</outputDirectory>
 			<destName>pmedit-cli64.ini</destName>
 		</file>	</files>
 </assembly>
