@@ -120,6 +120,7 @@ public class Main {
 						}
 						window.toFront();
 						window.repaint();
+						window.reloadFile();
 						return;
 					}
 				}

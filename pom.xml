@@ -75,15 +75,6 @@
 		<resources>
 			<resource>
 				<directory>src/main/resources/</directory>
-				<excludes>
-					<exclude>*.properties</exclude>
-				</excludes>
-			</resource>
-			<resource>
-				<directory>src/main/resources/</directory>
-				<includes>
-					<include>*.properties</include>
-				</includes>
 				<filtering>true</filtering>
 			</resource>
 		</resources>
@@ -96,33 +87,6 @@
 				</configuration>
 			</plugin>
 
-			<!-- appbundler should run before shade, plugin so that it includes the 
-				original and not shaded jar -->
-			<!-- 
-			<plugin>
-				<groupId>sh.tak.appbundler</groupId>
-				<artifactId>appbundle-maven-plugin</artifactId>
-				<version>1.1.0</version>
-				<configuration>
-					<mainClass>pmedit.Main</mainClass>
-					<iconFile>pmedit/pdf-metadata-edit.icns</iconFile>
-					<bundleName>PdfMetadataEditor</bundleName>
-					<generateDiskImageFile>true</generateDiskImageFile>
-					<includeApplicationsSymlink>true</includeApplicationsSymlink>
-					<buildDirectory>${project.build.directory}/macos</buildDirectory>
-					<diskImageFile>${project.build.directory}/dist/${project.build.finalName}.dmg</diskImageFile>
-					<jrePath>${appbudle.jre}</jrePath>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>bundle</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			 -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
