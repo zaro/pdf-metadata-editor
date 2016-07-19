@@ -252,7 +252,7 @@ public class MetadataInfo {
 		this.dcEnabled = new XmpDublinCoreEnabled();
 	}
 
-	public void loadFromPDF(PDDocument document) throws IOException, XmpParsingException {
+	protected void loadFromPDF(PDDocument document) throws IOException, XmpParsingException {
 		PDDocumentInformation info = document.getDocumentInformation();
 
 		// Basic info
@@ -325,8 +325,8 @@ public class MetadataInfo {
 	public void loadFromPDF(File pdfFile) throws FileNotFoundException,
 			IOException, XmpParsingException {
 		PDDocument document = null;
-
-		document = PDDocument.load(new FileInputStream(pdfFile));
+		FileInputStream inputStream = new FileInputStream(pdfFile);
+		document = PDDocument.load(inputStream);
 
 		loadFromPDF(document);
 
@@ -337,9 +337,10 @@ public class MetadataInfo {
 
 			}
 		}
+		inputStream.close();
 	}
 
-	public void saveToPDF(PDDocument document, File pdfFile) throws Exception {
+	protected void saveToPDF(PDDocument document, File pdfFile) throws Exception {
 		if(!(docEnabled.atLeastOne() || basicEnabled.atLeastOne() || pdfEnabled.atLeastOne() || dcEnabled.atLeastOne())){
 			return;
 		}
@@ -835,7 +836,8 @@ public class MetadataInfo {
 	public void saveToPDF(File pdfFile) throws Exception {
 		PDDocument document = null;
 
-		document = PDDocument.load(new FileInputStream(pdfFile));
+		FileInputStream inputStream = new FileInputStream(pdfFile);
+		document = PDDocument.load(inputStream);
 
 		saveToPDF(document, pdfFile);
 
@@ -846,7 +848,7 @@ public class MetadataInfo {
 
 			}
 		}
-
+		inputStream.close();
 	}
 
 	public void copyDocToXMP() {

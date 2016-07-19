@@ -54,7 +54,7 @@ public class Version {
     	if( version == null){
         	Properties prop = new Properties();
     		try {
-				prop.load(VersionTuple.class.getClassLoader().getResourceAsStream("version.properties"));
+				prop.load(VersionTuple.class.getClassLoader().getResourceAsStream("pmedit/version.properties"));
 				version = prop.getProperty("app.version", "0.0.0-dev");
 			} catch (IOException e) {
 				e.printStackTrace();

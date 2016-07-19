@@ -39,7 +39,6 @@ public class PDFMetadataEditWindow extends JFrame{
 	final JFileChooser fc;
 
 	private File pdfFile;
-	private PDDocument document;
 	private MetadataInfo metadataInfo = new MetadataInfo();
 	private MetadataInfo defaultMetadata;
 
@@ -61,7 +60,7 @@ public class PDFMetadataEditWindow extends JFrame{
 		if (filePath != null) {
 			try {
 				pdfFile = new File(filePath);
-				loadFile();
+				reloadFile();
 			} catch (Exception e) {
 				JOptionPane.showMessageDialog(this,
 						"Error while opening file:\n" + e.toString());
@@ -117,24 +116,16 @@ public class PDFMetadataEditWindow extends JFrame{
 
 	public void loadFile(String fileName){
 		pdfFile = new File(fileName);
-		loadFile();
+		reloadFile();
 	}
 
-	private void loadFile() {
-		if (document != null) {
-			try {
-				document.close();
-			} catch (IOException e) {
-			}
-			document = null;
-		}
+	public void reloadFile() {
 		clear();
 		try {
-			document = PDDocument.load(new FileInputStream(pdfFile));
 			filename.setText(pdfFile.getAbsolutePath());
 			metadataInfo = new MetadataInfo();
 			metadataInfo.copyFrom(defaultMetadata);
-			metadataInfo.loadFromPDF(document);
+			metadataInfo.loadFromPDF(pdfFile);
 
 			metadataEditor.fillFromMetadata(metadataInfo);
 		} catch (Exception e) {
@@ -147,7 +138,7 @@ public class PDFMetadataEditWindow extends JFrame{
 		try {
 			metadataEditor.copyToMetadata(metadataInfo);
 			metadataInfo.copyUnset(defaultMetadata);
-			metadataInfo.saveToPDF(document, pdfFile);
+			metadataInfo.saveToPDF(pdfFile);
 
 			metadataEditor.fillFromMetadata(metadataInfo);
 		} catch (Exception e) {
@@ -181,7 +172,7 @@ public class PDFMetadataEditWindow extends JFrame{
 				JOptionPane.showMessageDialog(PDFMetadataEditWindow.this,
 						"Error while renaming file:\n" + e1.toString());
 			}
-			loadFile();
+			reloadFile();
 		}
 	}; 
 
@@ -206,7 +197,7 @@ public class PDFMetadataEditWindow extends JFrame{
 				pdfFile = selected;
 
 				saveFile();
-				loadFile();
+				reloadFile();
 
 				// save dir as last opened
 				Main.getPreferences().put("LastDir", pdfFile.getParent());
@@ -277,7 +268,7 @@ public class PDFMetadataEditWindow extends JFrame{
 								if (returnVal == JFileChooser.APPROVE_OPTION) {
 									pdfFile = fc.getSelectedFile();
 									// This is where a real application would open the file.
-									loadFile();
+									reloadFile();
 									// save dir as last opened
 									Main.getPreferences().put("LastDir", pdfFile.getParent());
 								}
