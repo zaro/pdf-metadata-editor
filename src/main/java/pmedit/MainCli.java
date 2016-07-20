@@ -41,6 +41,14 @@ public class MainCli {
 	
 
 	public static void main(CommandLine cmdLine){
+		if(cmdLine.licenseEmail != null && cmdLine.licenseKey != null){
+			if(BatchMan.giveBatch( cmdLine.licenseKey, cmdLine.licenseEmail)) {
+				System.out.println("Installed license for email: " + cmdLine.licenseEmail);
+			} else {
+				System.out.println("Invalid license!");
+			}
+			return;
+		}
 		executeCommand(cmdLine);
 	}
 	

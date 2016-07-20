@@ -51,11 +51,11 @@ public class WindowsRegisterContextMenu {
 	}
 	
 	public static String editCmdShellKey(String pdfFileType){
-		return "SOFTWARE\\Classes\\" + pdfFileType + "\\shell\\Pdf metadata edit";		
+		return "SOFTWARE\\Classes\\" + pdfFileType + "\\shell\\PME1.Edit.File";		
 	}
 
 	public static String batchMenuShellKey(String pdfFileType){
-		return "SOFTWARE\\Classes\\" + pdfFileType + "\\shell\\PME.Batch.Menu";		
+		return "SOFTWARE\\Classes\\" + pdfFileType + "\\shell\\PME2.Batch.Menu";		
 	}
 
 	public static String batchMenuKey(String pdfFileType){
