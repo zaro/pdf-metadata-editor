@@ -279,8 +279,8 @@
 				<artifactId>maven-antrun-plugin</artifactId>
 				<executions>
 					<execution>
-						<id>fx-test</id>
-						<phase>package</phase>
+						<id>fx-package</id>
+						<phase>none</phase>
 						<goals>
 							<goal>run</goal>
 						</goals>

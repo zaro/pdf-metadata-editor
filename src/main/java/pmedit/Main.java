@@ -173,6 +173,7 @@ public class Main {
 	    	cmdLine = CommandLine.parse(args);
 		} catch (ParseError e) {
 			System.err.println(e);
+			return;
 		}
 	    //System.out.println(cmdLine);
 	    if(cmdLine.noGui){

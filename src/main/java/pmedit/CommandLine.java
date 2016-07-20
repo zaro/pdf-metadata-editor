@@ -53,6 +53,8 @@ public class CommandLine {
 	public BatchOperationParameters params = new BatchOperationParameters();
 	public boolean batchGui = false;
 	public boolean showHelp = false;
+	public String licenseEmail;
+	public String licenseKey;
 	
 	public CommandLine(){
 	}
@@ -99,6 +101,20 @@ public class CommandLine {
 					++i;
 				} else {
 					throw new ParseError("Missing argument for renameTemplate");
+				}
+			} else if(arg.equalsIgnoreCase("license") ){
+				if( i+1 < args.size() ){
+					String ek = args.get(i+1).trim();
+					int comaPos = ek.indexOf(",");
+					if( comaPos > 0){
+						cmdLine.licenseEmail = ek.substring(0, comaPos);
+						cmdLine.licenseKey = ek.substring(comaPos+1);
+					} else {
+						throw new ParseError("Invalid argument for --license, must be in format '--license email,key' , found:" + ek);
+					}
+					++i;
+				} else {
+					throw new ParseError("Missing argument for license");
 				}
 			} else if(arg.equalsIgnoreCase("h") || arg.equalsIgnoreCase("help") ){
 				cmdLine.showHelp = true;

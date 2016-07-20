@@ -1,7 +1,9 @@
 package pmedit;
 
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 public class BatchMan {
 	
@@ -10,9 +12,20 @@ public class BatchMan {
 			try {
 				MessageDigest md = MessageDigest.getInstance("SHA-1");
 				md.update(boto.getBytes());
-				String toto = Base64.encodeBytes(md.digest());
-				return toto.equals(moto);
+				byte[] toto = md.digest();
+				byte[] binMoto = Base64.decode(moto);
+				if( binMoto.length == toto.length ){
+					return Arrays.equals(toto, binMoto);
+				} else if( binMoto.length == toto.length+1 ){
+					byte key = binMoto[0];
+					byte[] rest = Arrays.copyOfRange(binMoto, 1, binMoto.length);
+					for(int i=0; i < rest.length; ++i){
+						rest[i]  = (byte) (rest[i] ^ key);
+					}
+					return Arrays.equals(toto, rest);
+				}
 			} catch (NoSuchAlgorithmException e) {
+			} catch (IOException e) {
 			}
 		}
 		return false;		
@@ -22,6 +35,15 @@ public class BatchMan {
 		String moto = Main.getPreferences().get("key", null);
 		String boto = Main.getPreferences().get("email", null);
 		return maybeHasBatch(moto, boto);
+	}
+
+	public static boolean giveBatch(String moto, String boto){
+		if( maybeHasBatch(moto, boto)){
+			Main.getPreferences().put("key", moto);
+			Main.getPreferences().put("email", boto);
+			return true;
+		}
+		return false;
 	}
 
 }

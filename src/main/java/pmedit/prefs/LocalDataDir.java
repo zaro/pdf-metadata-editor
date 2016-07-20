@@ -49,7 +49,12 @@ public class LocalDataDir {
 		} catch(Win32Exception e){
 			try {
 				dir = Shell32Util.getFolderPath(ShlObj.CSIDL_APPDATA);
-			}  catch (Win32Exception e1) {
+			}  catch (Exception e1) {
+			}
+		} catch(UnsatisfiedLinkError e){
+			try {
+				dir = Shell32Util.getFolderPath(ShlObj.CSIDL_APPDATA);
+			}  catch (Exception e1) {
 			}
 		}
 		return dir;
