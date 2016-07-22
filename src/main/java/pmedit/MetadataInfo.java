@@ -271,6 +271,7 @@ public class MetadataInfo {
 		PDMetadata meta = catalog.getMetadata();
 		if (meta != null) {
 			DomXmpParser xmpParser = new DomXmpParser();
+			xmpParser.setStrictParsing(false);
 			XMPMetadata metadata = xmpParser.parse(meta.createInputStream());
 			// XMP Basic
 			XMPBasicSchema bi = metadata.getXMPBasicSchema();
@@ -386,6 +387,7 @@ public class MetadataInfo {
 		XMPMetadata xmpOld = null;
 		if (meta != null) {
 			DomXmpParser xmpParser = new DomXmpParser();
+			xmpParser.setStrictParsing(false);
 			xmpOld = xmpParser.parse(meta.createInputStream());
 		}
 		XMPMetadata xmpNew = XMPMetadata.createXMPMetadata();
