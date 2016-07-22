@@ -1,6 +1,8 @@
 package pmedit;
 
 import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
@@ -11,6 +13,8 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.prefs.Preferences;
 
 import javax.swing.JFrame;
@@ -77,7 +81,7 @@ public class Main {
 	}
 	
 	protected static void executeCommandSwingWorker(final CommandLine cmdLine){
-		logLine("executeCommand", cmdLine.toString());
+		logLine("executeCommandSwingWorker", cmdLine.toString());
 	
 		if( cmdLine.hasCommand()) {
 			try {
@@ -140,6 +144,8 @@ public class Main {
 		}
 	}
 	public static void executeCommand(final CommandLine cmdLine){
+	   Main.logLine("executeCommand:", cmdLine.toString());
+
 		try {
 			cmdQueue.put(cmdLine);
 		} catch (InterruptedException e) {
@@ -148,7 +154,11 @@ public class Main {
 		}
 	}
 
+	final static String debugLog = System.getProperty("debugLog");
 	protected static void logLine(String context, String line){
+		if(debugLog == null){
+			return;
+		}
 		System.out.println(context+":: " + line);
 		try{
 			PrintWriter output = new PrintWriter(new FileWriter(System.getProperty("java.io.tmpdir") + File.separator + "pdf-metada-editor-log.txt",true));
@@ -165,6 +175,10 @@ public class Main {
 		if( batchInstances.size() == 0 && editorInstances.size() == 0 && cmdQueue.size() == 0){
 			System.exit(0);
 		}
+	}
+	
+	public static int numWindows(){
+		return batchInstances.size() + editorInstances.size();
 	}
 
 	public static void main(final String[] args) {
@@ -194,13 +208,19 @@ public class Main {
 	   Main.logLine("DDE:", "DONE");
 	   CommandsExecutor commandsExecutor = new CommandsExecutor();
 	   commandsExecutor.execute();
+
+	   // Wait for at least on windows to open up, or the program
+	   // terminates without showing anything
 	   try {
-		   commandsExecutor.get();
+		   while(numWindows() == 0){
+				try {
+					commandsExecutor.get(50, TimeUnit.MILLISECONDS);
+				} catch (TimeoutException e) {
+				}
+		   }
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
