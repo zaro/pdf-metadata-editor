@@ -172,6 +172,7 @@ public class Main {
 	    try {
 	    	cmdLine = CommandLine.parse(args);
 		} catch (ParseError e) {
+			Main.logLine("ParseError", e.toString());
 			System.err.println(e);
 			return;
 		}

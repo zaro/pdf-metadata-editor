@@ -11,9 +11,9 @@ public class BatchMan {
 		if( moto != null && boto != null){
 			try {
 				MessageDigest md = MessageDigest.getInstance("SHA-1");
-				md.update(boto.getBytes());
+				md.update(boto.trim().getBytes());
 				byte[] toto = md.digest();
-				byte[] binMoto = Base64.decode(moto);
+				byte[] binMoto = Base64.decode(moto.trim());
 				if( binMoto.length == toto.length ){
 					return Arrays.equals(toto, binMoto);
 				} else if( binMoto.length == toto.length+1 ){

@@ -69,6 +69,9 @@ public class MainCli {
 			"  -rt, --renameTemplate=STRING    set a rename template for 'rename' command\n" +
 			"                                  any metadata field enclosed in {} will be substituted\n" +
 			"                                  with the actual field value\n" +
+			"       --license=email,key        install batch license and quit\n" +
+			"                                  pass email and key separated with comma (no spaces) to \n" +
+			"                                  install batch license from the command line.\n" +
 			"\n"+
 			"COMMANDS\n" +
 			"\n"+
