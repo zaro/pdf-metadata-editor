@@ -80,7 +80,7 @@ public class MainCli {
 			"METADATA FIELDS\n" +
 			"\n" +
 			"Enable field : [!]FIEDLNAME\n" +
-			"  A field is enabled by specifing it's name. If the name is prefixed wiht ! it will be disabled.\n" +
+			"  A field is enabled by specifying it's name. If the name is prefixed wiht ! it will be disabled.\n" +
 			"  There are two special fields `all` and `none` which respectively enable and disable all of the fields.\n" +
 			"  By default all fields are disabled, so you must enable at least one or the command will be a no-op.\n" +
 			"\n" +
