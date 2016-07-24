@@ -585,9 +585,18 @@ public class PreferencesWindow extends JDialog {
 				}
 			}
 			if (file != null) {
+				String[] installerPatterns = {
+					"PdfMetadataEditor-(\\d+)\\.(\\d+)\\.(\\d+)-installer.jar",
+					"pdf-metadata-edit-(\\d+)\\.(\\d+)\\.(\\d+)-installer.jar",
+				};
 				Version.VersionTuple current = Version.get();
-				Version.VersionTuple latest = new Version.VersionTuple(file,
-						"pdf-metadata-edit-(\\d+)\\.(\\d+)\\.(\\d+)-installer.jar");
+				Version.VersionTuple latest = null;
+				for(String pattern: installerPatterns){
+					latest = new Version.VersionTuple(file, pattern);
+					if(latest.parseSuccess){
+						break;
+					}
+				}
 				if (current.cmp(latest) < 0) {
 					versionMsg = "<h3 align=center>New version available: <a href='http://broken-by.me/pdf-metadata-editor/#download'>"
 							+ latest.getAsString() + "</a> , current: " + current.getAsString() + "</h3>";

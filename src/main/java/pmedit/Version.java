@@ -11,6 +11,7 @@ public class Version {
     	public int minor;
     	public int patch;
     	public String tag = "";
+    	public boolean parseSuccess = false;
     	
     	
     	public  VersionTuple(String version) {
@@ -28,6 +29,7 @@ public class Version {
 	    				tag = "";
 	    			}
     			}
+    			parseSuccess = true;
     		} else {
     			tag = "dev";
     		}
