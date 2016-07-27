@@ -1069,9 +1069,9 @@ public class MetadataInfo {
 	public boolean isEquvalent(MetadataInfo other){
  		for(Entry<String, List<FieldDescription>> e: _mdFields.entrySet()){
 			// Skip "dc.dates" for now as loading them from PDF is broken in xmpbox
-			if("dc.dates".equals(e.getKey())){
-				continue;
-			}
+			//if("dc.dates".equals(e.getKey())){
+			//	continue;
+			//}
 			Object t = get(e.getKey());
 			Object o = other.get(e.getKey());
 			FieldDescription fd = e.getValue().get(e.getValue().size()-1);

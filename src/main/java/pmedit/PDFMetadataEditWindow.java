@@ -129,6 +129,7 @@ public class PDFMetadataEditWindow extends JFrame{
 
 			metadataEditor.fillFromMetadata(metadataInfo);
 		} catch (Exception e) {
+			e.printStackTrace();
 			JOptionPane.showMessageDialog(this,
 					"Error while opening file:\n" + e.toString());
 		}
