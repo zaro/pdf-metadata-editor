@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.xmpbox.xml.XmpParsingException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +29,7 @@ public class BatchCommandTest {
 	}
 	static int NUM_FILES = 5;
 	@Test
-	public void testClearAll() throws FileNotFoundException, IOException, XmpParsingException, Exception {
+	public void testClearAll() throws FileNotFoundException, IOException, Exception {
 		List<PMTuple> fileList = MetadataInfoTest.randomFiles(NUM_FILES);
 		List<String> args = new ArrayList<String>();
 		args.add("clear");
@@ -64,7 +63,7 @@ public class BatchCommandTest {
 	}
 
 	@Test
-	public void testClearNone() throws FileNotFoundException, IOException, XmpParsingException, Exception {
+	public void testClearNone() throws FileNotFoundException, IOException, Exception {
 		List<PMTuple> fileList = MetadataInfoTest.randomFiles(NUM_FILES);
 		List<String> args = new ArrayList<String>();
 		args.add("clear");

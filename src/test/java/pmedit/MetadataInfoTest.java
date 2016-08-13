@@ -13,7 +13,6 @@ import java.util.Random;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.xmpbox.xml.XmpParsingException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,7 +55,8 @@ public class MetadataInfoTest {
 		Random rand = new Random();
 		for(int i=0; i<numFiles; ++i) {
 			MetadataInfo md = new MetadataInfo();
-			int genFields = rand.nextInt(numFields);
+			//int genFields = rand.nextInt(numFields);
+			int genFields = numFields;
 			for(int j=0; j< genFields; ++j){
 				String field = fields.get(rand.nextInt(numFields));
 				if(field.equals("doc.trapped")){
@@ -114,7 +114,7 @@ public class MetadataInfoTest {
 	}
 	
 	@Test
-	public void testEmptyLoad() throws Exception, IOException, XmpParsingException, Exception{
+	public void testEmptyLoad() throws Exception, IOException, Exception{
 		MetadataInfo md = new MetadataInfo();
 		md.loadFromPDF(emptyPdf());
 		assertTrue(md.isEquvalent(new MetadataInfo()));
@@ -125,7 +125,14 @@ public class MetadataInfoTest {
 		for(PMTuple t: randomFiles(NUM_FILES)){
 			MetadataInfo loaded = new MetadataInfo();
 			loaded.loadFromPDF(t.file);
-			//System.out.println(pdf.getAbsolutePath());
+			System.out.println(t.file.getAbsolutePath());
+			System.out.println("SAVED:" );
+			System.out.println("=========" );
+			System.out.println(t.md.toYAML(true));
+			System.out.println("LOADED:" );
+			System.out.println("=========" );
+			System.out.println(loaded.toYAML(true));
+
 			assertTrue(t.md.isEquvalent(loaded));
 		}
 	}

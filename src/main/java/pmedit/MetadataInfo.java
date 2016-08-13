@@ -24,14 +24,11 @@ import javax.swing.JCheckBox;
 import javax.xml.transform.TransformerException;
 
 
+import org.apache.jempbox.xmp.XMPMetadata;
+import org.apache.jempbox.xmp.XMPSchemaBasic;
+import org.apache.jempbox.xmp.XMPSchemaDublinCore;
+import org.apache.jempbox.xmp.XMPSchemaPDF;
 
-import org.apache.xmpbox.XMPMetadata;
-import org.apache.xmpbox.schema.AdobePDFSchema;
-import org.apache.xmpbox.schema.DublinCoreSchema;
-import org.apache.xmpbox.schema.XMPBasicSchema;
-import org.apache.xmpbox.xml.DomXmpParser;
-import org.apache.xmpbox.xml.XmpParsingException;
-import org.apache.xmpbox.xml.XmpSerializer;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
@@ -252,7 +249,7 @@ public class MetadataInfo {
 		this.dcEnabled = new XmpDublinCoreEnabled();
 	}
 
-	protected void loadFromPDF(PDDocument document) throws IOException, XmpParsingException {
+	protected void loadFromPDF(PDDocument document) throws IOException {
 		PDDocumentInformation info = document.getDocumentInformation();
 
 		// Basic info
@@ -269,12 +266,12 @@ public class MetadataInfo {
 		// Load XMP catalog
 		PDDocumentCatalog catalog = document.getDocumentCatalog();
 		PDMetadata meta = catalog.getMetadata();
+
 		if (meta != null) {
-			DomXmpParser xmpParser = new DomXmpParser();
-			xmpParser.setStrictParsing(false);
-			XMPMetadata metadata = xmpParser.parse(meta.createInputStream());
+			XMPMetadata xmp = XMPMetadata.load(meta.createInputStream());
+
 			// XMP Basic
-			XMPBasicSchema bi = metadata.getXMPBasicSchema();
+			XMPSchemaBasic bi = xmp.getBasicSchema();
 			if (bi != null) {
 
 				basic.creatorTool = bi.getCreatorTool();
@@ -285,12 +282,12 @@ public class MetadataInfo {
 				basic.label = bi.getLabel();
 				basic.nickname = bi.getNickname();
 				basic.identifiers = bi.getIdentifiers();
-				basic.advisories = bi.getAdvisory();
+				basic.advisories = bi.getAdvisories();
 				basic.metadataDate = bi.getMetadataDate();
 			}
 
 			// XMP PDF
-			AdobePDFSchema pi = metadata.getAdobePDFSchema();
+			XMPSchemaPDF pi = xmp.getPDFSchema();
 			if (pi != null) {
 				pdf.pdfVersion = pi.getPDFVersion();
 				pdf.keywords = pi.getKeywords();
@@ -298,7 +295,7 @@ public class MetadataInfo {
 			}
 
 			// XMP Dublin Core
-			DublinCoreSchema dcS = metadata.getDublinCoreSchema();
+			XMPSchemaDublinCore dcS = xmp.getDublinCoreSchema();
 			if (dcS != null) {
 				dc.title = dcS.getTitle();
 				dc.description = dcS.getDescription();
@@ -310,7 +307,7 @@ public class MetadataInfo {
 				dc.identifier = dcS.getIdentifier();
 				dc.languages = dcS.getLanguages();
 				dc.publishers = dcS.getPublishers();
-				dc.relationships = dcS.getRelations();
+				dc.relationships = dcS.getRelationships();
 				dc.rights = dcS.getRights();
 				dc.source = dcS.getSource();
 				dc.subjects = dcS.getSubjects();
@@ -324,7 +321,7 @@ public class MetadataInfo {
 	}
 
 	public void loadFromPDF(File pdfFile) throws FileNotFoundException,
-			IOException, XmpParsingException {
+			IOException {
 		PDDocument document = null;
 		FileInputStream inputStream = new FileInputStream(pdfFile);
 		document = PDDocument.load(inputStream);
@@ -386,16 +383,14 @@ public class MetadataInfo {
 		
 		XMPMetadata xmpOld = null;
 		if (meta != null) {
-			DomXmpParser xmpParser = new DomXmpParser();
-			xmpParser.setStrictParsing(false);
-			xmpOld = xmpParser.parse(meta.createInputStream());
+			xmpOld = XMPMetadata.load(meta.createInputStream());
 		}
-		XMPMetadata xmpNew = XMPMetadata.createXMPMetadata();
+		XMPMetadata xmpNew = new XMPMetadata();
 		// XMP Basic
-		XMPBasicSchema biOld = xmpOld != null ? xmpOld.getXMPBasicSchema() : null;
+		XMPSchemaBasic biOld = xmpOld != null ? xmpOld.getBasicSchema() : null;
 		boolean atLeastOneXmpBasicSet = false;
 		if(basicEnabled.atLeastOne() || (biOld != null)) {
-			XMPBasicSchema bi = xmpNew.createAndAddXMPBasicSchema();
+			XMPSchemaBasic bi = xmpNew.addBasicSchema();
 			
 			if(basicEnabled.advisories){
 				if(basic.advisories != null){
@@ -405,7 +400,7 @@ public class MetadataInfo {
 					}
 				}
 			} else if(biOld != null){
-				List<String> old = biOld.getAdvisory(); 
+				List<String> old = biOld.getAdvisories(); 
 				if(old != null){
 					for(String a: old){
 						bi.addAdvisory(a);
@@ -535,10 +530,10 @@ public class MetadataInfo {
 			}
 		}
 		// XMP PDF
-		AdobePDFSchema piOld = xmpOld != null ? xmpOld.getAdobePDFSchema() : null;
+		XMPSchemaPDF piOld = xmpOld != null ? xmpOld.getPDFSchema() : null;
 		boolean atLeastOneXmpPdfSet = false;
 		if(pdfEnabled.atLeastOne() || (piOld != null)){
-			AdobePDFSchema pi = xmpNew.createAndAddAdobePDFSchema();
+			XMPSchemaPDF pi = xmpNew.addPDFSchema();
 
 			if(pdfEnabled.keywords){
 				if(pdf.keywords != null){
@@ -581,10 +576,10 @@ public class MetadataInfo {
 		}
 		
 		// XMP Dublin Core
-		DublinCoreSchema dcOld = xmpOld != null ? xmpOld.getDublinCoreSchema() : null;
+		XMPSchemaDublinCore dcOld = xmpOld != null ? xmpOld.getDublinCoreSchema() : null;
 		boolean atLeastOneXmpDcSet = false;
 		if(dcEnabled.atLeastOne() || (dcOld != null)){
-			DublinCoreSchema dcS = xmpNew.createAndAddDublinCoreSchema();
+			XMPSchemaDublinCore dcS = xmpNew.addDublinCoreSchema();
 			
 			if(dcEnabled.title){
 				if(dc.title != null){
@@ -641,7 +636,7 @@ public class MetadataInfo {
 					}
 				}
 			}else if(dcOld != null) {
-				List<String> old= dcOld.getRelations();
+				List<String> old= dcOld.getRelationships();
 				if(old != null){
 					for(String a: old){
 						dcS.addRelation(a);;
@@ -759,7 +754,7 @@ public class MetadataInfo {
 			
 			if(dcEnabled.rights){
 				if(dc.rights != null){
-					dcS.addRights(null, dc.rights);
+					dcS.setRights(null, dc.rights);
 					atLeastOneXmpDcSet = true;
 				}
 			} else if(dcOld != null){
@@ -768,7 +763,7 @@ public class MetadataInfo {
 					for(String rl: rll){
 						String rights = dcOld.getRights(rl);
 						if(rights != null){
-							dcS.addRights(rl, rights);
+							dcS.setRights(rl, rights);
 							atLeastOneXmpDcSet = true;
 						}
 					}
@@ -823,10 +818,7 @@ public class MetadataInfo {
 				atLeastOneXmpBasicSet || atLeastOneXmpPdfSet || atLeastOneXmpDcSet){
 			PDMetadata metadataStream = new PDMetadata(document);
 			try {
-                XmpSerializer serializer = new XmpSerializer();
- 	            ByteArrayOutputStream baos = new ByteArrayOutputStream();
- 	            serializer.serialize(xmpNew, baos, true);
-				metadataStream.importXMPMetadata(baos.toByteArray());
+				metadataStream.importXMPMetadata(xmpNew.asByteArray());
 			} catch (TransformerException e) {
 				throw new Exception("Failed to save document:" + e.getMessage());
 			}
@@ -1068,10 +1060,14 @@ public class MetadataInfo {
 	
 	public boolean isEquvalent(MetadataInfo other){
  		for(Entry<String, List<FieldDescription>> e: _mdFields.entrySet()){
-			// Skip "dc.dates" for now as loading them from PDF is broken in xmpbox
+			// Skip "dc.dates" for now as loading them from PDF is broken in xmpbox <= 2.0.2
 			//if("dc.dates".equals(e.getKey())){
 			//	continue;
 			//}
+ 			// Skip "basic.label" for now as it cannot be loaded in jempbox <= 1.8.12
+			if("basic.label".equals(e.getKey())){
+				continue;
+			}
 			Object t = get(e.getKey());
 			Object o = other.get(e.getKey());
 			FieldDescription fd = e.getValue().get(e.getValue().size()-1);
