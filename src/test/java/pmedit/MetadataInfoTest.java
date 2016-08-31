@@ -19,6 +19,7 @@ import org.junit.Test;
 
 import pmedit.FieldID;
 import pmedit.MetadataInfo;
+import pmedit.MetadataInfo.FieldDescription;
 
 public class MetadataInfoTest {
 	static int NUM_FILES = 5;
@@ -63,13 +64,16 @@ public class MetadataInfoTest {
 					md.setAppend(field, Arrays.asList("False", "True","Unknown").get(rand.nextInt(3)));
 					continue;
 				}
-				switch(MetadataInfo.getFieldDescription(field).type){
+				FieldDescription fd = MetadataInfo.getFieldDescription(field); 
+				switch(fd.type){
 				case IntField:
 					md.setAppend(field, rand.nextInt(1000));
 					break;
+				case BoolField:
+					md.setAppend(field, ((rand.nextInt(1000) & 1) == 1) ? true : false);
+					break;
 				case DateField:
 					Calendar cal = Calendar.getInstance();
-					//cal.set(Calendar.MILLISECOND, 0);
 					cal.setLenient(false);
 					md.setAppend(field, cal);
 					break;
@@ -100,6 +104,8 @@ public class MetadataInfoTest {
 		
 		MetadataInfo md1 = new MetadataInfo();
 		MetadataInfo md2 = new MetadataInfo();
+
+
 		md1.setAppendFromString("doc.title", "a title");
 		assertFalse(md1.isEquvalent(md2));
 		
@@ -110,6 +116,12 @@ public class MetadataInfoTest {
 		assertFalse(md1.isEquvalent(md2));
 		
 		md2.setAppendFromString("basic.rating", "333");
+		assertTrue(md1.isEquvalent(md2));
+
+		md1.setAppendFromString("rights.marked", "true");
+		assertFalse(md1.isEquvalent(md2));
+
+		md2.setAppendFromString("rights.marked", "true");
 		assertTrue(md1.isEquvalent(md2));
 	}
 	

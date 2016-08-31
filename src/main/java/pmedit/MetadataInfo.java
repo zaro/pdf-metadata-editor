@@ -28,7 +28,7 @@ import org.apache.jempbox.xmp.XMPMetadata;
 import org.apache.jempbox.xmp.XMPSchemaBasic;
 import org.apache.jempbox.xmp.XMPSchemaDublinCore;
 import org.apache.jempbox.xmp.XMPSchemaPDF;
-
+import org.apache.jempbox.xmp.XMPSchemaRightsManagement;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
@@ -42,8 +42,6 @@ import pmedit.CommandLine.ParseError;
 import pmedit.MdStruct.StructType;
 
 public class MetadataInfo {
-
-	protected static final String[] MD_FIELD_GROUPS = new String[] { "doc", "basic", "pdf", "dc" };
 
 	// Copy of java.util.functions.Function from Java8
 	public interface Function<T, R> {
@@ -214,6 +212,35 @@ public class MetadataInfo {
 		}
 	};
 
+	public static class XmpRights {
+		public String certificate;
+		public Boolean marked;
+		public List<String> owner;
+		public String usageTerms;
+		public String webStatement;
+	}
+	
+	public static class XmpRightsEnabled {
+		public boolean certificate = true;
+		public boolean marked = true;
+		public boolean owner = true;
+		public boolean usageTerms = true;
+		public boolean webStatement = true;
+		
+		public boolean atLeastOne() {
+			return certificate || marked || owner || usageTerms || webStatement;
+		}
+		
+		public void setAll(boolean value){
+			certificate = value;
+			marked  = value;
+			owner = value;
+			usageTerms = value;
+			webStatement = value;
+		}
+	}
+
+
 	@MdStruct
 	public Basic doc;
 	@MdStruct
@@ -222,6 +249,8 @@ public class MetadataInfo {
 	public XmpPdf pdf ;
 	@MdStruct
 	public XmpDublinCore dc;
+	@MdStruct
+	public XmpRights rights;
 
 	@MdStruct(name="doc", type=MdStruct.StructType.MdEnableStruct)
 	public BasicEnabled docEnabled ;
@@ -231,6 +260,8 @@ public class MetadataInfo {
 	public XmpPdfEnabled pdfEnabled ;
 	@MdStruct(name="dc", type=MdStruct.StructType.MdEnableStruct)
 	public XmpDublinCoreEnabled dcEnabled;
+	@MdStruct(name="rights", type=MdStruct.StructType.MdEnableStruct)
+	public XmpRightsEnabled rightsEnabled;
 
 	public MetadataInfo() {
 		super();
@@ -242,11 +273,13 @@ public class MetadataInfo {
 		this.basic = new XmpBasic();
 		this.pdf = new XmpPdf();
 		this.dc  = new XmpDublinCore();	
+		this.rights = new XmpRights();
 		
 		this.docEnabled = new BasicEnabled();
 		this.basicEnabled = new XmpBasicEnabled();
 		this.pdfEnabled = new XmpPdfEnabled();
 		this.dcEnabled = new XmpDublinCoreEnabled();
+		this.rightsEnabled = new XmpRightsEnabled();
 	}
 
 	protected void loadFromPDF(PDDocument document) throws IOException {
@@ -313,6 +346,17 @@ public class MetadataInfo {
 				dc.subjects = dcS.getSubjects();
 				dc.types = dcS.getTypes();
 			}
+			
+			// XMP Rights
+			XMPSchemaRightsManagement ri = xmp.getRightsManagementSchema();
+			if (ri != null){
+				rights.certificate = ri.getCertificateURL();
+				// rights.marked  = ri.getMarked(); // getMarked() return false on null value
+				rights.marked = ri.getBooleanProperty("xmpRights:Marked");
+				rights.owner = ri.getOwners();
+				rights.usageTerms = ri.getUsageTerms();
+				rights.webStatement = ri.getWebStatement();
+			}
 		}
 
 		//System.err.println("Loaded:");
@@ -339,7 +383,7 @@ public class MetadataInfo {
 	}
 
 	protected void saveToPDF(PDDocument document, File pdfFile) throws Exception {
-		if(!(docEnabled.atLeastOne() || basicEnabled.atLeastOne() || pdfEnabled.atLeastOne() || dcEnabled.atLeastOne())){
+		if(!(docEnabled.atLeastOne() || basicEnabled.atLeastOne() || pdfEnabled.atLeastOne() || dcEnabled.atLeastOne() || rightsEnabled.atLeastOne())){
 			return;
 		}
 		//System.err.println("Saving:");
@@ -813,9 +857,88 @@ public class MetadataInfo {
 				}
 			}
 		}
+		
+		// XMP Rights
+		XMPSchemaRightsManagement riOld = xmpOld != null ? xmpOld.getRightsManagementSchema() : null;
+		boolean atLeastOneXmpRightsSet = false;
+		if(rightsEnabled.atLeastOne() || (riOld != null)){
+			XMPSchemaRightsManagement ri = xmpNew.addRightsManagementSchema();
+			
+			if(rightsEnabled.certificate){
+				if(rights.certificate != null){
+					ri.setCertificateURL(rights.certificate);;
+					atLeastOneXmpRightsSet = true;
+				}
+			} else if(riOld != null){
+				String old = riOld.getCertificateURL();
+				if(old != null){
+					ri.setCertificateURL(old);
+					atLeastOneXmpRightsSet = true;
+				}
+			}
+
+			if(rightsEnabled.marked){
+				if(rights.marked != null){
+					ri.setMarked(rights.marked);;
+					atLeastOneXmpRightsSet = true;
+				}
+			} else if(riOld != null){
+				Boolean old = riOld.getMarked();
+				if(old != null){
+					ri.setMarked(old);
+					atLeastOneXmpRightsSet = true;
+				}
+			}
+			
+			if(rightsEnabled.owner ){
+				if (rights.owner != null) {
+					for (String i : rights.owner) {
+						ri.addOwner(i);
+						atLeastOneXmpRightsSet = true;
+					}
+				}
+			} else if(riOld != null) {
+				List<String> old= riOld.getOwners();
+				if(old != null){
+					for(String a: old){
+						ri.addOwner(a);
+						atLeastOneXmpRightsSet = true;
+					}
+				}
+			}
+
+
+			if(rightsEnabled.usageTerms){
+				if(rights.usageTerms != null){
+					ri.setUsageTerms(rights.usageTerms);
+					atLeastOneXmpRightsSet = true;
+				}
+			} else if(riOld != null){
+				String old = riOld.getUsageTerms();
+				if(old != null){
+					ri.setUsageTerms(old);
+					atLeastOneXmpRightsSet = true;
+				}
+			}
+
+			if(rightsEnabled.webStatement){
+				if(rights.webStatement != null){
+					ri.setWebStatement(rights.webStatement);
+					atLeastOneXmpRightsSet = true;
+				}
+			} else if(riOld != null){
+				String old = riOld.getWebStatement();
+				if(old != null){
+					ri.setWebStatement(old);
+					atLeastOneXmpRightsSet = true;
+				}
+			}
+
+		}
+
 		// Do the save
-		if( basicEnabled.atLeastOne() || pdfEnabled.atLeastOne() || dcEnabled.atLeastOne() ||
-				atLeastOneXmpBasicSet || atLeastOneXmpPdfSet || atLeastOneXmpDcSet){
+		if( basicEnabled.atLeastOne() || pdfEnabled.atLeastOne() || dcEnabled.atLeastOne() || rightsEnabled.atLeastOne() ||
+				atLeastOneXmpBasicSet || atLeastOneXmpPdfSet || atLeastOneXmpDcSet || atLeastOneXmpRightsSet){
 			PDMetadata metadataStream = new PDMetadata(document);
 			try {
 				metadataStream.importXMPMetadata(xmpNew.asByteArray());
@@ -906,6 +1029,7 @@ public class MetadataInfo {
 		basicEnabled.setAll(value);
 		pdfEnabled.setAll(value);
 		dcEnabled.setAll(value);
+		rightsEnabled.setAll(value);
 	}
 	
 	public void setEnabled(String id, boolean value) {
@@ -977,6 +1101,7 @@ public class MetadataInfo {
 		basicEnabled.setAll(false);
 		pdfEnabled.setAll(false);
 		dcEnabled.setAll(false);
+		rightsEnabled.setAll(false);
 		for(Map.Entry<String, Object> entry: values.entrySet()){
 			if( entry.getValue() != null){
 				setEnabled(entry.getKey(), true);
@@ -1171,7 +1296,9 @@ public class MetadataInfo {
 
 		public FieldDescription(String name, Field field){
 			Class<?> klass = field.getType();
-			if(Calendar.class.isAssignableFrom(klass)){
+			if(Boolean.class.isAssignableFrom(klass)){
+				this.type = FieldID.FieldType.BoolField;
+			} else if(Calendar.class.isAssignableFrom(klass)){
 				this.type = FieldID.FieldType.DateField;
 			}else if(Integer.class.isAssignableFrom(klass)){
 				this.type = FieldID.FieldType.IntField;
@@ -1191,6 +1318,8 @@ public class MetadataInfo {
 				return ListFormat.humanReadable((List)value);
 			} else if(type == FieldID.FieldType.DateField){
 				return DateFormat.formatDateTime((Calendar)value);
+			} else if(type == FieldID.FieldType.BoolField){
+				return ((Boolean)value) ? "true" : "false";
 			} else {
 				return value.toString();
 			}
@@ -1208,6 +1337,10 @@ public class MetadataInfo {
 				} else if(type == FieldID.FieldType.IntField ){
 					// TODO: possible allow comma separated interger list
 					return Arrays.asList(Integer.parseInt(value));
+				} else if(type == FieldID.FieldType.BoolField ){
+					// TODO: possible allow comma separated boolean list
+					String v = value.toLowerCase().trim();
+					return Arrays.asList( v.equals("true") ? true : false );
 				} else if(type == FieldID.FieldType.DateField){
 					List<Calendar> rval = new ArrayList<Calendar>();
 					for(String line:value.split("\n")){
@@ -1226,6 +1359,9 @@ public class MetadataInfo {
 					return value;
 				} else if(type == FieldID.FieldType.IntField ){
 					return Integer.parseInt(value);
+				} else if(type == FieldID.FieldType.BoolField ){
+					String v = value.toLowerCase().trim();
+					return v.equals("true") ? true : false;
 				} else if(type == FieldID.FieldType.DateField){
 					try {
 						return DateFormat.parseDate(value);
@@ -1355,6 +1491,9 @@ public class MetadataInfo {
 			throw new RuntimeException("_setStructObject('"+id+"') No such field");
 		}
 		Object current = _getStructObject(id, mdFields, true, false, false, null);
+		if(current == null){
+			throw new RuntimeException("_setStructObject('"+id+"') No such field");
+		}
 		try {
 			FieldDescription fieldD = fields.get(fields.size()-1);
 			if(fromString && (value != null)){

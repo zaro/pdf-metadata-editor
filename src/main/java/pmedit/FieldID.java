@@ -10,7 +10,8 @@ public @interface FieldID {
 		StringField,
 		TextField,
 		IntField,
-		DateField
+		DateField,
+		BoolField
 	};
 	FieldType type() default FieldType.StringField;
 }
