@@ -1340,7 +1340,10 @@ public class MetadataInfo {
 				} else if(type == FieldID.FieldType.BoolField ){
 					// TODO: possible allow comma separated boolean list
 					String v = value.toLowerCase().trim();
-					return Arrays.asList( v.equals("true") ? true : false );
+					Boolean b = null;
+					if (v.equals("true") || v.equals("yes")) b = true;
+					if (v.equals("false") || v.equals("no")) b =  false;
+					return Arrays.asList( b );
 				} else if(type == FieldID.FieldType.DateField){
 					List<Calendar> rval = new ArrayList<Calendar>();
 					for(String line:value.split("\n")){
@@ -1361,7 +1364,9 @@ public class MetadataInfo {
 					return Integer.parseInt(value);
 				} else if(type == FieldID.FieldType.BoolField ){
 					String v = value.toLowerCase().trim();
-					return v.equals("true") ? true : false;
+					if (v.equals("true") || v.equals("yes")) return true;
+					if (v.equals("false") || v.equals("no")) return false;
+					return null;
 				} else if(type == FieldID.FieldType.DateField){
 					try {
 						return DateFormat.parseDate(value);

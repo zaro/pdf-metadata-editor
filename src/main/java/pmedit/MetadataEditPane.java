@@ -25,6 +25,7 @@ import net.miginfocom.swing.MigLayout;
 
 import com.toedter.calendar.JDateChooser;
 import java.awt.GridBagLayout;
+import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import javax.swing.JEditorPane;
@@ -35,6 +36,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 import javax.swing.text.PlainDocument;
 import javax.swing.JFormattedTextField;
+import javax.swing.JFrame;
 
 public class MetadataEditPane {
 
@@ -126,9 +128,24 @@ public class MetadataEditPane {
 	public JTextArea xmpDcSubjects;
 	@FieldID(value = "dc.types", type = FieldID.FieldType.TextField)
 	public JTextArea xmpDcTypes;
+	
+	@FieldID("rights.certificate")
+	public JTextField xmpRightsCertificate;
+	@FieldID(value = "rights.marked", type = FieldID.FieldType.BoolField)
+	public JComboBox xmpRightsMarked;
+	@FieldID(value = "rights.owner" , type = FieldID.FieldType.TextField)
+	public JTextArea xmpRightsOwner;
+	@FieldID("rights.usageTerms")
+	public JTextArea xmpRightsUsageTerms;
+	@FieldID("rights.webStatement")
+	public JTextField xmpRightsWebStatement;
+
+	
+	
 	public JPanel xmlBasicMetaPanel;
 	public JPanel xmlPdfMetaPanel;
 	public JPanel xmpDcMetaPanel;
+	public JPanel xmpRightsMetaPanel;
 
 	public JTabbedPane tabbedaPane;
 	private JScrollPane scrollPane;
@@ -212,6 +229,22 @@ public class MetadataEditPane {
 	public JCheckBox xmpDcSubjectsEnabled;
 	@FieldEnabled("dc.types")
 	public JCheckBox xmpDcTypesEnabled;
+	
+	@FieldEnabled("rights.certificate")
+	public JCheckBox xmpRightsCertificateEnabled;
+	@FieldEnabled("rights.marked")
+	public JCheckBox xmpRightsMarkedEnabled;
+	@FieldEnabled("rights.owner")
+	public JCheckBox xmpRightsOwnerEnabled;
+	@FieldEnabled("rights.usageTerms")
+	public JCheckBox xmpRightsUsageTermsEnabled;
+	@FieldEnabled("rights.webStatement")
+	public JCheckBox xmpRightsWebStatementEnabled;
+
+	
+	
+	private JScrollPane scrollPane_3;
+	private JScrollPane scrollPane_4;
 
 	public MetadataEditPane() {
 		initialize();
@@ -1293,7 +1326,171 @@ public class MetadataEditPane {
 		gbc_xmpDcTypes.gridx = 2;
 		gbc_xmpDcTypes.gridy = 14;
 		xmpDcMetaPanel.add(xmpDcTypes, gbc_xmpDcTypes);
+		
+		
+		JScrollPane xmpRightsScrollpane = new JScrollPane();
+		xmpRightsScrollpane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		tabbedaPane.addTab("XMP Rights", null, xmpRightsScrollpane, null);
 
+		xmpRightsMetaPanel = new JPanel();
+		xmpRightsScrollpane.setViewportView(xmpRightsMetaPanel);
+		GridBagLayout gbl_xmpRightsMetaPanel = new GridBagLayout();
+		gbl_xmpRightsMetaPanel.columnWidths = new int[] {112, 0, 284, 0};
+		gbl_xmpRightsMetaPanel.rowHeights = new int[] { 16, 26, 26, 26, 26, 0 };
+		gbl_xmpRightsMetaPanel.columnWeights = new double[] { 0.0, 0.0, 0.0, Double.MIN_VALUE };
+		gbl_xmpRightsMetaPanel.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
+		xmpRightsMetaPanel.setLayout(gbl_xmpRightsMetaPanel);
+
+		JLabel lblRightsCertificate = new JLabel("Certificate");
+		GridBagConstraints gbc_lblRightsCertificate = new GridBagConstraints();
+		gbc_lblRightsCertificate.anchor = GridBagConstraints.EAST;
+		gbc_lblRightsCertificate.insets = new Insets(0, 0, 5, 5);
+		gbc_lblRightsCertificate.gridx = 0;
+		gbc_lblRightsCertificate.gridy = 0;
+		xmpRightsMetaPanel.add(lblRightsCertificate, gbc_lblRightsCertificate);
+		
+		xmpRightsCertificateEnabled = new JCheckBox("");
+		xmpRightsCertificateEnabled.setEnabled(false);
+		xmpRightsCertificateEnabled.setSelected(true);
+		GridBagConstraints gbc_xmpRightsCertificateEnabled = new GridBagConstraints();
+		gbc_xmpRightsCertificateEnabled.insets = new Insets(0, 0, 5, 5);
+		gbc_xmpRightsCertificateEnabled.gridx = 1;
+		gbc_xmpRightsCertificateEnabled.gridy = 0;
+		xmpRightsMetaPanel.add(xmpRightsCertificateEnabled, gbc_xmpRightsCertificateEnabled);
+
+		xmpRightsCertificate = new JTextField();
+		GridBagConstraints gbc_xmpRightsCertificate = new GridBagConstraints();
+		gbc_xmpRightsCertificate.anchor = GridBagConstraints.WEST;
+		gbc_xmpRightsCertificate.fill = GridBagConstraints.HORIZONTAL;
+		gbc_xmpRightsCertificate.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpRightsCertificate.gridx = 2;
+		gbc_xmpRightsCertificate.gridy = 0;
+		xmpRightsMetaPanel.add(xmpRightsCertificate, gbc_xmpRightsCertificate);
+		xmpRightsCertificate.setColumns(10);
+
+		JLabel lblRightsMarked = new JLabel("Marked");
+		GridBagConstraints gbc_lblRightsMarked = new GridBagConstraints();
+		gbc_lblRightsMarked.anchor = GridBagConstraints.EAST;
+		gbc_lblRightsMarked.insets = new Insets(0, 0, 5, 5);
+		gbc_lblRightsMarked.gridx = 0;
+		gbc_lblRightsMarked.gridy = 1;
+		xmpRightsMetaPanel.add(lblRightsMarked, gbc_lblRightsMarked);
+		
+		xmpRightsMarkedEnabled = new JCheckBox("");
+		xmpRightsMarkedEnabled.setEnabled(false);
+		xmpRightsMarkedEnabled.setSelected(true);
+		GridBagConstraints gbc_xmpRightsMarkedEnabled = new GridBagConstraints();
+		gbc_xmpRightsMarkedEnabled.insets = new Insets(0, 0, 5, 5);
+		gbc_xmpRightsMarkedEnabled.gridx = 1;
+		gbc_xmpRightsMarkedEnabled.gridy = 1;
+		xmpRightsMetaPanel.add(xmpRightsMarkedEnabled, gbc_xmpRightsMarkedEnabled);
+
+		xmpRightsMarked = new JComboBox();
+		xmpRightsMarked.setModel(new DefaultComboBoxModel(new String[] { "Unset", "Yes", "No" }));
+		GridBagConstraints gbc_xmpRightsMarked = new GridBagConstraints();
+		gbc_xmpRightsMarked.anchor = GridBagConstraints.WEST;
+		gbc_xmpRightsMarked.fill = GridBagConstraints.HORIZONTAL;
+		gbc_xmpRightsMarked.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpRightsMarked.gridx = 2;
+		gbc_xmpRightsMarked.gridy = 1;
+		xmpRightsMetaPanel.add(xmpRightsMarked, gbc_xmpRightsMarked);
+
+		JLabel lblRightsOwner = new JLabel("Owners");
+		GridBagConstraints gbc_lblRightsOwner = new GridBagConstraints();
+		gbc_lblRightsOwner.anchor = GridBagConstraints.EAST;
+		gbc_lblRightsOwner.insets = new Insets(0, 0, 5, 5);
+		gbc_lblRightsOwner.gridx = 0;
+		gbc_lblRightsOwner.gridy = 2;
+		xmpRightsMetaPanel.add(lblRightsOwner, gbc_lblRightsOwner);
+		
+		xmpRightsOwnerEnabled = new JCheckBox("");
+		xmpRightsOwnerEnabled.setEnabled(false);
+		xmpRightsOwnerEnabled.setSelected(true);
+		GridBagConstraints gbc_xmpRightsOwnerEnabled = new GridBagConstraints();
+		gbc_xmpRightsOwnerEnabled.insets = new Insets(0, 0, 5, 5);
+		gbc_xmpRightsOwnerEnabled.gridx = 1;
+		gbc_xmpRightsOwnerEnabled.gridy = 2;
+		xmpRightsMetaPanel.add(xmpRightsOwnerEnabled, gbc_xmpRightsOwnerEnabled);
+
+		JScrollPane xmpRightsOwnerScroll = new JScrollPane();
+		GridBagConstraints gbc_xmpRightsOwner = new GridBagConstraints();
+		gbc_xmpRightsOwner.weighty = 1.0;
+		gbc_xmpRightsOwner.weightx = 1.0;
+		gbc_xmpRightsOwner.anchor = GridBagConstraints.WEST;
+		gbc_xmpRightsOwner.fill = GridBagConstraints.BOTH;
+		gbc_xmpRightsOwner.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpRightsOwner.gridx = 2;
+		gbc_xmpRightsOwner.gridy = 2;
+		xmpRightsMetaPanel.add(xmpRightsOwnerScroll, gbc_xmpRightsOwner);
+		
+		xmpRightsOwner = new JTextArea();
+		xmpRightsOwnerScroll.setViewportView(xmpRightsOwner);
+		xmpRightsOwner.setWrapStyleWord(true);
+		xmpRightsOwner.setLineWrap(true);
+		xmpRightsOwner.setColumns(10);
+
+		
+		JLabel lblRightsUsageTerms = new JLabel("Usage Terms");
+		GridBagConstraints gbc_lblRightsUsageTerms = new GridBagConstraints();
+		gbc_lblRightsUsageTerms.anchor = GridBagConstraints.EAST;
+		gbc_lblRightsUsageTerms.insets = new Insets(0, 0, 5, 5);
+		gbc_lblRightsUsageTerms.gridx = 0;
+		gbc_lblRightsUsageTerms.gridy = 3;
+		xmpRightsMetaPanel.add(lblRightsUsageTerms, gbc_lblRightsUsageTerms);
+		
+		xmpRightsUsageTermsEnabled = new JCheckBox("");
+		xmpRightsUsageTermsEnabled.setEnabled(false);
+		xmpRightsUsageTermsEnabled.setSelected(true);
+		GridBagConstraints gbc_xmpRightsUsageTermsEnabled = new GridBagConstraints();
+		gbc_xmpRightsUsageTermsEnabled.insets = new Insets(0, 0, 5, 5);
+		gbc_xmpRightsUsageTermsEnabled.gridx = 1;
+		gbc_xmpRightsUsageTermsEnabled.gridy = 3;
+		xmpRightsMetaPanel.add(xmpRightsUsageTermsEnabled, gbc_xmpRightsUsageTermsEnabled);
+
+		JScrollPane xmpRightsUsageTermsScroll = new JScrollPane();
+		GridBagConstraints gbc_xmpRightsUsageTerms = new GridBagConstraints();
+		gbc_xmpRightsUsageTerms.weighty = 1.0;
+		gbc_xmpRightsUsageTerms.weightx = 1.0;
+		gbc_xmpRightsUsageTerms.anchor = GridBagConstraints.WEST;
+		gbc_xmpRightsUsageTerms.fill = GridBagConstraints.BOTH;
+		gbc_xmpRightsUsageTerms.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpRightsUsageTerms.gridx = 2;
+		gbc_xmpRightsUsageTerms.gridy = 3;
+		xmpRightsMetaPanel.add(xmpRightsUsageTermsScroll, gbc_xmpRightsUsageTerms);
+
+		xmpRightsUsageTerms = new JTextArea();
+		xmpRightsUsageTermsScroll.setViewportView(xmpRightsUsageTerms);
+		xmpRightsUsageTerms.setWrapStyleWord(true);
+		xmpRightsUsageTerms.setLineWrap(true);
+		xmpRightsUsageTerms.setColumns(10);
+	
+		JLabel lblRightsWebStatement = new JLabel("Web Statement");
+		GridBagConstraints gbc_lblRightsWebStatement = new GridBagConstraints();
+		gbc_lblRightsWebStatement.anchor = GridBagConstraints.EAST;
+		gbc_lblRightsWebStatement.insets = new Insets(0, 0, 5, 5);
+		gbc_lblRightsWebStatement.gridx = 0;
+		gbc_lblRightsWebStatement.gridy = 4;
+		xmpRightsMetaPanel.add(lblRightsWebStatement, gbc_lblRightsWebStatement);
+		
+		xmpRightsWebStatementEnabled = new JCheckBox("");
+		xmpRightsWebStatementEnabled.setEnabled(false);
+		xmpRightsWebStatementEnabled.setSelected(true);
+		GridBagConstraints gbc_xmpRightsWebStatementEnabled = new GridBagConstraints();
+		gbc_xmpRightsWebStatementEnabled.insets = new Insets(0, 0, 5, 5);
+		gbc_xmpRightsWebStatementEnabled.gridx = 1;
+		gbc_xmpRightsWebStatementEnabled.gridy = 4;
+		xmpRightsMetaPanel.add(xmpRightsWebStatementEnabled, gbc_xmpRightsWebStatementEnabled);
+
+		xmpRightsWebStatement = new JTextField();
+		GridBagConstraints gbc_xmpRightsWebStatement = new GridBagConstraints();
+		gbc_xmpRightsWebStatement.anchor = GridBagConstraints.WEST;
+		gbc_xmpRightsWebStatement.fill = GridBagConstraints.HORIZONTAL;
+		gbc_xmpRightsWebStatement.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpRightsWebStatement.gridx = 2;
+		gbc_xmpRightsWebStatement.gridy = 4;
+		xmpRightsMetaPanel.add(xmpRightsWebStatement, gbc_xmpRightsWebStatement);
+		
+		
 		// Make rating digits only
 		PlainDocument doc = new PlainDocument();
 		doc.setDocumentFilter(new DocumentFilter() {
@@ -1312,6 +1509,7 @@ public class MetadataEditPane {
 		});
 
 		xmpBasicRating.setDocument(doc);
+		
 	}
 
 	private void traverseFields(MetadataEditPane.FieldSetGet setGet, MetadataEditPane.FieldEnabledCheckBox fieldEnabled) {
@@ -1391,7 +1589,7 @@ public class MetadataEditPane {
 					objectToField((JTextArea) field, null);
 				}
 				if (field instanceof JComboBox) {
-					objectToField((JComboBox) field, null);
+					objectToField((JComboBox) field, null, anno.type() == FieldID.FieldType.BoolField);
 				}
 				if (field instanceof JDateChooser) {
 					objectToField((JDateChooser) field, null);
@@ -1423,7 +1621,7 @@ public class MetadataEditPane {
 					objectToField((JTextArea) field, value);
 				}
 				if (field instanceof JComboBox) {
-					objectToField((JComboBox) field, value);
+					objectToField((JComboBox) field, value, anno.type() == FieldID.FieldType.BoolField);
 				}
 				if (field instanceof JDateChooser) {
 					objectToField((JDateChooser) field, value);
@@ -1486,6 +1684,9 @@ public class MetadataEditPane {
 					case StringField:
 						metadataInfo.set(anno.value(), text);
 						break;
+					case BoolField:
+						metadataInfo.setFromString(anno.value(), text);
+						break;
 					default:
 						throw new RuntimeException("Cannot (store (choice text) in :" + anno.type());
 
@@ -1538,9 +1739,15 @@ public class MetadataEditPane {
 		}
 	}
 
-	private void objectToField(JComboBox field, Object o) {
+	private void objectToField(JComboBox field, Object o, boolean oIsBool) {
 		if (o instanceof String) {
 			field.getModel().setSelectedItem(o);
+		}else if (o instanceof Boolean || oIsBool) {
+			String v = "Unset";
+			if( o != null ){
+				v = (Boolean)o ? "Yes" : "No";
+			}
+			field.getModel().setSelectedItem(v);
 		} else if (o == null) {
 			field.setSelectedIndex(-1);
 		} else {
@@ -1599,5 +1806,21 @@ public class MetadataEditPane {
 	private String stringListToText(List<String> slist) {
 		return itemListToText(slist, "\n");
 	}
-
+	
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					MetadataEditPane pane = new MetadataEditPane();
+					JFrame frame = new JFrame();
+					frame.getContentPane().add(pane.tabbedaPane);
+					frame.setVisible(true);
+					frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+					frame.setSize(640, 480);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
 }
