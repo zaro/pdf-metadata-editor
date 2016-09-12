@@ -99,37 +99,37 @@ public class MetadataInfoTest {
 
 	@Test
 	public void testSimpleEquality() {
-		assertTrue(new MetadataInfo().isEquvalent(new MetadataInfo()));
-		assertTrue(MetadataInfo.getSampleMetadata().isEquvalent(MetadataInfo.getSampleMetadata()));
+		assertTrue(new MetadataInfo().isEquivalent(new MetadataInfo()));
+		assertTrue(MetadataInfo.getSampleMetadata().isEquivalent(MetadataInfo.getSampleMetadata()));
 		
 		MetadataInfo md1 = new MetadataInfo();
 		MetadataInfo md2 = new MetadataInfo();
 
 
 		md1.setAppendFromString("doc.title", "a title");
-		assertFalse(md1.isEquvalent(md2));
+		assertFalse(md1.isEquivalent(md2));
 		
 		md2.setAppendFromString("doc.title", md1.getString("doc.title"));
-		assertTrue(md1.isEquvalent(md2));
+		assertTrue(md1.isEquivalent(md2));
 
 		md1.setAppendFromString("basic.rating", "333");
-		assertFalse(md1.isEquvalent(md2));
+		assertFalse(md1.isEquivalent(md2));
 		
 		md2.setAppendFromString("basic.rating", "333");
-		assertTrue(md1.isEquvalent(md2));
+		assertTrue(md1.isEquivalent(md2));
 
 		md1.setAppendFromString("rights.marked", "true");
-		assertFalse(md1.isEquvalent(md2));
+		assertFalse(md1.isEquivalent(md2));
 
 		md2.setAppendFromString("rights.marked", "true");
-		assertTrue(md1.isEquvalent(md2));
+		assertTrue(md1.isEquivalent(md2));
 	}
 	
 	@Test
 	public void testEmptyLoad() throws Exception, IOException, Exception{
 		MetadataInfo md = new MetadataInfo();
 		md.loadFromPDF(emptyPdf());
-		assertTrue(md.isEquvalent(new MetadataInfo()));
+		assertTrue(md.isEquivalent(new MetadataInfo()));
 	}
 	
 	@Test
@@ -137,15 +137,17 @@ public class MetadataInfoTest {
 		for(PMTuple t: randomFiles(NUM_FILES)){
 			MetadataInfo loaded = new MetadataInfo();
 			loaded.loadFromPDF(t.file);
-			System.out.println(t.file.getAbsolutePath());
-			System.out.println("SAVED:" );
-			System.out.println("=========" );
-			System.out.println(t.md.toYAML(true));
-			System.out.println("LOADED:" );
-			System.out.println("=========" );
-			System.out.println(loaded.toYAML(true));
+			if( !t.md.isEquivalent(loaded) ){
+				System.out.println(t.file.getAbsolutePath());
+				System.out.println("SAVED:" );
+				System.out.println("=========" );
+				System.out.println(t.md.toYAML(true));
+				System.out.println("LOADED:" );
+				System.out.println("=========" );
+				System.out.println(loaded.toYAML(true));
+			}
 
-			assertTrue(t.md.isEquvalent(loaded));
+			assertTrue(t.md.isEquivalent(loaded));
 		}
 	}
 

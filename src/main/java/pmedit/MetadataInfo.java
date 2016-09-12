@@ -216,6 +216,7 @@ public class MetadataInfo {
 		public String certificate;
 		public Boolean marked;
 		public List<String> owner;
+		public String copyright;
 		public String usageTerms;
 		public String webStatement;
 	}
@@ -224,6 +225,7 @@ public class MetadataInfo {
 		public boolean certificate = true;
 		public boolean marked = true;
 		public boolean owner = true;
+		public boolean copyright = true;
 		public boolean usageTerms = true;
 		public boolean webStatement = true;
 		
@@ -355,6 +357,7 @@ public class MetadataInfo {
 				rights.marked = ri.getBooleanProperty("xmpRights:Marked");
 				rights.owner = ri.getOwners();
 				rights.usageTerms = ri.getUsageTerms();
+				rights.copyright = ri.getCopyright();
 				rights.webStatement = ri.getWebStatement();
 			}
 		}
@@ -907,7 +910,19 @@ public class MetadataInfo {
 				}
 			}
 
-
+			if(rightsEnabled.copyright){
+				if(rights.copyright != null){
+					ri.setCopyright(rights.copyright);;
+					atLeastOneXmpRightsSet = true;
+				}
+			} else if(riOld != null){
+				String old = riOld.getCopyright();
+				if(old != null){
+					ri.setCopyright(old);
+					atLeastOneXmpRightsSet = true;
+				}
+			}
+			
 			if(rightsEnabled.usageTerms){
 				if(rights.usageTerms != null){
 					ri.setUsageTerms(rights.usageTerms);
@@ -1183,7 +1198,7 @@ public class MetadataInfo {
 		});
 	}
 	
-	public boolean isEquvalent(MetadataInfo other){
+	public boolean isEquivalent(MetadataInfo other){
  		for(Entry<String, List<FieldDescription>> e: _mdFields.entrySet()){
 			// Skip "dc.dates" for now as loading them from PDF is broken in xmpbox <= 2.0.2
 			//if("dc.dates".equals(e.getKey())){

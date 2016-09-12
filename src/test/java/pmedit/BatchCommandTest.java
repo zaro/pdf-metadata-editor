@@ -58,7 +58,7 @@ public class BatchCommandTest {
 			MetadataInfo loaded = new MetadataInfo();
 			loaded.loadFromPDF(t.file);
 			//System.out.println(pdf.getAbsolutePath());
-			assertTrue(empty.isEquvalent(loaded));
+			assertTrue(empty.isEquivalent(loaded));
 		}
 	}
 
@@ -92,7 +92,7 @@ public class BatchCommandTest {
 			MetadataInfo loaded = new MetadataInfo();
 			loaded.loadFromPDF(t.file);
 			//System.out.println(pdf.getAbsolutePath());
-			assertTrue(t.md.isEquvalent(loaded));
+			assertTrue(t.md.isEquivalent(loaded));
 		}
 	}
 

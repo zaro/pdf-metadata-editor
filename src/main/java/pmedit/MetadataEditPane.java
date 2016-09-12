@@ -135,6 +135,8 @@ public class MetadataEditPane {
 	public JComboBox xmpRightsMarked;
 	@FieldID(value = "rights.owner" , type = FieldID.FieldType.TextField)
 	public JTextArea xmpRightsOwner;
+	@FieldID(value = "rights.copyright")
+	public JTextArea xmpRightsCopyright;
 	@FieldID("rights.usageTerms")
 	public JTextArea xmpRightsUsageTerms;
 	@FieldID("rights.webStatement")
@@ -236,6 +238,8 @@ public class MetadataEditPane {
 	public JCheckBox xmpRightsMarkedEnabled;
 	@FieldEnabled("rights.owner")
 	public JCheckBox xmpRightsOwnerEnabled;
+	@FieldEnabled("rights.copyright")
+	public JCheckBox xmpRightsCopyrightEnabled;
 	@FieldEnabled("rights.usageTerms")
 	public JCheckBox xmpRightsUsageTermsEnabled;
 	@FieldEnabled("rights.webStatement")
@@ -1429,13 +1433,47 @@ public class MetadataEditPane {
 		xmpRightsOwner.setLineWrap(true);
 		xmpRightsOwner.setColumns(10);
 
+		JLabel lblRightsCopyright = new JLabel("Copyright");
+		GridBagConstraints gbc_lblRightsCopyright = new GridBagConstraints();
+		gbc_lblRightsCopyright.anchor = GridBagConstraints.EAST;
+		gbc_lblRightsCopyright.insets = new Insets(0, 0, 5, 5);
+		gbc_lblRightsCopyright.gridx = 0;
+		gbc_lblRightsCopyright.gridy = 3;
+		xmpRightsMetaPanel.add(lblRightsCopyright, gbc_lblRightsCopyright);
+		
+		xmpRightsCopyrightEnabled = new JCheckBox("");
+		xmpRightsCopyrightEnabled.setEnabled(false);
+		xmpRightsCopyrightEnabled.setSelected(true);
+		GridBagConstraints gbc_xmpRightsCopyrightEnabled = new GridBagConstraints();
+		gbc_xmpRightsCopyrightEnabled.insets = new Insets(0, 0, 5, 5);
+		gbc_xmpRightsCopyrightEnabled.gridx = 1;
+		gbc_xmpRightsCopyrightEnabled.gridy = 3;
+		xmpRightsMetaPanel.add(xmpRightsCopyrightEnabled, gbc_xmpRightsCopyrightEnabled);
+
+		JScrollPane xmpRightsCopyrightScroll = new JScrollPane();
+		GridBagConstraints gbc_xmpRightsCopyright = new GridBagConstraints();
+		gbc_xmpRightsCopyright.weighty = 1.0;
+		gbc_xmpRightsCopyright.weightx = 1.0;
+		gbc_xmpRightsCopyright.anchor = GridBagConstraints.WEST;
+		gbc_xmpRightsCopyright.fill = GridBagConstraints.BOTH;
+		gbc_xmpRightsCopyright.insets = new Insets(0, 0, 5, 0);
+		gbc_xmpRightsCopyright.gridx = 2;
+		gbc_xmpRightsCopyright.gridy = 3;
+		xmpRightsMetaPanel.add(xmpRightsCopyrightScroll, gbc_xmpRightsCopyright);
+		
+		xmpRightsCopyright = new JTextArea();
+		xmpRightsCopyrightScroll.setViewportView(xmpRightsCopyright);
+		xmpRightsCopyright.setWrapStyleWord(true);
+		xmpRightsCopyright.setLineWrap(true);
+		xmpRightsCopyright.setColumns(10);
+
 		
 		JLabel lblRightsUsageTerms = new JLabel("Usage Terms");
 		GridBagConstraints gbc_lblRightsUsageTerms = new GridBagConstraints();
 		gbc_lblRightsUsageTerms.anchor = GridBagConstraints.EAST;
 		gbc_lblRightsUsageTerms.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRightsUsageTerms.gridx = 0;
-		gbc_lblRightsUsageTerms.gridy = 3;
+		gbc_lblRightsUsageTerms.gridy = 4;
 		xmpRightsMetaPanel.add(lblRightsUsageTerms, gbc_lblRightsUsageTerms);
 		
 		xmpRightsUsageTermsEnabled = new JCheckBox("");
@@ -1444,7 +1482,7 @@ public class MetadataEditPane {
 		GridBagConstraints gbc_xmpRightsUsageTermsEnabled = new GridBagConstraints();
 		gbc_xmpRightsUsageTermsEnabled.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpRightsUsageTermsEnabled.gridx = 1;
-		gbc_xmpRightsUsageTermsEnabled.gridy = 3;
+		gbc_xmpRightsUsageTermsEnabled.gridy = 4;
 		xmpRightsMetaPanel.add(xmpRightsUsageTermsEnabled, gbc_xmpRightsUsageTermsEnabled);
 
 		JScrollPane xmpRightsUsageTermsScroll = new JScrollPane();
@@ -1455,7 +1493,7 @@ public class MetadataEditPane {
 		gbc_xmpRightsUsageTerms.fill = GridBagConstraints.BOTH;
 		gbc_xmpRightsUsageTerms.insets = new Insets(0, 0, 5, 0);
 		gbc_xmpRightsUsageTerms.gridx = 2;
-		gbc_xmpRightsUsageTerms.gridy = 3;
+		gbc_xmpRightsUsageTerms.gridy = 4;
 		xmpRightsMetaPanel.add(xmpRightsUsageTermsScroll, gbc_xmpRightsUsageTerms);
 
 		xmpRightsUsageTerms = new JTextArea();
@@ -1469,7 +1507,7 @@ public class MetadataEditPane {
 		gbc_lblRightsWebStatement.anchor = GridBagConstraints.EAST;
 		gbc_lblRightsWebStatement.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRightsWebStatement.gridx = 0;
-		gbc_lblRightsWebStatement.gridy = 4;
+		gbc_lblRightsWebStatement.gridy = 5;
 		xmpRightsMetaPanel.add(lblRightsWebStatement, gbc_lblRightsWebStatement);
 		
 		xmpRightsWebStatementEnabled = new JCheckBox("");
@@ -1478,7 +1516,7 @@ public class MetadataEditPane {
 		GridBagConstraints gbc_xmpRightsWebStatementEnabled = new GridBagConstraints();
 		gbc_xmpRightsWebStatementEnabled.insets = new Insets(0, 0, 5, 5);
 		gbc_xmpRightsWebStatementEnabled.gridx = 1;
-		gbc_xmpRightsWebStatementEnabled.gridy = 4;
+		gbc_xmpRightsWebStatementEnabled.gridy = 5;
 		xmpRightsMetaPanel.add(xmpRightsWebStatementEnabled, gbc_xmpRightsWebStatementEnabled);
 
 		xmpRightsWebStatement = new JTextField();
@@ -1487,7 +1525,7 @@ public class MetadataEditPane {
 		gbc_xmpRightsWebStatement.fill = GridBagConstraints.HORIZONTAL;
 		gbc_xmpRightsWebStatement.insets = new Insets(0, 0, 5, 0);
 		gbc_xmpRightsWebStatement.gridx = 2;
-		gbc_xmpRightsWebStatement.gridy = 4;
+		gbc_xmpRightsWebStatement.gridy = 5;
 		xmpRightsMetaPanel.add(xmpRightsWebStatement, gbc_xmpRightsWebStatement);
 		
 		
