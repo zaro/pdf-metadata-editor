@@ -169,6 +169,7 @@ public class PDFMetadataEditWindow extends JFrame{
 			File to = new File(toDir,toName);
 			try {
 				Files.move(pdfFile.toPath(), to.toPath());
+				pdfFile = to;
 			} catch (IOException e1) {
 				JOptionPane.showMessageDialog(PDFMetadataEditWindow.this,
 						"Error while renaming file:\n" + e1.toString());
