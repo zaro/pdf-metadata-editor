@@ -206,7 +206,7 @@ public class PreferencesWindow extends JDialog {
 		scrollPane.setViewportView(txtpnAaa);
 		txtpnAaa.setContentType("text/html");
 		txtpnAaa.setText(
-				"Supported fields:<br>\n<pre>\n<i>" + CommandLine.mdFieldsHelpMessage(60,"  {","}") + "</i></pre>");
+				"Supported fields:<br>\n<pre>\n<i>" + CommandLine.mdFieldsHelpMessage(60,"  {","}", false) + "</i></pre>");
 		txtpnAaa.setFont(UIManager.getFont("TextPane.font"));
 		txtpnAaa.setCaretPosition(0);
 

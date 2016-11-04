@@ -1,12 +1,9 @@
 package pmedit;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -18,21 +15,22 @@ public class CommandLine {
 		}
 	}
 	
-	public static String mdFieldsHelpMessage(int lineLen){
-		return mdFieldsHelpMessage(lineLen, "  ", "");
+	public static String mdFieldsHelpMessage(int lineLen, boolean markReadOnly){
+		return mdFieldsHelpMessage(lineLen, "  ", "", markReadOnly);
 	}
-	public static String mdFieldsHelpMessage(int lineLen, String pre, String post){
+	public static String mdFieldsHelpMessage(int lineLen, String pre, String post, boolean markReadOnly){
 		int maxLen=0;
 		for(String s: validMdNames){
-			if(s.length() > maxLen){
-				maxLen = s.length() +  post.length();
+			int additionalLength =  ( markReadOnly && !MetadataInfo.keyIsWritable(s) ? 1 : 0);
+			if(s.length() + additionalLength > maxLen){
+				maxLen = s.length() +  post.length() + additionalLength;
 			}
 		}
 		int ll = 0;
 		StringBuilder sb = new StringBuilder();
 		for(String s: validMdNames){
 			sb.append(pre);
-			sb.append(String.format("%1$-" + maxLen + "s",s + post));
+			sb.append(String.format("%1$-" + maxLen + "s",s + ( markReadOnly && !MetadataInfo.keyIsWritable(s) ? "*" : "") + post ));
 			ll += maxLen + pre.length();
 			if(ll >= lineLen){
 				sb.append('\n');
@@ -45,7 +43,7 @@ public class CommandLine {
 		return sb.toString();
 	}
 	
-	static Set<String> validMdNames = new MetadataInfo().asFlatMap().keySet();
+	static Set<String> validMdNames = new LinkedHashSet<String>(MetadataInfo.keys());
 	public List<String> fileList = new ArrayList<String>();
 	
 	public boolean noGui = System.getProperty("noGui") != null;

@@ -102,7 +102,7 @@ public class BatchParametersRename extends BatchParametersWindow {
 				txtpnSupportedFieldsbasictitle_1.setEditable(false);
 				txtpnSupportedFieldsbasictitle_1.setBackground(UIManager.getColor("Panel.background"));
 				txtpnSupportedFieldsbasictitle_1.setContentType("text/html");
-				txtpnSupportedFieldsbasictitle_1.setText("Supported fields:<br>\n<pre>\n<i>" + CommandLine.mdFieldsHelpMessage(60,"  {","}") + "</i></pre>");
+				txtpnSupportedFieldsbasictitle_1.setText("Supported fields:<br>\n<pre>\n<i>" + CommandLine.mdFieldsHelpMessage(60,"  {","}", false) + "</i></pre>");
 				scrollPane.setViewportView(txtpnSupportedFieldsbasictitle_1);
 				txtpnSupportedFieldsbasictitle_1.setCaretPosition(0);
 				

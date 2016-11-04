@@ -6,6 +6,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,6 +49,38 @@ public class MetadataInfo {
 	public interface Function<T, R> {
 	    R apply(T t);
 	}
+	
+	public static class FileInfo {
+		public String name;
+		public String nameWithExt;
+		public Long sizeBytes;
+		public String size;
+		public String createTime;
+		public String modifyTime;
+		
+	}
+
+	public static class FileInfoEnabled {
+		public boolean name = false;
+		public boolean nameWithExt = false;
+		public boolean sizeBytes = false;
+		public boolean size = false;
+		public boolean createTime = false;
+		public boolean modifyTime = false;
+
+		public boolean atLeastOne() {
+			return false;
+		}
+		
+		public void setAll(boolean value){
+			name = false;
+			nameWithExt = false;
+			sizeBytes = false;
+			size = false;
+			createTime = false;
+			modifyTime = false;
+		}
+	};
 
 	public static class Basic {
 		public String title;
@@ -253,6 +287,8 @@ public class MetadataInfo {
 	public XmpDublinCore dc;
 	@MdStruct
 	public XmpRights rights;
+	@MdStruct(name="file", type=MdStruct.StructType.MdStruct, access=MdStruct.Access.ReadOnly)
+	public FileInfo file;
 
 	@MdStruct(name="doc", type=MdStruct.StructType.MdEnableStruct)
 	public BasicEnabled docEnabled ;
@@ -264,6 +300,8 @@ public class MetadataInfo {
 	public XmpDublinCoreEnabled dcEnabled;
 	@MdStruct(name="rights", type=MdStruct.StructType.MdEnableStruct)
 	public XmpRightsEnabled rightsEnabled;
+	@MdStruct(name="file", type=MdStruct.StructType.MdEnableStruct, access=MdStruct.Access.ReadOnly)
+	public FileInfoEnabled fileEnabled;
 
 	public MetadataInfo() {
 		super();
@@ -276,12 +314,14 @@ public class MetadataInfo {
 		this.pdf = new XmpPdf();
 		this.dc  = new XmpDublinCore();	
 		this.rights = new XmpRights();
+		this.file = new FileInfo();
 		
 		this.docEnabled = new BasicEnabled();
 		this.basicEnabled = new XmpBasicEnabled();
 		this.pdfEnabled = new XmpPdfEnabled();
 		this.dcEnabled = new XmpDublinCoreEnabled();
 		this.rightsEnabled = new XmpRightsEnabled();
+		this.fileEnabled = new FileInfoEnabled();
 	}
 
 	protected void loadFromPDF(PDDocument document) throws IOException {
@@ -367,11 +407,38 @@ public class MetadataInfo {
 
 	}
 
+	protected static String hrSizes[] = new String[]{ "B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
 	public void loadFromPDF(File pdfFile) throws FileNotFoundException,
 			IOException {
 		PDDocument document = null;
 		FileInputStream inputStream = new FileInputStream(pdfFile);
 		document = PDDocument.load(inputStream);
+		
+		file.nameWithExt = pdfFile.getName();
+		BasicFileAttributes attrs = Files.readAttributes(pdfFile.toPath(), BasicFileAttributes.class);
+		file.sizeBytes = attrs.size();
+		file.createTime = attrs.creationTime().toString();
+		file.modifyTime = attrs.lastModifiedTime().toString();
+		
+		// filename w/o extension
+		if(file.nameWithExt != null) {
+			int dotPos = file.nameWithExt.lastIndexOf('.');
+			if(dotPos >= 0){
+				file.name = file.nameWithExt.substring(0, dotPos);
+			} else {
+				file.name = file.nameWithExt;
+			}
+		}
+		// human readable file size
+		double size = file.sizeBytes;
+		int idx;
+		for(idx=0; idx < hrSizes.length; ++idx) {
+			if( size < 1000 ) {
+				break;
+			}
+			size /= 1000;
+		}
+		file.size = String.format("%.2f%s", size, hrSizes[idx]);
 
 		loadFromPDF(document);
 
@@ -1057,6 +1124,11 @@ public class MetadataInfo {
 	public static List<String> keys(){
 		return new ArrayList<String>(_mdFields.keySet());
 	}
+
+	public static boolean keyIsWritable(String key){
+		FieldDescription fd = getFieldDescription(key);
+		return (fd != null) ? fd.isWritable :  false;
+	}
 	
 	public <T> Map<String, T> asFlatMap(Function<Object, T> convertor) {
 		LinkedHashMap<String, T> map = new LinkedHashMap<String, T>();
@@ -1106,6 +1178,20 @@ public class MetadataInfo {
 			Object o = get(fieldName);
 			if( o == null){
 				set(fieldName, other.get(fieldName));
+			}
+		}		
+	}
+
+	public void copyUnsetExpanded(MetadataInfo other, MetadataInfo expandInfo){
+		for (String fieldName : keys()) {
+			Object o = get(fieldName);
+			if( o == null){
+				Object otherVal = other.get(fieldName);
+				if (otherVal instanceof String) {
+					TemplateString ts = new TemplateString((String)otherVal);
+					otherVal = ts.process(expandInfo);
+				}
+				set(fieldName, otherVal);
 			}
 		}		
 	}
@@ -1200,6 +1286,10 @@ public class MetadataInfo {
 	
 	public boolean isEquivalent(MetadataInfo other){
  		for(Entry<String, List<FieldDescription>> e: _mdFields.entrySet()){
+ 			// Skip file.* fields, as they are read only and come from file metadata
+ 			if(e.getKey().startsWith("file.")){
+ 				continue;
+ 			}
 			// Skip "dc.dates" for now as loading them from PDF is broken in xmpbox <= 2.0.2
 			//if("dc.dates".equals(e.getKey())){
 			//	continue;
@@ -1302,14 +1392,16 @@ public class MetadataInfo {
 		final Field field;
 		public final FieldID.FieldType type;
 		public final boolean isList;
-		public FieldDescription(String name, Field field, FieldID.FieldType type){
+		public final boolean isWritable;
+		public FieldDescription(String name, Field field, FieldID.FieldType type, boolean isWritable){
 			this.name = name;
 			this.field = field;
 			this.type = type;
+			this.isWritable = isWritable;
 			isList = List.class.isAssignableFrom(field.getType());
 		}
 
-		public FieldDescription(String name, Field field){
+		public FieldDescription(String name, Field field, boolean isWritable){
 			Class<?> klass = field.getType();
 			if(Boolean.class.isAssignableFrom(klass)){
 				this.type = FieldID.FieldType.BoolField;
@@ -1317,11 +1409,14 @@ public class MetadataInfo {
 				this.type = FieldID.FieldType.DateField;
 			}else if(Integer.class.isAssignableFrom(klass)){
 				this.type = FieldID.FieldType.IntField;
+			}else if(Long.class.isAssignableFrom(klass)){
+				this.type = FieldID.FieldType.LongField;
 			} else  {
 				this.type = FieldID.FieldType.StringField;
 			}
 			this.name = name;
 			this.field = field;
+			this.isWritable = isWritable;
 			isList = List.class.isAssignableFrom(klass);
 		}
 		
@@ -1402,18 +1497,19 @@ public class MetadataInfo {
 					prefix += ".";
 				}
 				String name = mdStruct.name().length() > 0 ? mdStruct.name() : field.getName();
-				FieldDescription t = new FieldDescription(prefix + name, field, null);
+				FieldDescription t = new FieldDescription(prefix + name, field, null, mdStruct.access() == MdStruct.Access.ReadWrite);
 				List<FieldDescription> a = new ArrayList<FieldDescription>(ancestors);
 				a.add(t);
 				traverseFields(a, true, field.getType(), mdType, f);
 			} else {
 				FieldID fieldId = field.getAnnotation(FieldID.class);
+				boolean isParentWritable = (ancestors.size() > 0) ? ancestors.get(ancestors.size()-1).isWritable : true;
 				if(fieldId != null){
 					String prefix = ancestors.size() > 0 ? ancestors.get(ancestors.size()-1).name : "";
 					if(prefix.length() > 0){
 						prefix += ".";
 					}
-					FieldDescription t =new FieldDescription(prefix + fieldId.value(), field, fieldId.type());
+					FieldDescription t =new FieldDescription(prefix + fieldId.value(), field, fieldId.type(), isParentWritable);
 					List<FieldDescription> a = new ArrayList<FieldDescription>(ancestors);
 					a.add(t);
 					f.apply(a);
@@ -1422,7 +1518,7 @@ public class MetadataInfo {
 					if(prefix.length() > 0){
 						prefix += ".";
 					}
-					FieldDescription t =new FieldDescription(prefix + field.getName(), field);
+					FieldDescription t =new FieldDescription(prefix + field.getName(), field, isParentWritable);
 					List<FieldDescription> a = new ArrayList<FieldDescription>(ancestors);
 					a.add(t);
 					f.apply(a);

@@ -60,12 +60,20 @@ public class MetadataInfoTest {
 			int genFields = numFields;
 			for(int j=0; j< genFields; ++j){
 				String field = fields.get(rand.nextInt(numFields));
+				// 	ignore file fields as they are read only
+				if(field.startsWith("file.")) {
+					--j;
+					continue;
+				}
 				if(field.equals("doc.trapped")){
 					md.setAppend(field, Arrays.asList("False", "True","Unknown").get(rand.nextInt(3)));
 					continue;
 				}
 				FieldDescription fd = MetadataInfo.getFieldDescription(field); 
 				switch(fd.type){
+				case LongField:
+					md.setAppend(field, (long)rand.nextInt(1000));
+					break;
 				case IntField:
 					md.setAppend(field, rand.nextInt(1000));
 					break;

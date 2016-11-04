@@ -93,8 +93,8 @@ public class MainCli {
       		"    \"2016-06-16 00:15:00\" or \"2016-06-16\"\n" +
 			"\n"+
 			"Available fields :\n" +
-			CommandLine.mdFieldsHelpMessage(80) +
-			"\n" +
+			CommandLine.mdFieldsHelpMessage(80, true) +
+			"\n  * field is read only, assignment to it will be ignored\n" +
 			"EXAMPLES\n" +
 			"\n" +
 			"Clear all metadata:\n" +

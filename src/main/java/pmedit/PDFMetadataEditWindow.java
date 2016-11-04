@@ -124,8 +124,8 @@ public class PDFMetadataEditWindow extends JFrame{
 		try {
 			filename.setText(pdfFile.getAbsolutePath());
 			metadataInfo = new MetadataInfo();
-			metadataInfo.copyFrom(defaultMetadata);
 			metadataInfo.loadFromPDF(pdfFile);
+			metadataInfo.copyUnsetExpanded(defaultMetadata, metadataInfo);
 
 			metadataEditor.fillFromMetadata(metadataInfo);
 		} catch (Exception e) {
@@ -138,7 +138,7 @@ public class PDFMetadataEditWindow extends JFrame{
 	private void saveFile() {
 		try {
 			metadataEditor.copyToMetadata(metadataInfo);
-			metadataInfo.copyUnset(defaultMetadata);
+			metadataInfo.copyUnsetExpanded(defaultMetadata, metadataInfo);
 			metadataInfo.saveToPDF(pdfFile);
 
 			metadataEditor.fillFromMetadata(metadataInfo);

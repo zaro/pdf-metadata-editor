@@ -9,6 +9,7 @@ public @interface FieldID {
 	public enum FieldType {
 		StringField,
 		TextField,
+		LongField,
 		IntField,
 		DateField,
 		BoolField
