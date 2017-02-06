@@ -12,7 +12,7 @@ public class ListFormat {
 		Iterator<Object> it = list.iterator();
 		while(it.hasNext()){
 			Object v =  it.next();
-			if(v.getClass().equals(Calendar.class)){
+			if(Calendar.class.isAssignableFrom(v.getClass())){
 				sb.append(DateFormat.formatDateTime((Calendar)v));
 			} else {
 				sb.append(v.toString());

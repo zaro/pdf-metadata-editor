@@ -2,6 +2,7 @@ package pmedit;
 
 import java.lang.reflect.Field;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
@@ -19,6 +20,7 @@ import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SpinnerNumberModel;
 
+import pmedit.CommandLine.ParseError;
 import pmedit.MetadataEditPane.FieldEnabledCheckBox;
 import pmedit.MetadataEditPane.FieldSetGet;
 import net.miginfocom.swing.MigLayout;
@@ -1621,10 +1623,10 @@ public class MetadataEditPane {
 			@Override
 			public void apply(Object field, FieldID anno) {
 				if (field instanceof JTextField) {
-					objectToField((JTextField) field, null);
+					((JTextField) field).setText(null);
 				}
 				if (field instanceof JTextArea) {
-					objectToField((JTextArea) field, null);
+					((JTextArea) field).setText(null);
 				}
 				if (field instanceof JComboBox) {
 					objectToField((JComboBox) field, null, anno.type() == FieldID.FieldType.BoolField);
@@ -1650,14 +1652,15 @@ public class MetadataEditPane {
 		traverseFields(new MetadataEditPane.FieldSetGet() {
 			@Override
 			public void apply(Object field, FieldID anno) {
-				Object value = metadataInfo.get(anno.value());
 
 				if (field instanceof JTextField) {
-					objectToField((JTextField) field, value);
+					((JTextField) field).setText(metadataInfo.getString(anno.value()));
 				}
 				if (field instanceof JTextArea) {
-					objectToField((JTextArea) field, value);
+					((JTextArea) field).setText(metadataInfo.getString(anno.value()));
 				}
+
+				Object value = metadataInfo.get(anno.value());
 				if (field instanceof JComboBox) {
 					objectToField((JComboBox) field, value, anno.type() == FieldID.FieldType.BoolField);
 				}
@@ -1690,17 +1693,7 @@ public class MetadataEditPane {
 					if (text.length() == 0) {
 						text = null;
 					}
-					switch (anno.type()) {
-					case StringField:
-						metadataInfo.setFromString(anno.value(), text);
-						break;
-					case TextField:
-						metadataInfo.set(anno.value(), text == null ? null : Arrays.asList(text.split("\n")));
-						break;
-					default:
-						throw new RuntimeException("Cannot store text in :" + anno.type());
-
-					}
+					metadataInfo.setFromString(anno.value(), text);
 				}
 				if (field instanceof JSpinner) {
 					switch (anno.type()) {
@@ -1751,32 +1744,6 @@ public class MetadataEditPane {
 
 	}
 
-	private void objectToField(JTextField field, Object o) {
-		if (o instanceof String) {
-			field.setText((String) o);
-		} else if (o instanceof Integer) {
-			field.setText(((Integer)o).toString());
-		} else if (o == null) {
-			field.setText("");
-		} else {
-			throw new RuntimeException("Cannot store non-String/Integer object in JTextField");
-		}
-	}
-
-	private void objectToField(JTextArea field, Object o) {
-		if (o instanceof String) {
-			field.setText((String) o);
-		} else if (o instanceof List<?>) {
-			field.setText(stringListToText((List<String>) o));
-		} else if (o == null) {
-			field.setText("");
-		} else {
-			RuntimeException e = new RuntimeException("Cannot store non-String/List<String> object in JTextArea");
-			e.printStackTrace();
-			throw e;
-		}
-	}
-
 	private void objectToField(JComboBox field, Object o, boolean oIsBool) {
 		if (o instanceof String) {
 			field.getModel().setSelectedItem(o);
@@ -1819,31 +1786,6 @@ public class MetadataEditPane {
 		}
 	}
 
-	private <T> T formatItem(T s) {
-		return s;
-	}
-
-	// private String formatItem(Calendar date) {
-	// return DateFormat.getInstance().format(date.getTime());
-	// }
-
-	private <T> String itemListToText(List<T> slist, String separator) {
-		if (slist == null) {
-			return null;
-		}
-		StringBuilder b = new StringBuilder();
-		for (int i = 0; i < slist.size(); ++i) {
-			b.append(formatItem(slist.get(i)));
-			if (i < (slist.size() - 1)) {
-				b.append(separator);
-			}
-		}
-		return b.toString();
-	}
-
-	private String stringListToText(List<String> slist) {
-		return itemListToText(slist, "\n");
-	}
 	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
