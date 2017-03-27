@@ -1,9 +1,11 @@
 package pmedit;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
@@ -342,8 +344,22 @@ public class MetadataInfo {
 		PDDocumentCatalog catalog = document.getDocumentCatalog();
 		PDMetadata meta = catalog.getMetadata();
 
+
 		if (meta != null) {
-			XMPMetadata xmp = XMPMetadata.load(meta.createInputStream());
+			// Workaround stupid jempbox not recognizing ISO dates with subsecond granularity
+			InputStream is= meta.createInputStream();
+			java.util.Scanner s = new java.util.Scanner(is);
+			s.useDelimiter("\\A");
+			String xmpData = s.hasNext() ? s.next() : "";
+			s.close();
+			is.close();
+			// remove subsecond digits from dates like 2017-03-26T18:50:09.184000+02:00
+			String re = "(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})\\.\\d+([-+Z])";
+			xmpData = xmpData.replaceAll(re, "$1$2");
+			InputStream xmpDataStream = new ByteArrayInputStream(xmpData.getBytes());
+
+			// Load the metadata
+			XMPMetadata xmp = XMPMetadata.load(xmpDataStream);
 
 			// XMP Basic
 			XMPSchemaBasic bi = xmp.getBasicSchema();
