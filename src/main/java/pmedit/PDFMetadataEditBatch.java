@@ -88,8 +88,12 @@ public class PDFMetadataEditBatch {
 			
 			@Override
 			public void apply(File file) {
-				MetadataInfo md = params != null ? params.metadata : new MetadataInfo();
+				MetadataInfo mdParams = params != null ? params.metadata : new MetadataInfo();
 				try {
+					MetadataInfo mdFile = new MetadataInfo();
+					mdFile.loadFromPDF(file);
+					MetadataInfo md = mdParams.clone(); 
+					md.expand(mdFile);
 					md.saveToPDF(file);
 					status.addStatus(file.getName(), "Done");
 				} catch (Exception e) {

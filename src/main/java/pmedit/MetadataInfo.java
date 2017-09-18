@@ -426,10 +426,26 @@ public class MetadataInfo {
 	protected static String hrSizes[] = new String[]{ "B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
 	public void loadFromPDF(File pdfFile) throws FileNotFoundException,
 			IOException {
+		
+		loadPDFFileInfo(pdfFile);
+
 		PDDocument document = null;
 		FileInputStream inputStream = new FileInputStream(pdfFile);
 		document = PDDocument.load(inputStream);
-		
+		loadFromPDF(document);
+
+		if (document != null) {
+			try {
+				document.close();
+			} catch (Exception e) {
+
+			}
+		}
+		inputStream.close();
+	}
+	
+
+	public void loadPDFFileInfo(File pdfFile) throws FileNotFoundException, IOException {
 		file.nameWithExt = pdfFile.getName();
 		BasicFileAttributes attrs = Files.readAttributes(pdfFile.toPath(), BasicFileAttributes.class);
 		file.sizeBytes = attrs.size();
@@ -455,17 +471,6 @@ public class MetadataInfo {
 			size /= 1000;
 		}
 		file.size = String.format("%.2f%s", size, hrSizes[idx]);
-
-		loadFromPDF(document);
-
-		if (document != null) {
-			try {
-				document.close();
-			} catch (Exception e) {
-
-			}
-		}
-		inputStream.close();
 	}
 
 	protected void saveToPDF(PDDocument document, File pdfFile) throws Exception {
@@ -1183,6 +1188,12 @@ public class MetadataInfo {
 		}
 	}
 
+	public MetadataInfo clone(){
+		MetadataInfo md = new MetadataInfo();
+		md.copyFrom(this);
+		return md;
+	}
+
 	public void copyFrom(MetadataInfo other){
 		for (String fieldName : keys()) {
 			set(fieldName, other.get(fieldName));
@@ -1208,6 +1219,20 @@ public class MetadataInfo {
 					otherVal = ts.process(expandInfo);
 				}
 				set(fieldName, otherVal);
+			}
+		}		
+	}
+
+	public void expand(MetadataInfo expandInfo){
+		for (String fieldName : keys()) {
+			Object o = get(fieldName);
+			if( o != null){
+				Object expandedVal = get(fieldName);
+				if (expandedVal instanceof String) {
+					TemplateString ts = new TemplateString((String)expandedVal);
+					expandedVal = ts.process(expandInfo);
+				}
+				set(fieldName, expandedVal);
 			}
 		}		
 	}
