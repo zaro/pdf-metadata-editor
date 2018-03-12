@@ -1053,13 +1053,13 @@ public class MetadataInfo {
 		document.save(pdfFile.getAbsolutePath());
 	}
 
-	public void saveToPDF(File pdfFile) throws Exception {
+	public void saveAsPDF(File pdfFile, File newFile) throws Exception {
 		PDDocument document = null;
 
 		FileInputStream inputStream = new FileInputStream(pdfFile);
 		document = PDDocument.load(inputStream);
 
-		saveToPDF(document, pdfFile);
+		saveToPDF(document, newFile == null ? pdfFile : newFile);
 
 		if (document != null) {
 			try {

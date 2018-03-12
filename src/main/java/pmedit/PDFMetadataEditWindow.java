@@ -135,12 +135,13 @@ public class PDFMetadataEditWindow extends JFrame{
 		}
 	}
 
-	private void saveFile() {
+	private void saveFile(File newFile) {
 		try {
 			metadataEditor.copyToMetadata(metadataInfo);
 			metadataInfo.copyUnsetExpanded(defaultMetadata, metadataInfo);
-			metadataInfo.saveToPDF(pdfFile);
-
+			
+			metadataInfo.saveAsPDF(pdfFile, newFile);
+			
 			metadataEditor.fillFromMetadata(metadataInfo);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -152,13 +153,13 @@ public class PDFMetadataEditWindow extends JFrame{
 
 	final ActionListener saveAction = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
-			saveFile();
+			saveFile(null);
 		}
 	}; 
 
 	final ActionListener saveRenameAction = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
-			saveFile();
+			saveFile(null);
 			String renameTemplate =  Main.getPreferences().get("renameTemplate", null);
 			if(renameTemplate == null){
 				return;
@@ -196,9 +197,9 @@ public class PDFMetadataEditWindow extends JFrame{
 				if(!selected.getName().toLowerCase().endsWith(".pdf")){
 					selected = new File(selected.getAbsolutePath() + ".pdf");
 				}
-				pdfFile = selected;
 
-				saveFile();
+				saveFile(selected);
+				pdfFile = selected;
 				reloadFile();
 
 				// save dir as last opened
