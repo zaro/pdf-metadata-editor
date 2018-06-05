@@ -388,7 +388,7 @@ public class PDFMetadataEditWindow extends JFrame{
 								panel_1.add(btnSave, "cell 0 0,alignx left,aligny top, gapright 0");
 								btnSave.setIcon(new ImageIcon(
 										PDFMetadataEditWindow.class
-												.getResource("/com/sun/java/swing/plaf/windows/icons/FloppyDrive.gif")));
+												.getResource("save-icon.png")));
 								
 								final BasicArrowButton btnSaveMenu = new BasicArrowButton(BasicArrowButton.SOUTH);
 								btnSaveMenu.addActionListener(new ActionListener() {
