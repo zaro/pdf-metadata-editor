@@ -94,7 +94,7 @@ public class PDFMetadataEditBatch {
 					mdFile.loadFromPDF(file);
 					MetadataInfo md = mdParams.clone(); 
 					md.expand(mdFile);
-					md.saveToPDF(file);
+					md.saveAsPDF(file);
 					status.addStatus(file.getName(), "Done");
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -117,7 +117,7 @@ public class PDFMetadataEditBatch {
 			public void apply(File file) {
 				MetadataInfo md = params != null ? params.metadata : new MetadataInfo();
 				try {
-					md.saveToPDF(file);
+					md.saveAsPDF(file);
 					status.addStatus(file.getName(), "Cleared");
 				} catch (Exception e) {
 					// TODO Auto-generated catch block

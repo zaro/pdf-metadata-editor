@@ -91,7 +91,7 @@ public class MetadataInfoTest {
 				}
 			}
 			File pdf = emptyPdf();
-			md.saveToPDF(pdf);
+			md.saveAsPDF(pdf);
 			rval.add(new PMTuple(pdf, md));
 		}
 		return rval;

@@ -1052,7 +1052,11 @@ public class MetadataInfo {
 		}
 		document.save(pdfFile.getAbsolutePath());
 	}
-
+	
+	public void saveAsPDF(File pdfFile) throws Exception {
+		saveAsPDF(pdfFile, null);
+	}
+	
 	public void saveAsPDF(File pdfFile, File newFile) throws Exception {
 		PDDocument document = null;
 
