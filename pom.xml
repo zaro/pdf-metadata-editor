@@ -152,7 +152,7 @@
 			<plugin>
 				<groupId>org.codehaus.izpack</groupId>
 				<artifactId>izpack-maven-plugin</artifactId>
-				<version>5.0.9</version>
+				<version>5.1.2</version>
 				<extensions>true</extensions>
 				<configuration>
 					<installFile>izpack/izpack-install.xml</installFile>
