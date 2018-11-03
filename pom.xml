@@ -30,7 +30,9 @@
 		<vm.location></vm.location>
 		<version.izpack>${project.version}</version.izpack>
 		<arch.64></arch.64>
+		<app.name>Pdf Metadata Editor</app.name>
 		<app.filename>PdfMetadataEditor</app.filename>
+		<app.description>Pdf Metadata Editor</app.description>
 		<native.bundle>image</native.bundle>
 		<snakeyaml.path>${org.yaml:snakeyaml:jar}</snakeyaml.path>
 	</properties>

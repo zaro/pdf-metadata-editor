@@ -6,9 +6,9 @@
 
 
 	<info>
-		<appname>Pdf Metadata Editor</appname>
+		<appname>@{app.name}</appname>
 		<appversion>@{version.izpack}</appversion>
-		<appsubpath>PdfMetadataEditor</appsubpath>
+		<appsubpath>@{app.filename}</appsubpath>
 		<uninstaller write="yes" />
 		<javaversion>1.6</javaversion>
 		<run-privileged condition="izpack.windowsinstall" />
@@ -46,7 +46,7 @@
 
 	<packs>
 		<pack name="Core files" required="yes" id="pack.core">
-			<description>Pdf Metadata Editor</description>
+			<description>@{app.description}</description>
 			<fileset dir="@{staging.dir}" override="true">
 				<include name="pdf-metadata-edit-@{version.izpack}.jar" />
 			</fileset>
