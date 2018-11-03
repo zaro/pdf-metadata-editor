@@ -8,6 +8,9 @@
 	<description>Simple PDF metadata editor</description>
 	<url>http://broken-by.me/pdf-metadata-editor/</url>
 	<packaging>jar</packaging>
+	<prerequisites>
+       <maven>3.5.0</maven>
+   	</prerequisites>
 
 	<developers>
 		<developer>
@@ -81,104 +84,22 @@
 		</resources>
 		<plugins>
 			<plugin>
-				<groupId>org.moditect</groupId>
-				<artifactId>moditect-maven-plugin</artifactId>
-				<version>1.0.0.Beta1</version>
-				<executions>
-					<execution>
-						<id>generate-module-info</id>
-						<phase>generate-sources</phase>
-						<goals>
-							<goal>generate-module-info</goal>
-						</goals>
-						<configuration>
-							<modules>
-								<module>
-									<artifact>
-										<groupId>org.apache.pdfbox</groupId>
-										<artifactId>pdfbox</artifactId>
-										<version>1.8.14</version>
-									</artifact>
-								</module>
-								<module>
-									<artifact>
-										<groupId>org.apache.pdfbox</groupId>
-										<artifactId>jempbox</artifactId>
-										<version>1.8.12</version>
-									</artifact>
-								</module>
-								<module>
-									<artifact>
-										<groupId>com.miglayout</groupId>
-										<artifactId>miglayout-swing</artifactId>
-										<version>5.1</version>
-									</artifact>
-								</module>
-								<module>
-									<artifact>
-										<groupId>com.toedter</groupId>
-										<artifactId>jcalendar</artifactId>
-										<version>1.4</version>
-									</artifact>
-								</module>
-								<module>
-									<artifact>
-										<groupId>org.yaml</groupId>
-										<artifactId>snakeyaml</artifactId>
-										<version>1.21</version>
-									</artifact>
-								</module>
-								<module>
-									<artifact>
-										<groupId>net.java.dev.jna</groupId>
-										<artifactId>jna-platform</artifactId>
-										<version>4.5.1</version>
-									</artifact>
-								</module>
-								<module>
-									<artifact>
-										<groupId>junit</groupId>
-										<artifactId>junit</artifactId>
-										<version>4.12</version>
-									</artifact>
-									<moduleInfo>
-										<exports>
-											!hamcrest.core;
-											!org.hamcrest.internal;
-											*;
-										</exports>
-										<requires>
-										</requires>
-			                        </moduleInfo>
-								</module>
-								<module>
-									<artifact>
-										<groupId>com.googlecode.json-simple</groupId>
-										<artifactId>json-simple</artifactId>
-										<version>1.1.1</version>
-									</artifact>
-									<moduleInfo>
-										<requires>
-											!junit;
-											!hamcrest.core;
-											!org.hamcrest.internal;
-											*;
-										</requires>
-			                        </moduleInfo>
-								</module>
-							</modules>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
+			    <groupId>org.codehaus.mojo</groupId>
+			    <artifactId>versions-maven-plugin</artifactId>
+			    <version>2.7</version>
+			    <configuration>
+			        <generateBackupPoms>false</generateBackupPoms>
+			    </configuration>
+			</plugin>	
 
 			<plugin>
 			 	<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.7.0</version>
+				<version>3.8.0</version>
 				<configuration>
-					<source>9</source>
-					<target>9</target>
+					<source>8</source>
+					<target>8</target>
+					<!--   <release>11</release> -->
 				</configuration>
 			</plugin>
 			<plugin>
@@ -193,7 +114,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.1.1</version>
+				<version>3.2.0</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -203,7 +124,7 @@
 						<configuration>
 					        <outputDirectory>${project.build.directory}/jar</outputDirectory>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
-							<minimizeJar>true</minimizeJar>
+							<minimizeJar>true</minimizeJar> <!--  this is not supported in JDK11 -->
 							<transformers>
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
@@ -417,24 +338,8 @@
 						</configuration>
 					</execution>
 					<execution>
-						<id>jdeps</id>
-						<phase>install</phase>
-						<goals>
-							<goal>run</goal>
-						</goals>
-						<configuration>
-							<tasks>
-								<exec executable="jdeps">
-									<arg value="--generate-module-info" />
-									<arg value="${project.build.directory}/jarModules" />
-									<arg value="${snakeyaml.path}" />
-								</exec>
-							</tasks>
-						</configuration>
-					</execution>					
-					<execution>
 						<id>create-dmg</id>
-						<phase>install</phase>
+						<phase>package</phase>
 						<goals>
 							<goal>run</goal>
 						</goals>
@@ -443,28 +348,23 @@
 								<exec executable="javapackager">
 									<arg value="-deploy" />
 									<arg value="-v" />
+									<arg value='-Bruntime=jre_to_bundle/' />
 									<arg value='-BappVersion=${project.version}' />
 									<arg value='-Bmac.CFBundleIdentifier=pmedit.pdf-metadata-editor' />
 									<arg value="-native" />
 									<arg value="dmg" />
-									<arg value="--module" />
-									<arg value="pmedit" />
-									<arg value="--module-path" />
-									<arg value="${project.build.directory}/:${project.build.directory}/jarModules" />
 									<arg value="-outdir" />
 									<arg value="${project.build.directory}" />
 									<arg value="-outfile" />
 									<arg value="${project.name}.app" />
 									<arg value="-srcfiles" />
-									<arg value="${project.build.directory}/pdf-metadata-edit-${project.version}.jar" />
+									<arg value="${project.build.directory}/jar/pdf-metadata-edit-${project.version}.jar" />
 									<arg value="-appclass" />
 									<arg value="pmedit.Main" />
 									<arg value="-name" />
 									<arg value="${app.filename}" />
 									<arg value="-title" />
 									<arg value="${project.name}" />
-									<arg value="--add-modules" />
-									<arg value="java.base,java.desktop,pmedit"/>
 								</exec>
 							</tasks>
 						</configuration>
@@ -508,22 +408,76 @@
 		</plugins>
 
 
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.moditect</groupId>
+										<artifactId>
+											moditect-maven-plugin
+										</artifactId>
+										<versionRange>
+											[1.0.0.Beta1,)
+										</versionRange>
+										<goals>
+											<goal>
+												generate-module-info
+											</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<execute></execute>
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.apache.maven.plugins
+										</groupId>
+										<artifactId>
+											maven-dependency-plugin
+										</artifactId>
+										<versionRange>
+											[2.8,)
+										</versionRange>
+										<goals>
+											<goal>properties</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<execute></execute>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>pdfbox</artifactId>
-			<version>1.8.14</version>
+			<version>1.8.16</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>jempbox</artifactId>
-			<version>1.8.12</version>
+			<version>1.8.16</version>
 		</dependency>
 		<dependency>
 			<groupId>com.miglayout</groupId>
 			<artifactId>miglayout-swing</artifactId>
-			<version>5.1</version>
+			<version>5.2</version>
 		</dependency>
 		<dependency>
 			<groupId>com.toedter</groupId>
@@ -533,7 +487,7 @@
 		<dependency>
 			<groupId>org.yaml</groupId>
 			<artifactId>snakeyaml</artifactId>
-			<version>1.21</version>
+			<version>1.23</version>
 		</dependency>
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
@@ -549,17 +503,17 @@
 		<dependency>
 			<groupId>net.java.dev.jna</groupId>
 			<artifactId>jna-platform</artifactId>
-			<version>4.5.1</version>
+			<version>5.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
-			<version>4.5</version>
+			<version>4.5.6</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpasyncclient</artifactId>
-			<version>4.1</version>
+			<version>4.1.4</version>
 		</dependency>
 		<!-- 
 		<dependency>
