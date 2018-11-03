@@ -29,6 +29,7 @@
 		<arch.64></arch.64>
 		<app.filename>PdfMetadataEditor</app.filename>
 		<native.bundle>image</native.bundle>
+		<snakeyaml.path>${org.yaml:snakeyaml:jar}</snakeyaml.path>
 	</properties>
 
 
@@ -80,16 +81,119 @@
 		</resources>
 		<plugins>
 			<plugin>
+				<groupId>org.moditect</groupId>
+				<artifactId>moditect-maven-plugin</artifactId>
+				<version>1.0.0.Beta1</version>
+				<executions>
+					<execution>
+						<id>generate-module-info</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate-module-info</goal>
+						</goals>
+						<configuration>
+							<modules>
+								<module>
+									<artifact>
+										<groupId>org.apache.pdfbox</groupId>
+										<artifactId>pdfbox</artifactId>
+										<version>1.8.14</version>
+									</artifact>
+								</module>
+								<module>
+									<artifact>
+										<groupId>org.apache.pdfbox</groupId>
+										<artifactId>jempbox</artifactId>
+										<version>1.8.12</version>
+									</artifact>
+								</module>
+								<module>
+									<artifact>
+										<groupId>com.miglayout</groupId>
+										<artifactId>miglayout-swing</artifactId>
+										<version>5.1</version>
+									</artifact>
+								</module>
+								<module>
+									<artifact>
+										<groupId>com.toedter</groupId>
+										<artifactId>jcalendar</artifactId>
+										<version>1.4</version>
+									</artifact>
+								</module>
+								<module>
+									<artifact>
+										<groupId>org.yaml</groupId>
+										<artifactId>snakeyaml</artifactId>
+										<version>1.21</version>
+									</artifact>
+								</module>
+								<module>
+									<artifact>
+										<groupId>net.java.dev.jna</groupId>
+										<artifactId>jna-platform</artifactId>
+										<version>4.5.1</version>
+									</artifact>
+								</module>
+								<module>
+									<artifact>
+										<groupId>junit</groupId>
+										<artifactId>junit</artifactId>
+										<version>4.12</version>
+									</artifact>
+									<moduleInfo>
+										<exports>
+											!hamcrest.core;
+											!org.hamcrest.internal;
+											*;
+										</exports>
+										<requires>
+										</requires>
+			                        </moduleInfo>
+								</module>
+								<module>
+									<artifact>
+										<groupId>com.googlecode.json-simple</groupId>
+										<artifactId>json-simple</artifactId>
+										<version>1.1.1</version>
+									</artifact>
+									<moduleInfo>
+										<requires>
+											!junit;
+											!hamcrest.core;
+											!org.hamcrest.internal;
+											*;
+										</requires>
+			                        </moduleInfo>
+								</module>
+							</modules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+			 	<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.7.0</version>
 				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
+					<source>9</source>
+					<target>9</target>
 				</configuration>
 			</plugin>
+			<plugin>
+		      <groupId>org.apache.maven.plugins</groupId>
+		      <artifactId>maven-jar-plugin</artifactId>
+			  
+		      <configuration>
+		        <outputDirectory>${project.build.directory}/jar</outputDirectory>
+		      </configuration>
+		    </plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.1.1</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -97,6 +201,7 @@
 							<goal>shade</goal>
 						</goals>
 						<configuration>
+					        <outputDirectory>${project.build.directory}/jar</outputDirectory>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
 							<minimizeJar>true</minimizeJar>
 							<transformers>
@@ -149,6 +254,7 @@
 					</execution>
 				</executions>
 			</plugin>
+
 			<plugin>
 				<groupId>org.codehaus.izpack</groupId>
 				<artifactId>izpack-maven-plugin</artifactId>
@@ -311,6 +417,22 @@
 						</configuration>
 					</execution>
 					<execution>
+						<id>jdeps</id>
+						<phase>install</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<tasks>
+								<exec executable="jdeps">
+									<arg value="--generate-module-info" />
+									<arg value="${project.build.directory}/jarModules" />
+									<arg value="${snakeyaml.path}" />
+								</exec>
+							</tasks>
+						</configuration>
+					</execution>					
+					<execution>
 						<id>create-dmg</id>
 						<phase>install</phase>
 						<goals>
@@ -321,11 +443,14 @@
 								<exec executable="javapackager">
 									<arg value="-deploy" />
 									<arg value="-v" />
-									<arg value='-Bruntime=jre_to_bundle/' />
 									<arg value='-BappVersion=${project.version}' />
 									<arg value='-Bmac.CFBundleIdentifier=pmedit.pdf-metadata-editor' />
 									<arg value="-native" />
 									<arg value="dmg" />
+									<arg value="--module" />
+									<arg value="pmedit" />
+									<arg value="--module-path" />
+									<arg value="${project.build.directory}/:${project.build.directory}/jarModules" />
 									<arg value="-outdir" />
 									<arg value="${project.build.directory}" />
 									<arg value="-outfile" />
@@ -338,6 +463,8 @@
 									<arg value="${app.filename}" />
 									<arg value="-title" />
 									<arg value="${project.name}" />
+									<arg value="--add-modules" />
+									<arg value="java.base,java.desktop,pmedit"/>
 								</exec>
 							</tasks>
 						</configuration>
@@ -350,6 +477,11 @@
 	            <groupId>org.apache.maven.plugins</groupId>
 	            <artifactId>maven-dependency-plugin</artifactId>
 	            <executions>
+	                <execution>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
 	                <execution>
 	                    <id>unpack</id>
 	                    <phase>prepare-package</phase>
@@ -381,7 +513,7 @@
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>pdfbox</artifactId>
-			<version>1.8.12</version>
+			<version>1.8.14</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
@@ -391,7 +523,7 @@
 		<dependency>
 			<groupId>com.miglayout</groupId>
 			<artifactId>miglayout-swing</artifactId>
-			<version>4.2</version>
+			<version>5.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.toedter</groupId>
@@ -401,7 +533,7 @@
 		<dependency>
 			<groupId>org.yaml</groupId>
 			<artifactId>snakeyaml</artifactId>
-			<version>1.14</version>
+			<version>1.21</version>
 		</dependency>
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
@@ -412,6 +544,7 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.12</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>net.java.dev.jna</groupId>
