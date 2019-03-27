@@ -26,7 +26,7 @@ public class CommandDescription {
 			new CommandDescription("rename", "Rename files from metadata"),	
 			new CommandDescription("tojson", "Extract metadata as JSON"),	
 			new CommandDescription("toyaml", "Extract metadata as YAML/Text"),	
-			new CommandDescription("fromcsv", "Set metadate from CSV file"),	
+			new CommandDescription("fromcsv", "Set metadata from CSV file"),	
 	};
 	
 	public static String helpMessage(int descriptionOffset) {
