@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 import java.util.prefs.PreferencesFactory;
-import java.util.prefs.BackingStoreException;
 
 /**
  * PreferencesFactory implementation that stores the preferences in a

@@ -240,6 +240,33 @@ public class PDFMetadataEditBatch {
 			}
 		});	
 	}
+	
+	public void fromcsv(List<File> csvFiles, final ActionStatus status){
+		for(File csvFile: csvFiles) {
+			try {
+				List<MetadataInfo> actionList = CsvMetadata.readFile(csvFile);
+				for(MetadataInfo mdParams : actionList) {
+					File file = new File(mdParams.file.fullPath);
+					try {
+						MetadataInfo mdFile = new MetadataInfo();
+						mdFile.loadFromPDF(file);
+						MetadataInfo md = mdParams.clone(); 
+						md.expand(mdFile);
+						md.saveAsPDF(file);
+						status.addStatus(file.getName(), "Done");
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						status.addError(file.getName(), "Failed: "  + e.toString());
+					}
+				}
+				
+			} catch (Exception e) {
+				status.addError(csvFile.getName(), "Failed: "  + e.toString());
+			}
+		}
+	}
+
 
 	public void runCommand(CommandDescription command, List<File> batchFileList, ActionStatus actionStatus){
 		if( !BatchMan.hasBatch() ){
@@ -254,6 +281,8 @@ public class PDFMetadataEditBatch {
 			tojson(batchFileList, actionStatus);
 		} else if( command.is("toyaml")){
 			toyaml(batchFileList, actionStatus);
+		} else if( command.is("fromcsv")){
+			fromcsv(batchFileList, actionStatus);
 		} else {
 			actionStatus.addError("*", "Invalid command");
 		}

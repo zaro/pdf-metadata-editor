@@ -1,9 +1,6 @@
 package pmedit;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.concurrent.locks.ReadWriteLock;
-
-import pmedit.FieldID.FieldType;
 
 @Retention(RetentionPolicy.RUNTIME)
 

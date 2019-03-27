@@ -1,10 +1,14 @@
 package pmedit;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -17,8 +21,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import pmedit.FieldID;
-import pmedit.MetadataInfo;
 import pmedit.MetadataInfo.FieldDescription;
 
 public class MetadataInfoTest {
@@ -47,6 +49,14 @@ public class MetadataInfoTest {
         temp.deleteOnExit();
         return temp;
 	}
+
+	public static File csvFile(List<String> lines) throws Exception{
+		File temp = File.createTempFile("test-csv", ".csv");
+		Files.write(temp.toPath(), lines, Charset.forName("UTF-8"));
+		temp.deleteOnExit();
+        return temp;
+	}
+
 	
 	public static List<PMTuple> randomFiles(int numFiles) throws Exception{
 		List<String> fields = MetadataInfo.keys();

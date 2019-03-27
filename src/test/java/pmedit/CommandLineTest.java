@@ -1,18 +1,19 @@
 package pmedit;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import org.junit.Test;
 
-import pmedit.CommandLine;
 import pmedit.CommandLine.ParseError;
-import pmedit.MetadataInfo;
 
 public class CommandLineTest {
 

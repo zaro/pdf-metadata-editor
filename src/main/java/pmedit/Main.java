@@ -1,8 +1,6 @@
 package pmedit;
 
 import java.awt.event.WindowEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
@@ -18,11 +16,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.prefs.Preferences;
 
 import javax.swing.JFrame;
-import javax.swing.LookAndFeel;
-import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 import pmedit.CommandLine.ParseError;
 import pmedit.prefs.FilePreferencesFactory;

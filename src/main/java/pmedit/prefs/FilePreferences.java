@@ -1,14 +1,19 @@
 package pmedit.prefs;
 
-import java.util.*;
-import java.util.logging.Logger;
-import java.util.logging.Level;
-import java.util.prefs.AbstractPreferences;
-import java.util.prefs.BackingStoreException;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.prefs.AbstractPreferences;
+import java.util.prefs.BackingStoreException;
  
 /**
  * Preferences implementation that stores to a user-defined file. See FilePreferencesFactory.

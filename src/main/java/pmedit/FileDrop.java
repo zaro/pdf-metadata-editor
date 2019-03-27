@@ -10,6 +10,8 @@ import java.io.Reader;
 
 import javax.swing.SwingUtilities;
 
+import pmedit.FileDrop.TransferableObject;
+
 /**
  * This class makes it easy to drag and drop files from the operating
  * system to a Java program. Any <tt>java.awt.Component</tt> can be

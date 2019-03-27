@@ -1,17 +1,11 @@
 package pmedit.prefs;
 
 import java.io.File;
-import java.util.Locale;
 
-import com.sun.jna.Native;
 import com.sun.jna.platform.win32.Guid.GUID;
-import com.sun.jna.platform.win32.Ole32;
-import com.sun.jna.platform.win32.Shell32;
 import com.sun.jna.platform.win32.Shell32Util;
 import com.sun.jna.platform.win32.ShlObj;
 import com.sun.jna.platform.win32.Win32Exception;
-import com.sun.jna.platform.win32.WinDef;
-import com.sun.jna.ptr.PointerByReference;
 
 import pmedit.OsCheck;
 

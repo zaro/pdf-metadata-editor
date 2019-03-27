@@ -1,32 +1,24 @@
 package pmedit;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.function.Function;
 
-import javax.swing.JCheckBox;
 import javax.xml.transform.TransformerException;
-
 
 import org.apache.jempbox.xmp.XMPMetadata;
 import org.apache.jempbox.xmp.XMPSchemaBasic;
@@ -59,6 +51,7 @@ public class MetadataInfo {
 		public String size;
 		public String createTime;
 		public String modifyTime;
+		public String fullPath;
 		
 	}
 
@@ -69,6 +62,7 @@ public class MetadataInfo {
 		public boolean size = false;
 		public boolean createTime = false;
 		public boolean modifyTime = false;
+		public boolean fullPath = false;
 
 		public boolean atLeastOne() {
 			return false;
@@ -81,6 +75,7 @@ public class MetadataInfo {
 			size = false;
 			createTime = false;
 			modifyTime = false;
+			fullPath = false;
 		}
 	};
 
@@ -446,6 +441,7 @@ public class MetadataInfo {
 	
 
 	public void loadPDFFileInfo(File pdfFile) throws FileNotFoundException, IOException {
+		file.fullPath = pdfFile.getAbsolutePath();
 		file.nameWithExt = pdfFile.getName();
 		BasicFileAttributes attrs = Files.readAttributes(pdfFile.toPath(), BasicFileAttributes.class);
 		file.sizeBytes = attrs.size();

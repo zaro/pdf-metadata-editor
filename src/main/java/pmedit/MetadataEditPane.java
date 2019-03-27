@@ -1,15 +1,17 @@
 package pmedit;
 
+import java.awt.EventQueue;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.lang.reflect.Field;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.List;
 
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -18,27 +20,13 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.SpinnerNumberModel;
-
-import pmedit.CommandLine.ParseError;
-import pmedit.MetadataEditPane.FieldEnabledCheckBox;
-import pmedit.MetadataEditPane.FieldSetGet;
-import net.miginfocom.swing.MigLayout;
-
-import com.toedter.calendar.JDateChooser;
-import java.awt.GridBagLayout;
-import java.awt.EventQueue;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
-import javax.swing.JEditorPane;
-import javax.swing.JCheckBox;
 import javax.swing.SwingConstants;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 import javax.swing.text.PlainDocument;
-import javax.swing.JFormattedTextField;
-import javax.swing.JFrame;
+
+import com.toedter.calendar.JDateChooser;
 
 public class MetadataEditPane {
 

@@ -1,9 +1,5 @@
 package pmedit;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 public class CommandDescription {
 	protected static int regKeyCount = 1;
 	
@@ -30,6 +26,7 @@ public class CommandDescription {
 			new CommandDescription("rename", "Rename files from metadata"),	
 			new CommandDescription("tojson", "Extract metadata as JSON"),	
 			new CommandDescription("toyaml", "Extract metadata as YAML/Text"),	
+			new CommandDescription("fromcsv", "Set metadate from CSV file"),	
 	};
 	
 	public static String helpMessage(int descriptionOffset) {

@@ -1,7 +1,5 @@
 package pmedit;
 
-import java.text.SimpleDateFormat;
-
 import pmedit.CommandLine.ParseError;
 
 public class MainCli {
