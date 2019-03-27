@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>pdf-metadata-edit</groupId>
 	<artifactId>pdf-metadata-edit</artifactId>
-	<version>2.3.0</version>
+	<version>2.4.0</version>
 	<name>Pdf Metadata Editor</name>
 	<description>Simple PDF metadata editor</description>
 	<url>http://broken-by.me/pdf-metadata-editor/</url>
@@ -518,6 +518,11 @@
 			<artifactId>httpasyncclient</artifactId>
 			<version>4.1.4</version>
 		</dependency>
+		<dependency>
+	     	<groupId>com.opencsv</groupId>
+	     	<artifactId>opencsv</artifactId>
+	     	<version>4.5</version>
+ 		</dependency>
 		<!-- 
 		<dependency>
 		    <groupId>com.pretty-tools</groupId>
