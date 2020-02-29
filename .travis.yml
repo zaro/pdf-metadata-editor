@@ -1,0 +1,32 @@
+language: shell
+
+os:
+  - osx
+
+osx_image: xcode9.3
+
+script:
+  - source .travis/java.sh
+  - git clone https://github.com/zaro/jdde-bundle.git jdde
+  - pwd
+  - ls -lah
+  # - cd jdde
+  # - ls -lah
+  # - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+  # - cd ..
+  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+
+after_success:
+  - ls -lah target/packages/ target/bundles/
+
+deploy:
+  provider: releases
+  api_key: $GITHUB_TOKEN
+  file_glob: true
+  file:
+    - target/packages/*
+    - target/bundles/*
+  skip_cleanup: true
+  draft: true
+  on:
+    branch: travis-ci

@@ -3,56 +3,22 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
 	<formats>
-		<format>zip</format>
+		<format>${archive.format}</format>
 	</formats>
 	<includeBaseDirectory>false</includeBaseDirectory>
 	<fileSets>
 		<fileSet>
-			<directory>target</directory>
-			<outputDirectory>${app.filename}</outputDirectory>
-			<includes>
-				<include>pdf-metadata-edit-${project.version}.jar</include>
-			</includes>
-		</fileSet>
-		<fileSet>
-			<directory>target/zip/</directory>
-			<outputDirectory>${app.filename}</outputDirectory>
-			<includes>
-				<include>PdfMetadataEditor.ini</include>
-				<include>PdfMetadataEditor.exe</include>
-				<include>PdfMetadataEditor64.exe</include>
-				<include>JavaDDE.dll</include>
-				<include>JavaDDEx64.dll</include>
-				<include>pmedit-cli*</include>
-			</includes>
-		</fileSet>
-		<fileSet>
-			<directory>target/win/com/pretty_tools/dde/</directory>
-			<outputDirectory>${app.filename}</outputDirectory>
-			<includes>
-				<include>JavaDDE.dll</include>
-				<include>JavaDDEx64.dll</include>
-			</includes>
-		</fileSet>
-		<fileSet>
-			<directory>target</directory>
-			<outputDirectory>${app.filename}</outputDirectory>
-			<includes>
-				<include>pdf-metadata-edit</include>
-				<include>pmedit-cli</include>
-			</includes>
-			<fileMode>0755</fileMode>
+			<directory>target/packages/</directory>
+			<excludes>
+          <exclude>*.rpm</exclude>
+          <exclude>*.deb</exclude>
+          <exclude>*.zip</exclude>
+          <exclude>*.tar.gz</exclude>
+          <exclude>*.exe</exclude>
+          <exclude>*.msi</exclude>
+          <exclude>*.dmg</exclude>
+      </excludes>
+			<outputDirectory>/</outputDirectory>
 		</fileSet>
 	</fileSets>
-	<files>
-		<file>
-			<source>target/zip/PdfMetadataEditor.ini</source>
-			<outputDirectory>${app.filename}</outputDirectory>
-			<destName>PdfMetadataEditor64.ini</destName>
-		</file>
-		<file>
-			<source>target/zip/pmedit-cli.ini</source>
-			<outputDirectory>${app.filename}</outputDirectory>
-			<destName>pmedit-cli64.ini</destName>
-		</file>	</files>
 </assembly>

@@ -22,12 +22,12 @@ import pmedit.CommandLine.ParseError;
 import pmedit.prefs.FilePreferencesFactory;
 
 public class Main {
-	
+
 	protected static int batchGuiCounter = 0;
 	public static String getBatchGuiCommand(){
 		return "batch-gui-"+ batchGuiCounter++;
 	}
-	
+
 	static BlockingQueue<CommandLine> cmdQueue = new LinkedBlockingDeque<CommandLine>();
 	static class CommandsExecutor extends SwingWorker<Void, CommandLine> {
 		 CommandsExecutor() {
@@ -49,7 +49,7 @@ public class Main {
 				}
 			 }
 		 }
-		
+
 		 @Override
 		 protected void process(List<CommandLine> chunks) {
 			 for(CommandLine cmdLine: chunks){
@@ -57,7 +57,7 @@ public class Main {
 			 }
 		 }
 	}
-	
+
 	// this must be swing worker
 	public static void makeBatchWindow(final String commandName, final CommandDescription command, final List<String> fileList){
 		logLine("makeBatchWindow", commandName);
@@ -73,10 +73,10 @@ public class Main {
 		batchInstances.put(commandName, bs);
 		bs.setVisible(true);
 	}
-	
+
 	protected static void executeCommandSwingWorker(final CommandLine cmdLine){
 		logLine("executeCommandSwingWorker", cmdLine.toString());
-	
+
 		if( cmdLine.hasCommand()) {
 			try {
 				BatchOperationWindow bs = batchInstances.get(cmdLine.command.name);
@@ -156,12 +156,12 @@ public class Main {
 		System.out.println(context+":: " + line);
 		try{
 			PrintWriter output = new PrintWriter(new FileWriter(System.getProperty("java.io.tmpdir") + File.separator + "pdf-metada-editor-log.txt",true));
-	
+
 		    output.printf("%s:: %s\r\n", context, line == null ? "null" : line);
 		    output.close();
-		}  catch (Exception e) {} 	
+		}  catch (Exception e) {}
 	}
-	
+
 	static Map<String, BatchOperationWindow> batchInstances= new HashMap<String, BatchOperationWindow>();
 	static List<PDFMetadataEditWindow> editorInstances = new ArrayList<PDFMetadataEditWindow>();
 
@@ -170,13 +170,13 @@ public class Main {
 			System.exit(0);
 		}
 	}
-	
+
 	public static int numWindows(){
 		return batchInstances.size() + editorInstances.size();
 	}
 
 	public static void main(final String[] args) {
-		CommandLine cmdLine = null; 
+		CommandLine cmdLine = null;
 	    try {
 	    	cmdLine = CommandLine.parse(args);
 		} catch (ParseError e) {
@@ -192,7 +192,7 @@ public class Main {
 //	    try {
 //    	UIManager.setLookAndFeel(
 //    			UIManager.getCrossPlatformLookAndFeelClassName());
-//    } 
+//    }
 //    catch (UnsupportedLookAndFeelException e) {}
 //    catch (ClassNotFoundException e) {}
 //    catch (InstantiationException e) {}

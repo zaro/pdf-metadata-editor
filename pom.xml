@@ -2,10 +2,10 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>pdf-metadata-edit</groupId>
-	<artifactId>pdf-metadata-edit</artifactId>
-	<version>2.4.0</version>
+	<artifactId>pdf-metadata-editor</artifactId>
+	<version>3.0.0</version>
 	<name>Pdf Metadata Editor</name>
-	<description>Simple PDF metadata editor</description>
+	<description>Simple Editor for PDF metadata</description>
 	<url>http://broken-by.me/pdf-metadata-editor/</url>
 	<packaging>jar</packaging>
 	<prerequisites>
@@ -26,19 +26,35 @@
 
 	<properties>
 		<staging.dir>${project.build.directory}</staging.dir>
-		<appbudle.jre>${java.home}/../../../</appbudle.jre>
 		<vm.location></vm.location>
-		<version.izpack>${project.version}</version.izpack>
-		<arch.64></arch.64>
 		<app.name>Pdf Metadata Editor</app.name>
-		<app.filename>PdfMetadataEditor</app.filename>
-		<app.description>Pdf Metadata Editor</app.description>
-		<native.bundle>image</native.bundle>
+		<app.description>Editor For Pdf Metadata</app.description>
 		<snakeyaml.path>${org.yaml:snakeyaml:jar}</snakeyaml.path>
+		<main.file.name>${project.artifactId}-${project.version}</main.file.name>
+		<main.jar.name>${main.file.name}.jar</main.jar.name>
+		<packages.list></packages.list>
+		<icon.format></icon.format>
+		<archive.format>zip</archive.format>
+		<archive.suffix></archive.suffix>
 	</properties>
 
 
 	<profiles>
+		<profile>
+			<id>os_linux</id>
+			<activation>
+				<os>
+					<family>unix</family>
+				</os>
+			</activation>
+			<properties>
+				<!-- <packages.list>deb,rpm,app-image</packages.list> -->
+				<packages.list>rpmMMMM</packages.list>
+				<archive.format>tar.gz</archive.format>
+				<archive.suffix>-linux</archive.suffix>
+				<icon.format>png</icon.format>
+			</properties>
+		</profile>
 		<profile>
 			<id>os_win</id>
 			<activation>
@@ -47,8 +63,9 @@
 				</os>
 			</activation>
 			<properties>
-				<native.bundle>msi</native.bundle>
-				<appbudle.jre></appbudle.jre>
+				<packages.list>msi,exe,app-image</packages.list>
+				<archive.suffix>-windows</archive.suffix>
+				<icon.format>ico</icon.format>
 			</properties>
 		</profile>
 		<profile>
@@ -59,19 +76,9 @@
 				</os>
 			</activation>
 			<properties>
-				<native.bundle>msi</native.bundle>
-				<appbudle.jre></appbudle.jre>
-			</properties>
-		</profile>
-		<profile>
-			<id>arch64</id>
-			<activation>
-				<os>
-					<arch>x64</arch>
-				</os>
-			</activation>
-			<properties>
-				<arch.64>64</arch.64>
+				<packages.list>dmg,app-image</packages.list>
+				<archive.suffix>-macos</archive.suffix>
+				<icon.format>icns</icon.format>
 			</properties>
 		</profile>
 	</profiles>
@@ -92,22 +99,21 @@
 			    <configuration>
 			        <generateBackupPoms>false</generateBackupPoms>
 			    </configuration>
-			</plugin>	
+			</plugin>
 
 			<plugin>
 			 	<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.0</version>
+				<version>3.8.1</version>
 				<configuration>
-					<source>8</source>
-					<target>8</target>
-					<!--   <release>11</release> -->
+					<source>14</source>
+					<target>14</target>
 				</configuration>
 			</plugin>
 			<plugin>
 		      <groupId>org.apache.maven.plugins</groupId>
 		      <artifactId>maven-jar-plugin</artifactId>
-			  
+					<version>3.2.0</version>
 		      <configuration>
 		        <outputDirectory>${project.build.directory}/jar</outputDirectory>
 		      </configuration>
@@ -116,7 +122,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.2.0</version>
+				<version>3.2.2</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -179,121 +185,97 @@
 			</plugin>
 
 			<plugin>
-				<groupId>org.codehaus.izpack</groupId>
-				<artifactId>izpack-maven-plugin</artifactId>
-				<version>5.1.3</version>
-				<extensions>true</extensions>
-				<configuration>
-					<installFile>izpack/izpack-install.xml</installFile>
-					<baseDir>${staging.dir}</baseDir>
-					<mkdirs>true</mkdirs>
-					<outputDirectory>${project.build.directory}/bundles/</outputDirectory>
-					<finalName>${app.filename}-${project.version}</finalName>
-					<autoIncludeUrl>true</autoIncludeUrl>
-					<autoIncludeDevelopers>true</autoIncludeDevelopers>
-					<comprLevel>9</comprLevel>
-					<classifier>installer</classifier>
-				</configuration>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.1.0</version>
 				<executions>
 					<execution>
-						<id>standard-installer</id>
+						<id>copy-resources-1</id>
 						<phase>package</phase>
 						<goals>
-							<goal>izpack</goal>
+							<goal>copy-resources</goal>
 						</goals>
+						<configuration>
+							<encoding>UTF-8</encoding>
+							<outputDirectory>${staging.dir}/jpackage/</outputDirectory>
+							<nonFilteredFileExtensions>
+            		<nonFilteredFileExtension>jar</nonFilteredFileExtension>
+							</nonFilteredFileExtensions>
+							<resources>
+								<resource>
+									<directory>${staging.dir}/jar/</directory>
+									<excludes>
+										<exclude>original-*</exclude>
+									</excludes>
+								</resource>
+							</resources>
+						</configuration>
 					</execution>
+
 				</executions>
 			</plugin>
 
-			<plugin>
-				<artifactId>maven-resources-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>copy-zip-resources-1</id>
-						<phase>validate</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<encoding>UTF-8</encoding>
-							<outputDirectory>${staging.dir}/zip/</outputDirectory>
-							<nonFilteredFileExtensions>
-            					<nonFilteredFileExtension>exe</nonFilteredFileExtension>
-            					<nonFilteredFileExtension>png</nonFilteredFileExtension>
-            					<nonFilteredFileExtension>ico</nonFilteredFileExtension>
-          					</nonFilteredFileExtensions>
-							<resources>
-								<resource>
-									<directory>package/all/</directory>
-									<includes>
-										<include>*</include>
-									</includes>
-									<filtering>true</filtering>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-					<execution>
-						<id>copy-izpack-resources</id>
-						<phase>validate</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<encoding>UTF-8</encoding>
-							<outputDirectory>${staging.dir}/izpack/</outputDirectory>
-							<resources>
-								<resource>
-									<directory>izpack/</directory>
-									<include>*</include>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-					
-					<execution>
-						<id>copy-exe-resources</id>
-						<phase>validate</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<encoding>UTF-8</encoding>
-							<outputDirectory>${staging.dir}/win/app</outputDirectory>
-							<resources>
-								<resource>
-									<directory>package/all/</directory>
-									<include>pmedit-cli${arch.64}.exe</include>
-									<include>pmedit-cli.ini</include>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-					<execution>
-						<id>copy-package-resources</id>
-						<phase>validate</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<encoding>UTF-8</encoding>
-							<outputDirectory>${project.build.directory}/package</outputDirectory>
-							<resources>
-								<resource>
-									<directory>package</directory>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
+      <plugin>
+        <groupId>com.soebes.maven.plugins</groupId>
+        <artifactId>iterator-maven-plugin</artifactId>
+        <version>0.5.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>iterator</goal>
+            </goals>
+            <configuration>
+							<content>${packages.list}</content>
+              <pluginExecutors>
+                <pluginExecutor>
+										<plugin>
+											<groupId>org.codehaus.mojo</groupId>
+											<artifactId>exec-maven-plugin</artifactId>
+											<version>1.6.0</version>
+										</plugin>
+										<goal>exec</goal>
+										<configuration>
+											<executable>jpackage</executable>
+											<arguments>
+												<argument>--type</argument>
+												<argument>@item@</argument>
+												<argument>--input</argument>
+												<argument>${staging.dir}/jpackage</argument>
+												<argument>--name</argument>
+												<argument>pdf-metadata-editor</argument>
+												<argument>--main-class</argument>
+												<argument>pmedit.Main</argument>
+												<argument>--main-jar</argument>
+												<argument>${main.jar.name}</argument>
+												<argument>--icon</argument>
+												<argument>jpackage/pdf-metadata-edit.${icon.format}</argument>
+												<argument>--app-version</argument>
+												<argument>${project.version}</argument>
+												<argument>--description</argument>
+												<argument>${project.description}</argument>
+												<argument>--add-launcher</argument>
+												<argument>batch-pdf-metadata-editor=jpackage/batch-launcher.properties</argument>
+												<argument>--add-launcher</argument>
+												<argument>pmedit-cli=jpackage/cli.properties</argument>
+												<!-- <argument>- -file-associations</argument> -->
+												<!-- <argument>jpackage/file-associations.properties</argument> -->
+												<argument>--dest</argument>
+												<argument>${staging.dir}/packages</argument>
+											</arguments>
+										</configuration>
+                </pluginExecutor>
+              </pluginExecutors>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<configuration>
 					<descriptor>package/assembly-zip.xml</descriptor>
-					<finalName>bundles/${app.filename}-${project.version}</finalName>
+					<finalName>bundles/${main.file.name}${archive.suffix}</finalName>
 				</configuration>
 				<executions>
 					<execution>
@@ -305,76 +287,6 @@
 				</executions>
 			</plugin>
 
-			<plugin>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>fx-package</id>
-						<phase>none</phase>
-						<goals>
-							<goal>run</goal>
-						</goals>
-						<configuration>
-  							<tasks>
-								<replace dir="${project.build.directory}/win/app/" value="..\runtime\bin\client\jvm.dll">
-								 	<include name="*.ini"/>
-									<replacetoken>@vm.location@</replacetoken>
-								</replace>
-								<replace dir="${project.build.directory}/win/app/" value="${project.build.finalName}">
-								 	<include name="*.ini"/>
-									<replacetoken>@project.build.finalName@</replacetoken>
-								</replace>
-                        		<property name="staging.dir" value="${project.build.directory}" />
-                        		<property name="dist.dir" value="${project.build.directory}" />
-                        		<property name="app.name" value="${app.filename}" />
-                        		<property name="app.title" value="${project.name}" />
-                        		<property name="app.version" value="${project.version}" />
-		                        <property name="app.main.class" value="pmedit.Main"/>
-		                        <property name="app.main.jar" value="pdf-metadata-edit-${project.version}.jar" />
-		                        <property name="app.bundle.name" value="pdf-metadata-edit-${project.version}" />
-		                        <property name="jre.bundle" value="jre_to_bundle/" />
-		                        <property name="native.bundle" value="${native.bundle}" />
-		                        <ant antfile="build-install.xml">
-		                          <target name="deploy-bundle"/>
-        		                </ant>
-	                      </tasks>
-						</configuration>
-					</execution>
-					<execution>
-						<id>create-dmg</id>
-						<phase>package</phase>
-						<goals>
-							<goal>run</goal>
-						</goals>
-						<configuration>
-							<tasks>
-								<exec executable="javapackager">
-									<arg value="-deploy" />
-									<arg value="-v" />
-									<arg value='-Bruntime=jre_to_bundle/' />
-									<arg value='-BappVersion=${project.version}' />
-									<arg value='-Bmac.CFBundleIdentifier=pmedit.pdf-metadata-editor' />
-									<arg value="-native" />
-									<arg value="dmg" />
-									<arg value="-outdir" />
-									<arg value="${project.build.directory}" />
-									<arg value="-outfile" />
-									<arg value="${project.name}.app" />
-									<arg value="-srcfiles" />
-									<arg value="${project.build.directory}/jar/pdf-metadata-edit-${project.version}.jar" />
-									<arg value="-appclass" />
-									<arg value="pmedit.Main" />
-									<arg value="-name" />
-									<arg value="${app.filename}" />
-									<arg value="-title" />
-									<arg value="${project.name}" />
-								</exec>
-							</tasks>
-						</configuration>
-					</execution>					
-				</executions>
-			</plugin>
-			
 
 	        <plugin>
 	            <groupId>org.apache.maven.plugins</groupId>
@@ -406,8 +318,6 @@
 	                </execution>
 	            </executions>
 	        </plugin>
-	        
-	        		       
 		</plugins>
 
 
@@ -523,7 +433,7 @@
 	     	<artifactId>opencsv</artifactId>
 	     	<version>4.5</version>
  		</dependency>
-		<!-- 
+		<!--
 		<dependency>
 		    <groupId>com.pretty-tools</groupId>
 		    <artifactId>jdde-bundle</artifactId>
