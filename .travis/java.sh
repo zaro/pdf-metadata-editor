@@ -74,5 +74,22 @@ else
   export JAVA_HOME=~/openjdk14
   export PATH="$JAVA_HOME/bin:$PATH"
   source ~/bin/install-jdk.sh --feature "14"  --cacerts
+
+  # On macos  the feature release has symlink instead of cacrts file, replace with the current one
+  if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+    CA_LINK=`readlink "$JAVA_HOME/lib/security/cacerts"`
+    if [ -n "$CA_LINK" ]; then
+      OLD_JAVA_HOME=$(/usr/libexec/java_home)
+      echo Preinstalled Java Home: $OLD_JAVA_HOME
+
+      if [ -n "$OLD_JAVA_HOME" ]; then
+        rm -v $JAVA_HOME/lib/security/cacerts
+        cp -v "$OLD_JAVA_HOME/lib/security/cacerts" "$JAVA_HOME/lib/security/"
+      fi
+    fi
+    ls -lah $JAVA_HOME/lib/security/
+  fi
+
+
 fi
 

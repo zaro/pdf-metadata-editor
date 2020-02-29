@@ -49,7 +49,7 @@
 			</activation>
 			<properties>
 				<!-- <packages.list>deb,rpm,app-image</packages.list> -->
-				<packages.list>rpmMMMM</packages.list>
+				<packages.list>rpm</packages.list>
 				<archive.format>tar.gz</archive.format>
 				<archive.suffix>-linux</archive.suffix>
 				<icon.format>png</icon.format>
