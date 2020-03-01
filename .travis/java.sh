@@ -2,10 +2,10 @@
 
 export TOOLS_PATH=/c/Users/travis
 
-# Install some jpackage dependencies
+# Install Maven and some jpackage dependencies
 if [ "$TRAVIS_OS_NAME" = "linux" ]; then
   sudo apt-get update
-  sudo apt -y install rpm fakeroot
+  sudo apt -y install rpm fakeroot maven
 fi
 if [ "$TRAVIS_OS_NAME" = "windows" ]; then
   pushd ${TOOLS_PATH}
