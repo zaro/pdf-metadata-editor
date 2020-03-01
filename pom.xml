@@ -27,8 +27,6 @@
 	<properties>
 		<staging.dir>${project.build.directory}</staging.dir>
 		<vm.location></vm.location>
-		<app.name>Pdf Metadata Editor</app.name>
-		<app.description>Editor For Pdf Metadata</app.description>
 		<snakeyaml.path>${org.yaml:snakeyaml:jar}</snakeyaml.path>
 		<main.file.name>${project.artifactId}-${project.version}</main.file.name>
 		<main.jar.name>${main.file.name}.jar</main.jar.name>
@@ -48,8 +46,7 @@
 				</os>
 			</activation>
 			<properties>
-				<!-- <packages.list>deb,rpm,app-image</packages.list> -->
-				<packages.list>rpm</packages.list>
+				<packages.list>deb,rpm,app-image</packages.list>
 				<archive.format>tar.gz</archive.format>
 				<archive.suffix>-linux</archive.suffix>
 				<icon.format>png</icon.format>
@@ -229,7 +226,7 @@
 							<resources>
 								<resource>
 									<directory>jpackage/</directory>
-									<filtering>true</filtering>				
+									<filtering>true</filtering>
 								</resource>
 							</resources>
 						</configuration>
