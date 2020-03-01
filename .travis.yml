@@ -3,7 +3,6 @@ language: shell
 os:
   - osx
 
-
 script:
   - source .travis/java.sh
   - .travis/jdde.sh
