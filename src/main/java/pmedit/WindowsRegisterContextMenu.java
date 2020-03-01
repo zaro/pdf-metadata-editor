@@ -16,16 +16,20 @@ public class WindowsRegisterContextMenu {
 		} catch (URISyntaxException e) {
 			throw new Exception("Cannot find the path to current jar");
 		}
+		String paths = "";
 		String appName = Version.getAppName();
 		String exePath = thisJarDir + File.separator + appName + ".exe";
 		if(new File(exePath).exists()){
 			return exePath;
 		}
+		paths += exePath;
 		exePath = thisJarDir + File.separator + "..\\" + appName + ".exe";
 		if(new File(exePath).exists()){
 			return exePath;
 		}
-		throw new Exception("Cannot find the path to current exe");
+		paths += " , ";
+		paths += exePath;
+		throw new Exception("Cannot find the path to current exe, tried: " + paths);
 	}
 	
 
