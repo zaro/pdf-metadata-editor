@@ -106,6 +106,7 @@
 				<configuration>
 					<source>14</source>
 					<target>14</target>
+					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
 			<plugin>

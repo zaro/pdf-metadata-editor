@@ -13,6 +13,13 @@ script:
 apfter_success:
   - ls -lah target/packages/ target/bundles/
 
+before_deploy:
+  # Set up git user name and tag this commit
+  - git config --local user.name "Svetlozar Argirov"
+  - git config --local user.email "zarrro@gmail.com"
+  - export TRAVIS_TAG=3.0.0
+  - git tag $TRAVIS_TAG
+
 deploy:
   provider: releases
   api_key: $GITHUB_TOKEN
