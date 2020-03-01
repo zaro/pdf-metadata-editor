@@ -1,14 +1,16 @@
 language: shell
 
 os:
+  - windows
   - osx
+  - linux
 
 script:
   - source .travis/java.sh
   - .travis/jdde.sh
   - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 
-after_success:
+apfter_success:
   - ls -lah target/packages/ target/bundles/
 
 deploy:
