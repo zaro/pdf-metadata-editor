@@ -16,11 +16,12 @@ public class WindowsRegisterContextMenu {
 		} catch (URISyntaxException e) {
 			throw new Exception("Cannot find the path to current jar");
 		}
-		String exePath = thisJarDir + File.separator + "PdfMetadataEditor.exe";
+		String appName = Version.getAppName();
+		String exePath = thisJarDir + File.separator + appName + ".exe";
 		if(new File(exePath).exists()){
 			return exePath;
 		}
-		exePath = thisJarDir + File.separator + "..\\PdfMetadataEditor.exe";
+		exePath = thisJarDir + File.separator + "..\\" + appName + ".exe";
 		if(new File(exePath).exists()){
 			return exePath;
 		}
@@ -44,15 +45,15 @@ public class WindowsRegisterContextMenu {
 	}
 	
 	public static String applicationKey(){
-		return "SOFTWARE\\Classes\\PdfMetadataEditor";
+		return "SOFTWARE\\Classes\\" + Version.getAppName();
 	}
 	
 	public static String editCmdShellKey(String pdfFileType){
-		return "SOFTWARE\\Classes\\" + pdfFileType + "\\shell\\PME1.Edit.File";		
+		return "SOFTWARE\\Classes\\" + pdfFileType + "\\shell\\" + Version.getAppName() + ".Edit.File";		
 	}
 
 	public static String batchMenuShellKey(String pdfFileType){
-		return "SOFTWARE\\Classes\\" + pdfFileType + "\\shell\\PME2.Batch.Menu";		
+		return "SOFTWARE\\Classes\\" + pdfFileType + "\\shell\\" + Version.getAppName() + ".Batch.Menu";		
 	}
 
 	public static String batchMenuKey(String pdfFileType){
@@ -128,7 +129,7 @@ public class WindowsRegisterContextMenu {
 			setRegistryKey(WinReg.HKEY_CURRENT_USER, shellKey, "", "Pdf metadata editor");
 			setRegistryKey(WinReg.HKEY_CURRENT_USER, shellCommandKey, "", exePath );
 			setRegistryKey(WinReg.HKEY_CURRENT_USER, shellDdeExecKey, "", "\"%1\"");
-			setRegistryKey(WinReg.HKEY_CURRENT_USER, shellDdeExecApplicationKey, "", "PdfMetadataEditor");
+			setRegistryKey(WinReg.HKEY_CURRENT_USER, shellDdeExecApplicationKey, "", Version.getAppName());
 			
 			// Add batch commands
 			String batchMenuShellKey = batchMenuShellKey(pdfFileType);
@@ -147,7 +148,7 @@ public class WindowsRegisterContextMenu {
 				setRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellKey, "MUIVerb", desc.description);
 				setRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellCommandKey, "", exePath + " " + desc.name);
 				setRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecKey, "", desc.name +" \"%1\"");
-				setRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecApplicationKey, "", "PdfMetadataEditor");
+				setRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecApplicationKey, "", Version.getAppName());
 			}
 	}
 	

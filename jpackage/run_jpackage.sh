@@ -29,8 +29,13 @@ fi
 # Remove spaces in app name, because desktop registration fails
 if [ "$TYPE" = "deb" -o  "$TYPE" = "rpm" ]; then
   APP_NAME=$(echo $APP_NAME | tr -d " ")
-  LINUX_OPTS="--linux-package-name pdf-metadata-editor"
+  OS_OPTS="--linux-package-name pdf-metadata-editor"
 fi
+
+if [ "$TYPE" = "msi" -o  "$TYPE" = "exe" ]; then
+  OS_OPTS="--win-dir-chooser --win-menu --win-menu-group '$APP_NAME' --win-upgrade-uuid c71564cd-5068-4d6d-874b-6a189abd40d3  --win-per-user-install"
+fi
+
 
 set -x
 exec jpackage \
@@ -46,5 +51,5 @@ exec jpackage \
   --add-launcher "Batch ${APP_NAME}=$THIS_DIR/batch-launcher.properties" \
   --add-launcher "pmedit-cli=$THIS_DIR/cli.properties" \
   ${FILE_ASSOCIATION} \
-  ${LINUX_OPTS} \
+  ${OS_OPTS} \
   --dest ${STAGING_DIR}/packages

@@ -5,7 +5,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Version {
-    protected static String version;
+	protected static String version;
+	protected static String appName;
     public static class VersionTuple {
     	public int major;
     	public int minor;
@@ -65,4 +66,19 @@ public class Version {
     	}
     	return new VersionTuple( version );
     }
+    public static String getAppName() {
+    	if( appName == null){
+        	Properties prop = new Properties();
+    		try {
+				prop.load(VersionTuple.class.getClassLoader().getResourceAsStream("pmedit/version.properties"));
+				appName = prop.getProperty("app.name", "Pdf Metadata Editor");
+			} catch (IOException e) {
+				e.printStackTrace();
+				appName = "Pdf Metadata Editor";
+			}
+    	}
+    	return appName;
+    }
+
+
 }

@@ -8,9 +8,6 @@
 	<description>Simple Editor for PDF metadata</description>
 	<url>http://broken-by.me/pdf-metadata-editor/</url>
 	<packaging>jar</packaging>
-	<prerequisites>
-       <maven>3.5.0</maven>
-  </prerequisites>
 
 	<developers>
 		<developer>
@@ -25,6 +22,7 @@
 	</developers>
 
 	<properties>
+	  <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<staging.dir>${project.build.directory}</staging.dir>
 		<vm.location></vm.location>
 		<snakeyaml.path>${org.yaml:snakeyaml:jar}</snakeyaml.path>
@@ -194,7 +192,6 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<encoding>UTF-8</encoding>
 							<outputDirectory>${staging.dir}/jpackage/</outputDirectory>
 							<nonFilteredFileExtensions>
             		<nonFilteredFileExtension>jar</nonFilteredFileExtension>
@@ -217,7 +214,6 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<encoding>UTF-8</encoding>
 							<outputDirectory>${staging.dir}/jpackage-scripts/</outputDirectory>
 							<nonFilteredFileExtensions>
             		<nonFilteredFileExtension>icns</nonFilteredFileExtension>
