@@ -10,7 +10,7 @@
 	<packaging>jar</packaging>
 	<prerequisites>
        <maven>3.5.0</maven>
-   	</prerequisites>
+  </prerequisites>
 
 	<developers>
 		<developer>
@@ -212,6 +212,29 @@
 						</configuration>
 					</execution>
 
+					<execution>
+						<id>copy-jpackage-scripts</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<encoding>UTF-8</encoding>
+							<outputDirectory>${staging.dir}/jpackage-scripts/</outputDirectory>
+							<nonFilteredFileExtensions>
+            		<nonFilteredFileExtension>icns</nonFilteredFileExtension>
+            		<nonFilteredFileExtension>ico</nonFilteredFileExtension>
+            		<nonFilteredFileExtension>png</nonFilteredFileExtension>
+							</nonFilteredFileExtensions>
+							<resources>
+								<resource>
+									<directory>jpackage/</directory>
+									<filtering>true</filtering>				
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+
 				</executions>
 			</plugin>
 
@@ -236,32 +259,10 @@
 										</plugin>
 										<goal>exec</goal>
 										<configuration>
-											<executable>jpackage</executable>
+											<executable>sh</executable>
 											<arguments>
-												<argument>--type</argument>
+												<argument>${staging.dir}/jpackage-scripts/run_jpackage.sh</argument>
 												<argument>@item@</argument>
-												<argument>--input</argument>
-												<argument>${staging.dir}/jpackage</argument>
-												<argument>--name</argument>
-												<argument>pdf-metadata-editor</argument>
-												<argument>--main-class</argument>
-												<argument>pmedit.Main</argument>
-												<argument>--main-jar</argument>
-												<argument>${main.jar.name}</argument>
-												<argument>--icon</argument>
-												<argument>jpackage/pdf-metadata-edit.${icon.format}</argument>
-												<argument>--app-version</argument>
-												<argument>${project.version}</argument>
-												<argument>--description</argument>
-												<argument>${project.description}</argument>
-												<argument>--add-launcher</argument>
-												<argument>batch-pdf-metadata-editor=jpackage/batch-launcher.properties</argument>
-												<argument>--add-launcher</argument>
-												<argument>pmedit-cli=jpackage/cli.properties</argument>
-												<!-- <argument>- -file-associations</argument> -->
-												<!-- <argument>jpackage/file-associations.properties</argument> -->
-												<argument>--dest</argument>
-												<argument>${staging.dir}/packages</argument>
 											</arguments>
 										</configuration>
                 </pluginExecutor>
