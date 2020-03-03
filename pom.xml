@@ -232,6 +232,43 @@
 				</executions>
 			</plugin>
 
+			<plugin>
+					<groupId>com.igormaznitsa</groupId>
+					<artifactId>mvn-jlink-wrapper</artifactId>
+					<version>1.0.7</version>
+					<executions>
+							<execution>
+									<id>call-jdeps</id>
+									<goals>
+											<goal>jdeps</goal>
+									</goals>
+									<configuration>
+											<output>${project.build.directory}${file.separator}jdeps.out</output>
+											<options>
+													<option>${project.build.directory}${file.separator}/jar/${main.jar.name}</option>
+											</options>
+									</configuration>
+							</execution>
+							<execution>
+									<id>call-jlink</id>
+									<goals>
+											<goal>jlink</goal>
+									</goals>
+									<configuration>
+											<jdepsReportPath>${project.build.directory}${file.separator}jdeps.out</jdepsReportPath>
+											<output>${project.build.directory}${file.separator}preparedJDK</output>
+											<options>
+													<option>--compress=2</option>
+													<option>--no-header-files</option>
+													<option>--no-man-pages</option>
+													<option>--strip-debug</option>
+													<option>--strip-native-commands</option>
+											</options>
+									</configuration>
+							</execution>
+					</executions>
+			</plugin>
+
       <plugin>
         <groupId>com.soebes.maven.plugins</groupId>
         <artifactId>iterator-maven-plugin</artifactId>
@@ -396,7 +433,7 @@
 		<dependency>
 			<groupId>org.yaml</groupId>
 			<artifactId>snakeyaml</artifactId>
-			<version>1.23</version>
+			<version>1.26</version>
 		</dependency>
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
@@ -412,12 +449,12 @@
 		<dependency>
 			<groupId>net.java.dev.jna</groupId>
 			<artifactId>jna-platform</artifactId>
-			<version>5.0.0</version>
+			<version>5.5.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
-			<version>4.5.6</version>
+			<version>4.5.11</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
@@ -427,7 +464,7 @@
 		<dependency>
 	     	<groupId>com.opencsv</groupId>
 	     	<artifactId>opencsv</artifactId>
-	     	<version>4.5</version>
+	     	<version>5.1</version>
  		</dependency>
 		<!--
 		<dependency>
