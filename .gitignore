@@ -5,3 +5,4 @@ bin/
 dist
 /target/
 jre_to_bundle/
+.envrc
