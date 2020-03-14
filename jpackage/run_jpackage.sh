@@ -17,7 +17,7 @@ APP_VERSION="${project.version}"
 ICON_FORMAT="${icon.format}"
 DEST_DIR=target/packages
 
-rm -vr "${DEST_DIR}/$APP_NAME"  "${DEST_DIR}/$APP_NAME.app"
+rm -r "${DEST_DIR}/$APP_NAME"  "${DEST_DIR}/$APP_NAME.app"
 
 JP_OPTS=""
 JP_OPTS="$JP_OPTS --type $TYPE"
@@ -45,7 +45,12 @@ if [ "$TYPE" = "deb" -o  "$TYPE" = "rpm" ]; then
 fi
 
 if [ "$TYPE" = "msi" -o  "$TYPE" = "exe" ]; then
-  JP_OPTS="$JP_OPTS --win-dir-chooser --win-menu  --win-upgrade-uuid '$WINDOWS_UUID' --win-per-user-install --win-menu-group '$APP_NAME'"
+  JP_OPTS="$JP_OPTS --win-menu  --win-upgrade-uuid '$WINDOWS_UUID' --win-menu-group '$APP_NAME'"
+
+  # Allow some customization options for the exe
+  if [ "$TYPE" = "exe" ]; then
+    JP_OPTS="$JP_OPTS --win-dir-chooser --win-per-user-install"
+  fi
 fi
 
 set -x

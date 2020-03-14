@@ -6,3 +6,6 @@ dist
 /target/
 jre_to_bundle/
 .envrc
+test-files/
+ris/
+.vscode/

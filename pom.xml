@@ -58,7 +58,8 @@
 				</os>
 			</activation>
 			<properties>
-				<packages.list>msi,exe,app-image</packages.list>
+				<packages.list>app-image</packages.list>
+				<!-- <packages.list>msi,exe,app-image</packages.list> -->
 				<archive.suffix>-windows</archive.suffix>
 				<icon.format>ico</icon.format>
 			</properties>

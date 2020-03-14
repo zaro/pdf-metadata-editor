@@ -15,31 +15,11 @@ import com.sun.jna.platform.win32.Psapi;
 
 public class WindowsSingletonApplication {
 
-	public static String exePath() throws Exception {
-		String thisJarDir;
-		try {
-			thisJarDir = new File(PreferencesWindow.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).getParentFile().getAbsolutePath();
-
-		} catch (URISyntaxException e) {
-			throw new Exception("Cannot find the path to current jar");
-		}
-		String appName = Version.getAppName();
-		String exePath = thisJarDir + File.separator + appName + ".exe";
-		if(new File(exePath).exists()){
-			return exePath;
-		}
-		exePath = thisJarDir + File.separator + "..\\" + appName + ".exe";
-		if(new File(exePath).exists()){
-			return exePath;
-		}
-		throw new Exception("Cannot find the path to current exe");
-	}
-
-	public static void killProcessByName(String filename) {
+	public static boolean isAlreadyRunning() {
 			int thisProcessId = Kernel32.INSTANCE.GetCurrentProcessId();
 
 			final byte[] filePathUnicode = new byte[1025];
-			int length = Psapi.INSTANCE.GetModuleFileNameExA(null, null, filePathUnicode, filePathUnicode.length - 1);
+			int length = Psapi.INSTANCE.GetModuleFileNameExA(Kernel32.INSTANCE.GetCurrentProcess(), null, filePathUnicode, filePathUnicode.length - 1);
 			if (length == 0) {
 					throw new Win32Exception(Kernel32.INSTANCE.GetLastError());
 			}
@@ -49,13 +29,25 @@ public class WindowsSingletonApplication {
 			HANDLE hSnapShot = Kernel32.INSTANCE.CreateToolhelp32Snapshot(TH32CS_SNAPALL, null);
 			Tlhelp32.PROCESSENTRY32 process = new Tlhelp32.PROCESSENTRY32();
 			boolean hRes = Kernel32.INSTANCE.Process32First(hSnapShot, process);
+			boolean result = false;
 			while (hRes) {
-					String imageName = Native.toString(process.szExeFile);
-					if (thisProcessId != process.th32ProcessID.intValue() && imageName.equalsIgnoreCase(thisProcessImageName)) {
+				HANDLE hProcess = Kernel32.INSTANCE.OpenProcess(Kernel32.PROCESS_QUERY_INFORMATION | Kernel32.PROCESS_VM_READ,	false, process.th32ProcessID.intValue());
+				if (hProcess != null) {
+					length = Psapi.INSTANCE.GetModuleFileNameExA(hProcess, null, filePathUnicode, filePathUnicode.length - 1);
+					Kernel32.INSTANCE.CloseHandle(hProcess);
+					if (length == 0) {
+							throw new Win32Exception(Kernel32.INSTANCE.GetLastError());
 					}
-					hRes = Kernel32.INSTANCE.Process32Next(hSnapShot, process);
+					String imageName = Native.toString(filePathUnicode).substring(0, length);
+					if (thisProcessId != process.th32ProcessID.intValue() && imageName.equalsIgnoreCase(thisProcessImageName)) {
+						result = true;
+						break;
+					}
+				}
+				hRes = Kernel32.INSTANCE.Process32Next(hSnapShot, process);
 			}
 			Kernel32.INSTANCE.CloseHandle(hSnapShot);
+			return result;
 	}
 
 

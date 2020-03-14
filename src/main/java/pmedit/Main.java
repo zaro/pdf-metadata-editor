@@ -197,6 +197,9 @@ public class Main {
 //    catch (ClassNotFoundException e) {}
 //    catch (InstantiationException e) {}
 //    catch (IllegalAccessException e) {}
+	   if(WindowsSingletonApplication.isAlreadyRunning()){
+		   System.out.println(">>>> already running");
+	   }
 	   executeCommand(cmdLine);
 	   DDE.init();
 	   Main.logLine("DDE:", "DONE");
