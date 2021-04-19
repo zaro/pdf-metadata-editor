@@ -5,8 +5,14 @@ export TOOLS_PATH=/c/Users/travis
 # Install Maven and some jpackage dependencies
 if [ "$TRAVIS_OS_NAME" = "linux" ]; then
   sudo apt-get update
-  sudo apt -y install rpm fakeroot p7zip-full
+  sudo apt -y install rpm fakeroot p7zip-full maven
 fi
+
+if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+  brew install p7zip
+  brew install maven@3.6.3
+fi
+
 if [ "$TRAVIS_OS_NAME" = "windows" ]; then
   pushd ${TOOLS_PATH}
 
@@ -51,6 +57,24 @@ if [ "$TRAVIS_OS_NAME" = "windows" ]; then
   export PATH=${JAVA_HOME}/bin:$PATH
   java -version
 
+  echo ==============================================
+  echo Install maven
+  echo ==============================================
+  MVN_VERSION=3.6.3
+  MVN_URL="https://archive.apache.org/dist/maven/maven-3/${MVN_VERSION}/binaries/apache-maven-${MVN_VERSION}-bin.zip"
+  export MVN_HOME=$TOOLS_PATH/mvn
+  echo "Downloading $MVN_URL..."
+  curl -fsS -o maven.zip "$MVN_URL"
+  rm -rf ${MVN_HOME}
+
+  echo "Extracting maven.zip..."
+  7z x maven.zip -y -o${TOOLS_PATH}/
+  mv ${TOOLS_PATH}/apache-maven-${MVN_VERSION} ${MVN_HOME}
+
+  export PATH=${MVN_HOME}/bin:$PATH
+  mvn -version
+
+
   popd
 else
   curl --create-dirs -Lo ~/bin/install-jdk.sh https://github.com/sormuras/bach/raw/master/install-jdk.sh
@@ -74,21 +98,4 @@ else
   fi
 
 fi
-
-echo ==============================================
-echo Install maven
-echo ==============================================
-MVN_VERSION=3.6.3
-MVN_URL="https://archive.apache.org/dist/maven/maven-3/${MVN_VERSION}/binaries/apache-maven-${MVN_VERSION}-bin.zip"
-export MVN_HOME=$TOOLS_PATH/mvn
-echo "Downloading $MVN_URL..."
-curl -fsS -o maven.zip "$MVN_URL"
-rm -rf ${MVN_HOME}
-
-echo "Extracting maven.zip..."
-7z x maven.zip -y -o${TOOLS_PATH}/
-mv ${TOOLS_PATH}/apache-maven-${MVN_VERSION} ${MVN_HOME}
-
-export PATH=${MVN_HOME}/bin:$PATH
-mvn -version
 
