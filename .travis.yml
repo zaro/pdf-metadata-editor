@@ -5,6 +5,13 @@ os:
   - osx
   - linux
 
+dist: focal
+
+addons:
+  homebrew:
+    packages:
+    - p7zip
+
 script:
   - source .travis/java.sh
   - .travis/jdde.sh
