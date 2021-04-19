@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -x
+
 TYPE="$1"
 if [ -z "$TYPE" ]; then
   echo MUST specify type
@@ -55,9 +57,11 @@ if [ "$TYPE" = "msi" -o  "$TYPE" = "exe" ]; then
   fi
 fi
 
-if [ "$TYPE" = "dmg" ]; then
-  JP_OPTS="$JP_OPTS --mac-sign"
-fi
 
 set -x
 eval jpackage $JP_OPTS
+
+if [ "$TYPE" = "dmg" ]; then
+  codesign -s - -f "${STAGING_DIR}/packages/${APP_NAME}.dmg"
+fi
+
