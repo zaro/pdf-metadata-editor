@@ -17,7 +17,7 @@ APP_VERSION="${project.version}"
 ICON_FORMAT="${icon.format}"
 DEST_DIR=target/packages
 
-rm -r "${DEST_DIR}/$APP_NAME"  "${DEST_DIR}/$APP_NAME.app"
+rm -rf "${DEST_DIR}/$APP_NAME"  "${DEST_DIR}/$APP_NAME.app"
 
 JP_OPTS=""
 JP_OPTS="$JP_OPTS --type $TYPE"
@@ -31,6 +31,7 @@ JP_OPTS="$JP_OPTS --description '$DESCRIPTION'"
 JP_OPTS="$JP_OPTS --add-launcher 'Batch ${APP_NAME}=${STAGING_DIR}/jpackage-scripts/batch-launcher.properties'"
 JP_OPTS="$JP_OPTS --add-launcher 'pmedit-cli=${STAGING_DIR}/jpackage-scripts/cli.properties'"
 JP_OPTS="$JP_OPTS --dest '${STAGING_DIR}/packages'"
+JP_OPTS="$JP_OPTS --runtime-image ${STAGING_DIR}/preparedJDK"
 
 if [ "$TYPE" = "app-image" ]; then
   true
@@ -51,6 +52,10 @@ if [ "$TYPE" = "msi" -o  "$TYPE" = "exe" ]; then
   if [ "$TYPE" = "exe" ]; then
     JP_OPTS="$JP_OPTS --win-dir-chooser --win-per-user-install"
   fi
+fi
+
+if [ "$TYPE" = "dmg" ]; then
+  JP_OPTS="$JP_OPTS --mac-sign"
 fi
 
 set -x
