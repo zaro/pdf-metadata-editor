@@ -1,14 +1,19 @@
 #!/bin/sh
 
-export TOOLS_PATH=/c/Users/travis
+if [ "$TRAVIS_OS_NAME" = "windows" ]; then
+  export TOOLS_PATH=/c/Users/travis
+else
+  export TOOLS_PATH=~/travis
+fi
+mkdir -p TOOLS_PATH
 
-# Install Maven and some jpackage dependencies
 if [ "$TRAVIS_OS_NAME" = "linux" ]; then
   sudo apt-get update
   sudo apt -y install rpm fakeroot p7zip-full
 fi
 
 if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+  export HOMEBREW_NO_AUTO_UPDATE=1
   brew install p7zip
 fi
 
