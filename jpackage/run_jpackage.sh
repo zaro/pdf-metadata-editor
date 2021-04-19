@@ -1,5 +1,5 @@
 #!/bin/sh
-
+set -x
 TYPE="$1"
 if [ -z "$TYPE" ]; then
   echo MUST specify type
@@ -62,6 +62,6 @@ eval jpackage $JP_OPTS
 ls -lah ${STAGING_DIR}/packages/
 
 if [ "$TYPE" = "dmg" ]; then
-  codesign -s - -f "${STAGING_DIR}/packages/${APP_NAME}.dmg"
+  codesign -s - -f "${STAGING_DIR}/packages/${APP_NAME}-${APP_VERSION}.dmg"
 fi
 
