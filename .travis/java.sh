@@ -34,11 +34,11 @@ if [ "$TRAVIS_OS_NAME" = "windows" ]; then
   pushd ${TOOLS_PATH}
 
   echo ==============================================
-  echo Install JDK 14
+  echo Install JDK 16
   echo ==============================================
-  JAVA_URL="https://download.java.net/java/GA/jdk14/076bab302c7b4508975440c56f6cc26a/36/GPL/openjdk-14_windows-x64_bin.zip"
+  JAVA_URL="https://download.java.net/java/GA/jdk16/7863447f0ab643c585b9bdebf67c69db/36/GPL/openjdk-16_windows-x64_bin.zip"
   export JAVA_HOME=${JAVA_HOME:-$TOOLS_PATH/jdk}
-  export JAVA_VERSION=14
+  export JAVA_VERSION=16
 
   echo "Downloading $JAVA_URL..."
   curl -fsS -o openjdk.zip "$JAVA_URL"
@@ -73,22 +73,22 @@ else
   curl --create-dirs -Lo ~/bin/install-jdk.sh https://github.com/sormuras/bach/raw/master/install-jdk.sh
   export JAVA_HOME=~/openjdk14
   export PATH="$JAVA_HOME/bin:$PATH"
-  source ~/bin/install-jdk.sh --feature "14"  --cacerts
+  source ~/bin/install-jdk.sh --feature "16"  --cacerts
 
   # On macos  the feature release has symlink instead of cacrts file, replace with the current one
-  if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    CA_LINK=`readlink "$JAVA_HOME/lib/security/cacerts"`
-    if [ -n "$CA_LINK" ]; then
-      OLD_JAVA_HOME=$(/usr/libexec/java_home)
-      echo Preinstalled Java Home: $OLD_JAVA_HOME
+  # if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+  #   CA_LINK=`readlink "$JAVA_HOME/lib/security/cacerts"`
+  #   if [ -n "$CA_LINK" ]; then
+  #     OLD_JAVA_HOME=$(/usr/libexec/java_home)
+  #     echo Preinstalled Java Home: $OLD_JAVA_HOME
 
-      if [ -n "$OLD_JAVA_HOME" ]; then
-        rm -v $JAVA_HOME/lib/security/cacerts
-        cp -v "$OLD_JAVA_HOME/lib/security/cacerts" "$JAVA_HOME/lib/security/"
-      fi
-    fi
-    ls -lah $JAVA_HOME/lib/security/
-  fi
+  #     if [ -n "$OLD_JAVA_HOME" ]; then
+  #       rm -v $JAVA_HOME/lib/security/cacerts
+  #       cp -v "$OLD_JAVA_HOME/lib/security/cacerts" "$JAVA_HOME/lib/security/"
+  #     fi
+  #   fi
+  #   ls -lah $JAVA_HOME/lib/security/
+  # fi
 
 
 fi
