@@ -5,6 +5,7 @@ if [ -z "$TYPE" ]; then
   echo MUST specify type
   exit 1
 fi
+echo Building "$TYPE" package
 
 WINDOWS_UUID="c71564cd-5068-4d6d-874b-6a189abd40d3"
 STAGING_DIR="${staging.dir}"
