@@ -34,7 +34,7 @@ JP_OPTS="$JP_OPTS --description '$DESCRIPTION'"
 JP_OPTS="$JP_OPTS --add-launcher 'Batch ${APP_NAME}=${STAGING_DIR}/jpackage-scripts/batch-launcher.properties'"
 JP_OPTS="$JP_OPTS --add-launcher 'pmedit-cli=${STAGING_DIR}/jpackage-scripts/cli.properties'"
 JP_OPTS="$JP_OPTS --dest '${STAGING_DIR}/packages'"
-JP_OPTS="$JP_OPTS --runtime-image ${STAGING_DIR}/preparedJDK"
+JP_OPTS="$JP_OPTS --runtime-image '${STAGING_DIR}/preparedJDK'"
 
 if [ "$TYPE" = "app-image" ]; then
   true
@@ -60,6 +60,8 @@ fi
 
 set -x
 eval jpackage $JP_OPTS
+
+ls --lah ${STAGING_DIR}/packages/
 
 if [ "$TYPE" = "dmg" ]; then
   codesign -s - -f "${STAGING_DIR}/packages/${APP_NAME}.dmg"
