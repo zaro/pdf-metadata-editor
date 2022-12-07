@@ -6,13 +6,23 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 
 public class CsvMetadata {
 
 	public static List<MetadataInfo> readFile(File filename) throws Exception{
 		ArrayList<MetadataInfo> parsed = new ArrayList<MetadataInfo>();
-		CSVReader reader = new CSVReader(new FileReader(filename));
+		final CSVParser parser =
+			new CSVParserBuilder()
+			.withEscapeChar(OsCheck.isWindows()? '\0' : '\\')
+			.build();
+		final CSVReader reader =
+			new CSVReaderBuilder(new FileReader(filename))
+			.withCSVParser(parser)
+			.build();
 	    List<String[]> entries = reader.readAll();
 	    reader.close();
 	    String[] header = entries.remove(0);
