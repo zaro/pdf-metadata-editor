@@ -1,5 +1,7 @@
 #!/bin/sh
-set -x
+
+#set -x
+
 TYPE="$1"
 if [ -z "$TYPE" ]; then
   echo MUST specify type
@@ -19,6 +21,7 @@ ICON_FORMAT="${icon.format}"
 DEST_DIR=target/packages
 
 rm -rf "${DEST_DIR}/$APP_NAME"  "${DEST_DIR}/$APP_NAME.app"
+mkdir -p ${DEST_DIR}
 
 JP_OPTS=""
 JP_OPTS="$JP_OPTS --type $TYPE"

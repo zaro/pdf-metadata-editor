@@ -43,13 +43,13 @@ fi
 if [ "$TRAVIS_OS_NAME" = "windows" ]; then
 
   pushd ${TOOLS_PATH}
-
+  
+  export JAVA_VERSION=17
   echo ==============================================
-  echo Install JDK 16
+  echo Install JDK ${JAVA_VERSION}
   echo ==============================================
-  JAVA_URL="https://download.java.net/java/GA/jdk16/7863447f0ab643c585b9bdebf67c69db/36/GPL/openjdk-16_windows-x64_bin.zip"
+  JAVA_URL="https://download.oracle.com/java/17/latest/jdk-17_windows-x64_bin.zip"
   export JAVA_HOME=${JAVA_HOME:-$TOOLS_PATH/jdk}
-  export JAVA_VERSION=16
 
   echo "Downloading $JAVA_URL..."
   curl -fsS -o openjdk.zip "$JAVA_URL"
@@ -67,7 +67,7 @@ else
   curl --create-dirs -Lo ~/bin/install-jdk.sh https://github.com/sormuras/bach/raw/master/install-jdk.sh
   export JAVA_HOME=~/openjdk14
   export PATH="$JAVA_HOME/bin:$PATH"
-  source ~/bin/install-jdk.sh --feature "16"  --cacerts
+  source ~/bin/install-jdk.sh --feature "17"  --cacerts
 
   # On macos  the feature release has symlink instead of cacrts file, replace with the current one
   if [ "$TRAVIS_OS_NAME" = "osx" ]; then
