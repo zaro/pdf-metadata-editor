@@ -44,7 +44,7 @@
 				</os>
 			</activation>
 			<properties>
-				<packages.list>deb,rpm,app-image</packages.list>
+				<packages.list>app-image,deb,rpm</packages.list>
 				<archive.format>tar.gz</archive.format>
 				<archive.suffix>-linux</archive.suffix>
 				<icon.format>png</icon.format>
@@ -58,7 +58,7 @@
 				</os>
 			</activation>
 			<properties>
-				<packages.list>msi,exe,app-image</packages.list>
+				<packages.list>app-image,msi,exe</packages.list>
 				<archive.suffix>-windows</archive.suffix>
 				<icon.format>ico</icon.format>
 			</properties>
@@ -71,7 +71,7 @@
 				</os>
 			</activation>
 			<properties>
-				<packages.list>dmg,app-image</packages.list>
+				<packages.list>app-image,dmg</packages.list>
 				<archive.format>zip</archive.format>
 				<archive.suffix>-macos</archive.suffix>
 				<icon.format>icns</icon.format>
@@ -119,7 +119,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.2.4</version>
+				<version>3.4.1</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -194,7 +194,7 @@
 						<configuration>
 							<outputDirectory>${staging.dir}/jpackage/</outputDirectory>
 							<nonFilteredFileExtensions>
-            		<nonFilteredFileExtension>jar</nonFilteredFileExtension>
+            				<nonFilteredFileExtension>jar</nonFilteredFileExtension>
 							</nonFilteredFileExtensions>
 							<resources>
 								<resource>
@@ -286,9 +286,9 @@
               <goal>iterator</goal>
             </goals>
             <configuration>
-							<content>${packages.list}</content>
-              <pluginExecutors>
-                <pluginExecutor>
+				<content>${packages.list}</content>
+				<pluginExecutors>
+					<pluginExecutor>
 										<plugin>
 											<groupId>org.codehaus.mojo</groupId>
 											<artifactId>exec-maven-plugin</artifactId>
@@ -313,8 +313,8 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<configuration>
-					<descriptor>package/assembly-zip.xml</descriptor>
-					<finalName>bundles/${main.file.name}${archive.suffix}</finalName>
+					<descriptor>jpackage/assembly-zip.xml</descriptor>
+					<finalName>packages/${main.file.name}</finalName>
 				</configuration>
 				<executions>
 					<execution>

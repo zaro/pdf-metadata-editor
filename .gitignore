@@ -10,3 +10,4 @@ test-files/
 ris/
 .vscode/
 test/
+jpackage/cert/*.pfx
