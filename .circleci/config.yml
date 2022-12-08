@@ -2,6 +2,9 @@
 # See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 
+orbs:
+  win: circleci/windows@4.1.1 # The Windows orb gives you everything you need to start using the Windows executor
+
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
@@ -31,6 +34,32 @@ jobs:
           name: Test
           command: mvn test
 
+  build-and-test-windows:
+    # These next lines define a Docker executor: https://circleci.com/docs/2.0/executor-types/
+    # You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
+    # Be sure to update the Docker image tag below to openjdk version of your application.
+    # A list of available CircleCI Docker Convenience Images are available here: https://circleci.com/developer/images/image/cimg/openjdk
+    executor: win/server-2019
+
+    steps:
+      # Checkout the code as the first step.
+      - checkout
+      # Checkout and build JDDE
+      - run:
+          name: Build JDDE
+          command: ci-scripts/jdde.sh
+          shell: bash.exe
+      # Use mvn clean and package as the standard maven build phase
+      - run:
+          name: Build
+          command: mvn -B -DskipTests clean package
+          shell: bash.exe
+      # Then run your tests!
+      - run:
+          name: Test
+          command: mvn test
+          shell: bash.exe
+
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
@@ -38,3 +67,4 @@ workflows:
     # Inside the workflow, you define the jobs you want to run.
     jobs:
       - build-and-test-linux
+      - build-and-test-windows
