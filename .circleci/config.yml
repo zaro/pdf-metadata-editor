@@ -18,6 +18,10 @@ jobs:
     steps:
       # Checkout the code as the first step.
       - checkout
+      # Checkout and build JDDE
+      - run:
+          name: Build JDDE
+          command: ci-scripts/jdde.sh
       # Use mvn clean and package as the standard maven build phase
       - run:
           name: Build
