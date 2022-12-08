@@ -2,6 +2,12 @@
 
 #set -x
 
+echo '--------------------------------'
+java -version
+echo '--------------------------------'
+mvn -version
+echo '--------------------------------'
+
 cd $HOME
 echo "Clonning jdde"
 git clone https://github.com/zaro/jdde-bundle.git

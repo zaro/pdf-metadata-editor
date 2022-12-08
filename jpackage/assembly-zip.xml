@@ -9,8 +9,9 @@
 	<includeBaseDirectory>false</includeBaseDirectory>
 	<fileSets>
 		<fileSet>
-			<directory>target/packages/</directory>
-			<excludes>
+			<directory>target/packages-image/</directory>
+			<!--
+				<excludes>
           <exclude>*.rpm</exclude>
           <exclude>*.deb</exclude>
           <exclude>*.zip</exclude>
@@ -18,7 +19,8 @@
           <exclude>*.exe</exclude>
           <exclude>*.msi</exclude>
           <exclude>*.dmg</exclude>
-      </excludes>
+      	</excludes>
+			-->
 			<outputDirectory>/</outputDirectory>
 		</fileSet>
 	</fileSets>

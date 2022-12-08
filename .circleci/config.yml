@@ -4,6 +4,9 @@ version: 2.1
 
 orbs:
   win: circleci/windows@4.1.1 # The Windows orb gives you everything you need to start using the Windows executor
+  msix: circleci/microsoft-msix@1.1
+  github-cli: circleci/github-cli@2.1.1
+
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
@@ -21,6 +24,11 @@ jobs:
     steps:
       # Checkout the code as the first step.
       - checkout
+      - run:
+          name: Install build dependencies
+          command: |
+            sudo apt update
+            sudo apt install fakeroot rpm
       # Checkout and build JDDE
       - run:
           name: Build JDDE
@@ -33,6 +41,9 @@ jobs:
       - run:
           name: Test
           command: mvn test
+      - store_artifacts:
+          path: target/packages/
+          destination: linux
 
   build-and-test-windows:
     # These next lines define a Docker executor: https://circleci.com/docs/2.0/executor-types/
@@ -42,29 +53,83 @@ jobs:
     executor: win/server-2019
 
     steps:
-      # Checkout the code as the first step.
       - checkout
-      # Checkout and build JDDE
+      - run:
+          name: Install JDK, Maven, WIX
+          command: |
+            choco uninstall openjdk --all-versions
+            refreshenv
+            choco install temurin --version=17.0.2.800 -y --params="/ADDLOCAL=FeatureMain,FeatureEnvironment,FeatureJarFileRunWith,FeatureJavaHome"
+            refreshenv
+            choco install maven -y
+            refreshenv
+            choco install wixtoolset -y
+            refreshenv
+      - run:
+          name: Info
+          command: |
+            ls -la /usr/bin
+            ls -la /mingw64/bin
+            which sh
+            which bash
+            which find
+            which ls
+            echo $PATH
+          shell: bash.exe
+      - run:
+          name: Build JDDE
+          command: bash ci-scripts/jdde.sh
+      - run:
+          name: Build
+          command: bash -c 'mvn -B -DskipTests clean package'
+      - run:
+          name: Test
+          command: bash -c 'mvn test'
+      - store_artifacts:
+          path: target/packages/
+          destination: windows
+
+  build-and-test-macos:
+    macos:
+      xcode: 14.1.0
+    steps:
+      - checkout
+      - run:
+          name: Brew
+          command: |
+            # set -x
+            # export HOMEBREW_NO_AUTO_UPDATE=1
+            # brew list
+            # curl -LO https://raw.githubusercontent.com/Homebrew/homebrew-cask/4565865e9d7c3d3018ee8aa67803ea68c54dde86/Casks/temurin.rb
+            # brew install --cask temurin.rb
+            # brew install --ignore-dependencies maven
+            curl -LO https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.5%2B8/OpenJDK17U-jdk_x64_mac_hotspot_17.0.5_8.pkg
+            sudo installer -pkg ./OpenJDK17U-jdk_x64_mac_hotspot_17.0.5_8.pkg -target /Applications
+            curl -LO https://dlcdn.apache.org/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
+            tar xzf apache-maven-3.8.6-bin.tar.gz
+            sudo mkdir -p /usr/local/bin/
+            sudo ln -s `pwd`/apache-maven-3.8.6/bin/mvn /usr/local/bin/mvn
+            java -version
+            mvn -version
       - run:
           name: Build JDDE
           command: ci-scripts/jdde.sh
-          shell: bash.exe
-      # Use mvn clean and package as the standard maven build phase
       - run:
           name: Build
           command: mvn -B -DskipTests clean package
-          shell: bash.exe
-      # Then run your tests!
       - run:
           name: Test
           command: mvn test
-          shell: bash.exe
+      - store_artifacts:
+          path: target/packages/
+          destination: macos
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  sample: # This is the name of the workflow, feel free to change it to better match your workflow.
+  build-deliverables: # This is the name of the workflow, feel free to change it to better match your workflow.
     # Inside the workflow, you define the jobs you want to run.
     jobs:
       - build-and-test-linux
       - build-and-test-windows
+      - build-and-test-macos
