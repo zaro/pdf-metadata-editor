@@ -51,7 +51,7 @@ fi
 
 mkdir -p ${DEST_DIR} ${DEST_IMAGE_DIR}
 
-JP_OPTS=""
+JP_OPTS="--verbose"
 JP_OPTS="$JP_OPTS --type $TYPE"
 JP_OPTS="$JP_OPTS --name '$APP_NAME'"
 JP_OPTS="$JP_OPTS --vendor 'broken-by.me'"

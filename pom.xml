@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>pdf-metadata-edit</groupId>
 	<artifactId>pdf-metadata-editor</artifactId>
-	<version>3.0.0.beta</version>
+	<version>3.0.beta</version>
 	<name>Pdf Metadata Editor</name>
 	<description>Simple Editor for PDF metadata</description>
 	<url>http://broken-by.me/pdf-metadata-editor/</url>
