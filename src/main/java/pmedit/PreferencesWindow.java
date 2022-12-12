@@ -271,52 +271,54 @@ public class PreferencesWindow extends JDialog {
 
 		panelDefaults.add(defaultMetadataPane.tabbedaPane, gbc_lblDefineHereDefault1);
 
-		JPanel panelOsIntegration = new JPanel();
-		tabbedPane.addTab("Os Integration", null, panelOsIntegration, null);
-		panelOsIntegration.setLayout(new MigLayout("", "[grow]", "[grow]"));
+		// if(false){
+		// JPanel panelOsIntegration = new JPanel();
+		// tabbedPane.addTab("Os Integration", null, panelOsIntegration, null);
+		// panelOsIntegration.setLayout(new MigLayout("", "[grow]", "[grow]"));
 
-		JPanel panel_2 = new JPanel();
-		panel_2.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-				"Explorer context menu (Windows only)", TitledBorder.LEADING, TitledBorder.TOP, null,
-				new Color(0, 0, 0)));
-		panelOsIntegration.add(panel_2, "cell 0 0,grow");
-		panel_2.setLayout(new MigLayout("", "[][]", "[growprio 50,grow][growprio 50,grow]"));
+		// JPanel panel_2 = new JPanel();
+		// panel_2.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+		// 		"Explorer context menu (Windows only)", TitledBorder.LEADING, TitledBorder.TOP, null,
+		// 		new Color(0, 0, 0)));
+		// panelOsIntegration.add(panel_2, "cell 0 0,grow");
+		// panel_2.setLayout(new MigLayout("", "[][]", "[growprio 50,grow][growprio 50,grow]"));
 
-		JButton btnRegister = new JButton("Add to context menu");
-		btnRegister.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				try {
-					WindowsRegisterContextMenu.register();
-				} catch (Exception e1) {
-					// StringWriter sw = new StringWriter();
-					// PrintWriter pw = new PrintWriter(sw);
-					// e1.printStackTrace(pw);
-					// JOptionPane.showMessageDialog(owner,
-					// "Failed to register context menu:\n" + e1.toString()
-					// +"\n" +sw.toString());
-					JOptionPane.showMessageDialog(owner, "Failed to register context menu:\n" + e1.toString());
-					e1.printStackTrace();
-				}
+		// JButton btnRegister = new JButton("Add to context menu");
+		// btnRegister.addActionListener(new ActionListener() {
+		// 	public void actionPerformed(ActionEvent e) {
+		// 		try {
+		// 			WindowsRegisterContextMenu.register();
+		// 		} catch (Exception e1) {
+		// 			// StringWriter sw = new StringWriter();
+		// 			// PrintWriter pw = new PrintWriter(sw);
+		// 			// e1.printStackTrace(pw);
+		// 			// JOptionPane.showMessageDialog(owner,
+		// 			// "Failed to register context menu:\n" + e1.toString()
+		// 			// +"\n" +sw.toString());
+		// 			JOptionPane.showMessageDialog(owner, "Failed to register context menu:\n" + e1.toString());
+		// 			e1.printStackTrace();
+		// 		}
 
-			}
-		});
-		panel_2.add(btnRegister, "cell 0 0,growx,aligny center");
+		// 	}
+		// });
+		// panel_2.add(btnRegister, "cell 0 0,growx,aligny center");
 
-		JButton btnUnregister = new JButton("Remove from context menu");
-		btnUnregister.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				WindowsRegisterContextMenu.unregister();
-			}
-		});
+		// JButton btnUnregister = new JButton("Remove from context menu");
+		// btnUnregister.addActionListener(new ActionListener() {
+		// 	public void actionPerformed(ActionEvent e) {
+		// 		WindowsRegisterContextMenu.unregister();
+		// 	}
+		// });
 
-		final JLabel lblNewLabel_1 = new JLabel("");
-		panel_2.add(lblNewLabel_1, "cell 1 0 1 2");
+		// final JLabel lblNewLabel_1 = new JLabel("");
+		// panel_2.add(lblNewLabel_1, "cell 1 0 1 2");
 
-		panel_2.add(btnUnregister, "cell 0 1,growx,aligny center");
+		// panel_2.add(btnUnregister, "cell 0 1,growx,aligny center");
 
-		btnRegister.setEnabled(isWindows);
-		btnUnregister.setEnabled(isWindows);
-		
+		// btnRegister.setEnabled(isWindows);
+		// btnUnregister.setEnabled(isWindows);
+		// }
+
 		JPanel panelBatchLicense = new JPanel();
 		tabbedPane.addTab("License", null, panelBatchLicense, null);
 		GridBagLayout gbl_panelBatchLicense = new GridBagLayout();
@@ -325,7 +327,7 @@ public class PreferencesWindow extends JDialog {
 		gbl_panelBatchLicense.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
 		gbl_panelBatchLicense.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		panelBatchLicense.setLayout(gbl_panelBatchLicense);
-		
+
 		JTextPane txtpnEnterLicenseInformation = new JTextPane();
 		txtpnEnterLicenseInformation.setEditable(false);
 		txtpnEnterLicenseInformation.setBackground(UIManager.getColor("Panel.background"));
@@ -358,7 +360,7 @@ public class PreferencesWindow extends JDialog {
 
 				}
 			}
-		});		
+		});
 		JLabel lblNewLabel_2 = new JLabel("Email");
 		GridBagConstraints gbc_lblNewLabel_2 = new GridBagConstraints();
 		gbc_lblNewLabel_2.insets = new Insets(15, 15, 5, 5);
@@ -366,7 +368,7 @@ public class PreferencesWindow extends JDialog {
 		gbc_lblNewLabel_2.gridx = 0;
 		gbc_lblNewLabel_2.gridy = 1;
 		panelBatchLicense.add(lblNewLabel_2, gbc_lblNewLabel_2);
-		
+
 		emailField = new JTextField();
 		GridBagConstraints gbc_emailField = new GridBagConstraints();
 		gbc_emailField.insets = new Insets(15, 0, 5, 15);
@@ -381,18 +383,18 @@ public class PreferencesWindow extends JDialog {
 			public void removeUpdate(DocumentEvent e) {
 				updateLicense();
 			}
-			
+
 			@Override
 			public void insertUpdate(DocumentEvent e) {
 				updateLicense();
 			}
-			
+
 			@Override
 			public void changedUpdate(DocumentEvent e) {
 
 			}
 		});
-		
+
 		JLabel lblLicenseKey = new JLabel("License key");
 		GridBagConstraints gbc_lblLicenseKey = new GridBagConstraints();
 		gbc_lblLicenseKey.anchor = GridBagConstraints.EAST;
@@ -400,7 +402,7 @@ public class PreferencesWindow extends JDialog {
 		gbc_lblLicenseKey.gridx = 0;
 		gbc_lblLicenseKey.gridy = 2;
 		panelBatchLicense.add(lblLicenseKey, gbc_lblLicenseKey);
-		
+
 		keyField = new JTextField();
 		GridBagConstraints gbc_keyField = new GridBagConstraints();
 		gbc_keyField.insets = new Insets(0, 0, 5, 15);
@@ -415,18 +417,18 @@ public class PreferencesWindow extends JDialog {
 			public void removeUpdate(DocumentEvent e) {
 				updateLicense();
 			}
-			
+
 			@Override
 			public void insertUpdate(DocumentEvent e) {
 				updateLicense();
 			}
-			
+
 			@Override
 			public void changedUpdate(DocumentEvent e) {
 
 			}
 		});
-		
+
 		labelLicenseStatus = new JLabel("No License");
 		GridBagConstraints gbc_labelLicenseStatus = new GridBagConstraints();
 		gbc_labelLicenseStatus.gridwidth = 2;
@@ -465,7 +467,7 @@ public class PreferencesWindow extends JDialog {
 		txtpnDf.setText(
 				aboutMsg="<h1 align=center>Pdf Metadata editor</h1>\n\n<p align=center><a href=\"http://broken-by.me/pdf-metadata-editor/\">http://broken-by.me/pdf-metadata-editor/</a></p>\n<br>\n<p align=center>If you have suggestions, found bugs or just want to share some idea about it you can write me at : <a href=\"mailto:zarrro@gmail.com\"/>zarrro@gmail.com</a></p>\n<br>");
 		scrollPane_1.setViewportView(txtpnDf);
-		
+
 		JPanel panel_3 = new JPanel();
 		GridBagConstraints gbc_panel_3 = new GridBagConstraints();
 		gbc_panel_3.insets = new Insets(0, 5, 0, 5);
@@ -474,10 +476,10 @@ public class PreferencesWindow extends JDialog {
 		gbc_panel_3.gridy = 1;
 		contentPane.add(panel_3, gbc_panel_3);
 				panel_3.setLayout(new BorderLayout(0, 0));
-		
+
 				JButton btnClose = new JButton("Close");
 				panel_3.add(btnClose, BorderLayout.EAST);
-				
+
 				updateStatusLabel = new JLabel("...");
 				panel_3.add(updateStatusLabel, BorderLayout.WEST);
 				btnClose.addActionListener(new ActionListener() {
@@ -531,8 +533,8 @@ public class PreferencesWindow extends JDialog {
 
 			@Override
 			public void run() {
-				lblNewLabel_1
-						.setIcon(new ImageIcon(PreferencesWindow.class.getResource("/pmedit/os_integration_hint.png")));
+				// lblNewLabel_1
+				// 		.setIcon(new ImageIcon(PreferencesWindow.class.getResource("/pmedit/os_integration_hint.png")));
 
 			}
 		});
@@ -545,10 +547,10 @@ public class PreferencesWindow extends JDialog {
 			showUpdatesStatus(status);
 		} else {
 			(new Thread(new Runnable() {
-				
+
 				@Override
 				public void run() {
-					showUpdatesStatus(status);					
+					showUpdatesStatus(status);
 				}
 			})).start();
 		}
@@ -666,9 +668,9 @@ public class PreferencesWindow extends JDialog {
 		} else {
 			labelLicenseStatus.setText("Invalid license");
 		}
-		
+
 	}
-	
+
 	private String desc = "";
 	private JLabel lblNewLabel;
 	private JComboBox comboBox;

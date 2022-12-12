@@ -12,15 +12,15 @@ import java.util.List;
 public class PDFMetadataEditBatch {
 
 	BatchOperationParameters params;
-	
+
 	public PDFMetadataEditBatch() {
 		this(null);
 	}
-	
+
 	public PDFMetadataEditBatch(BatchOperationParameters params){
 		this.params = params;
 	}
-	
+
 	/**
 	 * @param args
 	 */
@@ -28,12 +28,12 @@ public class PDFMetadataEditBatch {
 		public void addStatus(String filename, String message);
 		public void addError(String filename, String error);
 	}
-	
+
 	interface FileAction {
 		public void apply(File file);
 		public void ignore(File file);
 	};
-	
+
 	public void forFiles(File file, FileFilter filter, FileAction action){
 		if(file.isFile()){
 			if(isPdfExtension(file)){
@@ -44,12 +44,12 @@ public class PDFMetadataEditBatch {
 		} else if( file.isDirectory() ){
 			for(File f:file.listFiles(filter)){
 				action.apply(f);
-			}			
+			}
 		} else {
 			action.ignore(file);
 		}
 	}
-	
+
 	public void forFiles(List<File> files, FileFilter filter, FileAction action){
 		for(File file: files){
 			forFiles(file, filter, action);
@@ -57,7 +57,7 @@ public class PDFMetadataEditBatch {
 	}
 
 	protected FileFilter defaultFileFilter= new FileFilter() {
-		
+
 		@Override
 		public boolean accept(File pathname) {
 			if( isPdfExtension( pathname) ){
@@ -66,7 +66,7 @@ public class PDFMetadataEditBatch {
 			return false;
 		}
 	};
-	
+
 	public void forFiles(File file, FileAction action){
 		forFiles(file, defaultFileFilter, action);
 	}
@@ -74,7 +74,7 @@ public class PDFMetadataEditBatch {
 	public void forFiles(List<File> files, FileAction action){
 		forFiles(files, defaultFileFilter, action);
 	}
-	
+
 	public static boolean isPdfExtension(File pathname) {
 		return pathname.getName().toLowerCase().endsWith(".pdf");
 	}
@@ -85,14 +85,14 @@ public class PDFMetadataEditBatch {
 			return;
 		}
 		forFiles(files, new FileAction() {
-			
+
 			@Override
 			public void apply(File file) {
 				MetadataInfo mdParams = params != null ? params.metadata : new MetadataInfo();
 				try {
 					MetadataInfo mdFile = new MetadataInfo();
 					mdFile.loadFromPDF(file);
-					MetadataInfo md = mdParams.clone(); 
+					MetadataInfo md = mdParams.clone();
 					md.expand(mdFile);
 					md.saveAsPDF(file);
 					status.addStatus(file.getName(), "Done");
@@ -105,14 +105,14 @@ public class PDFMetadataEditBatch {
 
 			@Override
 			public void ignore(File file) {
-				status.addError(file.getName(), "Invalid file:" + file.getAbsolutePath());				
+				status.addError(file.getName(), "Invalid file:" + file.getAbsolutePath());
 			}
 		});
 	}
-	
+
 	public void clear(List<File> files, final ActionStatus status){
 		forFiles(files, new FileAction() {
-			
+
 			@Override
 			public void apply(File file) {
 				MetadataInfo md = params != null ? params.metadata : new MetadataInfo();
@@ -128,12 +128,12 @@ public class PDFMetadataEditBatch {
 
 			@Override
 			public void ignore(File file) {
-				status.addError(file.getName(), "Invalid file:" + file.getAbsolutePath());				
+				status.addError(file.getName(), "Invalid file:" + file.getAbsolutePath());
 			}
 		});
 	}
-	
-	
+
+
 	public void rename(List<File> files, final ActionStatus status){
 		String template = null;
 		if(params != null ){
@@ -144,11 +144,11 @@ public class PDFMetadataEditBatch {
 		if(template == null){
 			status.addError("*", "Rename template not configured");
 			return;
-		}		
+		}
 		final TemplateString ts = new TemplateString(template);
-		
+
 		forFiles(files, new FileAction() {
-			
+
 			@Override
 			public void apply(File file) {
 				try {
@@ -172,18 +172,18 @@ public class PDFMetadataEditBatch {
 					status.addError(file.getName(), "Failed: "  + e.toString());
 				}
 			}
-			
+
 			@Override
 			public void ignore(File file) {
-				status.addError(file.getName(), "Invalid file:" + file.getAbsolutePath());				
+				status.addError(file.getName(), "Invalid file:" + file.getAbsolutePath());
 			}
-		});	
+		});
 	}
-	
+
 
 	public void tojson(List<File> files, final ActionStatus status){
 		forFiles(files, new FileAction() {
-			
+
 			@Override
 			public void apply(File file) {
 				try {
@@ -203,17 +203,17 @@ public class PDFMetadataEditBatch {
 					status.addError(file.getName(), "Failed: "  + e.toString());
 				}
 			}
-			
+
 			@Override
 			public void ignore(File file) {
-				status.addError(file.getName(), "Invalid file:" + file.getAbsolutePath());				
+				status.addError(file.getName(), "Invalid file:" + file.getAbsolutePath());
 			}
-		});	
+		});
 	}
 
 	public void toyaml(List<File> files, final ActionStatus status){
 		forFiles(files, new FileAction() {
-			
+
 			@Override
 			public void apply(File file) {
 				try {
@@ -233,14 +233,14 @@ public class PDFMetadataEditBatch {
 					status.addError(file.getName(), "Failed: "  + e.toString());
 				}
 			}
-			
+
 			@Override
 			public void ignore(File file) {
-				status.addError(file.getName(), "Invalid file:" + file.getAbsolutePath());				
+				status.addError(file.getName(), "Invalid file:" + file.getAbsolutePath());
 			}
-		});	
+		});
 	}
-	
+
 	public void fromcsv(List<File> csvFiles, final ActionStatus status){
 		for(File csvFile: csvFiles) {
 			try {
@@ -250,7 +250,7 @@ public class PDFMetadataEditBatch {
 					try {
 						MetadataInfo mdFile = new MetadataInfo();
 						mdFile.loadFromPDF(file);
-						MetadataInfo md = mdParams.clone(); 
+						MetadataInfo md = mdParams.clone();
 						md.expand(mdFile);
 						md.saveAsPDF(file);
 						status.addStatus(file.getName(), "Done");
@@ -260,13 +260,62 @@ public class PDFMetadataEditBatch {
 						status.addError(file.getName(), "Failed: "  + e.toString());
 					}
 				}
-				
+
 			} catch (Exception e) {
 				status.addError(csvFile.getName(), "Failed: "  + e.toString());
 			}
 		}
 	}
 
+	public void xmptodoc(List<File> files, final ActionStatus status){
+		forFiles(files, new FileAction() {
+
+			@Override
+			public void apply(File file) {
+				MetadataInfo mdParams = params != null ? params.metadata : new MetadataInfo();
+				try {
+					MetadataInfo mdFile = new MetadataInfo();
+					mdFile.loadFromPDF(file);
+					mdFile.copyXMPToDoc();
+					mdFile.saveAsPDF(file);
+					status.addStatus(file.getName(), "Done");
+				} catch (Exception e) {
+					e.printStackTrace();
+					status.addError(file.getName(), "Failed: "  + e.toString());
+				}
+			}
+
+			@Override
+			public void ignore(File file) {
+				status.addError(file.getName(), "Invalid file:" + file.getAbsolutePath());
+			}
+		});
+	}
+
+	public void doctoxmp(List<File> files, final ActionStatus status){
+		forFiles(files, new FileAction() {
+
+			@Override
+			public void apply(File file) {
+				MetadataInfo mdParams = params != null ? params.metadata : new MetadataInfo();
+				try {
+					MetadataInfo mdFile = new MetadataInfo();
+					mdFile.loadFromPDF(file);
+					mdFile.copyDocToXMP();
+					mdFile.saveAsPDF(file);
+					status.addStatus(file.getName(), "Done");
+				} catch (Exception e) {
+					e.printStackTrace();
+					status.addError(file.getName(), "Failed: "  + e.toString());
+				}
+			}
+
+			@Override
+			public void ignore(File file) {
+				status.addError(file.getName(), "Invalid file:" + file.getAbsolutePath());
+			}
+		});
+	}
 
 	public void runCommand(CommandDescription command, List<File> batchFileList, ActionStatus actionStatus){
 		if( !BatchMan.hasBatch() ){
@@ -283,9 +332,13 @@ public class PDFMetadataEditBatch {
 			toyaml(batchFileList, actionStatus);
 		} else if( command.is("fromcsv")){
 			fromcsv(batchFileList, actionStatus);
+		} else if( command.is("xmptodoc")) {
+			xmptodoc(batchFileList, actionStatus);
+		} else if( command.is("doctoxmp")) {
+			doctoxmp(batchFileList, actionStatus);
 		} else {
 			actionStatus.addError("*", "Invalid command");
 		}
 	}
-	
+
 }
