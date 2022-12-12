@@ -43,7 +43,7 @@ public class MetadataInfo {
 	public interface Function<T, R> {
 	    R apply(T t);
 	}
-	
+
 	public static class FileInfo {
 		public String name;
 		public String nameWithExt;
@@ -52,7 +52,7 @@ public class MetadataInfo {
 		public String createTime;
 		public String modifyTime;
 		public String fullPath;
-		
+
 	}
 
 	public static class FileInfoEnabled {
@@ -67,7 +67,7 @@ public class MetadataInfo {
 		public boolean atLeastOne() {
 			return false;
 		}
-		
+
 		public void setAll(boolean value){
 			name = false;
 			nameWithExt = false;
@@ -106,7 +106,7 @@ public class MetadataInfo {
 			return title || author || subject || keywords || creator || producer || creationDate || modificationDate
 					|| trapped;
 		}
-		
+
 		public void setAll(boolean value){
 			title = value;
 			author = value;
@@ -116,7 +116,7 @@ public class MetadataInfo {
 			producer = value;
 			creationDate = value;
 			modificationDate = value;
-			trapped = value;			
+			trapped = value;
 		}
 	};
 
@@ -132,7 +132,7 @@ public class MetadataInfo {
 		public List<String> advisories;
 		public Calendar metadataDate;
 	};
-	
+
 	public static class XmpBasicEnabled {
 		public boolean creatorTool = true;
 		public boolean createDate = true;
@@ -149,7 +149,7 @@ public class MetadataInfo {
 			return creatorTool || createDate || modifyDate || baseURL || rating || label || nickname
 					|| identifiers || advisories || metadataDate;
 		}
-		
+
 		public void setAll(boolean value){
 			creatorTool = value;
 			createDate = value;
@@ -160,10 +160,10 @@ public class MetadataInfo {
 			nickname = value;
 			identifiers = value;
 			advisories = value;
-			metadataDate = value;		
+			metadataDate = value;
 		}
 	};
-	
+
 	public static class XmpPdf {
 		public String pdfVersion;
 		public String keywords;
@@ -180,7 +180,7 @@ public class MetadataInfo {
 		public void setAll(boolean value){
 			pdfVersion = value;
 			keywords = value;
-			producer = value;	
+			producer = value;
 		}
 	};
 
@@ -239,7 +239,7 @@ public class MetadataInfo {
 			rights = value;
 			source = value;
 			subjects = value;
-			types = value;	
+			types = value;
 		}
 	};
 
@@ -251,7 +251,7 @@ public class MetadataInfo {
 		public String usageTerms;
 		public String webStatement;
 	}
-	
+
 	public static class XmpRightsEnabled {
 		public boolean certificate = true;
 		public boolean marked = true;
@@ -259,11 +259,11 @@ public class MetadataInfo {
 		public boolean copyright = true;
 		public boolean usageTerms = true;
 		public boolean webStatement = true;
-		
+
 		public boolean atLeastOne() {
 			return certificate || marked || owner || usageTerms || webStatement;
 		}
-		
+
 		public void setAll(boolean value){
 			certificate = value;
 			marked  = value;
@@ -304,15 +304,15 @@ public class MetadataInfo {
 		super();
 		clear();
 	}
-	
+
 	public void clear() {
 		this.doc =  new Basic();
 		this.basic = new XmpBasic();
 		this.pdf = new XmpPdf();
-		this.dc  = new XmpDublinCore();	
+		this.dc  = new XmpDublinCore();
 		this.rights = new XmpRights();
 		this.file = new FileInfo();
-		
+
 		this.docEnabled = new BasicEnabled();
 		this.basicEnabled = new XmpBasicEnabled();
 		this.pdfEnabled = new XmpPdfEnabled();
@@ -392,6 +392,14 @@ public class MetadataInfo {
 				dc.format = dcS.getFormat();
 				dc.identifier = dcS.getIdentifier();
 				dc.languages = dcS.getLanguages();
+				// It appears there are some PDF out there where the languages is stored as plain
+				// string instead of list. Try to workaround that.
+				if(dc.languages == null){
+					String singleLang = dcS.getTextProperty("dc:language");
+					if(singleLang != null){
+						dc.languages = Arrays.asList(singleLang);
+					}
+				}
 				dc.publishers = dcS.getPublishers();
 				dc.relationships = dcS.getRelationships();
 				dc.rights = dcS.getRights();
@@ -399,7 +407,7 @@ public class MetadataInfo {
 				dc.subjects = dcS.getSubjects();
 				dc.types = dcS.getTypes();
 			}
-			
+
 			// XMP Rights
 			XMPSchemaRightsManagement ri = xmp.getRightsManagementSchema();
 			if (ri != null){
@@ -421,7 +429,7 @@ public class MetadataInfo {
 	protected static String hrSizes[] = new String[]{ "B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
 	public void loadFromPDF(File pdfFile) throws FileNotFoundException,
 			IOException {
-		
+
 		loadPDFFileInfo(pdfFile);
 
 		PDDocument document = null;
@@ -438,7 +446,7 @@ public class MetadataInfo {
 		}
 		inputStream.close();
 	}
-	
+
 
 	public void loadPDFFileInfo(File pdfFile) throws FileNotFoundException, IOException {
 		file.fullPath = pdfFile.getAbsolutePath();
@@ -447,7 +455,7 @@ public class MetadataInfo {
 		file.sizeBytes = attrs.size();
 		file.createTime = attrs.creationTime().toString();
 		file.modifyTime = attrs.lastModifiedTime().toString();
-		
+
 		// filename w/o extension
 		if(file.nameWithExt != null) {
 			int dotPos = file.nameWithExt.lastIndexOf('.');
@@ -507,11 +515,11 @@ public class MetadataInfo {
 			}
 			document.setDocumentInformation(info);
 		}
-		
+
 		// XMP
 		PDDocumentCatalog catalog = document.getDocumentCatalog();
 		PDMetadata meta = catalog.getMetadata();
-		
+
 		XMPMetadata xmpOld = null;
 		if (meta != null) {
 			xmpOld = XMPMetadata.load(meta.createInputStream());
@@ -522,7 +530,7 @@ public class MetadataInfo {
 		boolean atLeastOneXmpBasicSet = false;
 		if(basicEnabled.atLeastOne() || (biOld != null)) {
 			XMPSchemaBasic bi = xmpNew.addBasicSchema();
-			
+
 			if(basicEnabled.advisories){
 				if(basic.advisories != null){
 					for (String a : basic.advisories) {
@@ -531,7 +539,7 @@ public class MetadataInfo {
 					}
 				}
 			} else if(biOld != null){
-				List<String> old = biOld.getAdvisories(); 
+				List<String> old = biOld.getAdvisories();
 				if(old != null){
 					for(String a: old){
 						bi.addAdvisory(a);
@@ -539,7 +547,7 @@ public class MetadataInfo {
 					}
 				}
 			}
-			
+
 			if(basicEnabled.baseURL){
 				if(basic.baseURL != null){
 					bi.setBaseURL(basic.baseURL);
@@ -552,7 +560,7 @@ public class MetadataInfo {
 					atLeastOneXmpBasicSet = true;
 				}
 			}
-			
+
 			if(basicEnabled.createDate){
 				if(basic.createDate != null){
 					bi.setCreateDate(basic.createDate);
@@ -565,7 +573,7 @@ public class MetadataInfo {
 					atLeastOneXmpBasicSet = true;
 				}
 			}
-			
+
 			if(basicEnabled.modifyDate){
 				if(basic.modifyDate != null){
 					bi.setModifyDate(basic.modifyDate);
@@ -577,8 +585,8 @@ public class MetadataInfo {
 					bi.setModifyDate(old);
 					atLeastOneXmpBasicSet = true;
 				}
-			} 
-			
+			}
+
 			if(basicEnabled.creatorTool){
 				if(basic.creatorTool != null){
 					bi.setCreatorTool(basic.creatorTool);
@@ -591,7 +599,7 @@ public class MetadataInfo {
 					atLeastOneXmpBasicSet = true;
 				}
 			}
-			
+
 			if(basicEnabled.identifiers){
 				if (basic.identifiers != null) {
 					for (String i : basic.identifiers) {
@@ -608,7 +616,7 @@ public class MetadataInfo {
 					}
 				}
 			}
-			
+
 			if(basicEnabled.label){
 				if(basic.label != null){
 					bi.setLabel(basic.label);
@@ -621,7 +629,7 @@ public class MetadataInfo {
 					atLeastOneXmpBasicSet = true;
 				}
 			}
-			
+
 			if(basicEnabled.metadataDate){
 				if(basic.metadataDate != null){
 					bi.setMetadataDate(basic.metadataDate);
@@ -634,7 +642,7 @@ public class MetadataInfo {
 					atLeastOneXmpBasicSet = true;
 				}
 			}
-			
+
 			if(basicEnabled.nickname){
 				if(basic.nickname != null){
 					bi.setNickname(basic.nickname);
@@ -678,7 +686,7 @@ public class MetadataInfo {
 					atLeastOneXmpPdfSet = true;
 				}
 			}
-			
+
 			if(pdfEnabled.producer){
 				if(pdf.producer != null){
 					pi.setProducer(pdf.producer);
@@ -691,7 +699,7 @@ public class MetadataInfo {
 					atLeastOneXmpPdfSet = true;
 				}
 			}
-			
+
 			if(pdfEnabled.pdfVersion){
 				if(pdf.pdfVersion != null){
 					pi.setPDFVersion(pdf.pdfVersion);
@@ -705,13 +713,13 @@ public class MetadataInfo {
 				}
 			}
 		}
-		
+
 		// XMP Dublin Core
 		XMPSchemaDublinCore dcOld = xmpOld != null ? xmpOld.getDublinCoreSchema() : null;
 		boolean atLeastOneXmpDcSet = false;
 		if(dcEnabled.atLeastOne() || (dcOld != null)){
 			XMPSchemaDublinCore dcS = xmpNew.addDublinCoreSchema();
-			
+
 			if(dcEnabled.title){
 				if(dc.title != null){
 					dcS.setTitle(dc.title);
@@ -724,7 +732,7 @@ public class MetadataInfo {
 					atLeastOneXmpDcSet = true;
 				}
 			}
-			// 
+			//
 			if(dcEnabled.contributors){
 				if(dc.contributors != null){
 					for (String i : dc.contributors) {
@@ -856,7 +864,7 @@ public class MetadataInfo {
 					atLeastOneXmpDcSet = true;
 				}
 			}
-			
+
 			if(dcEnabled.format){
 				if(dc.format != null){
 					dcS.setFormat(dc.format);
@@ -869,7 +877,7 @@ public class MetadataInfo {
 					atLeastOneXmpDcSet = true;
 				}
 			}
-			
+
 			if(dcEnabled.identifier){
 				if(dc.identifier != null){
 					dcS.setIdentifier(dc.identifier);
@@ -882,7 +890,7 @@ public class MetadataInfo {
 					atLeastOneXmpDcSet = true;
 				}
 			}
-			
+
 			if(dcEnabled.rights){
 				if(dc.rights != null){
 					dcS.setRights(null, dc.rights);
@@ -900,7 +908,7 @@ public class MetadataInfo {
 					}
 				}
 			}
-			
+
 			if(dcEnabled.source){
 				if(dc.source != null){
 					dcS.setSource(dc.source);
@@ -913,7 +921,7 @@ public class MetadataInfo {
 					atLeastOneXmpDcSet = true;
 				}
 			}
-			
+
 			if(dcEnabled.description){
 				if(dc.description != null){
 					dcS.setDescription(dc.description);
@@ -926,7 +934,7 @@ public class MetadataInfo {
 					atLeastOneXmpDcSet = true;
 				}
 			}
-			
+
 			if(dcEnabled.dates){
 				if (dc.dates != null) {
 					for (Calendar date : dc.dates) {
@@ -944,13 +952,13 @@ public class MetadataInfo {
 				}
 			}
 		}
-		
+
 		// XMP Rights
 		XMPSchemaRightsManagement riOld = xmpOld != null ? xmpOld.getRightsManagementSchema() : null;
 		boolean atLeastOneXmpRightsSet = false;
 		if(rightsEnabled.atLeastOne() || (riOld != null)){
 			XMPSchemaRightsManagement ri = xmpNew.addRightsManagementSchema();
-			
+
 			if(rightsEnabled.certificate){
 				if(rights.certificate != null){
 					ri.setCertificateURL(rights.certificate);;
@@ -976,7 +984,7 @@ public class MetadataInfo {
 					atLeastOneXmpRightsSet = true;
 				}
 			}
-			
+
 			if(rightsEnabled.owner ){
 				if (rights.owner != null) {
 					for (String i : rights.owner) {
@@ -1006,7 +1014,7 @@ public class MetadataInfo {
 					atLeastOneXmpRightsSet = true;
 				}
 			}
-			
+
 			if(rightsEnabled.usageTerms){
 				if(rights.usageTerms != null){
 					ri.setUsageTerms(rights.usageTerms);
@@ -1048,11 +1056,11 @@ public class MetadataInfo {
 		}
 		document.save(pdfFile.getAbsolutePath());
 	}
-	
+
 	public void saveAsPDF(File pdfFile) throws Exception {
 		saveAsPDF(pdfFile, null);
 	}
-	
+
 	public void saveAsPDF(File pdfFile, File newFile) throws Exception {
 		PDDocument document = null;
 
@@ -1076,7 +1084,7 @@ public class MetadataInfo {
 		pdf.producer = doc.producer;
 		pdfEnabled.keywords = docEnabled.keywords;
 		pdfEnabled.producer = docEnabled.producer;
-		
+
 		basic.createDate = doc.creationDate;
 		basic.modifyDate = doc.modificationDate;
 		basicEnabled.createDate = docEnabled.creationDate;
@@ -1103,8 +1111,8 @@ public class MetadataInfo {
 		doc.modificationDate = basic.modifyDate;
 		docEnabled.creationDate = basicEnabled.createDate;
 		docEnabled.modificationDate = basicEnabled.modifyDate;
-		
-		
+
+
 		doc.creator = basic.creatorTool;
 		docEnabled.creator = basicEnabled.creatorTool;
 
@@ -1126,7 +1134,7 @@ public class MetadataInfo {
 		docEnabled.author = dcEnabled.creators;
 
 	}
-		
+
 	public void setEnabled(boolean value){
 		docEnabled.setAll(value);
 		basicEnabled.setAll(value);
@@ -1134,7 +1142,7 @@ public class MetadataInfo {
 		dcEnabled.setAll(value);
 		rightsEnabled.setAll(value);
 	}
-	
+
 	public void setEnabled(String id, boolean value) {
 		_setObjectEnabled(id, value);
 	}
@@ -1150,7 +1158,7 @@ public class MetadataInfo {
 		FieldDescription fd = getFieldDescription(key);
 		return (fd != null) ? fd.isWritable :  false;
 	}
-	
+
 	public <T> Map<String, T> asFlatMap(Function<Object, T> convertor) {
 		LinkedHashMap<String, T> map = new LinkedHashMap<String, T>();
 
@@ -1179,7 +1187,7 @@ public class MetadataInfo {
 		return map;
 	}
 
-	
+
 	public void  fromFlatMap(Map<String, Object> map, Function<Object, Object> convertor) {
 		for (String fieldName : keys()) {
 			if(map.containsKey(fieldName)){
@@ -1199,14 +1207,14 @@ public class MetadataInfo {
 			set(fieldName, other.get(fieldName));
 		}
 	}
-	
+
 	public void copyUnset(MetadataInfo other){
 		for (String fieldName : keys()) {
 			Object o = get(fieldName);
 			if( o == null){
 				set(fieldName, other.get(fieldName));
 			}
-		}		
+		}
 	}
 
 	public void copyUnsetExpanded(MetadataInfo other, MetadataInfo expandInfo){
@@ -1220,7 +1228,7 @@ public class MetadataInfo {
 				}
 				set(fieldName, otherVal);
 			}
-		}		
+		}
 	}
 
 	public void expand(MetadataInfo expandInfo){
@@ -1234,9 +1242,9 @@ public class MetadataInfo {
 				}
 				set(fieldName, expandedVal);
 			}
-		}		
+		}
 	}
-	
+
 	public void enableOnlyNonNull(){
 		Map<String, Object> values = asFlatMap();
 		docEnabled.setAll(false);
@@ -1249,13 +1257,13 @@ public class MetadataInfo {
 				setEnabled(entry.getKey(), true);
 			}
 		}
-		
+
 	}
-	
+
 	public String toJson() {
 		return toJson(0);
 	}
-	
+
 	public String toJson(int indent) {
 		Map<String, Object> map = asFlatMap(new Function<Object, Object>() {
 			@Override
@@ -1274,7 +1282,7 @@ public class MetadataInfo {
 		if(indent > 0){
 			sb.append("\n");
 		}
-		Set<String> keySet = map.keySet(); 
+		Set<String> keySet = map.keySet();
 		int count = 0;
 		for(String key: keySet){
 			sb.append(istr);
@@ -1296,7 +1304,7 @@ public class MetadataInfo {
 		sb.append("}");
 		return sb.toString();
 	}
-	
+
 	public String toYAML() {
 		return toYAML(false);
 	}
@@ -1318,13 +1326,13 @@ public class MetadataInfo {
 				if(t instanceof Date){
 					  Calendar cal = Calendar.getInstance();
 					  cal.setTime((Date)t);
-					  return cal;				
+					  return cal;
 				}
 				return t;
 			}
 		});
 	}
-	
+
 	public boolean isEquivalent(MetadataInfo other){
  		for(Entry<String, List<FieldDescription>> e: _mdFields.entrySet()){
  			// Skip file.* fields, as they are read only and come from file metadata
@@ -1369,7 +1377,7 @@ public class MetadataInfo {
 						return false;
 					}
 				}
-					
+
 			} else if(t instanceof Calendar && o instanceof Calendar){
 				if( (((Calendar)t).getTimeInMillis()/1000) != (((Calendar)o).getTimeInMillis()/1000) ){
 					return false;
@@ -1380,7 +1388,7 @@ public class MetadataInfo {
 		}
 		return true;
 	}
-	
+
 	public String asPersistenceString(){
 		Map<String, Object> map = asFlatMap();
 		// Don't store null values as they are the default
@@ -1399,14 +1407,14 @@ public class MetadataInfo {
 		if(enabledMap.size() > 0) {
 			map.put("_enabled", enabledMap);
 		}
-		
+
 		DumperOptions options = new DumperOptions();
 
 		options.setWidth(0xFFFF);
 		Yaml yaml = new Yaml(options);
 		return yaml.dump(map);
 	}
-	
+
 	public static MetadataInfo fromPersistenceString(String yamlString) {
 		Yaml yaml = new Yaml();
 		Map<String, Object> map = (Map<String, Object>) yaml.load(yamlString);
@@ -1416,17 +1424,17 @@ public class MetadataInfo {
 		Object enMap = map.get("_enabled");
 		if(enMap != null && Map.class.isAssignableFrom(enMap.getClass())) {
 			Map<String, Object> enabledMap = (Map<String, Object>) enMap;
-			
+
 			for (String fieldName : _mdEnabledFields.keySet()) {
 				if(enabledMap.containsKey(fieldName)){
 					md.setEnabled(fieldName, (Boolean) enabledMap.get(fieldName));
 				}
 			}
 		}
-		
+
 		return md;
 	}
-	
+
 	//////////////////////////////
 	public static class FieldDescription {
 		public final String name;
@@ -1460,7 +1468,7 @@ public class MetadataInfo {
 			this.isWritable = isWritable;
 			isList = List.class.isAssignableFrom(klass);
 		}
-		
+
 		public String makeStringFromValue(Object value){
 			if( value == null){
 				return "";
@@ -1475,7 +1483,7 @@ public class MetadataInfo {
 				return value.toString();
 			}
 		}
-		
+
 		public Object makeValueFromString(String value){
 			if(value == null){
 				return null;
@@ -1567,7 +1575,7 @@ public class MetadataInfo {
 			}
 		}
 	}
-	
+
 	final static Map<String, List<FieldDescription>> _mdFields;
 	final static Map<String, List<FieldDescription>> _mdEnabledFields;
 	static {
@@ -1592,7 +1600,7 @@ public class MetadataInfo {
 			}
 		});
 	}
-	
+
 	protected Object _getStructObject(String id,  Map<String, List<FieldDescription>> mdFields, boolean parent, boolean toString, boolean useDefault, Object defaultValue) {
 		List<FieldDescription> fields = mdFields.get(id);
 		if(fields == null || fields.size() == 0){
@@ -1660,7 +1668,7 @@ public class MetadataInfo {
 				List<Object> l = (List<Object>) fieldD.field.get(current);
 				if(l == null){
 					l = new ArrayList<Object>();
-				} 
+				}
 				if(List.class.isAssignableFrom(value.getClass())){
 					l.addAll((List)value);
 				} else {
@@ -1703,13 +1711,13 @@ public class MetadataInfo {
 		return null;
 	}
 	//////////////////////////////
-	
+
 	public static MetadataInfo getSampleMetadata(){
 		MetadataInfo md = new MetadataInfo();
 		// Spec is at : http://partners.adobe.com/public/developer/en/xmp/sdk/XMPspecification.pdf
-		md.doc.title = "Dracula"; 
+		md.doc.title = "Dracula";
 		md.doc.author = "Bram Stoker";
-		md.doc.subject = "Horror tales, Epistolary fiction, Gothic fiction (Literary genre), Vampires -- Fiction, Dracula, Count (Fictitious character) -- Fiction, Transylvania (Romania) -- Fiction, Whitby (England) -- Fiction"; 
+		md.doc.subject = "Horror tales, Epistolary fiction, Gothic fiction (Literary genre), Vampires -- Fiction, Dracula, Count (Fictitious character) -- Fiction, Transylvania (Romania) -- Fiction, Whitby (England) -- Fiction";
 		md.doc.keywords = "Horror, Gothic, Vampires";
 		md.doc.creator = "Adobe InDesign CS4 (6.0.6)";
 		md.doc.producer = "Adobe PDF Library 9.0";
@@ -1721,23 +1729,23 @@ public class MetadataInfo {
 		md.basic.createDate = md.doc.creationDate;
 		md.basic.modifyDate = md.doc.modificationDate;
 		md.basic.baseURL = "https://www.gutenberg.org/";
-		md.basic.rating = 3; 
+		md.basic.rating = 3;
 		md.basic.label = "Horror Fiction Collection";
 		md.basic.nickname = "dracula";
 		md.basic.identifiers = Arrays.asList("Dracula_original_edition");
-		//md.xmpBasic.advisories ; 
+		//md.xmpBasic.advisories ;
 		md.basic.metadataDate = DateFormat.parseDateOrNull("2012-12-14 00:00:00");
 
-		md.pdf.pdfVersion = "1.5"; 
+		md.pdf.pdfVersion = "1.5";
 		md.pdf.keywords = md.doc.keywords;
 		md.pdf.producer = "Adobe PDF Library 9.0";
 
 		md.dc.title = md.doc.title;
-		md.dc.description = "The famous Bram Stocker book"; 
+		md.dc.description = "The famous Bram Stocker book";
 		md.dc.creators = new ArrayList<String>();
 		md.dc.creators.add("Bram Stocker");
 		md.dc.subjects = Arrays.asList(md.doc.subject.split("\\s*,\\s*"));
-		
+
 		return md;
 	}
 
