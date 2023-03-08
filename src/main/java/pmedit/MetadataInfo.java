@@ -1231,11 +1231,14 @@ public class MetadataInfo {
 		}
 	}
 
-	public void expand(MetadataInfo expandInfo){
+	public void copyFromWithExpand(MetadataInfo expandInfo){
 		for (String fieldName : keys()) {
-			Object o = get(fieldName);
+			if(!expandInfo.isEnabled(fieldName)) {
+				continue;
+			}
+			Object o = expandInfo.get(fieldName);
 			if( o != null){
-				Object expandedVal = get(fieldName);
+				Object expandedVal = o;
 				if (expandedVal instanceof String) {
 					TemplateString ts = new TemplateString((String)expandedVal);
 					expandedVal = ts.process(expandInfo);

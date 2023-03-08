@@ -92,9 +92,8 @@ public class PDFMetadataEditBatch {
 				try {
 					MetadataInfo mdFile = new MetadataInfo();
 					mdFile.loadFromPDF(file);
-					MetadataInfo md = mdParams.clone();
-					md.expand(mdFile);
-					md.saveAsPDF(file);
+					mdFile.copyFromWithExpand(mdParams);
+					mdFile.saveAsPDF(file);
 					status.addStatus(file.getName(), "Done");
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -250,9 +249,8 @@ public class PDFMetadataEditBatch {
 					try {
 						MetadataInfo mdFile = new MetadataInfo();
 						mdFile.loadFromPDF(file);
-						MetadataInfo md = mdParams.clone();
-						md.expand(mdFile);
-						md.saveAsPDF(file);
+						mdFile.copyFromWithExpand(mdParams);
+						mdFile.saveAsPDF(file);
 						status.addStatus(file.getName(), "Done");
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
