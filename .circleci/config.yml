@@ -105,8 +105,8 @@ jobs:
             # brew install --ignore-dependencies maven
             curl -LO https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.5%2B8/OpenJDK17U-jdk_x64_mac_hotspot_17.0.5_8.pkg
             sudo installer -pkg ./OpenJDK17U-jdk_x64_mac_hotspot_17.0.5_8.pkg -target /Applications
-            curl -LO https://dlcdn.apache.org/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
-            tar xzf apache-maven-3.8.6-bin.tar.gz
+            curl -LO https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz
+            tar xzf apache-maven-3.8.8-bin.tar.gz
             sudo mkdir -p /usr/local/bin/
             sudo ln -s `pwd`/apache-maven-3.8.6/bin/mvn /usr/local/bin/mvn
             java -version
