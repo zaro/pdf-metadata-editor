@@ -108,7 +108,7 @@ jobs:
             curl -LO https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz
             tar xzf apache-maven-3.8.8-bin.tar.gz
             sudo mkdir -p /usr/local/bin/
-            sudo ln -s `pwd`/apache-maven-3.8.6/bin/mvn /usr/local/bin/mvn
+            sudo ln -s `pwd`/apache-maven-3.8.8/bin/mvn /usr/local/bin/mvn
             java -version
             mvn -version
       - run:
