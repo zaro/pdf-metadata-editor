@@ -50,8 +50,9 @@ jobs:
     # You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     # Be sure to update the Docker image tag below to openjdk version of your application.
     # A list of available CircleCI Docker Convenience Images are available here: https://circleci.com/developer/images/image/cimg/openjdk
-    executor: win/default
-    size: large # can be medium, large, xlarge, 2xlarge
+    executor:
+      name: win/default
+      size: large # can be medium, large, xlarge, 2xlarge
 
     steps:
       - checkout
