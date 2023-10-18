@@ -58,13 +58,13 @@ jobs:
           name: Install JDK, Maven, WIX
           command: |
             choco uninstall openjdk --all-versions
-            refreshenv
+            Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
             choco install temurin --version=17.0.2.800 -y --params="/ADDLOCAL=FeatureMain,FeatureEnvironment,FeatureJarFileRunWith,FeatureJavaHome"
-            refreshenv
+            Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
             choco install maven -y
-            refreshenv
+            Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
             choco install wixtoolset -y
-            refreshenv
+            Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
       - run:
           name: Info
           command: |
