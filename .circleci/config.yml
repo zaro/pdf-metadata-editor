@@ -81,13 +81,19 @@ jobs:
           shell: bash.exe
       - run:
           name: Build JDDE
-          command: bash ci-scripts/jdde.sh
+          command: |
+            Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
+            bash ci-scripts/jdde.sh
       - run:
           name: Build
-          command: bash ci-scripts/build.sh
+          command: |
+            Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
+            bash ci-scripts/build.sh
       - run:
           name: Test
-          command: bash ci-scripts/test.sh
+          command: |
+            Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
+            bash ci-scripts/test.sh
       - store_artifacts:
           path: target/packages/
           destination: windows
