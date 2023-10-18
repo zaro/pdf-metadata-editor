@@ -313,7 +313,9 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<configuration>
-					<descriptor>jpackage/assembly-zip.xml</descriptor>
+					<descriptors>
+						<descriptor>jpackage/assembly-zip.xml</descriptor>
+					</descriptors>
 					<finalName>packages/${main.file.name}${archive.suffix}</finalName>
 				</configuration>
 				<executions>
