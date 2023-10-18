@@ -3,7 +3,7 @@
 version: 2.1
 
 orbs:
-  win: circleci/windows@4.1.1 # The Windows orb gives you everything you need to start using the Windows executor
+  win: circleci/windows@5.0.0 # The Windows orb gives you everything you need to start using the Windows executor
   msix: circleci/microsoft-msix@1.1
   github-cli: circleci/github-cli@2.1.1
 
@@ -82,10 +82,10 @@ jobs:
           command: bash ci-scripts/jdde.sh
       - run:
           name: Build
-          command: ci-scripts/build.sh
+          command: bash ci-scripts/build.sh
       - run:
           name: Test
-          command: ci-scripts/test.sh
+          command: bash ci-scripts/test.sh
       - store_artifacts:
           path: target/packages/
           destination: windows
