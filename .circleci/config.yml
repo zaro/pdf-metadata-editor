@@ -58,9 +58,9 @@ jobs:
           name: Install JDK, Maven, WIX
           no_output_timeout: 30m
           command: |
-            choco uninstall openjdk --all-versions
+            choco uninstall openjdk --all-versions -y
             Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
-            choco install temurin --version=17.0.2.800 -y --params="/ADDLOCAL=FeatureMain,FeatureEnvironment,FeatureJarFileRunWith,FeatureJavaHome"
+            choco install temurin17 -y --params="/ADDLOCAL=FeatureMain,FeatureEnvironment,FeatureJarFileRunWith,FeatureJavaHome"
             Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
             choco install maven -y
             Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
@@ -82,10 +82,10 @@ jobs:
           command: bash ci-scripts/jdde.sh
       - run:
           name: Build
-          command: bash -c 'mvn -B -DskipTests clean package'
+          command: ci-scripts/build.sh
       - run:
           name: Test
-          command: bash -c 'mvn test'
+          command: ci-scripts/test.sh
       - store_artifacts:
           path: target/packages/
           destination: windows
@@ -124,7 +124,18 @@ jobs:
       - store_artifacts:
           path: target/packages/
           destination: macos
-
+  publish-github-release:
+    docker:
+      - image: cibuilds/github:0.10
+    steps:
+      - attach_workspace:
+          at: ./artifacts
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            VERSION=${CIRCLE_TAG}
+            ls -lah ./artifacts
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} -draft ./artifacts/
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
@@ -134,3 +145,13 @@ workflows:
       - build-and-test-linux
       - build-and-test-windows
       - build-and-test-macos
+      - publish-github-release:
+          requires:
+            - build-and-test-linux
+            - build-and-test-windows
+            - build-and-test-macos
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+\.\d+\.\d+$/
