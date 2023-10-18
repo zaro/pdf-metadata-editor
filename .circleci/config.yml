@@ -50,12 +50,13 @@ jobs:
     # You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     # Be sure to update the Docker image tag below to openjdk version of your application.
     # A list of available CircleCI Docker Convenience Images are available here: https://circleci.com/developer/images/image/cimg/openjdk
-    executor: win/server-2019
+    executor: win/server-2022
 
     steps:
       - checkout
       - run:
           name: Install JDK, Maven, WIX
+          no_output_timeout: 30m
           command: |
             choco uninstall openjdk --all-versions
             Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
