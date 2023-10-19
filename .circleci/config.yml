@@ -53,47 +53,33 @@ jobs:
     executor:
       name: win/default
       size: large # can be medium, large, xlarge, 2xlarge
-
+    shell: bash.exe
     steps:
       - checkout
       - run:
-          name: Install JDK, Maven, WIX
+          name: WIX
           no_output_timeout: 30m
+          shell: powershell.exe -executionpolicy bypass
           command: |
-            choco uninstall openjdk --all-versions -y
-            Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
-            choco install temurin17 -y --params="/ADDLOCAL=FeatureMain,FeatureEnvironment,FeatureJarFileRunWith,FeatureJavaHome"
-            Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
-            choco install maven -y
-            Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
             choco install wixtoolset -y
             Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
       - run:
-          name: Info
+          name: Install JDK, Maven
           command: |
-            ls -la /usr/bin
-            ls -la /mingw64/bin
-            which sh
-            which bash
-            which find
-            which ls
-            echo $PATH
+            curl -s "https://get.sdkman.io" | bash
+            source "$HOME/.sdkman/bin/sdkman-init.sh"
+            sdk install java 17.0.8.1-tem
+            sdk install java maven
           shell: bash.exe
       - run:
           name: Build JDDE
-          command: |
-            Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
-            bash ci-scripts/jdde.sh
+          command: ci-scripts/jdde.sh
       - run:
           name: Build
-          command: |
-            Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
-            bash ci-scripts/build.sh
+          command: mvn -DskipTests=true clean package
       - run:
           name: Test
-          command: |
-            Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
-            bash ci-scripts/test.sh
+          command: mvn test
       - store_artifacts:
           path: target/packages/
           destination: windows
