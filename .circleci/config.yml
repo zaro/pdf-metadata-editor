@@ -85,15 +85,21 @@ jobs:
           shell: bash.exe
       - run:
           name: Build JDDE
-          command: ci-scripts/jdde.sh
+          command: |
+            . /c/Users/circleci/.bashrc
+            ci-scripts/jdde.sh
           shell: bash.exe
       - run:
           name: Build
-          command: mvn -DskipTests=true clean package
+          command: |
+            . /c/Users/circleci/.bashrc
+            mvn -DskipTests=true clean package
           shell: bash.exe
       - run:
           name: Test
-          command: mvn test
+          command: |
+            . /c/Users/circleci/.bashrc
+            mvn test
           shell: bash.exe
       - store_artifacts:
           path: target/packages/
