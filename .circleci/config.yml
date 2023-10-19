@@ -68,7 +68,7 @@ jobs:
             which 7z.exe
             ln -s $(which 7z.exe) $(dirname `which unzip.exe`)/zip.exe
             export SDKMAN_DIR="/c/sdkman" && curl -s "https://get.sdkman.io" | bash
-            cat /c/Users/circleci/.bashrc
+            set -x
             . /c/Users/circleci/.bashrc
             sdk version
             sdk install java 17.0.8.1-tem
