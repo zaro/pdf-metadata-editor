@@ -66,6 +66,12 @@ jobs:
           name: Install JDK, Maven
           command: |
             which 7z.exe
+            echo ---
+            echo $PATH
+            export PATH=$(dirname `which bash.exe`):$PATH
+            echo ---
+            echo $PATH
+            echo ---
             ln -s $(which 7z.exe) $(dirname `which unzip.exe`)/zip.exe
             export SDKMAN_DIR="/c/sdkman" && curl -s "https://get.sdkman.io" | bash
             echo --- find
