@@ -53,7 +53,6 @@ jobs:
     executor:
       name: win/default
       size: large # can be medium, large, xlarge, 2xlarge
-    shell: bash.exe
     steps:
       - checkout
       - run:
@@ -70,15 +69,19 @@ jobs:
             source "$HOME/.sdkman/bin/sdkman-init.sh"
             sdk install java 17.0.8.1-tem
             sdk install java maven
+          shell: bash.exe
       - run:
           name: Build JDDE
           command: ci-scripts/jdde.sh
+          shell: bash.exe
       - run:
           name: Build
           command: mvn -DskipTests=true clean package
+          shell: bash.exe
       - run:
           name: Test
           command: mvn test
+          shell: bash.exe
       - store_artifacts:
           path: target/packages/
           destination: windows
