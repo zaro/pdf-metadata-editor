@@ -60,11 +60,12 @@ jobs:
           no_output_timeout: 30m
           shell: powershell.exe -executionpolicy bypass
           command: |
-            choco install wixtoolset -y
-            Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
+            dotnet tool install --global wix
+            wix --version
       - run:
           name: Install JDK, Maven
           command: |
+            ln -s /c/Program\ Files/7-Zip/7z.exe /c/Program\ Files/Git/mingw64/bin/zip.exe
             curl -s "https://get.sdkman.io" | bash
             source "$HOME/.sdkman/bin/sdkman-init.sh"
             sdk install java 17.0.8.1-tem
