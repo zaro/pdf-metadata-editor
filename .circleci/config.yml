@@ -68,6 +68,10 @@ jobs:
             which 7z.exe
             ln -s $(which 7z.exe) $(dirname `which unzip.exe`)/zip.exe
             export SDKMAN_DIR="/c/sdkman" && curl -s "https://get.sdkman.io" | bash
+            echo --- find
+            find /c/sdkman/src /c/sdkman/ext -type f -name 'sdkman-*.sh'
+            echo --- ls
+            ls /c/sdkman/src /c/sdkman/ext
             set -x
             . /c/Users/circleci/.bashrc
             sdk version
