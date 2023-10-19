@@ -70,7 +70,6 @@ jobs:
             source "$HOME/.sdkman/bin/sdkman-init.sh"
             sdk install java 17.0.8.1-tem
             sdk install java maven
-          shell: bash.exe
       - run:
           name: Build JDDE
           command: ci-scripts/jdde.sh
