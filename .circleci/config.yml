@@ -78,11 +78,10 @@ jobs:
             find /c/sdkman/src /c/sdkman/ext -type f -name 'sdkman-*.sh'
             echo --- ls
             ls /c/sdkman/src /c/sdkman/ext
-            set -x
             . /c/Users/circleci/.bashrc
             sdk version
             sdk install java 17.0.8.1-tem
-            sdk install java maven
+            sdk install maven
           shell: bash.exe
       - run:
           name: Build JDDE
