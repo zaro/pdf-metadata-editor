@@ -79,6 +79,9 @@ jobs:
             find /c/sdkman/src /c/sdkman/ext -type f -name 'sdkman-*.sh'
             echo --- ls
             ls /c/sdkman/src /c/sdkman/ext
+            echo ---
+            cat /c/Users/circleci/.bashrc
+            echo ---
             . /c/Users/circleci/.bashrc
             sdk version
             sdk install java 17.0.8.1-tem
@@ -87,18 +90,21 @@ jobs:
       - run:
           name: Build JDDE
           command: |
+            export PATH=$(dirname `which bash.exe`):$PATH
             . /c/Users/circleci/.bashrc
             ci-scripts/jdde.sh
           shell: bash.exe
       - run:
           name: Build
           command: |
+            export PATH=$(dirname `which bash.exe`):$PATH
             . /c/Users/circleci/.bashrc
             mvn -DskipTests=true clean package
           shell: bash.exe
       - run:
           name: Test
           command: |
+            export PATH=$(dirname `which bash.exe`):$PATH
             . /c/Users/circleci/.bashrc
             mvn test
           shell: bash.exe
