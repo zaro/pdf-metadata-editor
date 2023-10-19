@@ -68,7 +68,7 @@ jobs:
             which 7z.exe
             ln -s $(which 7z.exe) $(dirname `which unzip.exe`)/zip.exe
             curl -s "https://get.sdkman.io" | bash
-            source "$HOME/.sdkman/bin/sdkman-init.sh"
+            source "/c/Users/circleci/.sdkman/bin/sdkman-init.sh"
             sdk install java 17.0.8.1-tem
             sdk install java maven
           shell: bash.exe
