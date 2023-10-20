@@ -62,11 +62,12 @@ jobs:
           command: |
             dotnet tool install --global wix
             wix --version
+            where wix
       - run:
           name: Install JDK, Maven
           command: |
             which 7z.exe
-            echo  'export PATH=$(dirname `which bash.exe`):$PATH' >> . /c/Users/circleci/.bashrc
+            echo  'export PATH=$(dirname `which bash.exe`):$PATH' >> /c/Users/circleci/.bashrc
             echo ---
             echo $PATH
             export PATH=$(dirname `which bash.exe`):$PATH
