@@ -164,13 +164,23 @@ jobs:
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} -draft ./artifacts/
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
+# Conditional jobs explanation: https://circleci.com/docs/workflows/#executing-workflows-for-a-git-tag
 workflows:
   build-deliverables: # This is the name of the workflow, feel free to change it to better match your workflow.
     # Inside the workflow, you define the jobs you want to run.
     jobs:
-      - build-and-test-linux
-      - build-and-test-windows
-      - build-and-test-macos
+      - build-and-test-linux:
+          filters:  # required since `publish-github-release` has tag filters AND requires `build`
+            tags:
+              only: /.*/
+      - build-and-test-windows:
+          filters:  # required since `publish-github-release` has tag filters AND requires `build`
+            tags:
+              only: /.*/
+      - build-and-test-macos:
+          filters:  # required since `publish-github-release` has tag filters AND requires `build`
+            tags:
+              only: /.*/
       - publish-github-release:
           requires:
             - build-and-test-linux
