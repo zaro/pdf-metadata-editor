@@ -62,7 +62,8 @@ jobs:
           command: |
             dotnet tool install --global wix
             wix --version
-            where wix
+            Get-Command wix
+            where.exe wix
       - run:
           name: Install JDK, Maven
           command: |
@@ -71,16 +72,8 @@ jobs:
             echo ---
             echo $PATH
             export PATH=$(dirname `which bash.exe`):$PATH
-            echo ---
-            echo $PATH
-            echo ---
-            ln -s $(which 7z.exe) $(dirname `which unzip.exe`)/zip.exe
             export SDKMAN_DIR="/c/sdkman" && curl -s "https://get.sdkman.io" | bash
-            echo --- find
-            find /c/sdkman/src /c/sdkman/ext -type f -name 'sdkman-*.sh'
-            echo --- ls
-            ls /c/sdkman/src /c/sdkman/ext
-            echo ---
+            echo --- cat /c/Users/circleci/.bashrc
             cat /c/Users/circleci/.bashrc
             echo ---
             . /c/Users/circleci/.bashrc
