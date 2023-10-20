@@ -65,13 +65,22 @@ jobs:
             Get-Command wix
             where.exe wix
       - run:
-          name: Install JDK, Maven
+          name: Install JDK, Maven, wix
           command: |
             which 7z.exe
-            echo  'export PATH=$(dirname `which bash.exe`):$PATH' >> /c/Users/circleci/.bashrc
-            echo ---
+            ln -s $(which 7z.exe) $(dirname `which unzip.exe`)/zip.exe
+            echo -- install wix
+            cd
+            curl -LO https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip
+            mkdir -p wix
+            unzip ../wix311-binaries.zip
+            echo  'export PATH=$(dirname `which bash.exe`):/c/Users/circleci/wix:$PATH' >> /c/Users/circleci/.bashrc
+            . /c/Users/circleci/.bashrc
+            which light.exe
+            which candle.exe
+            echo --- PATH
             echo $PATH
-            export PATH=$(dirname `which bash.exe`):$PATH
+            echo --- Install sdkman
             export SDKMAN_DIR="/c/sdkman" && curl -s "https://get.sdkman.io" | bash
             echo --- cat /c/Users/circleci/.bashrc
             cat /c/Users/circleci/.bashrc
