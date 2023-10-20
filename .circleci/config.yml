@@ -73,6 +73,7 @@ jobs:
             cd
             curl -LO https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip
             mkdir -p wix
+            cd wix
             unzip ../wix311-binaries.zip
             echo  'export PATH=$(dirname `which bash.exe`):/c/Users/circleci/wix:$PATH' >> /c/Users/circleci/.bashrc
             . /c/Users/circleci/.bashrc
