@@ -45,9 +45,10 @@ jobs:
           path: target/packages/
           destination: linux
       - persist_to_workspace:
-          root: workspace
+          root: target
           paths:
-            - target/packages
+            - packages
+
   build-and-test-windows:
     # These next lines define a Docker executor: https://circleci.com/docs/2.0/executor-types/
     # You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
@@ -119,9 +120,9 @@ jobs:
           path: target/packages/
           destination: windows
       - persist_to_workspace:
-          root: workspace
+          root: target
           paths:
-            - target/packages
+            - packages
 
   build-and-test-macos:
     macos:
@@ -158,9 +159,9 @@ jobs:
           path: target/packages/
           destination: macos
       - persist_to_workspace:
-          root: workspace
+          root: target
           paths:
-            - target/packages
+            - packages
   publish-github-release:
     docker:
       - image: cibuilds/github:0.10
