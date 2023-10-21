@@ -1,15 +1,20 @@
-WHATEVER License
+Copyright (c) 2023 Svetlozar Argirov <zarrro [AT] gmail [DOT] com>
 
-All files in this distribution shall be considered under this license
-agreement( or disagreement if you don't agree with it :) unless stated different
-in the file itself.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-This program is free, you can copy, redistribute it and generally do WHATEVER
-you want with it.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-In the case you are using the code for commercial purpose without providing
-access to the source code itself I  actually don't care, since probably you are
-sad and lonely person, and most likely nobody wants to really have
-something to do with you anyway.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
-Whatever 2015, Zaro - Svetlozar Argirov <zarrro [AT] gmail [DOT] com>

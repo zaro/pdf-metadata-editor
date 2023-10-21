@@ -11,3 +11,5 @@ ris/
 .vscode/
 test/
 jpackage/cert/*.pfx
+.flatpak-builder/
+build-dir/
