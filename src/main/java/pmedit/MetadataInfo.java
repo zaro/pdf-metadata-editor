@@ -1315,6 +1315,11 @@ public class MetadataInfo {
 		DumperOptions options = new DumperOptions();
 		if(!pretty){
 			options.setWidth(0xFFFF);
+		} else {
+			options.setExplicitStart(true);
+			options.setIndent(2);
+			options.setPrettyFlow(true);
+			options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
 		}
 		Yaml yaml = new Yaml(options);
 		return yaml.dump(asFlatMap());
