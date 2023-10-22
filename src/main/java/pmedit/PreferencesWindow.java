@@ -12,21 +12,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.prefs.Preferences;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
@@ -35,7 +31,6 @@ import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
@@ -44,11 +39,16 @@ import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.text.JTextComponent;
 
-import org.apache.http.Header;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpHead;
+import org.apache.http.ParseException;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
+import org.apache.http.util.EntityUtils;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -560,37 +560,28 @@ public class PreferencesWindow extends JDialog {
 	private Future<HttpResponse> checkForUpdates() {
 		CloseableHttpAsyncClient httpclient = HttpAsyncClients.createDefault();
 		httpclient.start();
-		HttpHead request = new HttpHead("http://broken-by.me/download/pdf-metadata-editor/");
+		HttpGet request = new HttpGet("https://api.github.com/repos/zaro/pdf-metadata-editor/releases?per_page=1");
 		Future<HttpResponse> future = httpclient.execute(request, null);
 		return future;
 	}
 
 
 	private void showUpdatesStatus(Future<HttpResponse> status) {
-		String versionMsg = "<h3 align=center>Cannot get version information </h3>";
+			Version.VersionTuple current = Version.get();
+		String currentVersionMsg = "<h3 align=center>Version: " + current.getAsString() +"</h3>";
+		String versionMsg = "<h3 align=center>Cannot get update information </h3>";
 		try {
 			HttpResponse response = status.get();
 			updateStatusLabel.setText("");
-			String file = null;
-			for (Header header : response.getHeaders("Content-Disposition")) {
-				Matcher matcher = Pattern.compile("filename=\"([^\"]+)\"").matcher(header.getValue());
-				while (matcher.find()) {
-					file = matcher.group(1);
-				}
+			String lastsVersion = null;
+			HttpEntity entity = response.getEntity();
+			JSONParser parser = new JSONParser();
+			JSONArray body = (JSONArray) parser.parse(EntityUtils.toString(entity));
+			if(body.size() >= 1){
+				lastsVersion = (String)((JSONObject)body.get(0)).get("name");
 			}
-			if (file != null) {
-				String[] installerPatterns = {
-					"PdfMetadataEditor-(\\d+)\\.(\\d+)\\.(\\d+)-installer.jar",
-					"pdf-metadata-edit-(\\d+)\\.(\\d+)\\.(\\d+)-installer.jar",
-				};
-				Version.VersionTuple current = Version.get();
-				Version.VersionTuple latest = null;
-				for(String pattern: installerPatterns){
-					latest = new Version.VersionTuple(file, pattern);
-					if(latest.parseSuccess){
-						break;
-					}
-				}
+			if (lastsVersion != null) {
+				Version.VersionTuple latest = new Version.VersionTuple(lastsVersion);
 				if (current.cmp(latest) < 0) {
 					versionMsg = "<h3 align=center>New version available: <a href='http://broken-by.me/pdf-metadata-editor/#download'>"
 							+ latest.getAsString() + "</a> , current: " + current.getAsString() + "</h3>";
@@ -604,8 +595,17 @@ public class PreferencesWindow extends JDialog {
 			e1.printStackTrace();
 		} catch (ExecutionException e1) {
 			versionMsg += "<h4 align=center>Error: " + e1.getCause().getLocalizedMessage() + "</h4>";
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (org.json.simple.parser.ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} finally {
-			txtpnDf.setText(aboutMsg + versionMsg);
+			txtpnDf.setText(aboutMsg + currentVersionMsg +versionMsg);
 		}
 	}
 
