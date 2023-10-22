@@ -148,6 +148,9 @@ jobs:
       - run:
           name: Test
           command: mvn test
+      - run:
+          name: Remove garbase artifacts
+          command: rm target/packages/default._*.dmg
       - store_artifacts:
           path: target/packages/
           destination: macos
