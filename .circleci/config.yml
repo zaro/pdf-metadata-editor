@@ -29,10 +29,6 @@ jobs:
           command: |
             sudo apt update
             sudo apt install fakeroot rpm
-      # Checkout and build JDDE
-      - run:
-          name: Build JDDE
-          command: ci-scripts/jdde.sh
       # Use mvn clean and package as the standard maven build phase
       - run:
           name: Build
@@ -146,9 +142,6 @@ jobs:
             sudo ln -s `pwd`/apache-maven-3.8.8/bin/mvn /usr/local/bin/mvn
             java -version
             mvn -version
-      - run:
-          name: Build JDDE
-          command: ci-scripts/jdde.sh
       - run:
           name: Build
           command: mvn -B -DskipTests clean package

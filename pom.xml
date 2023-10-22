@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>pdf-metadata-edit</groupId>
@@ -22,7 +23,7 @@
 	</developers>
 
 	<properties>
-	  <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<staging.dir>${project.build.directory}</staging.dir>
 		<vm.location></vm.location>
 		<snakeyaml.path>${org.yaml:snakeyaml:jar}</snakeyaml.path>
@@ -62,6 +63,40 @@
 				<archive.suffix>-windows</archive.suffix>
 				<icon.format>ico</icon.format>
 			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-dependency-plugin</artifactId>
+						<executions>
+							<execution>
+								<goals>
+									<goal>properties</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>unpack</id>
+								<phase>prepare-package</phase>
+								<goals>
+									<goal>unpack</goal>
+								</goals>
+								<configuration>
+									<artifactItems>
+										<artifactItem>
+											<groupId>com.pretty-tools</groupId>
+											<artifactId>jdde-bundle</artifactId>
+											<version>2.0.3</version>
+											<type>jar</type>
+											<includes>com/pretty_tools/dde/*.dll</includes>
+											<outputDirectory>${project.build.directory}/win</outputDirectory>
+										</artifactItem>
+									</artifactItems>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 		<profile>
 			<id>os_mac</id>
@@ -89,16 +124,16 @@
 		</resources>
 		<plugins>
 			<plugin>
-			    <groupId>org.codehaus.mojo</groupId>
-			    <artifactId>versions-maven-plugin</artifactId>
-			    <version>2.7</version>
-			    <configuration>
-			        <generateBackupPoms>false</generateBackupPoms>
-			    </configuration>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>versions-maven-plugin</artifactId>
+				<version>2.7</version>
+				<configuration>
+					<generateBackupPoms>false</generateBackupPoms>
+				</configuration>
 			</plugin>
 
 			<plugin>
-			 	<groupId>org.apache.maven.plugins</groupId>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.8.1</version>
 				<configuration>
@@ -108,13 +143,13 @@
 				</configuration>
 			</plugin>
 			<plugin>
-		      <groupId>org.apache.maven.plugins</groupId>
-		      <artifactId>maven-jar-plugin</artifactId>
-					<version>3.2.0</version>
-		      <configuration>
-		        <outputDirectory>${project.build.directory}/jar</outputDirectory>
-		      </configuration>
-		    </plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.2.0</version>
+				<configuration>
+					<outputDirectory>${project.build.directory}/jar</outputDirectory>
+				</configuration>
+			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -127,7 +162,7 @@
 							<goal>shade</goal>
 						</goals>
 						<configuration>
-					        <outputDirectory>${project.build.directory}/jar</outputDirectory>
+							<outputDirectory>${project.build.directory}/jar</outputDirectory>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
 							<minimizeJar>true</minimizeJar> <!--  this is not supported in JDK11 -->
 							<transformers>
@@ -194,7 +229,7 @@
 						<configuration>
 							<outputDirectory>${staging.dir}/jpackage/</outputDirectory>
 							<nonFilteredFileExtensions>
-            				<nonFilteredFileExtension>jar</nonFilteredFileExtension>
+								<nonFilteredFileExtension>jar</nonFilteredFileExtension>
 							</nonFilteredFileExtensions>
 							<resources>
 								<resource>
@@ -216,9 +251,9 @@
 						<configuration>
 							<outputDirectory>${staging.dir}/jpackage-scripts/</outputDirectory>
 							<nonFilteredFileExtensions>
-            		<nonFilteredFileExtension>icns</nonFilteredFileExtension>
-            		<nonFilteredFileExtension>ico</nonFilteredFileExtension>
-            		<nonFilteredFileExtension>png</nonFilteredFileExtension>
+								<nonFilteredFileExtension>icns</nonFilteredFileExtension>
+								<nonFilteredFileExtension>ico</nonFilteredFileExtension>
+								<nonFilteredFileExtension>png</nonFilteredFileExtension>
 							</nonFilteredFileExtensions>
 							<resources>
 								<resource>
@@ -239,75 +274,75 @@
 			</plugin>
 
 			<plugin>
-					<groupId>com.igormaznitsa</groupId>
-					<artifactId>mvn-jlink-wrapper</artifactId>
-					<version>1.1.0</version>
-					<executions>
-							<execution>
-									<id>call-jdeps</id>
-									<goals>
-											<goal>jdeps</goal>
-									</goals>
-									<configuration>
-											<output>${project.build.directory}${file.separator}jdeps.out</output>
-											<options>
-													<option>${project.build.directory}${file.separator}/jar/${main.jar.name}</option>
-											</options>
-									</configuration>
-							</execution>
-							<execution>
-									<id>call-jlink</id>
-									<goals>
-											<goal>jlink</goal>
-									</goals>
-									<configuration>
-											<jdepsReportPath>${project.build.directory}${file.separator}jdeps.out</jdepsReportPath>
-											<output>${project.build.directory}${file.separator}preparedJDK</output>
-											<options>
-													<option>--compress=2</option>
-													<option>--no-header-files</option>
-													<option>--no-man-pages</option>
-													<option>--strip-debug</option>
-													<option>--strip-native-commands</option>
-											</options>
-									</configuration>
-							</execution>
-					</executions>
+				<groupId>com.igormaznitsa</groupId>
+				<artifactId>mvn-jlink-wrapper</artifactId>
+				<version>1.1.0</version>
+				<executions>
+					<execution>
+						<id>call-jdeps</id>
+						<goals>
+							<goal>jdeps</goal>
+						</goals>
+						<configuration>
+							<output>${project.build.directory}${file.separator}jdeps.out</output>
+							<options>
+								<option>${project.build.directory}${file.separator}/jar/${main.jar.name}</option>
+							</options>
+						</configuration>
+					</execution>
+					<execution>
+						<id>call-jlink</id>
+						<goals>
+							<goal>jlink</goal>
+						</goals>
+						<configuration>
+							<jdepsReportPath>${project.build.directory}${file.separator}jdeps.out</jdepsReportPath>
+							<output>${project.build.directory}${file.separator}preparedJDK</output>
+							<options>
+								<option>--compress=2</option>
+								<option>--no-header-files</option>
+								<option>--no-man-pages</option>
+								<option>--strip-debug</option>
+								<option>--strip-native-commands</option>
+							</options>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 
-      <plugin>
-        <groupId>com.soebes.maven.plugins</groupId>
-        <artifactId>iterator-maven-plugin</artifactId>
-        <version>0.5.1</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>iterator</goal>
-            </goals>
-            <configuration>
-				<content>${packages.list}</content>
-				<pluginExecutors>
-					<pluginExecutor>
-										<plugin>
-											<groupId>org.codehaus.mojo</groupId>
-											<artifactId>exec-maven-plugin</artifactId>
-											<version>1.6.0</version>
-										</plugin>
-										<goal>exec</goal>
-										<configuration>
-											<executable>sh</executable>
-											<arguments>
-												<argument>${staging.dir}/jpackage-scripts/run_jpackage.sh</argument>
-												<argument>@item@</argument>
-											</arguments>
-										</configuration>
-                </pluginExecutor>
-              </pluginExecutors>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
+			<plugin>
+				<groupId>com.soebes.maven.plugins</groupId>
+				<artifactId>iterator-maven-plugin</artifactId>
+				<version>0.5.1</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>iterator</goal>
+						</goals>
+						<configuration>
+							<content>${packages.list}</content>
+							<pluginExecutors>
+								<pluginExecutor>
+									<plugin>
+										<groupId>org.codehaus.mojo</groupId>
+										<artifactId>exec-maven-plugin</artifactId>
+										<version>1.6.0</version>
+									</plugin>
+									<goal>exec</goal>
+									<configuration>
+										<executable>sh</executable>
+										<arguments>
+											<argument>${staging.dir}/jpackage-scripts/run_jpackage.sh</argument>
+											<argument>@item@</argument>
+										</arguments>
+									</configuration>
+								</pluginExecutor>
+							</pluginExecutors>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -329,43 +364,14 @@
 				</executions>
 			</plugin>
 
-
-	        <plugin>
-	            <groupId>org.apache.maven.plugins</groupId>
-	            <artifactId>maven-dependency-plugin</artifactId>
-	            <executions>
-	                <execution>
-                        <goals>
-                            <goal>properties</goal>
-                        </goals>
-                    </execution>
-	                <execution>
-	                    <id>unpack</id>
-	                    <phase>prepare-package</phase>
-	                    <goals>
-	                        <goal>unpack</goal>
-	                    </goals>
-	                    <configuration>
-	                        <artifactItems>
-	                            <artifactItem>
-					                   <groupId>com.pretty-tools</groupId>
-					                   <artifactId>jdde-bundle</artifactId>
-					                   <version>2.0.3</version>
-					                   <type>jar</type>
-	                                <includes>com/pretty_tools/dde/*.dll</includes>
-	                                <outputDirectory>${project.build.directory}/win</outputDirectory>
-	                            </artifactItem>
-	                        </artifactItems>
-	                    </configuration>
-	                </execution>
-	            </executions>
-	        </plugin>
 		</plugins>
 
 
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+				<!--This
+				plugin's configuration is used to store Eclipse m2e settings only. It has no influence on
+				the Maven build itself.-->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
 					<artifactId>lifecycle-mapping</artifactId>
@@ -471,10 +477,10 @@
 			<version>4.1.4</version>
 		</dependency>
 		<dependency>
-	     	<groupId>com.opencsv</groupId>
-	     	<artifactId>opencsv</artifactId>
-	     	<version>5.1</version>
- 		</dependency>
+			<groupId>com.opencsv</groupId>
+			<artifactId>opencsv</artifactId>
+			<version>5.1</version>
+		</dependency>
 		<!--
 		<dependency>
 		    <groupId>com.pretty-tools</groupId>
