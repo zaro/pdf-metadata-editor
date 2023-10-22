@@ -324,7 +324,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<executable>sh</executable>
+					<executable>bash</executable>
 					<arguments>
 						<argument>${staging.dir}/jpackage-scripts/build_jpackages.sh</argument>
 						<argument>${packages.list}</argument>

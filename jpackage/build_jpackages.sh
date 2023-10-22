@@ -15,5 +15,5 @@ fi
 
 for pkg in ${PKG_LIST//,/ }; do
     echo "*** Building $pkg ***"
-    $THIS_DIR/run_jpackage.sh $pkg
+    bash $THIS_DIR/run_jpackage.sh $pkg
 done
