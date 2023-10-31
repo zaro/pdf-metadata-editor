@@ -176,14 +176,20 @@ workflows:
     jobs:
       - build-and-test-linux:
           filters:  # required since `publish-github-release` has tag filters AND requires `build`
+            branches:
+              ignore: /.*/
             tags:
               only: /.*/
       - build-and-test-windows:
           filters:  # required since `publish-github-release` has tag filters AND requires `build`
+            branches:
+              ignore: /.*/
             tags:
               only: /.*/
       - build-and-test-macos:
           filters:  # required since `publish-github-release` has tag filters AND requires `build`
+            branches:
+              ignore: /.*/
             tags:
               only: /.*/
       - publish-github-release:
