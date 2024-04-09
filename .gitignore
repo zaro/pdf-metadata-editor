@@ -10,6 +10,7 @@ test-files/
 ris/
 .vscode/
 test/
+debug/
 jpackage/cert/*.pfx
 .flatpak-builder/
 build-dir/

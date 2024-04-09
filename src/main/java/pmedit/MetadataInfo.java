@@ -274,6 +274,48 @@ public class MetadataInfo {
 	}
 
 
+	protected class XmpSchemaOnDemand{
+		protected XMPMetadata xmpNew;
+		protected XMPSchemaBasic _basic;
+		protected XMPSchemaPDF _pdf;
+		protected XMPSchemaDublinCore _dc;
+		protected XMPSchemaRightsManagement _rights;
+
+		public XmpSchemaOnDemand(XMPMetadata xmp){
+			this.xmpNew = xmp;
+		}
+
+		public XMPSchemaBasic basic(){
+			if(this._basic == null){
+				this._basic = this.xmpNew.addBasicSchema();
+			}
+			return this._basic;
+		}
+
+		public XMPSchemaPDF pdf(){
+			if(this._pdf == null){
+				this._pdf = this.xmpNew.addPDFSchema();
+			}
+			return this._pdf;
+		}
+
+		public XMPSchemaDublinCore dc(){
+			if(this._dc == null){
+				this._dc = this.xmpNew.addDublinCoreSchema();
+			}
+			return this._dc;
+		}
+
+		public XMPSchemaRightsManagement rights(){
+			if(this._rights == null){
+				this._rights = this.xmpNew.addRightsManagementSchema();
+			}
+			return this._rights;
+		}
+
+
+	}
+
 	@MdStruct
 	public Basic doc;
 	@MdStruct
@@ -525,16 +567,16 @@ public class MetadataInfo {
 			xmpOld = XMPMetadata.load(meta.createInputStream());
 		}
 		XMPMetadata xmpNew = new XMPMetadata();
+		XmpSchemaOnDemand newXmp = new XmpSchemaOnDemand(xmpNew);
 		// XMP Basic
 		XMPSchemaBasic biOld = xmpOld != null ? xmpOld.getBasicSchema() : null;
 		boolean atLeastOneXmpBasicSet = false;
 		if(basicEnabled.atLeastOne() || (biOld != null)) {
-			XMPSchemaBasic bi = xmpNew.addBasicSchema();
 
 			if(basicEnabled.advisories){
 				if(basic.advisories != null){
 					for (String a : basic.advisories) {
-						bi.addAdvisory(a);
+						newXmp.basic().addAdvisory(a);
 						atLeastOneXmpBasicSet = true;
 					}
 				}
@@ -542,7 +584,7 @@ public class MetadataInfo {
 				List<String> old = biOld.getAdvisories();
 				if(old != null){
 					for(String a: old){
-						bi.addAdvisory(a);
+						newXmp.basic().addAdvisory(a);
 						atLeastOneXmpBasicSet = true;
 					}
 				}
@@ -550,52 +592,52 @@ public class MetadataInfo {
 
 			if(basicEnabled.baseURL){
 				if(basic.baseURL != null){
-					bi.setBaseURL(basic.baseURL);
+					newXmp.basic().setBaseURL(basic.baseURL);
 					atLeastOneXmpBasicSet = true;
 				}
 			} else if(biOld != null){
 				String baseUrl = biOld.getBaseURL();
 				if(baseUrl != null){
-					bi.setBaseURL(baseUrl);
+					newXmp.basic().setBaseURL(baseUrl);
 					atLeastOneXmpBasicSet = true;
 				}
 			}
 
 			if(basicEnabled.createDate){
 				if(basic.createDate != null){
-					bi.setCreateDate(basic.createDate);
+					newXmp.basic().setCreateDate(basic.createDate);
 					atLeastOneXmpBasicSet = true;
 				}
 			} else if(biOld != null){
 				Calendar old = biOld.getCreateDate();
 				if(old != null){
-					bi.setCreateDate(old);
+					newXmp.basic().setCreateDate(old);
 					atLeastOneXmpBasicSet = true;
 				}
 			}
 
 			if(basicEnabled.modifyDate){
 				if(basic.modifyDate != null){
-					bi.setModifyDate(basic.modifyDate);
+					newXmp.basic().setModifyDate(basic.modifyDate);
 					atLeastOneXmpBasicSet = true;
 				}
 			} else if(biOld != null){
 				Calendar old = biOld.getModifyDate();
 				if(old != null){
-					bi.setModifyDate(old);
+					newXmp.basic().setModifyDate(old);
 					atLeastOneXmpBasicSet = true;
 				}
 			}
 
 			if(basicEnabled.creatorTool){
 				if(basic.creatorTool != null){
-					bi.setCreatorTool(basic.creatorTool);
+					newXmp.basic().setCreatorTool(basic.creatorTool);
 					atLeastOneXmpBasicSet = true;
 				}
 			} else if(biOld != null){
 				String old = biOld.getCreatorTool();
 				if(old != null){
-					bi.setCreatorTool(old);
+					newXmp.basic().setCreatorTool(old);
 					atLeastOneXmpBasicSet = true;
 				}
 			}
@@ -603,7 +645,7 @@ public class MetadataInfo {
 			if(basicEnabled.identifiers){
 				if (basic.identifiers != null) {
 					for (String i : basic.identifiers) {
-						bi.addIdentifier(i);
+						newXmp.basic().addIdentifier(i);
 						atLeastOneXmpBasicSet = true;
 					}
 				}
@@ -611,7 +653,7 @@ public class MetadataInfo {
 				List<String> old=biOld.getIdentifiers();
 				if(old != null){
 					for(String a: old){
-						bi.addIdentifier(a);
+						newXmp.basic().addIdentifier(a);
 						atLeastOneXmpBasicSet = true;
 					}
 				}
@@ -619,51 +661,51 @@ public class MetadataInfo {
 
 			if(basicEnabled.label){
 				if(basic.label != null){
-					bi.setLabel(basic.label);
+					newXmp.basic().setLabel(basic.label);
 					atLeastOneXmpBasicSet = true;
 				}
 			} else if(biOld != null){
 				String old = biOld.getLabel();
 				if(old != null){
-					bi.setLabel(old);
+					newXmp.basic().setLabel(old);
 					atLeastOneXmpBasicSet = true;
 				}
 			}
 
 			if(basicEnabled.metadataDate){
 				if(basic.metadataDate != null){
-					bi.setMetadataDate(basic.metadataDate);
+					newXmp.basic().setMetadataDate(basic.metadataDate);
 					atLeastOneXmpBasicSet = true;
 				}
 			} else if(biOld != null){
 				Calendar old = biOld.getMetadataDate();
 				if(old != null){
-					bi.setMetadataDate(old);
+					newXmp.basic().setMetadataDate(old);
 					atLeastOneXmpBasicSet = true;
 				}
 			}
 
 			if(basicEnabled.nickname){
 				if(basic.nickname != null){
-					bi.setNickname(basic.nickname);
+					newXmp.basic().setNickname(basic.nickname);
 					atLeastOneXmpBasicSet = true;
 				}
 			} else if(biOld != null){
 				String old = biOld.getNickname();
 				if(old != null){
-					bi.setNickname(old);
+					newXmp.basic().setNickname(old);
 					atLeastOneXmpBasicSet = true;
 				}
 			}
 			if(basicEnabled.rating){
 				if(basic.rating != null){
-					bi.setRating(basic.rating);
+					newXmp.basic().setRating(basic.rating);
 					atLeastOneXmpBasicSet = true;
 				}
 			} else if(biOld != null){
 				Integer old = biOld.getRating();
 				if(old != null){
-					bi.setRating(old);
+					newXmp.basic().setRating(old);
 					atLeastOneXmpBasicSet = true;
 				}
 			}
@@ -672,43 +714,42 @@ public class MetadataInfo {
 		XMPSchemaPDF piOld = xmpOld != null ? xmpOld.getPDFSchema() : null;
 		boolean atLeastOneXmpPdfSet = false;
 		if(pdfEnabled.atLeastOne() || (piOld != null)){
-			XMPSchemaPDF pi = xmpNew.addPDFSchema();
 
 			if(pdfEnabled.keywords){
 				if(pdf.keywords != null){
-					pi.setKeywords(pdf.keywords);
+					newXmp.pdf().setKeywords(pdf.keywords);
 					atLeastOneXmpPdfSet = true;
 				}
 			} else if(piOld != null){
 				String old = piOld.getKeywords();
 				if(old != null){
-					pi.setKeywords(old);
+					newXmp.pdf().setKeywords(old);
 					atLeastOneXmpPdfSet = true;
 				}
 			}
 
 			if(pdfEnabled.producer){
 				if(pdf.producer != null){
-					pi.setProducer(pdf.producer);
+					newXmp.pdf().setProducer(pdf.producer);
 					atLeastOneXmpPdfSet = true;
 				}
 			} else if(piOld != null){
 				String old = piOld.getProducer();
 				if(old != null){
-					pi.setProducer(old);
+					newXmp.pdf().setProducer(old);
 					atLeastOneXmpPdfSet = true;
 				}
 			}
 
 			if(pdfEnabled.pdfVersion){
 				if(pdf.pdfVersion != null){
-					pi.setPDFVersion(pdf.pdfVersion);
+					newXmp.pdf().setPDFVersion(pdf.pdfVersion);
 					atLeastOneXmpPdfSet = true;
 				}
 			} else if(piOld != null){
 				String old = piOld.getPDFVersion();
 				if(old != null){
-					pi.setPDFVersion(old);
+					newXmp.pdf().setPDFVersion(old);
 					atLeastOneXmpPdfSet = true;
 				}
 			}
@@ -718,17 +759,16 @@ public class MetadataInfo {
 		XMPSchemaDublinCore dcOld = xmpOld != null ? xmpOld.getDublinCoreSchema() : null;
 		boolean atLeastOneXmpDcSet = false;
 		if(dcEnabled.atLeastOne() || (dcOld != null)){
-			XMPSchemaDublinCore dcS = xmpNew.addDublinCoreSchema();
 
 			if(dcEnabled.title){
 				if(dc.title != null){
-					dcS.setTitle(dc.title);
+					newXmp.dc().setTitle(dc.title);
 					atLeastOneXmpDcSet = true;
 				}
 			} else if(dcOld != null){
 				String old = dcOld.getTitle();
 				if(old != null){
-					dcS.setTitle(old);
+					newXmp.dc().setTitle(old);
 					atLeastOneXmpDcSet = true;
 				}
 			}
@@ -736,7 +776,7 @@ public class MetadataInfo {
 			if(dcEnabled.contributors){
 				if(dc.contributors != null){
 					for (String i : dc.contributors) {
-						dcS.addContributor(i);
+						newXmp.dc().addContributor(i);
 						atLeastOneXmpDcSet = true;
 					}
 				}
@@ -744,7 +784,7 @@ public class MetadataInfo {
 				List<String> old= dcOld.getContributors();
 				if(old != null){
 					for(String a: old){
-						dcS.addContributor(a);;
+						newXmp.dc().addContributor(a);;
 						atLeastOneXmpDcSet = true;
 					}
 				}
@@ -753,7 +793,7 @@ public class MetadataInfo {
 			if(dcEnabled.publishers){
 				if(dc.publishers != null){
 					for (String i : dc.publishers) {
-						dcS.addPublisher(i);
+						newXmp.dc().addPublisher(i);
 						atLeastOneXmpDcSet = true;
 					}
 				}
@@ -761,7 +801,7 @@ public class MetadataInfo {
 				List<String> old= dcOld.getPublishers();
 				if(old != null){
 					for(String a: old){
-						dcS.addPublisher(a);;
+						newXmp.dc().addPublisher(a);;
 						atLeastOneXmpDcSet = true;
 					}
 				}
@@ -770,7 +810,7 @@ public class MetadataInfo {
 			if(dcEnabled.relationships){
 				if(dc.relationships != null){
 					for (String i : dc.relationships) {
-						dcS.addRelation(i);
+						newXmp.dc().addRelation(i);
 						atLeastOneXmpDcSet = true;
 					}
 				}
@@ -778,7 +818,7 @@ public class MetadataInfo {
 				List<String> old= dcOld.getRelationships();
 				if(old != null){
 					for(String a: old){
-						dcS.addRelation(a);;
+						newXmp.dc().addRelation(a);;
 						atLeastOneXmpDcSet = true;
 					}
 				}
@@ -787,7 +827,7 @@ public class MetadataInfo {
 			if(dcEnabled.subjects){
 				if(dc.subjects != null){
 					for (String i : dc.subjects) {
-						dcS.addSubject(i);
+						newXmp.dc().addSubject(i);
 						atLeastOneXmpDcSet = true;
 					}
 				}
@@ -795,7 +835,7 @@ public class MetadataInfo {
 				List<String> old= dcOld.getSubjects();
 				if(old != null){
 					for(String a: old){
-						dcS.addSubject(a);;
+						newXmp.dc().addSubject(a);;
 						atLeastOneXmpDcSet = true;
 					}
 				}
@@ -804,7 +844,7 @@ public class MetadataInfo {
 			if(dcEnabled.types){
 				if (dc.types != null){
 					for (String i : dc.types) {
-						dcS.addType(i);
+						newXmp.dc().addType(i);
 						atLeastOneXmpDcSet = true;
 					}
 				}
@@ -812,7 +852,7 @@ public class MetadataInfo {
 				List<String> old= dcOld.getTypes();
 				if(old != null){
 					for(String a: old){
-						dcS.addType(a);;
+						newXmp.dc().addType(a);;
 						atLeastOneXmpDcSet = true;
 					}
 				}
@@ -821,7 +861,7 @@ public class MetadataInfo {
 			if(dcEnabled.languages){
 				if(dc.languages != null){
 					for (String i : dc.languages) {
-						dcS.addLanguage(i);
+						newXmp.dc().addLanguage(i);
 						atLeastOneXmpDcSet = true;
 					}
 				}
@@ -829,7 +869,7 @@ public class MetadataInfo {
 				List<String> old= dcOld.getLanguages();
 				if(old != null){
 					for(String a: old){
-						dcS.addLanguage(a);;
+						newXmp.dc().addLanguage(a);;
 						atLeastOneXmpDcSet = true;
 					}
 				}
@@ -838,7 +878,7 @@ public class MetadataInfo {
 			if(dcEnabled.creators ){
 				if (dc.creators != null) {
 					for (String i : dc.creators) {
-						dcS.addCreator(i);
+						newXmp.dc().addCreator(i);
 						atLeastOneXmpDcSet = true;
 					}
 				}
@@ -846,7 +886,7 @@ public class MetadataInfo {
 				List<String> old= dcOld.getCreators();
 				if(old != null){
 					for(String a: old){
-						dcS.addCreator(a);;
+						newXmp.dc().addCreator(a);;
 						atLeastOneXmpDcSet = true;
 					}
 				}
@@ -854,46 +894,46 @@ public class MetadataInfo {
 			//
 			if(dcEnabled.coverage){
 				if(dc.coverage != null){
-					dcS.setCoverage(dc.coverage);
+					newXmp.dc().setCoverage(dc.coverage);
 					atLeastOneXmpDcSet = true;
 				}
 			} else if(dcOld != null){
 				String old = dcOld.getCoverage();
 				if(old != null){
-					dcS.setCoverage(old);
+					newXmp.dc().setCoverage(old);
 					atLeastOneXmpDcSet = true;
 				}
 			}
 
 			if(dcEnabled.format){
 				if(dc.format != null){
-					dcS.setFormat(dc.format);
+					newXmp.dc().setFormat(dc.format);
 					atLeastOneXmpDcSet = true;
 				}
 			} else if(dcOld != null){
 				String old = dcOld.getFormat();
 				if(old != null){
-					dcS.setFormat(old);
+					newXmp.dc().setFormat(old);
 					atLeastOneXmpDcSet = true;
 				}
 			}
 
 			if(dcEnabled.identifier){
 				if(dc.identifier != null){
-					dcS.setIdentifier(dc.identifier);
+					newXmp.dc().setIdentifier(dc.identifier);
 					atLeastOneXmpDcSet = true;
 				}
 			} else if(dcOld != null){
 				String old = dcOld.getIdentifier();
 				if(old != null){
-					dcS.setIdentifier(old);
+					newXmp.dc().setIdentifier(old);
 					atLeastOneXmpDcSet = true;
 				}
 			}
 
 			if(dcEnabled.rights){
 				if(dc.rights != null){
-					dcS.setRights(null, dc.rights);
+					newXmp.dc().setRights(null, dc.rights);
 					atLeastOneXmpDcSet = true;
 				}
 			} else if(dcOld != null){
@@ -902,7 +942,7 @@ public class MetadataInfo {
 					for(String rl: rll){
 						String rights = dcOld.getRights(rl);
 						if(rights != null){
-							dcS.setRights(rl, rights);
+							newXmp.dc().setRights(rl, rights);
 							atLeastOneXmpDcSet = true;
 						}
 					}
@@ -911,26 +951,26 @@ public class MetadataInfo {
 
 			if(dcEnabled.source){
 				if(dc.source != null){
-					dcS.setSource(dc.source);
+					newXmp.dc().setSource(dc.source);
 					atLeastOneXmpDcSet = true;
 				}
 			} else if(dcOld != null){
 				String old = dcOld.getSource();
 				if(old != null){
-					dcS.setSource(old);
+					newXmp.dc().setSource(old);
 					atLeastOneXmpDcSet = true;
 				}
 			}
 
 			if(dcEnabled.description){
 				if(dc.description != null){
-					dcS.setDescription(dc.description);
+					newXmp.dc().setDescription(dc.description);
 					atLeastOneXmpDcSet = true;
 				}
 			} else if(dcOld != null){
 				String old = dcOld.getDescription();
 				if(old != null){
-					dcS.setDescription(old);
+					newXmp.dc().setDescription(old);
 					atLeastOneXmpDcSet = true;
 				}
 			}
@@ -938,7 +978,7 @@ public class MetadataInfo {
 			if(dcEnabled.dates){
 				if (dc.dates != null) {
 					for (Calendar date : dc.dates) {
-						dcS.addDate(date);
+						newXmp.dc().addDate(date);
 						atLeastOneXmpDcSet = true;
 					}
 				}
@@ -946,7 +986,7 @@ public class MetadataInfo {
 				List<Calendar> old= dcOld.getDates();
 				if(old != null){
 					for(Calendar a: old){
-						dcS.addDate(a);;
+						newXmp.dc().addDate(a);;
 						atLeastOneXmpDcSet = true;
 					}
 				}
@@ -957,30 +997,29 @@ public class MetadataInfo {
 		XMPSchemaRightsManagement riOld = xmpOld != null ? xmpOld.getRightsManagementSchema() : null;
 		boolean atLeastOneXmpRightsSet = false;
 		if(rightsEnabled.atLeastOne() || (riOld != null)){
-			XMPSchemaRightsManagement ri = xmpNew.addRightsManagementSchema();
 
 			if(rightsEnabled.certificate){
 				if(rights.certificate != null){
-					ri.setCertificateURL(rights.certificate);;
+					newXmp.rights().setCertificateURL(rights.certificate);;
 					atLeastOneXmpRightsSet = true;
 				}
 			} else if(riOld != null){
 				String old = riOld.getCertificateURL();
 				if(old != null){
-					ri.setCertificateURL(old);
+					newXmp.rights().setCertificateURL(old);
 					atLeastOneXmpRightsSet = true;
 				}
 			}
 
 			if(rightsEnabled.marked){
 				if(rights.marked != null){
-					ri.setMarked(rights.marked);;
+					newXmp.rights().setMarked(rights.marked);;
 					atLeastOneXmpRightsSet = true;
 				}
 			} else if(riOld != null){
 				Boolean old = riOld.getMarked();
 				if(old != null){
-					ri.setMarked(old);
+					newXmp.rights().setMarked(old);
 					atLeastOneXmpRightsSet = true;
 				}
 			}
@@ -988,7 +1027,7 @@ public class MetadataInfo {
 			if(rightsEnabled.owner ){
 				if (rights.owner != null) {
 					for (String i : rights.owner) {
-						ri.addOwner(i);
+						newXmp.rights().addOwner(i);
 						atLeastOneXmpRightsSet = true;
 					}
 				}
@@ -996,7 +1035,7 @@ public class MetadataInfo {
 				List<String> old= riOld.getOwners();
 				if(old != null){
 					for(String a: old){
-						ri.addOwner(a);
+						newXmp.rights().addOwner(a);
 						atLeastOneXmpRightsSet = true;
 					}
 				}
@@ -1004,39 +1043,39 @@ public class MetadataInfo {
 
 			if(rightsEnabled.copyright){
 				if(rights.copyright != null){
-					ri.setCopyright(rights.copyright);;
+					newXmp.rights().setCopyright(rights.copyright);;
 					atLeastOneXmpRightsSet = true;
 				}
 			} else if(riOld != null){
 				String old = riOld.getCopyright();
 				if(old != null){
-					ri.setCopyright(old);
+					newXmp.rights().setCopyright(old);
 					atLeastOneXmpRightsSet = true;
 				}
 			}
 
 			if(rightsEnabled.usageTerms){
 				if(rights.usageTerms != null){
-					ri.setUsageTerms(rights.usageTerms);
+					newXmp.rights().setUsageTerms(rights.usageTerms);
 					atLeastOneXmpRightsSet = true;
 				}
 			} else if(riOld != null){
 				String old = riOld.getUsageTerms();
 				if(old != null){
-					ri.setUsageTerms(old);
+					newXmp.rights().setUsageTerms(old);
 					atLeastOneXmpRightsSet = true;
 				}
 			}
 
 			if(rightsEnabled.webStatement){
 				if(rights.webStatement != null){
-					ri.setWebStatement(rights.webStatement);
+					newXmp.rights().setWebStatement(rights.webStatement);
 					atLeastOneXmpRightsSet = true;
 				}
 			} else if(riOld != null){
 				String old = riOld.getWebStatement();
 				if(old != null){
-					ri.setWebStatement(old);
+					newXmp.rights().setWebStatement(old);
 					atLeastOneXmpRightsSet = true;
 				}
 			}
@@ -1044,15 +1083,18 @@ public class MetadataInfo {
 		}
 
 		// Do the save
-		if( basicEnabled.atLeastOne() || pdfEnabled.atLeastOne() || dcEnabled.atLeastOne() || rightsEnabled.atLeastOne() ||
-				atLeastOneXmpBasicSet || atLeastOneXmpPdfSet || atLeastOneXmpDcSet || atLeastOneXmpRightsSet){
-			PDMetadata metadataStream = new PDMetadata(document);
-			try {
-				metadataStream.importXMPMetadata(xmpNew.asByteArray());
-			} catch (TransformerException e) {
-				throw new Exception("Failed to save document:" + e.getMessage());
+		if( basicEnabled.atLeastOne() || pdfEnabled.atLeastOne() || dcEnabled.atLeastOne() || rightsEnabled.atLeastOne()){
+			if(atLeastOneXmpBasicSet || atLeastOneXmpPdfSet || atLeastOneXmpDcSet || atLeastOneXmpRightsSet){
+				PDMetadata metadataStream = new PDMetadata(document);
+				try {
+					metadataStream.importXMPMetadata(xmpNew.asByteArray());
+				} catch (TransformerException e) {
+					throw new Exception("Failed to save document:" + e.getMessage());
+				}
+				catalog.setMetadata(metadataStream);
+			} else {
+				catalog.setMetadata(null);
 			}
-			catalog.setMetadata(metadataStream);
 		}
 		document.save(pdfFile.getAbsolutePath());
 	}
