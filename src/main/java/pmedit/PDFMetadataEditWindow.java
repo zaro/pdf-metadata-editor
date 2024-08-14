@@ -130,6 +130,11 @@ public class PDFMetadataEditWindow extends JFrame{
 	}
 
 	private void saveFile(File newFile) {
+		if (pdfFile == null && filename.getText().isEmpty()) {
+			JOptionPane.showMessageDialog(this, "Please select a pdf file.");
+			return;
+		}
+
 		try {
 			metadataEditor.copyToMetadata(metadataInfo);
 			metadataInfo.copyUnsetExpanded(defaultMetadata, metadataInfo);
@@ -175,6 +180,11 @@ public class PDFMetadataEditWindow extends JFrame{
 
 	final ActionListener saveAsAction = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
+			if (pdfFile == null && filename.getText().isEmpty()) {
+				JOptionPane.showMessageDialog(rootPane, "Please select a pdf file.");
+				return;
+			}
+
 			final JFileChooser fcSaveAs = new JFileChooser();
 
 			String dir = Main.getPreferences().get("LastDir", null);
