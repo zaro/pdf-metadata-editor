@@ -18,39 +18,37 @@ import java.util.prefs.PreferencesFactory;
  * @version $Id: FilePreferencesFactory.java 282 2009-06-18 17:05:18Z david $
  */
 public class FilePreferencesFactory implements PreferencesFactory {
-	private static final Logger log = Logger.getLogger(FilePreferencesFactory.class.getName());
+    public static final String SYSTEM_PROPERTY_FILE = "pmedit.prefs.FilePreferencesFactory.file";
+    private static final Logger log = Logger.getLogger(FilePreferencesFactory.class.getName());
+    private static File preferencesFile;
+    Preferences rootPreferences;
 
-	Preferences rootPreferences;
-	public static final String SYSTEM_PROPERTY_FILE = "pmedit.prefs.FilePreferencesFactory.file";
+    public static File getPreferencesFile() {
+        if (preferencesFile == null) {
+            String prefsFile = System.getProperty(SYSTEM_PROPERTY_FILE);
+            if (prefsFile == null || prefsFile.length() == 0) {
+                String prefsDir = LocalDataDir.get() + File.separator + "pdf-metadata-editor";
+                File prefsDirectory = new File(prefsDir);
+                if (!prefsDirectory.exists()) {
+                    prefsDirectory.mkdirs();
+                }
+                prefsFile = prefsDir + File.separator + "fileprefs";
+            }
+            preferencesFile = new File(prefsFile).getAbsoluteFile();
+        }
+        return preferencesFile;
+    }
 
-	public Preferences systemRoot() {
-		return userRoot();
-	}
+    public Preferences systemRoot() {
+        return userRoot();
+    }
 
-	public Preferences userRoot() {
-		if (rootPreferences == null) {
+    public Preferences userRoot() {
+        if (rootPreferences == null) {
 
-			rootPreferences = new FilePreferences(null, "");
-		}
-		return rootPreferences;
-	}
-
-	private static File preferencesFile;
-
-	public static File getPreferencesFile() {
-		if (preferencesFile == null) {
-			String prefsFile = System.getProperty(SYSTEM_PROPERTY_FILE);
-			if (prefsFile == null || prefsFile.length() == 0) {
-				String prefsDir = LocalDataDir.get() + File.separator + "pdf-metadata-editor";
-				File prefsDirectory = new File(prefsDir);
-				if (!prefsDirectory.exists()) {
-					prefsDirectory.mkdirs();
-				}
-				prefsFile = prefsDir + File.separator + "fileprefs";
-			}
-			preferencesFile = new File(prefsFile).getAbsoluteFile();
-		}
-		return preferencesFile;
-	}
+            rootPreferences = new FilePreferences(null, "");
+        }
+        return rootPreferences;
+    }
 
 }
