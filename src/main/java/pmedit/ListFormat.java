@@ -12,6 +12,11 @@ public class ListFormat {
 		Iterator<Object> it = list.iterator();
 		while(it.hasNext()){
 			Object v =  it.next();
+
+			// Skip null values in the list
+			if (v == null)
+				continue;
+
 			if(Calendar.class.isAssignableFrom(v.getClass())){
 				sb.append(DateFormat.formatDateTime((Calendar)v));
 			} else {
