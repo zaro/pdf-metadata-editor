@@ -2,12 +2,7 @@ package pmedit;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.PathMatcher;
-import java.nio.file.SimpleFileVisitor;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,75 +12,76 @@ import java.util.regex.Pattern;
 
 public class FileList {
 
-	static class Finder extends SimpleFileVisitor<Path> {
-		private final PathMatcher matcher;
-		List<File> fileList = new ArrayList<File>();
+    static Pattern isGlob = Pattern.compile("[\\[\\]\\{\\}\\*\\?]");
 
-		Finder(String pattern) {
-			matcher = FileSystems.getDefault().getPathMatcher("glob:" + pattern);
-		}
+    public static List<File> fileList(List<String> fileNames) {
+        ArrayList<File> rval = new ArrayList<File>();
 
-		// Compares the glob pattern against
-		// the file or directory name.
-		void find(Path file) {
-			Path name = file.getFileName();
-			if (name != null && matcher.matches(name)) {
-				fileList.add(file.toFile());
-			}
-		}
+        for (String fileName : fileNames) {
+            File file = new File(fileName);
 
-		// Invoke the pattern matching
-		// method on each file.
-		@Override
-		public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-			find(file);
-			return FileVisitResult.CONTINUE;
-		}
+            Matcher m = isGlob.matcher(file.getName());
+            if (m.find()) {
+                String dir = file.getParent();
+                if (dir == null) {
+                    dir = ".";
+                }
+                Finder finder = new Finder(file.getName());
+                try {
+                    Files.walkFileTree(new File(dir).toPath(), finder);
+                } catch (IOException e) {
+                    System.err.println(e);
+                }
+                rval.addAll(finder.fileList);
+            } else {
+                rval.add(file);
+            }
+        }
+        return rval;
+    }
 
-		// Invoke the pattern matching
-		// method on each directory.
-		@Override
-		public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-			find(dir);
-			return FileVisitResult.CONTINUE;
-		}
+    public static List<File> fileList(String[] fileNames) {
+        return fileList(Arrays.asList(fileNames));
+    }
 
-		@Override
-		public FileVisitResult visitFileFailed(Path file, IOException exc) {
-			System.err.println(exc);
-			return FileVisitResult.CONTINUE;
-		}
-	}
+    static class Finder extends SimpleFileVisitor<Path> {
+        private final PathMatcher matcher;
+        List<File> fileList = new ArrayList<File>();
 
-	static Pattern isGlob = Pattern.compile("[\\[\\]\\{\\}\\*\\?]");
-	public static List<File> fileList(List<String> fileNames) {
-		ArrayList<File> rval = new ArrayList<File>();
+        Finder(String pattern) {
+            matcher = FileSystems.getDefault().getPathMatcher("glob:" + pattern);
+        }
 
-		for (String fileName : fileNames) {
-			File file = new File(fileName);
+        // Compares the glob pattern against
+        // the file or directory name.
+        void find(Path file) {
+            Path name = file.getFileName();
+            if (name != null && matcher.matches(name)) {
+                fileList.add(file.toFile());
+            }
+        }
 
-			Matcher m = isGlob.matcher(file.getName());
-			if(m.find()){
-				String dir = file.getParent();
-				if(dir == null){
-					dir= ".";
-				}
-		        Finder finder = new Finder(file.getName());
-				try {
-					Files.walkFileTree(new File(dir).toPath(), finder);
-				} catch (IOException e) {
-					System.err.println(e);
-				}
-				rval.addAll(finder.fileList);
-			} else {
-				rval.add(file);
-			}
-		}
-		return rval;
-	}
+        // Invoke the pattern matching
+        // method on each file.
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+            find(file);
+            return FileVisitResult.CONTINUE;
+        }
 
-	public static List<File> fileList(String[] fileNames) {
-		return fileList(Arrays.asList(fileNames));
-	}
+        // Invoke the pattern matching
+        // method on each directory.
+        @Override
+        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+            find(dir);
+            return FileVisitResult.CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult visitFileFailed(Path file, IOException exc) {
+            System.err.println(exc);
+            return FileVisitResult.CONTINUE;
+        }
+    }
 
 }
