@@ -10,7 +10,7 @@ echo '--------------------------------'
 
 cd $HOME
 echo "Clonning jdde"
-git clone https://github.com/zaro/jdde-bundle.git
+git clone --depth 1 --branch jdk14 https://github.com/zaro/jdde-bundle.git
 
 
 echo "cd jdde"
