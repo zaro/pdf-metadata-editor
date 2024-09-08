@@ -134,8 +134,8 @@ jobs:
             # curl -LO https://raw.githubusercontent.com/Homebrew/homebrew-cask/4565865e9d7c3d3018ee8aa67803ea68c54dde86/Casks/temurin.rb
             # brew install --cask temurin.rb
             # brew install --ignore-dependencies maven
-            curl -LO https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.5%2B8/OpenJDK17U-jdk_x64_mac_hotspot_17.0.5_8.pkg
-            sudo installer -pkg ./OpenJDK17U-jdk_x64_mac_hotspot_17.0.5_8.pkg -target /Applications
+            curl -LO https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.12%2B7/OpenJDK17U-jdk_aarch64_mac_hotspot_17.0.12_7.pkg
+            sudo installer -pkg ./OpenJDK17U-jdk_aarch64_mac_hotspot_17.0.12_7.pkg -target /Applications
             curl -LO https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz
             tar xzf apache-maven-3.8.8-bin.tar.gz
             sudo mkdir -p /usr/local/bin/
