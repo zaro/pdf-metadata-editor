@@ -135,6 +135,7 @@ if [ "${machine}" = "win" ]; then
   else
     SIGNTOOL=$(which signtool)
   fi
+  echo SIGNTOOL is "${SIGNTOOL}"
 
   if [ ! -f "$SIGNTOOL_PFX" ]; then
     echo "$SIGNTOOL_PFX" not found, trying to create it from SIGNTOOL_CERT env
@@ -158,13 +159,19 @@ if [ "${machine}" = "win" ]; then
     set +x
   }
 
-  if [ "$TYPE" = "app-image" -a "${SIGNTOOL}" ]; then
-    OIFS="$IFS"
-    IFS=$'\n'
-    for file in  $(find "${APP_IMAGE_DIR}" -type f -name "*.exe"); do
-      signtool_file "$APP_NAME" "$file"
-    done
-    IFS="$OIFS"
+  if [ "$TYPE" = "app-image" ]; then
+    if [ "${SIGNTOOL}" ];  then
+      echo "====== Signing individual executables in app-image"
+      OIFS="$IFS"
+      IFS=$'\n'
+      for file in  $(find "${APP_IMAGE_DIR}" -type f -name "*.exe"); do
+        signtool_file "$APP_NAME" "$file"
+      done
+      IFS="$OIFS"
+      echo "====== Done signing individual executables in app-image"
+    else
+      echo "====== SKIP signing individual executables in app-image, no SIGNTOOL defined"
+    fi
   fi
 
   if [ "$TYPE" = "msi" ]; then
