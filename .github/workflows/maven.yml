@@ -44,9 +44,6 @@ jobs:
         uses: InstaCode/maven-settings-xml-action@v9
         with:
           servers: '[{ "id": "github", "username": "zaro", "password": "${{ secrets.JDDE_PACKAGES_TOKEN }}" }]'
-      - name: Check maven settings
-        if: ${{ startsWith( matrix.os, 'windows' ) }}
-        run: "base64 'C:\\Users\\runneradmin\\.m2\\settings.xml'"
 
       # Build
       - name: Build with Maven

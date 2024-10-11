@@ -469,12 +469,17 @@
 			<artifactId>opencsv</artifactId>
 			<version>5.1</version>
 		</dependency>
-		<!--
 		<dependency>
-		    <groupId>com.pretty-tools</groupId>
-		    <artifactId>jdde-bundle</artifactId>
-		    <version>2.0.3</version>
+			<groupId>com.pretty-tools</groupId>
+			<artifactId>jdde-bundle</artifactId>
+			<version>2.0.3</version>
 		</dependency>
-		-->
 	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>github</id>
+			<url>https://maven.pkg.github.com/zaro/jdde-bundle</url>
+		</repository>
+	</repositories>
 </project>
