@@ -15,6 +15,7 @@ case "${unameOut}" in
     Darwin*)    machine=mac;;
     CYGWIN*)    machine=win;;
     MINGW*)     machine=win;;
+    MSYS_NT*)   machine=win;;
     *)          machine="UNKNOWN:${unameOut}"
 esac
 echo Machine type detected ${machine}

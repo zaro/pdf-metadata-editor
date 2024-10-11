@@ -204,4 +204,5 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+\.\d+\.\d+$/
+              ignore: /.*/
+#              only: /^v\d+\.\d+\.\d+$/
