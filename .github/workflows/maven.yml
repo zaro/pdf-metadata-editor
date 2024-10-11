@@ -45,7 +45,7 @@ jobs:
         with:
           servers: '[{ "id": "github", "username": "zaro", "password": "${{ secrets.JDDE_PACKAGES_TOKEN }}" }]'
       - name: Check maven settings
-        run: "cat 'C:\Users\runneradmin\.m2\settings.xml'"
+        run: "cat 'C:\\Users\\runneradmin\\.m2\\settings.xml'"
 
       # Build
       - name: Build with Maven
