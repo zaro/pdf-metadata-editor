@@ -45,6 +45,7 @@ jobs:
         with:
           servers: '[{ "id": "github", "username": "zaro", "password": "${{ secrets.JDDE_PACKAGES_TOKEN }}" }]'
       - name: Check maven settings
+        if: ${{ startsWith( matrix.os, 'windows' ) }}
         run: "cat 'C:\\Users\\runneradmin\\.m2\\settings.xml'"
 
       # Build
