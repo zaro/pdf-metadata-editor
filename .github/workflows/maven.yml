@@ -44,7 +44,7 @@ jobs:
         uses: InstaCode/maven-settings-xml-action@v9
         with:
           # use hardcoded token as it only allows reading from packages repositories which are public anyway
-          servers: '[{ "id": "github", "username": "zaro", "password": "${{ secrets.GITHUB_TOKEN }}" }]'
+          servers: '[{ "id": "github", "username": "zaro", "password": "${{ secrets.JDDE_PACKAGES_TOKEN }}" }]'
 
       # Build
       - name: Build with Maven
