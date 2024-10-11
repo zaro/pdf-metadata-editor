@@ -43,8 +43,9 @@ jobs:
       - name: maven-settings-xml-action
         uses: InstaCode/maven-settings-xml-action@v9
         with:
-          # use hardcoded token as it only allows reading from packages repositories which are public anyway
           servers: '[{ "id": "github", "username": "zaro", "password": "${{ secrets.JDDE_PACKAGES_TOKEN }}" }]'
+      - name: Check maven settings
+        run: "cat 'C:\Users\runneradmin\.m2\settings.xml'"
 
       # Build
       - name: Build with Maven
