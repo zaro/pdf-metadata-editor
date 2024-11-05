@@ -1,0 +1,7 @@
+[env]
+_.file = '.env'
+
+[tools]
+# specify single or multiple versions
+java = "temurin-17.0.8"
+maven= "3.9.6"
