@@ -70,6 +70,7 @@ jobs:
         with:
           name: release-files-${{ matrix.os }}
           path: target/packages/* # or path/to/artifact
+          retention-days: 1
 
   release:
     permissions:
