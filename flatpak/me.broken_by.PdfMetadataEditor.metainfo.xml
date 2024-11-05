@@ -31,7 +31,7 @@
     </screenshot>
   </screenshots>
   <releases>
-    <release version="3.0.0" date="2023-10-20" type="stable" />
+    <release version="3.1.0" date="2024-11-05" type="stable" />
   </releases>
   <url type="homepage">https://pdf.metadata.care/</url>
   <url type="bugtracker">https://github.com/zaro/pdf-metadata-editor/issues</url>
