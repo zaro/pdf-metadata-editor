@@ -434,7 +434,7 @@ public class PreferencesWindow extends JDialog {
         txtpnDf.setContentType("text/html");
         txtpnDf.setEditable(false);
         txtpnDf.setText(
-                aboutMsg = "<h1 align=center>Pdf Metadata editor</h1>\n\n<p align=center><a href=\"http://broken-by.me/pdf-metadata-editor/\">http://broken-by.me/pdf-metadata-editor/</a></p>\n<br>\n<p align=center>If you have suggestions, found bugs or just want to share some idea about it you can write me at : <a href=\"mailto:zarrro@gmail.com\"/>zarrro@gmail.com</a></p>\n<br>");
+                aboutMsg = "<h1 align=center>Pdf Metadata editor</h1>\n\n<p align=center><a href=\"https://pdf.metadata.care/\">https://pdf.metadata.care/</a></p>\n<br>\n<p align=center>If you have suggestions, found bugs or just want to share some idea about it you can write me at : <a href=\"https://pdf.metadata.care/contact/\"/>https://pdf.metadata.care/contact/</a></p>\n<br>");
         scrollPane_1.setViewportView(txtpnDf);
 
         JPanel panel_3 = new JPanel();
@@ -569,7 +569,7 @@ public class PreferencesWindow extends JDialog {
             if (lastsVersion != null) {
                 Version.VersionTuple latest = new Version.VersionTuple(lastsVersion);
                 if (current.cmp(latest) < 0) {
-                    versionMsg = "<h3 align=center>New version available: <a href='http://broken-by.me/pdf-metadata-editor/#download'>"
+                    versionMsg = "<h3 align=center>New version available: <a href='https://pdf.metadata.care/download/'>"
                             + latest.getAsString() + "</a> , current: " + current.getAsString() + "</h3>";
                     updateStatusLabel.setText("Newer version available:" + latest.getAsString());
                 } else {

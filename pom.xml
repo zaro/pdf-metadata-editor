@@ -4,10 +4,10 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>pdf-metadata-edit</groupId>
 	<artifactId>pdf-metadata-editor</artifactId>
-	<version>3.0.3</version>
+	<version>3.1.0</version>
 	<name>Pdf Metadata Editor</name>
 	<description>Simple Editor for PDF metadata</description>
-	<url>http://broken-by.me/pdf-metadata-editor/</url>
+	<url>https://pdf.metadata.care/</url>
 	<packaging>jar</packaging>
 
 	<developers>
@@ -97,7 +97,14 @@
 					</plugin>
 				</plugins>
 			</build>
-		</profile>
+			<dependencies>
+				<dependency>
+					<groupId>com.pretty-tools</groupId>
+					<artifactId>jdde-bundle</artifactId>
+					<version>2.0.3</version>
+				</dependency>
+			</dependencies>
+	</profile>
 		<profile>
 			<id>os_mac</id>
 			<activation>
@@ -468,11 +475,6 @@
 			<groupId>com.opencsv</groupId>
 			<artifactId>opencsv</artifactId>
 			<version>5.1</version>
-		</dependency>
-		<dependency>
-			<groupId>com.pretty-tools</groupId>
-			<artifactId>jdde-bundle</artifactId>
-			<version>2.0.3</version>
 		</dependency>
 	</dependencies>
 

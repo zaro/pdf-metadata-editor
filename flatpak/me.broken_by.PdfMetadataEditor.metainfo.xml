@@ -19,15 +19,23 @@
   <screenshots>
     <screenshot type="default">
       <caption>Main Screen</caption>
-      <image type="source">https://broken-by.me/wp-content/uploads/2015/11/Windows.png</image>
+      <image type="source">https://pdf.metadata.care/screenshots/document.png</image>
+    </screenshot>
+    <screenshot type="default">
+      <caption>Dublin Core Screen</caption>
+      <image type="source">https://pdf.metadata.care/screenshots/dc.png</image>
+    </screenshot>
+    <screenshot type="default">
+      <caption>Preferences Screen</caption>
+      <image type="source">https://pdf.metadata.care/screenshots/prefs.png</image>
     </screenshot>
   </screenshots>
   <releases>
     <release version="3.0.0" date="2023-10-20" type="stable" />
   </releases>
-  <url type="homepage">https://broken-by.me/pdf-metadata-editor/</url>
+  <url type="homepage">https://pdf.metadata.care/</url>
   <url type="bugtracker">https://github.com/zaro/pdf-metadata-editor/issues</url>
-  <url type="help">https://broken-by.me/pdf-metadata-editor/help/</url>
+  <url type="help">https://pdf.metadata.care/help/</url>
   <categories>
     <category>Utility</category>
     <category>Office</category>
