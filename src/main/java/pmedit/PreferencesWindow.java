@@ -434,7 +434,7 @@ public class PreferencesWindow extends JDialog {
         txtpnDf.setContentType("text/html");
         txtpnDf.setEditable(false);
         txtpnDf.setText(
-k                aboutMsg = "<h1 align=center>Pdf Metadata editor</h1>\n\n<p align=center><a href=\"https://pdf.metadata.care/\">https://pdf.metadata.care/</a></p>\n<br>\n<p align=center>If you have suggestions, found bugs or just want to share some idea about it you can write me at : <a href=\"https://pdf.metadata.care/contact/\">https://pdf.metadata.care/contact/</a></p>\n<br>");
+                aboutMsg = "<h1 align=center>Pdf Metadata editor</h1>\n\n<p align=center><a href=\"https://pdf.metadata.care/\">https://pdf.metadata.care/</a></p>\n<br>\n<p align=center>If you have suggestions, found bugs or just want to share some idea about it you can write me at : <a href=\"https://pdf.metadata.care/contact/\">https://pdf.metadata.care/contact/</a></p>\n<br>");
         scrollPane_1.setViewportView(txtpnDf);
 
         JPanel panel_3 = new JPanel();
