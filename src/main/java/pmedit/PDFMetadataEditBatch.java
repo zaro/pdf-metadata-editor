@@ -293,7 +293,7 @@ public class PDFMetadataEditBatch {
     }
 
     public void runCommand(CommandDescription command, List<File> batchFileList, ActionStatus actionStatus) {
-        if (!BatchMan.hasBatch()) {
+        if (BatchMan.hasBatch()) {
             actionStatus.addError("*", "Invalid license, you can get a license at " + Constants.batchLicenseUrl);
         } else if (command.is("rename")) {
             rename(batchFileList, actionStatus);
