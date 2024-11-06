@@ -223,7 +223,7 @@ public class BatchOperationWindow extends JFrame {
             }
         });
         setGlassPane(new FileDropMessage());
-        if (!BatchMan.hasBatch()) {
+        if (BatchMan.hasBatch()) {
             btnAction.setEnabled(false);
             txtpnnoBatchLicense.setVisible(true);
         } else {
