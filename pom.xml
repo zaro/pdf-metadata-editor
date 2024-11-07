@@ -29,6 +29,7 @@
 		<snakeyaml.path>${org.yaml:snakeyaml:jar}</snakeyaml.path>
 		<main.file.name>${project.artifactId}-${project.version}</main.file.name>
 		<main.jar.name>${main.file.name}.jar</main.jar.name>
+		<windows.uuid>c71564cd-5068-4d6d-874b-6a189abd40d3</windows.uuid>
 		<packages.list></packages.list>
 		<icon.format></icon.format>
 		<archive.format>zip</archive.format>
@@ -238,6 +239,7 @@
 							<nonFilteredFileExtensions>
 								<nonFilteredFileExtension>jar</nonFilteredFileExtension>
 								<nonFilteredFileExtension>icns</nonFilteredFileExtension>
+								<nonFilteredFileExtension>pfx</nonFilteredFileExtension>
 							</nonFilteredFileExtensions>
 							<resources>
 								<resource>
@@ -262,6 +264,7 @@
 								<nonFilteredFileExtension>icns</nonFilteredFileExtension>
 								<nonFilteredFileExtension>ico</nonFilteredFileExtension>
 								<nonFilteredFileExtension>png</nonFilteredFileExtension>
+								<nonFilteredFileExtension>pfx</nonFilteredFileExtension>
 							</nonFilteredFileExtensions>
 							<resources>
 								<resource>

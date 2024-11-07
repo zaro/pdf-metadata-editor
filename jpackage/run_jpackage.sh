@@ -15,7 +15,6 @@ case "${unameOut}" in
     Darwin*)    machine=mac;;
     CYGWIN*)    machine=win;;
     MINGW*)     machine=win;;
-    MSYS_NT*)   machine=win;;
     *)          machine="UNKNOWN:${unameOut}"
 esac
 echo Machine type detected ${machine}
@@ -34,7 +33,7 @@ fi
 
 export MSYS_NO_PATHCONV=1
 
-WINDOWS_UUID="c71564cd-5068-4d6d-874b-6a189abd40d3"
+WINDOWS_UUID="${windows.uuid}"
 STAGING_DIR="${staging.dir}"
 APP_NAME="${project.name}"
 DESCRIPTION="${project.description}"
@@ -42,8 +41,8 @@ MAIN_JAR="${main.jar.name}"
 MAIN_CLASS="pmedit.Main"
 APP_VERSION="${project.version}"
 ICON_FORMAT="${icon.format}"
-DEST_DIR=target/packages
-DEST_IMAGE_DIR=target/packages-image
+DEST_DIR="${STAGING_DIR}/packages"
+DEST_IMAGE_DIR="${STAGING_DIR}/packages-image"
 APP_IMAGE_DIR="${DEST_IMAGE_DIR}/${APP_NAME}/"
 
 if [ "$TYPE" = "app-image" ]; then
@@ -63,12 +62,14 @@ JP_OPTS="$JP_OPTS --description '$DESCRIPTION'"
 if [ "$TYPE" = "app-image" -o "$machine" = "mac" ]; then
   JP_OPTS="$JP_OPTS --input '${STAGING_DIR}/jpackage'"
   JP_OPTS="$JP_OPTS --main-class '$MAIN_CLASS'"
+  JP_OPTS="$JP_OPTS --java-options '--add-opens java.base/java.nio=ALL-UNNAMED --add-opens=java.base/jdk.internal.ref=ALL-UNNAMED'"
   JP_OPTS="$JP_OPTS --main-jar '$MAIN_JAR'"
   JP_OPTS="$JP_OPTS --add-launcher 'Batch ${APP_NAME}=${STAGING_DIR}/jpackage-scripts/batch-launcher.properties'"
   JP_OPTS="$JP_OPTS --add-launcher 'pmedit-cli=${STAGING_DIR}/jpackage-scripts/cli.properties'"
   JP_OPTS="$JP_OPTS --runtime-image '${STAGING_DIR}/preparedJDK'"
   JP_OPTS="$JP_OPTS --dest '${DEST_IMAGE_DIR}'"
 fi
+
 if [ "$TYPE" != "app-image" -a "$machine" != "mac" ]; then
   JP_OPTS="$JP_OPTS --file-associations 'jpackage/file-associations.properties'"
   JP_OPTS="$JP_OPTS --dest '${DEST_DIR}'"
@@ -103,16 +104,13 @@ set -x
 eval jpackage $JP_OPTS
 
 ls -la ${STAGING_DIR}/packages/
-ls -la $DEST_IMAGE_DIR
+ls -la ${DEST_IMAGE_DIR}
 
 
 #if [ "$machine" = "mac" -a "$TYPE" = "app-image" ]; then
 #  (cd ${DEST_IMAGE_DIR}; zip -r "../packages/PdfMetadataEditor.app.zip" Pdf\ Metadata\ Editor.app/)
 #  zip -r "${STAGING_DIR}/packages/$APP_NAME.app.zip" target/packages/
 #fi
-
-ls -la ${STAGING_DIR}/packages/
-ls -la $DEST_IMAGE_DIR
 
 set +x
 ### Handle linux deliveries
@@ -136,14 +134,15 @@ if [ "${machine}" = "win" ]; then
   else
     SIGNTOOL=$(which signtool)
   fi
-  echo SIGNTOOL is "${SIGNTOOL}"
 
-  if [ ! -f "$SIGNTOOL_PFX" ]; then
-    echo "$SIGNTOOL_PFX" not found, trying to create it from SIGNTOOL_CERT env
-    if [ "$SIGNTOOL_CERT" ]; then
-      echo "$SIGNTOOL_CERT" | base64 -d > "$SIGNTOOL_PFX"
-    else
-      echo "SIGNTOOL_CERT not set"
+  if [ -z "$CERTUM_SHA" ]; then
+    if [ ! -f "$SIGNTOOL_PFX" ]; then
+      echo "$SIGNTOOL_PFX" not found, trying to create it from SIGNTOOL_CERT env
+      if [ "$SIGNTOOL_CERT" ]; then
+        echo "$SIGNTOOL_CERT" | base64 -d > "$SIGNTOOL_PFX"
+      else
+        echo "SIGNTOOL_CERT not set"
+      fi
     fi
   fi
 
@@ -154,25 +153,29 @@ if [ "${machine}" = "win" ]; then
     DESC=$1
     FILE=$2
     echo ">>> Signing '$FILE' with signtool"
+    if [ -z "${SIGNTOOL}" ];  then
+       echo "!!!!!!!!! SKIP: no SIGNTOOL found"
+    fi
     chmod a+w "$FILE"
-    set -x
-    "${SIGNTOOL}"  sign /f jpackage/cert/win-cert.pfx /p 123456 /d "$DESC" /v /fd SHA256 /tr "http://timestamp.sectigo.com" /td SHA256 "$FILE"
-    set +x
+    file "$FILE"
+    if [ -z "$CERTUM_SHA" ]; then
+      set -x
+      "${SIGNTOOL}"  sign /f jpackage/cert/win-cert.pfx /p 123456 /d "$DESC" /v /fd SHA256 /tr "http://timestamp.sectigo.com" /td SHA256 "$FILE"
+      set +x
+    else
+      set -x
+      "${SIGNTOOL}"  sign /sha1 "$CERTUM_SHA" /tr http://time.certum.pl /td sha256 /fd sha256 /v "$FILE"
+      set +x
+    fi
   }
 
-  if [ "$TYPE" = "app-image" ]; then
-    if [ "${SIGNTOOL}" ];  then
-      echo "====== Signing individual executables in app-image"
-      OIFS="$IFS"
-      IFS=$'\n'
-      for file in  $(find "${APP_IMAGE_DIR}" -type f -name "*.exe"); do
-        signtool_file "$APP_NAME" "$file"
-      done
-      IFS="$OIFS"
-      echo "====== Done signing individual executables in app-image"
-    else
-      echo "====== SKIP signing individual executables in app-image, no SIGNTOOL defined"
-    fi
+  if [ "$TYPE" = "app-image" -a "${SIGNTOOL}" ]; then
+    OIFS="$IFS"
+    IFS=$'\n'
+    for file in  $(find "${APP_IMAGE_DIR}" -type f -name "*.exe"); do
+      signtool_file "$APP_NAME" "$file"
+    done
+    IFS="$OIFS"
   fi
 
   if [ "$TYPE" = "msi" ]; then
