@@ -46,7 +46,7 @@ public class Version {
 
 
         public VersionTuple(String version) {
-            this(version, "^(\\d+)\\.(\\d+)\\.(\\d+)-?(\\S*)$");
+            this(version, "^v?(\\d+)\\.(\\d+)\\.(\\d+)-?(\\S*)$");
         }
 
         public VersionTuple(String version, String pattern) {
