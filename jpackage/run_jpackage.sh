@@ -15,6 +15,7 @@ case "${unameOut}" in
     Darwin*)    machine=mac;;
     CYGWIN*)    machine=win;;
     MINGW*)     machine=win;;
+    MSYS_NT*)   machine=win;;
     *)          machine="UNKNOWN:${unameOut}"
 esac
 echo Machine type detected ${machine}
@@ -134,6 +135,7 @@ if [ "${machine}" = "win" ]; then
   else
     SIGNTOOL=$(which signtool)
   fi
+  echo Using SIGNTOOL=$SIGNTOOL
 
   if [ -z "$CERTUM_SHA" ]; then
     if [ ! -f "$SIGNTOOL_PFX" ]; then
@@ -144,6 +146,8 @@ if [ "${machine}" = "win" ]; then
         echo "SIGNTOOL_CERT not set"
       fi
     fi
+  else
+    echo "Using CERTUM_SHA=$CERTUM_SHA"
   fi
 
   ls -lah jpackage/cert
