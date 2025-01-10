@@ -1,9 +1,5 @@
 package pmedit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -11,22 +7,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
+import org.junit.jupiter.api.Test;
 import pmedit.MetadataInfoTest.PMTuple;
 import pmedit.PDFMetadataEditBatch.ActionStatus;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 public class BatchCommandTest {
 
-	@Before
-	public void setUp() throws Exception {
-	}
-
-	@After
-	public void tearDown() throws Exception {
-	}
 	static int NUM_FILES = 5;
 	@Test
 	public void testClearAll() throws FileNotFoundException, IOException, Exception {
@@ -49,7 +38,7 @@ public class BatchCommandTest {
 			@Override
 			public void addError(String filename, String error) {
 				System.out.println(error);
-				assertFalse(error, true);
+                fail(error);
 			}
 
 		});
@@ -83,7 +72,7 @@ public class BatchCommandTest {
 			@Override
 			public void addError(String filename, String error) {
 				System.out.println(error);
-				assertFalse(error, true);
+				fail(error);
 			}
 
 		});
@@ -120,7 +109,7 @@ public class BatchCommandTest {
 			@Override
 			public void addError(String filename, String error) {
 				System.out.println(error);
-				assertFalse(error, true);
+				fail(error);
 			}
 
 		});
@@ -166,7 +155,7 @@ public class BatchCommandTest {
 			@Override
 			public void addError(String filename, String error) {
 				System.out.println(error);
-				assertFalse(error, true);
+				fail(error);
 			}
 
 		});

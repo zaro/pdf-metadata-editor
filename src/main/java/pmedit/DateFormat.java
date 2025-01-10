@@ -4,6 +4,10 @@ import pmedit.CommandLine.ParseError;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -26,11 +30,19 @@ public class DateFormat {
 
     public static Calendar parseDate(String value) throws ParseError {
         Date d = null;
-        for (SimpleDateFormat df : isoDateFormat) {
-            try {
-                d = df.parse(value);
-            } catch (ParseException e) {
+        try {
+            TemporalAccessor ta = DateTimeFormatter.ISO_INSTANT.parse(value);
+            Instant i = Instant.from(ta);
+            d = Date.from(i);
+        } catch (DateTimeParseException e){
+
+            for (SimpleDateFormat df : isoDateFormat) {
+                try {
+                    d = df.parse(value);
+                } catch (ParseException pe) {
+                }
             }
+
         }
         if (d != null) {
             Calendar cal = Calendar.getInstance();

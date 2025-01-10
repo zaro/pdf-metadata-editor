@@ -1,9 +1,14 @@
 package pmedit;
 
 import net.miginfocom.swing.MigLayout;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
+import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
+import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
+import org.apache.xmpbox.xml.XmpParsingException;
 
 import javax.swing.*;
-import javax.swing.plaf.basic.BasicArrowButton;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -18,14 +23,18 @@ public class PDFMetadataEditWindow extends JFrame {
     final JFileChooser fc;
     private final MetadataInfo defaultMetadata;
     private File pdfFile;
+    private String password;
     private MetadataInfo metadataInfo = new MetadataInfo();
     private JTextField filename;
 
     private PreferencesWindow preferencesWindow;
     private MetadataEditPane metadataEditor;
+    private ActionsAndOptions actionsAndOptions;
+
     final ActionListener saveAction = new ActionListener() {
         public void actionPerformed(ActionEvent e) {
             saveFile(null);
+            reloadFile();
         }
     };
     final ActionListener saveRenameAction = new ActionListener() {
@@ -82,11 +91,11 @@ public class PDFMetadataEditWindow extends JFrame {
             }
         }
     };
-    private JButton btnSave;
     final Runnable updateSaveButton = new Runnable() {
 
         @Override
         public void run() {
+            JButton btnSave = actionsAndOptions.btnSave;
             String saveActionS = Main.getPreferences().get("defaultSaveAction", "save");
 
             for (ActionListener l : btnSave.getActionListeners()) {
@@ -120,8 +129,7 @@ public class PDFMetadataEditWindow extends JFrame {
         clear();
         if (filePath != null) {
             try {
-                pdfFile = new File(filePath);
-                reloadFile();
+                loadFile(filePath);
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this,
                         "Error while opening file:\n" + e);
@@ -175,19 +183,64 @@ public class PDFMetadataEditWindow extends JFrame {
     }
 
     public void loadFile(String fileName) {
-        pdfFile = new File(fileName);
-        reloadFile();
+        loadFile(new File(fileName));
+    }
+
+    public void loadFile(File file) {
+        if(!file.equals(pdfFile)){
+            password = null;
+        }
+        pdfFile = file;
+        clear();
+        while(true) {
+            try {
+                PDDocument document = Loader.loadPDF(pdfFile, password != null ? password : "");
+
+                reloadFileFromDocument(document);
+                document.close();
+                break;
+            } catch (InvalidPasswordException e) {
+                password = (String)JOptionPane.showInputDialog(
+                        this,
+                        "File is encrypted, provide user password:\n",
+                        "Encrypted file",
+                        JOptionPane.PLAIN_MESSAGE
+                        );
+                if(password == null){
+                    break;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this,
+                        "Error while opening file:\n" + e);
+                break;
+            }
+        };
+
+    }
+
+    protected void reloadFileFromDocument(PDDocument document) throws XmpParsingException, IOException {
+        filename.setText(pdfFile.getAbsolutePath());
+        metadataInfo = new MetadataInfo();
+        metadataInfo.loadFromPDF(document);
+        metadataInfo.copyUnsetExpanded(defaultMetadata, metadataInfo);
+
+        metadataEditor.fillFromMetadata(metadataInfo);
+
+        actionsAndOptions.setCurrentDocumentVersion(document.getVersion());
+
+        metadataInfo.encryptionOptions.userPassword = password;
+        actionsAndOptions.setDocumentProtection(metadataInfo.encryptionOptions);
     }
 
     public void reloadFile() {
         clear();
         try {
-            filename.setText(pdfFile.getAbsolutePath());
-            metadataInfo = new MetadataInfo();
-            metadataInfo.loadFromPDF(pdfFile);
-            metadataInfo.copyUnsetExpanded(defaultMetadata, metadataInfo);
+            PDDocument document = Loader.loadPDF(pdfFile, password != null ? password : "");
 
-            metadataEditor.fillFromMetadata(metadataInfo);
+            reloadFileFromDocument(document);
+
+            document.close();
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this,
@@ -202,12 +255,26 @@ public class PDFMetadataEditWindow extends JFrame {
         }
 
         try {
+            metadataInfo.removeDocumentInfo = actionsAndOptions.removeDocumentCheckBox.isSelected();
+            metadataInfo.removeXmp = actionsAndOptions.removeXMPCheckBox.isSelected();
+
+            metadataInfo.encryptionOptions = actionsAndOptions.getDocumentProtection();
+
+            if(actionsAndOptions.pdfVersion.getSelectedItem() instanceof Float s) {
+                metadataInfo.saveAsVersion = s;
+            } else {
+                metadataInfo.saveAsVersion = 0;
+            }
+
             metadataEditor.copyToMetadata(metadataInfo);
             metadataInfo.copyUnsetExpanded(defaultMetadata, metadataInfo);
 
             metadataInfo.saveAsPDF(pdfFile, newFile);
 
             metadataEditor.fillFromMetadata(metadataInfo);
+
+            password = metadataInfo.encryptionOptions.userPassword;
+
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this,
@@ -217,7 +284,7 @@ public class PDFMetadataEditWindow extends JFrame {
 
     private void initialize() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setTitle("PDF Metadata Editor");
+        setTitle(Version.getAppName());
         setBounds(100, 100, 640, 480);
         setMinimumSize(new Dimension(640, 480));
         getContentPane()
@@ -253,9 +320,8 @@ public class PDFMetadataEditWindow extends JFrame {
                 int returnVal = fc.showOpenDialog(PDFMetadataEditWindow.this);
 
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    pdfFile = fc.getSelectedFile();
                     // This is where a real application would open the file.
-                    reloadFile();
+                    loadFile(fc.getSelectedFile());
                     // save dir as last opened
                     Main.getPreferences().put("LastDir", pdfFile.getParent());
                 }
@@ -320,18 +386,9 @@ public class PDFMetadataEditWindow extends JFrame {
 //				"cell 0 1,growy");
 
 
-        JPanel panel_4 = new JPanel();
-        getContentPane().add(panel_4, "cell 0 2,growx");
-        GridBagLayout gbl_panel_4 = new GridBagLayout();
-        gbl_panel_4.columnWidths = new int[]{340, 286, 0};
-        gbl_panel_4.rowHeights = new int[]{33, 29, 0};
-        gbl_panel_4.columnWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
-        gbl_panel_4.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
-        panel_4.setLayout(gbl_panel_4);
-
-
-        JButton btnCopyXmpTo = new JButton("Copy XMP To Document");
-        btnCopyXmpTo.addActionListener(new ActionListener() {
+        actionsAndOptions = new ActionsAndOptions();
+        getContentPane().add(actionsAndOptions.topPanel, "cell 0 2,growx");
+        actionsAndOptions.copyXMPToDocumentButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (metadataInfo != null) {
                     metadataEditor.copyToMetadata(metadataInfo);
@@ -340,16 +397,7 @@ public class PDFMetadataEditWindow extends JFrame {
                 }
             }
         });
-        GridBagConstraints gbc_btnCopyXmpTo = new GridBagConstraints();
-        gbc_btnCopyXmpTo.anchor = GridBagConstraints.SOUTH;
-        gbc_btnCopyXmpTo.fill = GridBagConstraints.HORIZONTAL;
-        gbc_btnCopyXmpTo.insets = new Insets(0, 0, 5, 5);
-        gbc_btnCopyXmpTo.gridx = 0;
-        gbc_btnCopyXmpTo.gridy = 0;
-        panel_4.add(btnCopyXmpTo, gbc_btnCopyXmpTo);
-
-        JButton btnCopyDocumentTo = new JButton("Copy Document To XMP");
-        btnCopyDocumentTo.addActionListener(new ActionListener() {
+        actionsAndOptions.copyDocumentToXMPButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
                 if (metadataInfo != null) {
                     metadataEditor.copyToMetadata(metadataInfo);
@@ -359,23 +407,8 @@ public class PDFMetadataEditWindow extends JFrame {
             }
         });
 
-        JPanel panel_1 = new JPanel();
-        GridBagConstraints gbc_panel_1 = new GridBagConstraints();
-        gbc_panel_1.fill = GridBagConstraints.BOTH;
-        gbc_panel_1.gridheight = 2;
-        gbc_panel_1.gridx = 1;
-        gbc_panel_1.gridy = 0;
-        panel_4.add(panel_1, gbc_panel_1);
-        panel_1.setLayout(new MigLayout("", "[grow,fill]0[]", "[grow,fill]"));
 
-        btnSave = new JButton("Save");
-        panel_1.add(btnSave, "cell 0 0,alignx left,aligny top, gapright 0");
-        btnSave.setIcon(new ImageIcon(
-                PDFMetadataEditWindow.class
-                        .getResource("save-icon.png")));
-
-        final BasicArrowButton btnSaveMenu = new BasicArrowButton(BasicArrowButton.SOUTH);
-        btnSaveMenu.addActionListener(new ActionListener() {
+        actionsAndOptions.btnSaveMenu.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 JPopupMenu menu = new JPopupMenu();
                 JMenuItem save = menu.add("Save");
@@ -386,23 +419,14 @@ public class PDFMetadataEditWindow extends JFrame {
                 saveAs.addActionListener(saveAsAction);
 
                 int x, y;
-                Point pos = btnSaveMenu.getLocationOnScreen();
+                Point pos = actionsAndOptions.btnSaveMenu.getLocationOnScreen();
                 x = pos.x;
-                y = pos.y + btnSaveMenu.getHeight();
+                y = pos.y + actionsAndOptions.btnSaveMenu.getHeight();
 
-                menu.show(btnSaveMenu, btnSaveMenu.getWidth() - (int) menu.getPreferredSize().getWidth(), btnSaveMenu.getHeight());
+                menu.show(actionsAndOptions.btnSaveMenu, actionsAndOptions.btnSaveMenu.getWidth() - (int) menu.getPreferredSize().getWidth(), actionsAndOptions.btnSaveMenu.getHeight());
 
             }
         });
-        panel_1.add(btnSaveMenu, "cell 1 0,growx,aligny center, gapleft 0");
-
-        GridBagConstraints gbc_btnCopyDocumentTo = new GridBagConstraints();
-        gbc_btnCopyDocumentTo.anchor = GridBagConstraints.NORTH;
-        gbc_btnCopyDocumentTo.fill = GridBagConstraints.HORIZONTAL;
-        gbc_btnCopyDocumentTo.insets = new Insets(0, 0, 0, 5);
-        gbc_btnCopyDocumentTo.gridx = 0;
-        gbc_btnCopyDocumentTo.gridy = 1;
-        panel_4.add(btnCopyDocumentTo, gbc_btnCopyDocumentTo);
 
 
         updateSaveButton.run();
@@ -418,7 +442,4 @@ public class PDFMetadataEditWindow extends JFrame {
         return new MetadataEditPane();
     }
 
-    protected JButton getBtnSave() {
-        return btnSave;
-    }
 }
