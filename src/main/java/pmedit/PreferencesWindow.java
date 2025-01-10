@@ -8,9 +8,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.util.EntityUtils;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
@@ -25,7 +22,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.prefs.Preferences;
@@ -54,6 +53,7 @@ public class PreferencesWindow extends JDialog {
     protected boolean isWindows;
     MetadataInfo defaultMetadata;
     Runnable onSave;
+    private JButton btnClose;
 
     /**
      * @wbp.parser.constructor
@@ -69,6 +69,7 @@ public class PreferencesWindow extends JDialog {
         super(owner, true);
         setLocationRelativeTo(owner);
         long startTime = System.nanoTime();
+
 
         final Future<HttpResponse> status = checkForUpdates();
         isWindows = System.getProperty("os.name").startsWith("Windows");
@@ -239,6 +240,10 @@ public class PreferencesWindow extends JDialog {
         defaultMetadataPane = new MetadataEditPane();
 
         panelDefaults.add(defaultMetadataPane.tabbedaPane, gbc_lblDefineHereDefault1);
+
+        OptimizationPreferenesPane optimizerPrefs = new OptimizationPreferenesPane();
+        tabbedPane.addTab("File Optimization", null, optimizerPrefs.topPanel, null);
+
 
         // if(false){
         // JPanel panelOsIntegration = new JPanel();
@@ -434,7 +439,7 @@ public class PreferencesWindow extends JDialog {
         txtpnDf.setContentType("text/html");
         txtpnDf.setEditable(false);
         txtpnDf.setText(
-                aboutMsg = "<h1 align=center>Pdf Metadata editor</h1>\n\n<p align=center><a href=\"https://pdf.metadata.care/\">https://pdf.metadata.care/</a></p>\n<br>\n<p align=center>If you have suggestions, found bugs or just want to share some idea about it you can write me at : <a href=\"https://pdf.metadata.care/contact/\">https://pdf.metadata.care/contact/</a></p>\n<br>");
+                aboutMsg = "<h1 align=center>" + Version.getAppName() + "</h1>\n\n<p align=center><a href=\"https://pdf.metadata.care/\">https://pdf.metadata.care/</a></p>\n<br>\n<p align=center>If you have suggestions, found bugs or just want to share some idea about it you can write me at : <a href=\"https://pdf.metadata.care/contact/\">https://pdf.metadata.care/contact/</a></p>\n<br>");
         scrollPane_1.setViewportView(txtpnDf);
 
         JPanel panel_3 = new JPanel();
@@ -446,7 +451,7 @@ public class PreferencesWindow extends JDialog {
         contentPane.add(panel_3, gbc_panel_3);
         panel_3.setLayout(new BorderLayout(0, 0));
 
-        JButton btnClose = new JButton("Close");
+        btnClose = new JButton("Close");
         panel_3.add(btnClose, BorderLayout.EAST);
 
         updateStatusLabel = new JLabel("...");
@@ -561,10 +566,10 @@ public class PreferencesWindow extends JDialog {
             updateStatusLabel.setText("");
             String lastsVersion = null;
             HttpEntity entity = response.getEntity();
-            JSONParser parser = new JSONParser();
-            JSONArray body = (JSONArray) parser.parse(EntityUtils.toString(entity));
-            if (body.size() >= 1) {
-                lastsVersion = (String) ((JSONObject) body.get(0)).get("name");
+
+            java.util.List<HashMap<String, Object>> body =  SerDeslUtils.listFromJSON(EntityUtils.toString(entity));
+            if (!body.isEmpty()) {
+                lastsVersion = (String) (body.get(0)).get("name");
             }
             if (lastsVersion != null) {
                 Version.VersionTuple latest = new Version.VersionTuple(lastsVersion);
@@ -585,9 +590,6 @@ public class PreferencesWindow extends JDialog {
             // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (org.json.simple.parser.ParseException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         } finally {
@@ -668,4 +670,7 @@ public class PreferencesWindow extends JDialog {
     protected JLabel getUpdateStatusLabel() {
         return updateStatusLabel;
     }
+	protected JButton getBtnClose() {
+		return btnClose;
+	}
 }

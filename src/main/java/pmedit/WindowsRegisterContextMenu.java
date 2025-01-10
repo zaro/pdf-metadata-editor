@@ -130,7 +130,7 @@ public class WindowsRegisterContextMenu {
         createRegistryKey(shellCommandKey);
         createRegistryKey(shellDdeExecKey);
         createRegistryKey(shellDdeExecApplicationKey);
-        setRegistryKey(WinReg.HKEY_CURRENT_USER, shellKey, "", "Pdf metadata editor");
+        setRegistryKey(WinReg.HKEY_CURRENT_USER, shellKey, "", Version.getAppName());
         setRegistryKey(WinReg.HKEY_CURRENT_USER, shellCommandKey, "", exePath);
         setRegistryKey(WinReg.HKEY_CURRENT_USER, shellDdeExecKey, "", "\"%1\"");
         setRegistryKey(WinReg.HKEY_CURRENT_USER, shellDdeExecApplicationKey, "", Version.getAppName());

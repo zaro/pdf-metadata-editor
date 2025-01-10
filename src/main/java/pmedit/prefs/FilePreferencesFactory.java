@@ -23,11 +23,12 @@ public class FilePreferencesFactory implements PreferencesFactory {
     private static File preferencesFile;
     Preferences rootPreferences;
 
+
     public static File getPreferencesFile() {
         if (preferencesFile == null) {
             String prefsFile = System.getProperty(SYSTEM_PROPERTY_FILE);
             if (prefsFile == null || prefsFile.length() == 0) {
-                String prefsDir = LocalDataDir.get() + File.separator + "pdf-metadata-editor";
+                String prefsDir = LocalDataDir.getAppDataDir();
                 File prefsDirectory = new File(prefsDir);
                 if (!prefsDirectory.exists()) {
                     prefsDirectory.mkdirs();

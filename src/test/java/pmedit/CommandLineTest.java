@@ -1,19 +1,16 @@
 package pmedit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
-import org.junit.Test;
 
+import org.junit.jupiter.api.Test;
 import pmedit.CommandLine.ParseError;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CommandLineTest {
 
@@ -176,19 +173,24 @@ public class CommandLineTest {
 		assertEquals(c.params.metadata.doc.title, "title");
 	}
 
-	@Test(expected = ParseError.class)
+	@Test
 	public void testInvalid1() throws ParseError {
-		CommandLine c;
-		c = CommandLine.parse(new String[]{
-				 "--something", "editv", "doc.creationDate"
+		assertThrows(ParseError.class,  () -> {
+			CommandLine c;
+			c = CommandLine.parse(new String[]{
+					"--something", "editv", "doc.creationDate"
+			});
+
 		});
 	}
 
-	@Test(expected = ParseError.class)
+	@Test
 	public void testInvalid2() throws ParseError {
-		CommandLine c;
-		c = CommandLine.parse(new String[]{
-				 "--renameTemplate"
+		assertThrows(ParseError.class,  () -> {
+			CommandLine c;
+			c = CommandLine.parse(new String[]{
+					"--renameTemplate"
+			});
 		});
 	}
 

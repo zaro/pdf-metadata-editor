@@ -1,32 +1,33 @@
 package pmedit;
 
-import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.List;
 
-import org.apache.jempbox.xmp.XMPMetadata;
-import org.apache.jempbox.xmp.XMPSchemaDublinCore;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
-import org.junit.Test;
+import org.apache.xmpbox.XMPMetadata;
+import org.apache.xmpbox.schema.DublinCoreSchema;
+import org.apache.xmpbox.xml.XmpParsingException;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author zaro
  * Test for some bugs in pdfbox 2.0.X
  *
  */
-public class TestDcDates {
+class TestDcDates {
 	
 	
 	@Test
-	public void test() throws Exception {
+    void test() throws Exception {
 		File temp = File.createTempFile("test-file", ".pdf");
         temp.deleteOnExit();
         Calendar cal = Calendar.getInstance();
@@ -37,15 +38,15 @@ public class TestDcDates {
             // a valid PDF document requires at least one page
             PDPage blankPage = new PDPage();
             doc.addPage(blankPage);
-    		XMPMetadata xmpNew = new XMPMetadata();
-    		XMPSchemaDublinCore dcS = xmpNew.addDublinCoreSchema();
+    		XMPMetadata xmpNew = XMPMetadata.createXMPMetadata();
+    		DublinCoreSchema dcS = xmpNew.createAndAddDublinCoreSchema();
 
 			dcS.addDate(cal);
 
 			PDDocumentCatalog catalog = doc.getDocumentCatalog();
 			PDMetadata metadataStream = new PDMetadata(doc);
 
-			metadataStream.importXMPMetadata(xmpNew.asByteArray());
+			metadataStream.importXMPMetadata(MetadataInfoUtils.serializeXMPMetadata(xmpNew));
 			catalog.setMetadata(metadataStream);
 
             doc.save(temp);
@@ -54,21 +55,21 @@ public class TestDcDates {
         }
         
         // Read the DC dates field
-		PDDocument document =  PDDocument.load(new FileInputStream(temp));
+		PDDocument document =  Loader.loadPDF(temp);
 		PDDocumentCatalog catalog = document.getDocumentCatalog();
 		PDMetadata meta = catalog.getMetadata();
-		XMPMetadata xmp = XMPMetadata.load(meta.createInputStream());
-		XMPSchemaDublinCore dcS = xmp.getDublinCoreSchema();
+		XMPMetadata xmp = MetadataInfoUtils.loadXMPMetadata(meta.createInputStream());
+		DublinCoreSchema dcS = xmp.getDublinCoreSchema();
 
 		List<Calendar> actual = dcS.getDates();
 		
-		assertEquals(1, actual.size());
-		assertEquals(cal.getTimeInMillis()/1000, actual.get(0).getTimeInMillis()/1000);
+		Assertions.assertEquals(1, actual.size());
+		Assertions.assertEquals(cal.getTimeInMillis()/1000, actual.get(0).getTimeInMillis()/1000);
 
 	}
 	
 	@Test
-	public void testDateFormat() throws IOException {
+    void testDateFormat() throws IOException, XmpParsingException {
 		String xmp = "<?xpacket begin=\"ï»¿\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>\n" +
 		"<x:xmpmeta xmlns:x=\"adobe:ns:meta/\" x:xmptk=\"3.1-701\">\n" +
 		   "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n" +
@@ -101,7 +102,7 @@ public class TestDcDates {
 		"</x:xmpmeta>\n" +
 		"<?xpacket end=\"w\"?>";
 
-		XMPMetadata meta = XMPMetadata.load(new ByteArrayInputStream(xmp.getBytes()));
+		MetadataInfoUtils.loadXMPMetadata(new ByteArrayInputStream(xmp.getBytes()));
 
 	}
 

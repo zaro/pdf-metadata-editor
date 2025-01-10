@@ -6,12 +6,17 @@ import com.sun.jna.platform.win32.ShlObj;
 import com.sun.jna.platform.win32.Win32Exception;
 import pmedit.OsCheck;
 
-import java.io.File;
+import java.io.*;
+import java.util.stream.Collectors;
 
 public class LocalDataDir {
 
     // according to : https://msdn.microsoft.com/en-us/library/windows/desktop/dd378457(v=vs.85).aspx
     public static final String FOLDERID_APPDATA = "{F1B32785-6FBA-4FCF-9D55-7B8E7F157091}";
+
+    public static String getAppDataDir(){
+        return get() + File.separator + "pdf-metadata-editor-fre" + File.separator;
+    }
 
     public static String get() {
         String dir;
@@ -71,4 +76,27 @@ public class LocalDataDir {
     private static String getMacos() {
         return System.getProperty("user.home") + "/Library/Preferences/";
     }
+
+    public static File getResourceFileAsLocalFile(String fileName) throws IOException {
+        ClassLoader classLoader = OsCheck.class.getClassLoader();
+        try (InputStream is = classLoader.getResourceAsStream(fileName)) {
+            if (is == null) return null;
+            File out = new File(getAppDataDir() + File.separator + fileName);
+            out.getParentFile().mkdirs();
+            is.transferTo(new FileOutputStream(out));
+            return  out;
+        }
+    }
+
+    public static String getResourceFileAsString(String fileName) throws IOException {
+        ClassLoader classLoader = OsCheck.class.getClassLoader();
+        try (InputStream is = classLoader.getResourceAsStream(fileName)) {
+            if (is == null) return null;
+            try (InputStreamReader isr = new InputStreamReader(is);
+                 BufferedReader reader = new BufferedReader(isr)) {
+                return reader.lines().collect(Collectors.joining(System.lineSeparator()));
+            }
+        }
+    }
+
 }

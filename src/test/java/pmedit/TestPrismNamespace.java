@@ -3,14 +3,14 @@ package pmedit;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-import org.apache.jempbox.xmp.XMPMetadata;
-import org.junit.Test;
+import org.apache.xmpbox.xml.XmpParsingException;
+import org.junit.jupiter.api.Test;
 
-public class TestPrismNamespace {
+class TestPrismNamespace {
 	
 	
 	@Test
-	public void testPrism() throws IOException {
+    void testPrism() throws IOException, XmpParsingException {
 		String xmp = "<?xpacket begin=\"ï»¿\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?><x:xmpmeta xmlns:x=\"adobe:ns:meta/\" x:xmptk=\"Adobe XMP Core 5.4-c005 78.147326, 2012/08/23-13:03:03        \">\r\n" + 
 				"   <rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\r\n" + 
 				"      <rdf:Description xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:pdf=\"http://ns.adobe.com/pdf/1.3/\" xmlns:pdfx=\"http://ns.adobe.com/pdfx/1.3/\" xmlns:prism=\"http://prismstandard.org/namespaces/basic/2.0/\" xmlns:xmp=\"http://ns.adobe.com/xap/1.0/\" xmlns:xmpMM=\"http://ns.adobe.com/xap/1.0/mm/\" xmlns:xmpRights=\"http://ns.adobe.com/xap/1.0/rights/\" rdf:about=\"\">\r\n" + 
@@ -88,7 +88,7 @@ public class TestPrismNamespace {
 				"</x:xmpmeta><?xpacket end=\"w\"?>\r\n" + 
 				"";
 
-		XMPMetadata meta = XMPMetadata.load(new ByteArrayInputStream(xmp.getBytes()));
+		MetadataInfoUtils.loadXMPMetadata(new ByteArrayInputStream(xmp.getBytes()));
 
 	}
 

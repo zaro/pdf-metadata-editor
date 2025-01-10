@@ -1,21 +1,32 @@
 package pmedit;
 
-import org.apache.jempbox.xmp.*;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
+import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
+import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
+import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
+import org.apache.xmpbox.*;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.Yaml;
+import org.apache.xmpbox.schema.AdobePDFSchema;
+import org.apache.xmpbox.schema.DublinCoreSchema;
+import org.apache.xmpbox.schema.XMPBasicSchema;
+import org.apache.xmpbox.schema.XMPRightsManagementSchema;
+import org.apache.xmpbox.type.BadFieldValueException;
+import org.apache.xmpbox.type.TextType;
+import org.apache.xmpbox.xml.XmpParsingException;
 import pmedit.CommandLine.ParseError;
 import pmedit.MdStruct.StructType;
 
 import javax.xml.transform.TransformerException;
 import java.io.*;
 import java.lang.reflect.Field;
+import java.nio.file.CopyOption;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.Map.Entry;
@@ -80,6 +91,13 @@ public class MetadataInfo {
     public XmpRightsEnabled rightsEnabled;
     @MdStruct(name = "file", type = MdStruct.StructType.MdEnableStruct, access = MdStruct.Access.ReadOnly)
     public FileInfoEnabled fileEnabled;
+
+    public boolean removeDocumentInfo;
+    public boolean removeXmp;
+    public float saveAsVersion;
+    public EncryptionOptions encryptionOptions;
+
+
     public MetadataInfo() {
         super();
         clear();
@@ -95,8 +113,8 @@ public class MetadataInfo {
     }
 
     public static MetadataInfo fromPersistenceString(String yamlString) {
-        Yaml yaml = new Yaml();
-        Map<String, Object> map = yaml.load(yamlString);
+        Map<String, Object> map = (Map<String, Object>) SerDeslUtils.fromYAML(yamlString);
+
         MetadataInfo md = new MetadataInfo();
         md.fromYAML(yamlString);
 
@@ -214,7 +232,7 @@ public class MetadataInfo {
         this.fileEnabled = new FileInfoEnabled();
     }
 
-    protected void loadFromPDF(PDDocument document) throws IOException {
+    protected void loadFromPDF(PDDocument document) throws IOException, XmpParsingException {
         PDDocumentInformation info = document.getDocumentInformation();
 
         // Basic info
@@ -234,23 +252,11 @@ public class MetadataInfo {
 
 
         if (meta != null) {
-            // Workaround stupid jempbox not recognizing ISO dates with subsecond granularity
-            InputStream is = meta.createInputStream();
-            java.util.Scanner s = new java.util.Scanner(is);
-            s.useDelimiter("\\A");
-            String xmpData = s.hasNext() ? s.next() : "";
-            s.close();
-            is.close();
-            // remove subsecond digits from dates like 2017-03-26T18:50:09.184000+02:00
-            String re = "(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})\\.\\d+([-+Z])";
-            xmpData = xmpData.replaceAll(re, "$1$2");
-            InputStream xmpDataStream = new ByteArrayInputStream(xmpData.getBytes());
 
-            // Load the metadata
-            XMPMetadata xmp = XMPMetadata.load(xmpDataStream);
+            XMPMetadata xmp = MetadataInfoUtils.loadXMPMetadata(meta.createInputStream());
 
             // XMP Basic
-            XMPSchemaBasic bi = xmp.getBasicSchema();
+            XMPBasicSchema bi = xmp.getXMPBasicSchema();
             if (bi != null) {
 
                 basic.creatorTool = bi.getCreatorTool();
@@ -261,12 +267,12 @@ public class MetadataInfo {
                 basic.label = bi.getLabel();
                 basic.nickname = bi.getNickname();
                 basic.identifiers = bi.getIdentifiers();
-                basic.advisories = bi.getAdvisories();
+                basic.advisories = bi.getAdvisory();
                 basic.metadataDate = bi.getMetadataDate();
             }
 
             // XMP PDF
-            XMPSchemaPDF pi = xmp.getPDFSchema();
+            AdobePDFSchema pi = xmp.getAdobePDFSchema();
             if (pi != null) {
                 pdf.pdfVersion = pi.getPDFVersion();
                 pdf.keywords = pi.getKeywords();
@@ -274,10 +280,18 @@ public class MetadataInfo {
             }
 
             // XMP Dublin Core
-            XMPSchemaDublinCore dcS = xmp.getDublinCoreSchema();
+            DublinCoreSchema dcS = xmp.getDublinCoreSchema();
             if (dcS != null) {
-                dc.title = dcS.getTitle();
-                dc.description = dcS.getDescription();
+                try {
+                    dc.title = dcS.getTitle();
+                } catch (BadFieldValueException e) {
+                    dc.title = "[INVALID FIELD VALUE]";
+                }
+                try {
+                    dc.description = dcS.getDescription();
+                } catch (BadFieldValueException e) {
+                    dc.description = "[INVALID FIELD VALUE]";
+                }
                 dc.creators = dcS.getCreators();
                 dc.contributors = dcS.getContributors();
                 dc.coverage = dcS.getCoverage();
@@ -288,55 +302,60 @@ public class MetadataInfo {
                 // It appears there are some PDF out there where the languages is stored as plain
                 // string instead of list. Try to workaround that.
                 if (dc.languages == null) {
-                    String singleLang = dcS.getTextProperty("dc:language");
-                    if (singleLang != null) {
-                        dc.languages = List.of(singleLang);
+                    var s = dcS.getProperty(DublinCoreSchema.LANGUAGE);
+                    if (s instanceof TextType) {
+                        dc.languages = List.of(((TextType) s).getStringValue());
                     }
                 }
                 dc.publishers = dcS.getPublishers();
-                dc.relationships = dcS.getRelationships();
-                dc.rights = dcS.getRights();
+                dc.relationships = dcS.getRelations();
+                try {
+                    dc.rights = dcS.getRights();
+                } catch (BadFieldValueException e) {
+                    dc.title = "[INVALID FIELD VALUE]";
+                }
                 dc.source = dcS.getSource();
                 dc.subjects = dcS.getSubjects();
                 dc.types = dcS.getTypes();
             }
 
             // XMP Rights
-            XMPSchemaRightsManagement ri = xmp.getRightsManagementSchema();
+            XMPRightsManagementSchema ri = xmp.getXMPRightsManagementSchema();
             if (ri != null) {
-                rights.certificate = ri.getCertificateURL();
+                rights.certificate = ri.getCertificate();
                 // rights.marked  = ri.getMarked(); // getMarked() return false on null value
-                rights.marked = ri.getBooleanProperty("xmpRights:Marked");
+                rights.marked = ri.getMarked();
                 rights.owner = ri.getOwners();
-                rights.usageTerms = ri.getUsageTerms();
-                rights.copyright = ri.getCopyright();
+                try {
+                    rights.usageTerms = ri.getUsageTerms();
+                } catch (BadFieldValueException e) {
+                    dc.title = "[INVALID FIELD VALUE]";
+                }
+                var c = ri.getProperty("Copyright");
+                rights.copyright = c instanceof TextType ? ((TextType) c).getStringValue() : null;
                 rights.webStatement = ri.getWebStatement();
             }
         }
 
+        // Load encryption options
+        PDEncryption enc = document.getEncryption();
+        boolean hasEncryption = enc != null;
+        AccessPermission permission =  hasEncryption ? new AccessPermission(enc.getPermissions()) : new AccessPermission();
+        encryptionOptions = new EncryptionOptions(hasEncryption, permission, null, null);
         //System.err.println("Loaded:");
         //System.err.println(toYAML());
 
     }
 
     public void loadFromPDF(File pdfFile) throws
-            IOException {
+            IOException, XmpParsingException {
 
         loadPDFFileInfo(pdfFile);
 
-        PDDocument document = null;
-        FileInputStream inputStream = new FileInputStream(pdfFile);
-        document = PDDocument.load(inputStream);
+        PDDocument document = Loader.loadPDF(pdfFile);
         loadFromPDF(document);
 
-        if (document != null) {
-            try {
-                document.close();
-            } catch (Exception e) {
-
-            }
-        }
-        inputStream.close();
+        document.close();
     }
 
     public void loadPDFFileInfo(File pdfFile) throws IOException {
@@ -368,9 +387,14 @@ public class MetadataInfo {
         file.size = String.format("%.2f%s", size, hrSizes[idx]);
     }
 
-    protected void saveToPDF(PDDocument document, File pdfFile) throws Exception {
-        if (!(docEnabled.atLeastOne() || basicEnabled.atLeastOne() || pdfEnabled.atLeastOne() || dcEnabled.atLeastOne() || rightsEnabled.atLeastOne())) {
-            return;
+    protected boolean saveToPDF(PDDocument document, File pdfFile) throws Exception {
+        boolean atLeastOneChange =
+                docEnabled.atLeastOne() || basicEnabled.atLeastOne() || pdfEnabled.atLeastOne() || dcEnabled.atLeastOne() || rightsEnabled.atLeastOne()
+                        || FileOptimizer.isOptimiserEnabled(FileOptimizer.Enum.PDFBOX)
+                        || removeXmp || removeDocumentInfo;
+
+        if (!atLeastOneChange) {
+            return false;
         }
         //System.err.println("Saving:");
         //System.err.println(toYAML());
@@ -413,12 +437,12 @@ public class MetadataInfo {
 
         XMPMetadata xmpOld = null;
         if (meta != null) {
-            xmpOld = XMPMetadata.load(meta.createInputStream());
+            xmpOld = MetadataInfoUtils.loadXMPMetadata(meta.createInputStream());
         }
-        XMPMetadata xmpNew = new XMPMetadata();
+        XMPMetadata xmpNew = XMPMetadata.createXMPMetadata();
         XmpSchemaOnDemand newXmp = new XmpSchemaOnDemand(xmpNew);
         // XMP Basic
-        XMPSchemaBasic biOld = xmpOld != null ? xmpOld.getBasicSchema() : null;
+        XMPBasicSchema biOld = xmpOld != null ? xmpOld.getXMPBasicSchema() : null;
         boolean atLeastOneXmpBasicSet = false;
         if (basicEnabled.atLeastOne() || (biOld != null)) {
 
@@ -430,7 +454,7 @@ public class MetadataInfo {
                     }
                 }
             } else if (biOld != null) {
-                List<String> old = biOld.getAdvisories();
+                List<String> old = biOld.getAdvisory();
                 if (old != null) {
                     for (String a : old) {
                         newXmp.basic().addAdvisory(a);
@@ -560,7 +584,7 @@ public class MetadataInfo {
             }
         }
         // XMP PDF
-        XMPSchemaPDF piOld = xmpOld != null ? xmpOld.getPDFSchema() : null;
+        AdobePDFSchema piOld = xmpOld != null ? xmpOld.getAdobePDFSchema() : null;
         boolean atLeastOneXmpPdfSet = false;
         if (pdfEnabled.atLeastOne() || (piOld != null)) {
 
@@ -605,7 +629,7 @@ public class MetadataInfo {
         }
 
         // XMP Dublin Core
-        XMPSchemaDublinCore dcOld = xmpOld != null ? xmpOld.getDublinCoreSchema() : null;
+        DublinCoreSchema dcOld = xmpOld != null ? xmpOld.getDublinCoreSchema() : null;
         boolean atLeastOneXmpDcSet = false;
         if (dcEnabled.atLeastOne() || (dcOld != null)) {
 
@@ -664,7 +688,7 @@ public class MetadataInfo {
                     }
                 }
             } else if (dcOld != null) {
-                List<String> old = dcOld.getRelationships();
+                List<String> old = dcOld.getRelations();
                 if (old != null) {
                     for (String a : old) {
                         newXmp.dc().addRelation(a);
@@ -782,7 +806,7 @@ public class MetadataInfo {
 
             if (dcEnabled.rights) {
                 if (dc.rights != null) {
-                    newXmp.dc().setRights(null, dc.rights);
+                    newXmp.dc().addRights(null, dc.rights);
                     atLeastOneXmpDcSet = true;
                 }
             } else if (dcOld != null) {
@@ -791,7 +815,7 @@ public class MetadataInfo {
                     for (String rl : rll) {
                         String rights = dcOld.getRights(rl);
                         if (rights != null) {
-                            newXmp.dc().setRights(rl, rights);
+                            newXmp.dc().addRights(rl, rights);
                             atLeastOneXmpDcSet = true;
                         }
                     }
@@ -843,19 +867,19 @@ public class MetadataInfo {
         }
 
         // XMP Rights
-        XMPSchemaRightsManagement riOld = xmpOld != null ? xmpOld.getRightsManagementSchema() : null;
+        XMPRightsManagementSchema riOld = xmpOld != null ? xmpOld.getXMPRightsManagementSchema() : null;
         boolean atLeastOneXmpRightsSet = false;
         if (rightsEnabled.atLeastOne() || (riOld != null)) {
 
             if (rightsEnabled.certificate) {
                 if (rights.certificate != null) {
-                    newXmp.rights().setCertificateURL(rights.certificate);
+                    newXmp.rights().setCertificate(rights.certificate);
                     atLeastOneXmpRightsSet = true;
                 }
             } else if (riOld != null) {
-                String old = riOld.getCertificateURL();
+                String old = riOld.getCertificate();
                 if (old != null) {
-                    newXmp.rights().setCertificateURL(old);
+                    newXmp.rights().setCertificate(old);
                     atLeastOneXmpRightsSet = true;
                 }
             }
@@ -892,13 +916,13 @@ public class MetadataInfo {
 
             if (rightsEnabled.copyright) {
                 if (rights.copyright != null) {
-                    newXmp.rights().setCopyright(rights.copyright);
+                    newXmp.rights().setTextPropertyValue("Copyright", rights.copyright);
                     atLeastOneXmpRightsSet = true;
                 }
             } else if (riOld != null) {
-                String old = riOld.getCopyright();
-                if (old != null) {
-                    newXmp.rights().setCopyright(old);
+                var old = riOld.getProperty("Copyright");
+                if (old instanceof TextType) {
+                    newXmp.rights().setTextPropertyValue("Copyright", ((TextType) old).getStringValue());
                     atLeastOneXmpRightsSet = true;
                 }
             }
@@ -936,7 +960,7 @@ public class MetadataInfo {
             if (atLeastOneXmpBasicSet || atLeastOneXmpPdfSet || atLeastOneXmpDcSet || atLeastOneXmpRightsSet) {
                 PDMetadata metadataStream = new PDMetadata(document);
                 try {
-                    metadataStream.importXMPMetadata(xmpNew.asByteArray());
+                    metadataStream.importXMPMetadata(MetadataInfoUtils.serializeXMPMetadata(xmpNew));
                 } catch (TransformerException e) {
                     throw new Exception("Failed to save document:" + e.getMessage());
                 }
@@ -945,7 +969,45 @@ public class MetadataInfo {
                 catalog.setMetadata(null);
             }
         }
-        document.save(pdfFile.getAbsolutePath());
+
+        if (FileOptimizer.isOptimiserEnabled(FileOptimizer.Enum.PDFBOX)){
+            document = FileOptimizer.optimizeWithPdfBox(document);
+        }
+
+        if(removeDocumentInfo) {
+            document.getDocument().getTrailer().removeItem(COSName.INFO);
+        }
+
+        if(removeXmp) {
+            document.getDocumentCatalog().setMetadata(null);
+        }
+
+        if(saveAsVersion>0){
+            document.setVersion(saveAsVersion);
+        }
+
+        if(encryptionOptions !=null) {
+            if (encryptionOptions.hasEncryption) {
+                // Define the length of the encryption key.
+                // Possible values are 40, 128 or 256.
+                int keyLength = 40;
+
+                AccessPermission ap = encryptionOptions.permission;
+                String ownerPass = encryptionOptions.ownerPassword != null ? encryptionOptions.ownerPassword : "";
+                String userPass = encryptionOptions.userPassword != null ? encryptionOptions.userPassword : "";
+
+                StandardProtectionPolicy spp = new StandardProtectionPolicy(ownerPass, userPass, ap);
+                spp.setEncryptionKeyLength(keyLength);
+
+                document.protect(spp);
+            } else {
+                document.setAllSecurityToBeRemoved(true);
+            }
+        }
+
+        document.save(pdfFile, new CompressParameters(FileOptimizer.getPdfBoxCompression()));
+        return true;
+
     }
 
     public void saveAsPDF(File pdfFile) throws Exception {
@@ -954,20 +1016,19 @@ public class MetadataInfo {
 
     public void saveAsPDF(File pdfFile, File newFile) throws Exception {
         PDDocument document = null;
+        String password = encryptionOptions != null ? encryptionOptions.userPassword : "";
+        document = Loader.loadPDF(pdfFile, password);
+        File writeFile = File.createTempFile(pdfFile.getName() + "-", null, pdfFile.getParentFile());
 
-        FileInputStream inputStream = new FileInputStream(pdfFile);
-        document = PDDocument.load(inputStream);
-
-        saveToPDF(document, newFile == null ? pdfFile : newFile);
-
-        if (document != null) {
-            try {
-                document.close();
-            } catch (Exception e) {
-
-            }
+        boolean fileSaved = saveToPDF(document, writeFile);
+        if(!fileSaved){
+            Files.copy(pdfFile.toPath(), writeFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
-        inputStream.close();
+
+        document.close();
+
+        File target = newFile != null ? newFile : pdfFile;
+        Files.move(writeFile.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
     public void copyDocToXMP() {
@@ -1146,48 +1207,16 @@ public class MetadataInfo {
     }
 
     public String toJson() {
-        return toJson(0);
+        return toJson(false);
     }
 
-    public String toJson(int indent) {
-        Map<String, Object> map = asFlatMap(new Function<Object, Object>() {
-            @Override
-            public Object apply(Object t) {
-                if (t != null) {
-                    if (t instanceof Calendar) {
-                        return DateFormat.formatDateTimeFull((Calendar) t);
-                    }
-                }
-                return t;
-            }
-        });
-        StringBuilder sb = new StringBuilder();
-        String istr = new String(new char[indent]).replace("\0", " ");
-        sb.append("{");
-        if (indent > 0) {
-            sb.append("\n");
-        }
-        Set<String> keySet = map.keySet();
-        int count = 0;
-        for (String key : keySet) {
-            sb.append(istr);
-            sb.append('"');
-            sb.append(JSONObject.escape(key));
-            sb.append("\":");
-            if (indent > 0) {
-                sb.append(" ");
-            }
-            Object val = map.get(key);
-            sb.append(JSONValue.toJSONString(val));
-            if (++count < keySet.size()) {
-                sb.append(",");
-            }
-            if (indent > 0) {
-                sb.append("\n");
-            }
-        }
-        sb.append("}");
-        return sb.toString();
+    public String toJson(boolean pretty) {
+        return  SerDeslUtils.toJSON(pretty, asFlatMap());
+    }
+
+    public void fromJson(String jsonString) {
+        Map<String, Object> map = (Map<String, Object>) SerDeslUtils.fromJSON(jsonString);
+        fromFlatMap(map, flatMapConvertor());
     }
 
     public String toYAML() {
@@ -1195,23 +1224,15 @@ public class MetadataInfo {
     }
 
     public String toYAML(boolean pretty) {
-        DumperOptions options = new DumperOptions();
-        if (!pretty) {
-            options.setWidth(0xFFFF);
-        } else {
-            options.setExplicitStart(true);
-            options.setIndent(2);
-            options.setPrettyFlow(true);
-            options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-        }
-        Yaml yaml = new Yaml(options);
-        return yaml.dump(asFlatMap());
+        return SerDeslUtils.toYAML(pretty, asFlatMap());
+    }
+    public void fromYAML(String yamlString) {
+        Map<String, Object> map = (Map<String, Object>) SerDeslUtils.fromYAML(yamlString);
+        fromFlatMap(map, flatMapConvertor());
     }
 
-    public void fromYAML(String yamlString) {
-        Yaml yaml = new Yaml();
-        Map<String, Object> map = yaml.load(yamlString);
-        fromFlatMap(map, new Function<Object, Object>() {
+    protected Function<Object, Object> flatMapConvertor(){
+        return new Function<Object, Object>() {
             @Override
             public Object apply(Object t) {
                 if (t instanceof Date) {
@@ -1219,9 +1240,14 @@ public class MetadataInfo {
                     cal.setTime((Date) t);
                     return cal;
                 }
+                if(t instanceof String s){
+                    if(s.matches("^\\d{4}-[01]\\d-[0-3]\\dT[0-2]\\d:[0-5]\\d:[0-5]\\d\\.\\d+([+-][0-2]\\d:[0-5]\\d|Z)$")){
+                        return DateFormat.parseDateOrNull(s);
+                    }
+                }
                 return t;
             }
-        });
+        };
     }
 
     public boolean isEquivalent(MetadataInfo other) {
@@ -1299,11 +1325,7 @@ public class MetadataInfo {
             map.put("_enabled", enabledMap);
         }
 
-        DumperOptions options = new DumperOptions();
-
-        options.setWidth(0xFFFF);
-        Yaml yaml = new Yaml(options);
-        return yaml.dump(map);
+        return SerDeslUtils.toYAML(false, map);
     }
 
     protected Object _getStructObject(String id, Map<String, List<FieldDescription>> mdFields, boolean parent, boolean toString, boolean useDefault, Object defaultValue) {
@@ -1757,39 +1779,39 @@ public class MetadataInfo {
 
     protected class XmpSchemaOnDemand {
         protected XMPMetadata xmpNew;
-        protected XMPSchemaBasic _basic;
-        protected XMPSchemaPDF _pdf;
-        protected XMPSchemaDublinCore _dc;
-        protected XMPSchemaRightsManagement _rights;
+        protected XMPBasicSchema _basic;
+        protected AdobePDFSchema _pdf;
+        protected DublinCoreSchema _dc;
+        protected XMPRightsManagementSchema _rights;
 
         public XmpSchemaOnDemand(XMPMetadata xmp) {
             this.xmpNew = xmp;
         }
 
-        public XMPSchemaBasic basic() {
+        public XMPBasicSchema basic() {
             if (this._basic == null) {
-                this._basic = this.xmpNew.addBasicSchema();
+                this._basic = this.xmpNew.createAndAddXMPBasicSchema();
             }
             return this._basic;
         }
 
-        public XMPSchemaPDF pdf() {
+        public AdobePDFSchema pdf() {
             if (this._pdf == null) {
-                this._pdf = this.xmpNew.addPDFSchema();
+                this._pdf = this.xmpNew.createAndAddAdobePDFSchema();
             }
             return this._pdf;
         }
 
-        public XMPSchemaDublinCore dc() {
+        public DublinCoreSchema dc() {
             if (this._dc == null) {
-                this._dc = this.xmpNew.addDublinCoreSchema();
+                this._dc = this.xmpNew.createAndAddDublinCoreSchema();
             }
             return this._dc;
         }
 
-        public XMPSchemaRightsManagement rights() {
+        public XMPRightsManagementSchema rights() {
             if (this._rights == null) {
-                this._rights = this.xmpNew.addRightsManagementSchema();
+                this._rights = this.xmpNew.createAndAddXMPRightsManagementSchema();
             }
             return this._rights;
         }

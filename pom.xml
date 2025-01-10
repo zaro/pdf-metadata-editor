@@ -26,7 +26,6 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<staging.dir>${project.build.directory}</staging.dir>
 		<vm.location></vm.location>
-		<snakeyaml.path>${org.yaml:snakeyaml:jar}</snakeyaml.path>
 		<main.file.name>${project.artifactId}-${project.version}</main.file.name>
 		<main.jar.name>${main.file.name}.jar</main.jar.name>
 		<windows.uuid>c71564cd-5068-4d6d-874b-6a189abd40d3</windows.uuid>
@@ -34,6 +33,7 @@
 		<icon.format></icon.format>
 		<archive.format>zip</archive.format>
 		<archive.suffix></archive.suffix>
+		<jpackage.goal>exec</jpackage.goal>
 	</properties>
 
 
@@ -174,6 +174,23 @@
 							<createDependencyReducedPom>false</createDependencyReducedPom>
 							<minimizeJar>true</minimizeJar> <!--  this is not supported in JDK11 -->
 							<transformers>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer">
+								</transformer>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
+									<addHeader>false</addHeader>
+								</transformer>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+									<resource>META-INF/services/javax.imageio.spi.ImageReaderSpi</resource>
+								</transformer>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+									<resource>META-INF/services/javax.imageio.spi.ImageWriterSpi</resource>
+								</transformer>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+									<resource>META-INF/services/javax.imageio.spi.ImageInputStreamSpi</resource>
+								</transformer>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+									<resource>META-INF/services/javax.imageio.spi.ImageOutputStreamSpi</resource>
+								</transformer>
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<manifestEntries>
@@ -183,8 +200,7 @@
 							</transformers>
 							<artifactSet>
 								<excludes>
-									<exclude>junit:junit</exclude>
-									<exclude>org.apache.pdfbox:fontbox</exclude>
+									<exclude>org.junit.jupiter:*</exclude>
 								</excludes>
 							</artifactSet>
 							<filters>
@@ -211,8 +227,25 @@
 									</excludes>
 								</filter>
 								<filter>
+									<artifact>org.apache.pdfbox:jbig2-imageio</artifact>
+									<includes>
+										<include>**</include>
+									</includes>
+								</filter>
+								<filter>
+									<artifact>com.github.jai-imageio:*</artifact>
+									<includes>
+										<include>**</include>
+									</includes>
+								</filter>
+								<filter>
 									<artifact>*:*</artifact>
 									<excludes>
+										<exclude>META-INF/LICENSE*</exclude>
+										<exclude>META-INF/DEPENDENCIES*</exclude>
+										<exclude>META-INF/MANIFEST*</exclude>
+										<exclude>META-INF/AL2*</exclude>
+										<exclude>META-INF/LGPL*</exclude>
 										<exclude>META-INF/*.SF</exclude>
 										<exclude>META-INF/*.DSA</exclude>
 										<exclude>META-INF/*.RSA</exclude>
@@ -329,7 +362,7 @@
 					<execution>
 						<phase>package</phase>
 						<goals>
-							<goal>exec</goal>
+							<goal>${jpackage.goal}</goal>
 						</goals>
 					</execution>
 				</executions>
@@ -426,12 +459,32 @@
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>pdfbox</artifactId>
-			<version>1.8.17</version>
+			<version>3.0.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
-			<artifactId>jempbox</artifactId>
-			<version>1.8.17</version>
+			<artifactId>fontbox</artifactId>
+			<version>3.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>xmpbox</artifactId>
+			<version>3.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>jbig2-imageio</artifactId>
+			<version>3.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.jai-imageio</groupId>
+			<artifactId>jai-imageio-core</artifactId>
+			<version>1.4.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.jai-imageio</groupId>
+			<artifactId>jai-imageio-jpeg2000</artifactId>
+			<version>1.4.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.miglayout</groupId>
@@ -439,24 +492,35 @@
 			<version>5.2</version>
 		</dependency>
 		<dependency>
+			<groupId>com.intellij</groupId>
+			<artifactId>forms_rt</artifactId>
+			<version>7.0.3</version>
+		</dependency>
+		<dependency>
 			<groupId>com.toedter</groupId>
 			<artifactId>jcalendar</artifactId>
 			<version>1.4</version>
 		</dependency>
 		<dependency>
-			<groupId>org.yaml</groupId>
-			<artifactId>snakeyaml</artifactId>
-			<version>2.0</version>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.18.0</version>
 		</dependency>
 		<dependency>
-			<groupId>com.googlecode.json-simple</groupId>
-			<artifactId>json-simple</artifactId>
-			<version>1.1.1</version>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-yaml</artifactId>
+			<version>2.18.0</version>
 		</dependency>
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.13.1</version>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>5.11.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-params</artifactId>
+			<version>5.11.0</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -478,6 +542,11 @@
 			<groupId>com.opencsv</groupId>
 			<artifactId>opencsv</artifactId>
 			<version>5.1</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.pretty-tools</groupId>
+		    <artifactId>jdde-bundle</artifactId>
+		    <version>2.0.3</version>
 		</dependency>
 	</dependencies>
 
