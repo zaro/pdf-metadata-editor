@@ -1,12 +1,13 @@
-package pmedit;
+package pmedit.ui;
 
-import net.miginfocom.swing.MigLayout;
+import com.intellij.uiDesigner.core.GridConstraints;
+import com.intellij.uiDesigner.core.GridLayoutManager;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 import org.apache.xmpbox.xml.XmpParsingException;
+import pmedit.*;
 import pmedit.prefs.Preferences;
-import pmedit.ui.PreferencesWindow;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,22 +15,27 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PDFMetadataEditWindow extends JFrame {
+public class MainWindow extends JFrame {
+    private JPanel contentPane;
+    public JButton btnOpenPdf;
+    public JTextField filename;
+    public JButton btnPreferences;
+    public MetadataEditPane metadataEditor;
+    public ActionsAndOptions actionsAndOptions;
 
+    //
     final JFileChooser fc;
     private final MetadataInfo defaultMetadata;
     private File pdfFile;
     private String password;
     private MetadataInfo metadataInfo = new MetadataInfo();
-    private JTextField filename;
 
     private PreferencesWindow preferencesWindow;
-    private MetadataEditPane metadataEditor;
-    private ActionsAndOptions actionsAndOptions;
 
     final ActionListener saveAction = new ActionListener() {
         public void actionPerformed(ActionEvent e) {
@@ -52,7 +58,7 @@ public class PDFMetadataEditWindow extends JFrame {
                 Files.move(pdfFile.toPath(), to.toPath());
                 pdfFile = to;
             } catch (IOException e1) {
-                JOptionPane.showMessageDialog(PDFMetadataEditWindow.this,
+                JOptionPane.showMessageDialog(MainWindow.this,
                         "Error while renaming file:\n" + e1);
             }
             reloadFile();
@@ -74,7 +80,7 @@ public class PDFMetadataEditWindow extends JFrame {
                 } catch (Exception e1) {
                 }
             }
-            int returnVal = fcSaveAs.showSaveDialog(PDFMetadataEditWindow.this);
+            int returnVal = fcSaveAs.showSaveDialog(MainWindow.this);
 
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File selected = fcSaveAs.getSelectedFile();
@@ -116,10 +122,13 @@ public class PDFMetadataEditWindow extends JFrame {
         }
     };
 
-    /**
-     * Create the application.
-     */
-    public PDFMetadataEditWindow(String filePath) {
+    public MainWindow() {
+        this(null);
+    }
+
+    public MainWindow(String filePath) {
+        setContentPane(contentPane);
+        //
         fc = new JFileChooser();
         defaultMetadata = new MetadataInfo();
         initialize();
@@ -137,7 +146,7 @@ public class PDFMetadataEditWindow extends JFrame {
         }
 
         new FileDrop(this, new FileDrop.Listener() {
-            public void filesDropped(java.io.File[] files, Point where) {
+            public void filesDropped(File[] files, Point where) {
                 FileDropSelectMessage fdm = ((FileDropSelectMessage) getGlassPane());
                 getGlassPane().setVisible(false);
                 repaint();
@@ -172,6 +181,101 @@ public class PDFMetadataEditWindow extends JFrame {
         setGlassPane(new FileDropSelectMessage());
     }
 
+    private void initialize() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setTitle(Version.getAppName());
+        setBounds(100, 100, 640, 480);
+        setMinimumSize(new Dimension(640, 480));
+
+        btnOpenPdf.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent arg0) {
+                String dir = Preferences.getInstance().get("LastDir", null);
+                if (dir != null) {
+                    try {
+                        fc.setCurrentDirectory(new File(dir));
+                    } catch (Exception e) {
+                    }
+                }
+                int returnVal = fc.showOpenDialog(MainWindow.this);
+
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    // This is where a real application would open the file.
+                    loadFile(fc.getSelectedFile());
+                    // save dir as last opened
+                    Preferences.getInstance().put("LastDir", pdfFile.getParent());
+                }
+            }
+        });
+
+        btnPreferences.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                SwingUtilities.invokeLater(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        if (preferencesWindow == null) {
+                            preferencesWindow = new PreferencesWindow(defaultMetadata, MainWindow.this);
+                            preferencesWindow.onSaveAction(updateSaveButton);
+                        }
+                        preferencesWindow.setVisible(true);
+                    }
+                });
+
+            }
+        });
+
+        metadataEditor.showEnabled(false);
+
+        actionsAndOptions.copyXMPToDocumentButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (metadataInfo != null) {
+                    metadataEditor.copyToMetadata(metadataInfo);
+                    metadataInfo.copyXMPToDoc();
+                    metadataEditor.fillFromMetadata(metadataInfo);
+                }
+            }
+        });
+        actionsAndOptions.copyDocumentToXMPButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent arg0) {
+                if (metadataInfo != null) {
+                    metadataEditor.copyToMetadata(metadataInfo);
+                    metadataInfo.copyDocToXMP();
+                    metadataEditor.fillFromMetadata(metadataInfo);
+                }
+            }
+        });
+
+
+        actionsAndOptions.btnSaveMenu.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                JPopupMenu menu = new JPopupMenu();
+                JMenuItem save = menu.add("Save");
+                save.addActionListener(saveAction);
+                JMenuItem saveRename = menu.add("Save & rename");
+                saveRename.addActionListener(saveRenameAction);
+                JMenuItem saveAs = menu.add("Save As ...");
+                saveAs.addActionListener(saveAsAction);
+
+                int x, y;
+                Point pos = actionsAndOptions.btnSaveMenu.getLocationOnScreen();
+                x = pos.x;
+                y = pos.y + actionsAndOptions.btnSaveMenu.getHeight();
+
+                menu.show(actionsAndOptions.btnSaveMenu, actionsAndOptions.btnSaveMenu.getWidth() - (int) menu.getPreferredSize().getWidth(), actionsAndOptions.btnSaveMenu.getHeight());
+
+            }
+        });
+
+
+        updateSaveButton.run();
+
+        URL imgURL = MainWindow.class
+                .getResource("pdf-metadata-edit.png");
+        ImageIcon icoImg = new ImageIcon(imgURL);
+        setIconImage(icoImg.getImage());
+        setVisible(true);
+    }
+
     public File getCurrentFile() {
         return pdfFile;
     }
@@ -187,12 +291,12 @@ public class PDFMetadataEditWindow extends JFrame {
     }
 
     public void loadFile(File file) {
-        if(!file.equals(pdfFile)){
+        if (!file.equals(pdfFile)) {
             password = null;
         }
         pdfFile = file;
         clear();
-        while(true) {
+        while (true) {
             try {
                 PDDocument document = Loader.loadPDF(pdfFile, password != null ? password : "");
 
@@ -200,13 +304,13 @@ public class PDFMetadataEditWindow extends JFrame {
                 document.close();
                 break;
             } catch (InvalidPasswordException e) {
-                password = (String)JOptionPane.showInputDialog(
+                password = (String) JOptionPane.showInputDialog(
                         this,
                         "File is encrypted, provide user password:\n",
                         "Encrypted file",
                         JOptionPane.PLAIN_MESSAGE
-                        );
-                if(password == null){
+                );
+                if (password == null) {
                     break;
                 }
             } catch (Exception e) {
@@ -215,7 +319,8 @@ public class PDFMetadataEditWindow extends JFrame {
                         "Error while opening file:\n" + e);
                 break;
             }
-        };
+        }
+        ;
 
     }
 
@@ -260,7 +365,7 @@ public class PDFMetadataEditWindow extends JFrame {
 
             metadataInfo.encryptionOptions = actionsAndOptions.getDocumentProtection();
 
-            if(actionsAndOptions.pdfVersion.getSelectedItem() instanceof Float s) {
+            if (actionsAndOptions.pdfVersion.getSelectedItem() instanceof Float s) {
                 metadataInfo.saveAsVersion = s;
             } else {
                 metadataInfo.saveAsVersion = 0;
@@ -282,164 +387,48 @@ public class PDFMetadataEditWindow extends JFrame {
         }
     }
 
-    private void initialize() {
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setTitle(Version.getAppName());
-        setBounds(100, 100, 640, 480);
-        setMinimumSize(new Dimension(640, 480));
-        getContentPane()
-                .setLayout(
-                        new MigLayout("insets 5", "[grow,fill]", "[][grow,fill][grow]"));
-
-        JPanel panel = new JPanel();
-        getContentPane().add(panel, "cell 0 0,growx");
-        GridBagLayout gbl_panel = new GridBagLayout();
-        gbl_panel.columnWidths = new int[]{105, 421, 20, 40, 0};
-        gbl_panel.rowHeights = new int[]{36, 0};
-        gbl_panel.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
-        gbl_panel.rowWeights = new double[]{0.0, Double.MIN_VALUE};
-        panel.setLayout(gbl_panel);
-
-        JButton btnOpenPdf = new JButton("Open PDF");
-        GridBagConstraints gbc_btnOpenPdf = new GridBagConstraints();
-        gbc_btnOpenPdf.anchor = GridBagConstraints.WEST;
-        gbc_btnOpenPdf.insets = new Insets(0, 0, 0, 5);
-        gbc_btnOpenPdf.gridx = 0;
-        gbc_btnOpenPdf.gridy = 0;
-        panel.add(btnOpenPdf, gbc_btnOpenPdf);
-
-        btnOpenPdf.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent arg0) {
-                String dir = Preferences.getInstance().get("LastDir", null);
-                if (dir != null) {
-                    try {
-                        fc.setCurrentDirectory(new File(dir));
-                    } catch (Exception e) {
-                    }
-                }
-                int returnVal = fc.showOpenDialog(PDFMetadataEditWindow.this);
-
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    // This is where a real application would open the file.
-                    loadFile(fc.getSelectedFile());
-                    // save dir as last opened
-                    Preferences.getInstance().put("LastDir", pdfFile.getParent());
-                }
-            }
-        });
-
-        filename = new JTextField();
-        GridBagConstraints gbc_filename = new GridBagConstraints();
-        gbc_filename.fill = GridBagConstraints.HORIZONTAL;
-        gbc_filename.insets = new Insets(0, 0, 0, 5);
-        gbc_filename.gridx = 1;
-        gbc_filename.gridy = 0;
-        panel.add(filename, gbc_filename);
-        filename.setEditable(false);
-        filename.setColumns(10);
-
-        Component horizontalStrut = Box.createHorizontalStrut(20);
-        GridBagConstraints gbc_horizontalStrut = new GridBagConstraints();
-        gbc_horizontalStrut.anchor = GridBagConstraints.WEST;
-        gbc_horizontalStrut.insets = new Insets(0, 0, 0, 5);
-        gbc_horizontalStrut.gridx = 2;
-        gbc_horizontalStrut.gridy = 0;
-        panel.add(horizontalStrut, gbc_horizontalStrut);
-
-        java.net.URL prefImgURL = PDFMetadataEditWindow.class
-                .getResource("settings-icon.png");
-        ImageIcon img = new ImageIcon(prefImgURL);
-
-        JButton btnPreferences = new JButton("");
-
-        GridBagConstraints gbc_btnPreferences = new GridBagConstraints();
-        gbc_btnPreferences.anchor = GridBagConstraints.WEST;
-        gbc_btnPreferences.gridx = 3;
-        gbc_btnPreferences.gridy = 0;
-        panel.add(btnPreferences, gbc_btnPreferences);
-        btnPreferences.setIcon(img);
-
-        btnPreferences.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                SwingUtilities.invokeLater(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        if (preferencesWindow == null) {
-                            preferencesWindow = new PreferencesWindow(defaultMetadata, PDFMetadataEditWindow.this);
-                            preferencesWindow.onSaveAction(updateSaveButton);
-                        }
-                        preferencesWindow.setVisible(true);
-                    }
-                });
-
-            }
-        });
-
-        metadataEditor = new MetadataEditPane();
-        getContentPane().add(metadataEditor.tabbedaPane, "cell 0 1,grow");
-        metadataEditor.showEnabled(false);
-
-
-//		metadataEditor = createMetadataEditor();
-//		getContentPane().add(metadataEditor,
-//				"cell 0 1,growy");
-
-
-        actionsAndOptions = new ActionsAndOptions();
-        getContentPane().add(actionsAndOptions.topPanel, "cell 0 2,growx");
-        actionsAndOptions.copyXMPToDocumentButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (metadataInfo != null) {
-                    metadataEditor.copyToMetadata(metadataInfo);
-                    metadataInfo.copyXMPToDoc();
-                    metadataEditor.fillFromMetadata(metadataInfo);
-                }
-            }
-        });
-        actionsAndOptions.copyDocumentToXMPButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent arg0) {
-                if (metadataInfo != null) {
-                    metadataEditor.copyToMetadata(metadataInfo);
-                    metadataInfo.copyDocToXMP();
-                    metadataEditor.fillFromMetadata(metadataInfo);
-                }
-            }
-        });
-
-
-        actionsAndOptions.btnSaveMenu.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                JPopupMenu menu = new JPopupMenu();
-                JMenuItem save = menu.add("Save");
-                save.addActionListener(saveAction);
-                JMenuItem saveRename = menu.add("Save & rename");
-                saveRename.addActionListener(saveRenameAction);
-                JMenuItem saveAs = menu.add("Save As ...");
-                saveAs.addActionListener(saveAsAction);
-
-                int x, y;
-                Point pos = actionsAndOptions.btnSaveMenu.getLocationOnScreen();
-                x = pos.x;
-                y = pos.y + actionsAndOptions.btnSaveMenu.getHeight();
-
-                menu.show(actionsAndOptions.btnSaveMenu, actionsAndOptions.btnSaveMenu.getWidth() - (int) menu.getPreferredSize().getWidth(), actionsAndOptions.btnSaveMenu.getHeight());
-
-            }
-        });
-
-
-        updateSaveButton.run();
-
-        java.net.URL imgURL = PDFMetadataEditWindow.class
-                .getResource("pdf-metadata-edit.png");
-        ImageIcon icoImg = new ImageIcon(imgURL);
-        setIconImage(icoImg.getImage());
-        setVisible(true);
+    {
+// GUI initializer generated by IntelliJ IDEA GUI Designer
+// >>> IMPORTANT!! <<<
+// DO NOT EDIT OR ADD ANY CODE HERE!
+        $$$setupUI$$$();
     }
 
-    public MetadataEditPane createMetadataEditor() {
-        return new MetadataEditPane();
+    /**
+     * Method generated by IntelliJ IDEA GUI Designer
+     * >>> IMPORTANT!! <<<
+     * DO NOT edit this method OR call it in your code!
+     *
+     * @noinspection ALL
+     */
+    private void $$$setupUI$$$() {
+        contentPane = new JPanel();
+        contentPane.setLayout(new GridLayoutManager(1, 1, new Insets(10, 10, 10, 10), -1, -1));
+        final JPanel panel1 = new JPanel();
+        panel1.setLayout(new GridLayoutManager(3, 4, new Insets(0, 0, 0, 0), -1, -1));
+        contentPane.add(panel1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        btnOpenPdf = new JButton();
+        btnOpenPdf.setText("Open PDF");
+        panel1.add(btnOpenPdf, new GridConstraints(0, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        filename = new JTextField();
+        filename.setColumns(10);
+        filename.setEditable(false);
+        panel1.add(filename, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        btnPreferences = new JButton();
+        btnPreferences.setIcon(new ImageIcon(getClass().getResource("/pmedit/ui/settings-icon.png")));
+        btnPreferences.setText("");
+        panel1.add(btnPreferences, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        metadataEditor = new MetadataEditPane();
+        panel1.add(metadataEditor.$$$getRootComponent$$$(), new GridConstraints(1, 0, 1, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        actionsAndOptions = new ActionsAndOptions();
+        panel1.add(actionsAndOptions.$$$getRootComponent$$$(), new GridConstraints(2, 0, 1, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+    }
+
+    /**
+     * @noinspection ALL
+     */
+    public JComponent $$$getRootComponent$$$() {
+        return contentPane;
     }
 
 }

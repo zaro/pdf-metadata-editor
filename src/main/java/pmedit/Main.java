@@ -2,6 +2,7 @@ package pmedit;
 
 import pmedit.CommandLine.ParseError;
 import pmedit.prefs.FilePreferences;
+import pmedit.ui.MainWindow;
 
 import javax.swing.*;
 import java.awt.event.WindowEvent;
@@ -21,7 +22,7 @@ public class Main {
     protected static int batchGuiCounter = 0;
     static BlockingQueue<CommandLine> cmdQueue = new LinkedBlockingDeque<CommandLine>();
     static Map<String, BatchOperationWindow> batchInstances = new HashMap<String, BatchOperationWindow>();
-    static List<PDFMetadataEditWindow> editorInstances = new ArrayList<PDFMetadataEditWindow>();
+    static List<MainWindow> editorInstances = new ArrayList<MainWindow>();
 
     public static String getBatchGuiCommand() {
         return "batch-gui-" + batchGuiCounter++;
@@ -77,7 +78,7 @@ public class Main {
                 }
 
                 logLine("executeCommand fileName", fileAbsPath);
-                for (PDFMetadataEditWindow window : editorInstances) {
+                for (MainWindow window : editorInstances) {
                     File wFile = window.getCurrentFile();
                     logLine("check ", wFile != null ? wFile.getAbsolutePath() : null);
                     if ((fileAbsPath == null && wFile == null) || (wFile != null && wFile.getAbsolutePath().equals(fileAbsPath))) {
@@ -92,7 +93,7 @@ public class Main {
                     }
                 }
                 logLine("open editor", file);
-                final PDFMetadataEditWindow window = new PDFMetadataEditWindow(file);
+                final MainWindow window = new MainWindow(file);
                 window.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 window.addWindowListener(new java.awt.event.WindowAdapter() {
                     public void windowClosing(WindowEvent winEvt) {

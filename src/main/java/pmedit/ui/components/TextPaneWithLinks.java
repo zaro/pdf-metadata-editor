@@ -56,7 +56,7 @@ public class TextPaneWithLinks extends JTextPane {
                     if (desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
                             desktop.browse(uri);
                     } else {
-                        // Detect Linux and fallback to xdg-open
+                        // Detect Linux and fallback to xdgo-open
                         if (OsCheck.isLinux()) {
                             try {
                                 Process p = Runtime.getRuntime().exec(new String[] { "xdg-open", e.getURL().toString() });
