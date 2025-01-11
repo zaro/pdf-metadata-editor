@@ -2,6 +2,7 @@ package pmedit;
 
 import pmedit.CommandLine.ParseError;
 import pmedit.prefs.FilePreferences;
+import pmedit.ui.BatchOperationWindow;
 import pmedit.ui.MainWindow;
 
 import javax.swing.*;
