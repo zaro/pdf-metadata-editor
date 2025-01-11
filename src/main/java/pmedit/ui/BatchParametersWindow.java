@@ -1,4 +1,6 @@
-package pmedit;
+package pmedit.ui;
+
+import pmedit.BatchOperationParameters;
 
 import javax.swing.*;
 import java.awt.*;

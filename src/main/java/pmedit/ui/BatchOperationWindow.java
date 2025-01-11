@@ -7,8 +7,6 @@ import pmedit.prefs.Preferences;
 import pmedit.ui.components.TextPaneWithLinks;
 
 import javax.swing.*;
-import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkListener;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
