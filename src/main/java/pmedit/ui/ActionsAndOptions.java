@@ -1,8 +1,9 @@
-package pmedit;
+package pmedit.ui;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import pmedit.EncryptionOptions;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicArrowButton;
@@ -34,7 +35,7 @@ public class ActionsAndOptions {
     public ActionsAndOptions() {
         $$$setupUI$$$();
         btnSave.setIcon(new ImageIcon(
-                PDFMetadataEditWindow.class
+                MainWindow.class
                         .getResource("save-icon.png")));
 
         pdfVersion.setRenderer(new DefaultListCellRenderer() {

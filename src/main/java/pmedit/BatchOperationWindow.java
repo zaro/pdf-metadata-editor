@@ -2,6 +2,7 @@ package pmedit;
 
 import pmedit.PDFMetadataEditBatch.ActionStatus;
 import pmedit.prefs.Preferences;
+import pmedit.ui.MainWindow;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
@@ -235,7 +236,7 @@ public class BatchOperationWindow extends JFrame {
             txtpnnoBatchLicense = null;
         }
 
-        java.net.URL imgURL = PDFMetadataEditWindow.class
+        java.net.URL imgURL = MainWindow.class
                 .getResource("pdf-metadata-edit.png");
         ImageIcon icoImg = new ImageIcon(imgURL);
         setIconImage(icoImg.getImage());

@@ -1,9 +1,10 @@
-package pmedit;
+package pmedit.ui;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
+import pmedit.EncryptionOptions;
 
 import javax.swing.*;
 import java.awt.*;

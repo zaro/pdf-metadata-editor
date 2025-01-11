@@ -232,7 +232,7 @@ public class MetadataInfo {
         this.fileEnabled = new FileInfoEnabled();
     }
 
-    protected void loadFromPDF(PDDocument document) throws IOException, XmpParsingException {
+    public void loadFromPDF(PDDocument document) throws IOException, XmpParsingException {
         PDDocumentInformation info = document.getDocumentInformation();
 
         // Basic info
