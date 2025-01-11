@@ -193,7 +193,7 @@ public class MetadataEditPane {
     @FieldEnabled("rights.webStatement")
     public JCheckBox xmpRightsWebStatementEnabled;
 
-    private void traverseFields(pmedit.MetadataEditPane.FieldSetGet setGet, pmedit.MetadataEditPane.FieldEnabledCheckBox fieldEnabled) {
+    private void traverseFields(MetadataEditPane.FieldSetGet setGet, MetadataEditPane.FieldEnabledCheckBox fieldEnabled) {
         for (Field field : this.getClass().getFields()) {
             if (setGet != null) {
                 FieldID annos = field.getAnnotation(FieldID.class);
@@ -236,7 +236,7 @@ public class MetadataEditPane {
     }
 
     public void showEnabled(final boolean show) {
-        traverseFields(null, new pmedit.MetadataEditPane.FieldEnabledCheckBox() {
+        traverseFields(null, new MetadataEditPane.FieldEnabledCheckBox() {
 
             @Override
             public void apply(JCheckBox field, FieldEnabled anno) {
@@ -248,7 +248,7 @@ public class MetadataEditPane {
     }
 
     public void disableEdit() {
-        traverseFields(new pmedit.MetadataEditPane.FieldSetGet() {
+        traverseFields(new MetadataEditPane.FieldSetGet() {
             @Override
             public void apply(Object field, FieldID anno) {
                 if (field instanceof JComponent) {
@@ -259,7 +259,7 @@ public class MetadataEditPane {
     }
 
     void clear() {
-        traverseFields(new pmedit.MetadataEditPane.FieldSetGet() {
+        traverseFields(new MetadataEditPane.FieldSetGet() {
             @Override
             public void apply(Object field, FieldID anno) {
                 if (field instanceof JTextField) {
@@ -278,7 +278,7 @@ public class MetadataEditPane {
                     objectToField((JSpinner) field, null);
                 }
             }
-        }, new pmedit.MetadataEditPane.FieldEnabledCheckBox() {
+        }, new MetadataEditPane.FieldEnabledCheckBox() {
             @Override
             public void apply(JCheckBox field, FieldEnabled anno) {
                 field.setSelected(true);
@@ -289,7 +289,7 @@ public class MetadataEditPane {
 
     public void fillFromMetadata(final MetadataInfo metadataInfo) {
 
-        traverseFields(new pmedit.MetadataEditPane.FieldSetGet() {
+        traverseFields(new MetadataEditPane.FieldSetGet() {
             @Override
             public void apply(Object field, FieldID anno) {
 
@@ -311,7 +311,7 @@ public class MetadataEditPane {
                     objectToField((JSpinner) field, value);
                 }
             }
-        }, new pmedit.MetadataEditPane.FieldEnabledCheckBox() {
+        }, new MetadataEditPane.FieldEnabledCheckBox() {
             @Override
             public void apply(JCheckBox field, FieldEnabled anno) {
                 field.setSelected(metadataInfo.isEnabled(anno.value()));
@@ -323,7 +323,7 @@ public class MetadataEditPane {
 
     public void copyToMetadata(final MetadataInfo metadataInfo) {
 
-        traverseFields(new pmedit.MetadataEditPane.FieldSetGet() {
+        traverseFields(new MetadataEditPane.FieldSetGet() {
             @Override
             public void apply(Object field, FieldID anno) {
 
@@ -374,7 +374,7 @@ public class MetadataEditPane {
                     }
                 }
             }
-        }, new pmedit.MetadataEditPane.FieldEnabledCheckBox() {
+        }, new MetadataEditPane.FieldEnabledCheckBox() {
             @Override
             public void apply(JCheckBox field, FieldEnabled anno) {
                 metadataInfo.setEnabled(anno.value(), field.isSelected());

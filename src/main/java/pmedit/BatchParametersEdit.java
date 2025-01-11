@@ -1,5 +1,7 @@
 package pmedit;
 
+import pmedit.ui.MetadataEditPane;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -102,7 +104,7 @@ public class BatchParametersEdit extends BatchParametersWindow {
         gbc_md.gridy = 1;
         defaultMetadataPane = new MetadataEditPane();
 
-        contentPane.add(defaultMetadataPane.tabbedaPane, gbc_md);
+        contentPane.add(defaultMetadataPane.tabbedPane1, gbc_md);
 
 
         JButton btnClose = new JButton("Close");
