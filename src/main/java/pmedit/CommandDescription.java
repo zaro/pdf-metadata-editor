@@ -12,8 +12,8 @@ public class CommandDescription {
             new CommandDescription("doctoxmp", "Copy Document to XMP metadata"),
     };
     protected static int regKeyCount = 1;
-    String name;
-    String description;
+    public String name;
+    public String description;
     String regKey;
 
     protected CommandDescription(String command, String name) {
