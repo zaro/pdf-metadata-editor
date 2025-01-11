@@ -1,5 +1,7 @@
 package pmedit;
 
+import pmedit.ui.BatchParametersWindow;
+
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;

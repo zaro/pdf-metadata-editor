@@ -1,5 +1,6 @@
 package pmedit;
 
+import pmedit.ui.BatchParametersWindow;
 import pmedit.ui.MetadataEditPane;
 
 import javax.swing.*;
