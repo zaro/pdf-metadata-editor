@@ -9,7 +9,7 @@ public class BatchOperationParameters {
     public static BatchOperationParameters loadForCommand(CommandDescription command) {
         BatchOperationParameters params = new BatchOperationParameters();
         if (command.is("edit")) {
-            String defaultMetadataYAML = Main.getPreferences().get("defaultMetadata", null);
+            String defaultMetadataYAML = pmedit.prefs.Preferences.getInstance().get("defaultMetadata", null);
             if (defaultMetadataYAML != null && defaultMetadataYAML.length() > 0) {
                 MetadataInfo editMetadata = new MetadataInfo();
                 editMetadata.fromYAML(defaultMetadataYAML);
@@ -18,14 +18,14 @@ public class BatchOperationParameters {
 
             }
         } else {
-            Preferences cmdPrefs = Main.getPreferences().node("batchParams").node(command.name);
+            Preferences cmdPrefs = pmedit.prefs.Preferences.getInstance().node("batchParams").node(command.name);
             String mdP = cmdPrefs.get("md", null);
             if (mdP != null && mdP.length() > 0) {
                 params.metadata = MetadataInfo.fromPersistenceString(mdP);
             }
             params.renameTemplate = cmdPrefs.get("rt", null);
             if (params.renameTemplate == null && command.is("rename")) {
-                params.renameTemplate = Main.getPreferences().get("renameTemplate", null);
+                params.renameTemplate = pmedit.prefs.Preferences.getInstance().get("renameTemplate", null);
             }
         }
 
@@ -36,7 +36,7 @@ public class BatchOperationParameters {
         if (command.is("edit")) {
             return;
         }
-        Preferences cmdPrefs = Main.getPreferences().node("batchParams").node(command.name);
+        Preferences cmdPrefs = pmedit.prefs.Preferences.getInstance().node("batchParams").node(command.name);
         cmdPrefs.put("md", metadata.asPersistenceString());
         if (renameTemplate != null) {
             cmdPrefs.put("rt", renameTemplate);

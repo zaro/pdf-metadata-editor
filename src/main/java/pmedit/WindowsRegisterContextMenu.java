@@ -11,7 +11,7 @@ public class WindowsRegisterContextMenu {
     public static String exePath() throws Exception {
         String thisJarDir;
         try {
-            thisJarDir = new File(PreferencesWindow.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).getParentFile().getAbsolutePath();
+            thisJarDir = new File(Version.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).getParentFile().getAbsolutePath();
 
         } catch (URISyntaxException e) {
             throw new Exception("Cannot find the path to current jar");

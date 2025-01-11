@@ -124,8 +124,29 @@
       </item>
     </group>
     <group name="Custom">
-      <item class="pmedit.FontReplacementEntry" icon="" removable="true" auto-create-binding="false" can-attach-label="false">
-        <default-constraints vsize-policy="3" hsize-policy="7" anchor="0" fill="1" />
+      <item class="com.github.lgooddatepicker.components.DateTimePicker" icon="/com/intellij/uiDesigner/icons/panel.svg" removable="true" auto-create-binding="false" can-attach-label="false">
+        <default-constraints vsize-policy="3" hsize-policy="3" anchor="0" fill="0" />
+      </item>
+      <item class="pmedit.ui.MetadataEditPane" icon="" removable="true" auto-create-binding="false" can-attach-label="false">
+        <default-constraints vsize-policy="7" hsize-policy="7" anchor="0" fill="3" />
+      </item>
+      <item class="pmedit.ui.components.TextPaneWithLinks" icon="/com/intellij/uiDesigner/icons/textPane.svg" removable="true" auto-create-binding="false" can-attach-label="false">
+        <default-constraints vsize-policy="7" hsize-policy="7" anchor="0" fill="3" />
+      </item>
+      <item class="pmedit.ui.preferences.GeneralPreferences" icon="" removable="true" auto-create-binding="false" can-attach-label="false">
+        <default-constraints vsize-policy="7" hsize-policy="7" anchor="0" fill="3" />
+      </item>
+      <item class="pmedit.ui.preferences.DefaultsPreferences" icon="" removable="true" auto-create-binding="false" can-attach-label="false">
+        <default-constraints vsize-policy="7" hsize-policy="7" anchor="0" fill="3" />
+      </item>
+      <item class="pmedit.ui.preferences.OptimizationPreferenesPane" icon="" removable="true" auto-create-binding="false" can-attach-label="false">
+        <default-constraints vsize-policy="7" hsize-policy="7" anchor="0" fill="3" />
+      </item>
+      <item class="pmedit.ui.preferences.LicensePreferences" icon="" removable="true" auto-create-binding="false" can-attach-label="false">
+        <default-constraints vsize-policy="7" hsize-policy="7" anchor="0" fill="3" />
+      </item>
+      <item class="pmedit.ui.preferences.AboutPreferences" icon="" removable="true" auto-create-binding="false" can-attach-label="false">
+        <default-constraints vsize-policy="7" hsize-policy="7" anchor="0" fill="3" />
       </item>
     </group>
   </component>

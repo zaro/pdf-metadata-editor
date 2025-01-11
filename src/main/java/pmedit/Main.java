@@ -1,7 +1,7 @@
 package pmedit;
 
 import pmedit.CommandLine.ParseError;
-import pmedit.prefs.FilePreferencesFactory;
+import pmedit.prefs.FilePreferences;
 
 import javax.swing.*;
 import java.awt.event.WindowEvent;
@@ -22,7 +22,6 @@ public class Main {
     static BlockingQueue<CommandLine> cmdQueue = new LinkedBlockingDeque<CommandLine>();
     static Map<String, BatchOperationWindow> batchInstances = new HashMap<String, BatchOperationWindow>();
     static List<PDFMetadataEditWindow> editorInstances = new ArrayList<PDFMetadataEditWindow>();
-    static Preferences _prefs;
 
     public static String getBatchGuiCommand() {
         return "batch-gui-" + batchGuiCounter++;
@@ -192,13 +191,6 @@ public class Main {
         }
     }
 
-    public static Preferences getPreferences() {
-        if (_prefs == null) {
-            System.setProperty("java.util.prefs.PreferencesFactory", FilePreferencesFactory.class.getName());
-            _prefs = Preferences.userRoot().node("PDFMetadataEditor");
-        }
-        return _prefs;
-    }
 
     static class CommandsExecutor extends SwingWorker<Void, CommandLine> {
         CommandsExecutor() {

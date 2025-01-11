@@ -15,7 +15,7 @@ public class LocalDataDir {
     public static final String FOLDERID_APPDATA = "{F1B32785-6FBA-4FCF-9D55-7B8E7F157091}";
 
     public static String getAppDataDir(){
-        return get() + File.separator + "pdf-metadata-editor-fre" + File.separator;
+        return get() + File.separator + "pdf-metadata-editor" + File.separator;
     }
 
     public static String get() {

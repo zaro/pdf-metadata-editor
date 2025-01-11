@@ -41,6 +41,9 @@ public final class OsCheck {
     public static boolean isWindows() {
         return getOperatingSystemType() == OSType.Windows;
     }
+    public static boolean isLinux() {
+        return getOperatingSystemType() == OSType.Linux;
+    }
 
     /**
      * types of Operating Systems

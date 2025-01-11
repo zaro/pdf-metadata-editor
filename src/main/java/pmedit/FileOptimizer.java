@@ -2,10 +2,7 @@ package pmedit;
 
 import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import pmedit.prefs.Preferences;
 
 public class FileOptimizer {
     public enum Enum {
@@ -14,20 +11,20 @@ public class FileOptimizer {
     }
 
     public static  void setPdfBoxCompression(int c){
-        Main.getPreferences().putInt("PdfBoxCompression", c);
+        Preferences.getInstance().putInt("PdfBoxCompression", c);
     }
 
     public static  int getPdfBoxCompression(){
-        return Main.getPreferences().getInt("PdfBoxCompression", CompressParameters.DEFAULT_OBJECT_STREAM_SIZE);
+        return Preferences.getInstance().getInt("PdfBoxCompression", CompressParameters.DEFAULT_OBJECT_STREAM_SIZE);
     }
 
 
     public static  void setCurrentOptimizer(Enum e){
-        Main.getPreferences().put("FileOptimizer", e.toString());
+        Preferences.getInstance().put("FileOptimizer", e.toString());
     }
 
     public static Enum getCurrentOptimizer(){
-        var opt = Main.getPreferences().get("FileOptimizer", FileOptimizer.Enum.NONE.toString());
+        var opt = Preferences.getInstance().get("FileOptimizer", FileOptimizer.Enum.NONE.toString());
         FileOptimizer.Enum optEnum;
         try {
             optEnum = FileOptimizer.Enum.valueOf(opt);

@@ -1,6 +1,7 @@
 package pmedit;
 
 import pmedit.PDFMetadataEditBatch.ActionStatus;
+import pmedit.prefs.Preferences;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
@@ -186,7 +187,7 @@ public class BatchOperationWindow extends JFrame {
             selectedBatchOperation.setModel(new DefaultComboBoxModel<CommandDescription>(new CommandDescription[]{command}));
         } else {
             selectedBatchOperation.setModel(new DefaultComboBoxModel<CommandDescription>(CommandDescription.batchCommands));
-            String lastUsedCommand = Main.getPreferences().get(LAST_USED_COMMAND_KEY, null);
+            String lastUsedCommand = Preferences.getInstance().get(LAST_USED_COMMAND_KEY, null);
             if (lastUsedCommand != null) {
                 CommandDescription lastCommand = CommandDescription.getBatchCommand(lastUsedCommand);
                 if (lastCommand != null) {
@@ -308,7 +309,7 @@ public class BatchOperationWindow extends JFrame {
 
     public void runBatch() {
         final CommandDescription command = ((CommandDescription) selectedBatchOperation.getSelectedItem());
-        Main.getPreferences().put(LAST_USED_COMMAND_KEY, command.name);
+        Preferences.getInstance().put(LAST_USED_COMMAND_KEY, command.name);
 
         (new Worker() {
             final ActionStatus actionStatus = new ActionStatus() {
