@@ -1,5 +1,7 @@
 package pmedit;
 
+import pmedit.prefs.Preferences;
+
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -32,8 +34,8 @@ public class BatchMan {
     }
 
     public static boolean hasBatch() {
-        String moto = Main.getPreferences().get("key", null);
-        String boto = Main.getPreferences().get("email", null);
+        String moto = Preferences.getInstance().get("key", null);
+        String boto = Preferences.getInstance().get("email", null);
         if (moto == null || boto == null) {
             String ek = System.getenv("PME_LICENSE");
             if (ek != null) {
@@ -49,8 +51,8 @@ public class BatchMan {
 
     public static boolean giveBatch(String moto, String boto) {
         if (maybeHasBatch(moto, boto)) {
-            Main.getPreferences().put("key", moto);
-            Main.getPreferences().put("email", boto);
+            Preferences.getInstance().put("key", moto);
+            Preferences.getInstance().put("email", boto);
             return true;
         }
         return false;

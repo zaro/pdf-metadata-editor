@@ -3,10 +3,10 @@ package pmedit;
 import net.miginfocom.swing.MigLayout;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
-import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
 import org.apache.xmpbox.xml.XmpParsingException;
+import pmedit.prefs.Preferences;
+import pmedit.ui.PreferencesWindow;
 
 import javax.swing.*;
 import java.awt.*;
@@ -40,7 +40,7 @@ public class PDFMetadataEditWindow extends JFrame {
     final ActionListener saveRenameAction = new ActionListener() {
         public void actionPerformed(ActionEvent e) {
             saveFile(null);
-            String renameTemplate = Main.getPreferences().get("renameTemplate", null);
+            String renameTemplate = Preferences.getInstance().get("renameTemplate", null);
             if (renameTemplate == null) {
                 return;
             }
@@ -67,7 +67,7 @@ public class PDFMetadataEditWindow extends JFrame {
 
             final JFileChooser fcSaveAs = new JFileChooser();
 
-            String dir = Main.getPreferences().get("LastDir", null);
+            String dir = Preferences.getInstance().get("LastDir", null);
             if (dir != null) {
                 try {
                     fcSaveAs.setCurrentDirectory(new File(dir));
@@ -87,7 +87,7 @@ public class PDFMetadataEditWindow extends JFrame {
                 reloadFile();
 
                 // save dir as last opened
-                Main.getPreferences().put("LastDir", pdfFile.getParent());
+                Preferences.getInstance().put("LastDir", pdfFile.getParent());
             }
         }
     };
@@ -96,7 +96,7 @@ public class PDFMetadataEditWindow extends JFrame {
         @Override
         public void run() {
             JButton btnSave = actionsAndOptions.btnSave;
-            String saveActionS = Main.getPreferences().get("defaultSaveAction", "save");
+            String saveActionS = Preferences.getInstance().get("defaultSaveAction", "save");
 
             for (ActionListener l : btnSave.getActionListeners()) {
                 btnSave.removeActionListener(l);
@@ -310,7 +310,7 @@ public class PDFMetadataEditWindow extends JFrame {
 
         btnOpenPdf.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
-                String dir = Main.getPreferences().get("LastDir", null);
+                String dir = Preferences.getInstance().get("LastDir", null);
                 if (dir != null) {
                     try {
                         fc.setCurrentDirectory(new File(dir));
@@ -323,7 +323,7 @@ public class PDFMetadataEditWindow extends JFrame {
                     // This is where a real application would open the file.
                     loadFile(fc.getSelectedFile());
                     // save dir as last opened
-                    Main.getPreferences().put("LastDir", pdfFile.getParent());
+                    Preferences.getInstance().put("LastDir", pdfFile.getParent());
                 }
             }
         });
@@ -366,7 +366,7 @@ public class PDFMetadataEditWindow extends JFrame {
                     @Override
                     public void run() {
                         if (preferencesWindow == null) {
-                            preferencesWindow = new PreferencesWindow(Main.getPreferences(), defaultMetadata, PDFMetadataEditWindow.this);
+                            preferencesWindow = new PreferencesWindow(defaultMetadata, PDFMetadataEditWindow.this);
                             preferencesWindow.onSaveAction(updateSaveButton);
                         }
                         preferencesWindow.setVisible(true);
