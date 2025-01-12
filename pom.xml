@@ -487,11 +487,6 @@
 			<version>1.4.0</version>
 		</dependency>
 		<dependency>
-			<groupId>com.miglayout</groupId>
-			<artifactId>miglayout-swing</artifactId>
-			<version>5.2</version>
-		</dependency>
-		<dependency>
 			<groupId>com.intellij</groupId>
 			<artifactId>forms_rt</artifactId>
 			<version>7.0.3</version>
