@@ -6,7 +6,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-public abstract class BatchParametersWindow extends JDialog {
+public class BatchParametersWindow extends JDialog {
 
     public BatchOperationParameters parameters;
     Runnable onClose;
@@ -21,6 +21,8 @@ public abstract class BatchParametersWindow extends JDialog {
     public BatchParametersWindow(BatchOperationParameters parameters, final Frame owner) {
         super(owner, true);
         setLocationRelativeTo(owner);
+        setTitle("Batch PDF metadata edit");
+        setMinimumSize(new Dimension(640, 480));
 
         if (parameters != null) {
             this.parameters = parameters;
@@ -43,10 +45,8 @@ public abstract class BatchParametersWindow extends JDialog {
                                              }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
                 JComponent.WHEN_IN_FOCUSED_WINDOW);
 
-        createContentPane();
     }
 
-    protected abstract void createContentPane();
 
     public void onCloseAction(Runnable newAction) {
         onClose = newAction;
