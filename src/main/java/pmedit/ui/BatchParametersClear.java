@@ -1,12 +1,11 @@
-package pmedit;
+package pmedit.ui;
+
+import pmedit.BatchOperationParameters;
 
 import java.awt.*;
 
 public class BatchParametersClear extends BatchParametersEdit {
 
-    /**
-     * @wbp.parser.constructor
-     */
     public BatchParametersClear(BatchOperationParameters params) {
         this(params, null);
     }
