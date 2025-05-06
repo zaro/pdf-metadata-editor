@@ -10,6 +10,8 @@ public @interface FieldID {
 
     FieldType type() default FieldType.StringField;
 
+    String nullValueText() default "";
+
     enum FieldType {
         StringField,
         TextField,
@@ -18,4 +20,5 @@ public @interface FieldID {
         DateField,
         BoolField
     }
+
 }

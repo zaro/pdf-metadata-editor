@@ -124,7 +124,7 @@
       </item>
     </group>
     <group name="Custom">
-      <item class="com.github.lgooddatepicker.components.DateTimePicker" icon="/com/intellij/uiDesigner/icons/panel.svg" removable="true" auto-create-binding="false" can-attach-label="false">
+      <item class="pmedit.ui.components.DateTimePicker" icon="/com/intellij/uiDesigner/icons/panel.svg" removable="true" auto-create-binding="false" can-attach-label="false">
         <default-constraints vsize-policy="3" hsize-policy="3" anchor="0" fill="0" />
       </item>
       <item class="pmedit.ui.MetadataEditPane" icon="" removable="true" auto-create-binding="false" can-attach-label="false">

@@ -62,7 +62,7 @@ public class MainCli {
             System.out.print(helpMessage);
             return;
         }
-        PDFMetadataEditBatch.ActionStatus status = new PDFMetadataEditBatch.ActionStatus() {
+        ActionStatus status = new ActionStatus() {
             @Override
             public void addStatus(String filename, String message) {
                 System.out.print(filename);

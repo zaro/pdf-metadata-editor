@@ -20,6 +20,8 @@ import org.apache.xmpbox.type.TextType;
 import org.apache.xmpbox.xml.XmpParsingException;
 import pmedit.CommandLine.ParseError;
 import pmedit.MdStruct.StructType;
+import pmedit.ext.PmeExtension;
+import pmedit.pdf.CompressionAndOptimisation;
 
 import javax.xml.transform.TransformerException;
 import java.io.*;
@@ -970,6 +972,8 @@ public class MetadataInfo {
             }
         }
 
+        PmeExtension.get().onDocumentSave(document, pdfFile, this);
+
         if (FileOptimizer.isOptimiserEnabled(FileOptimizer.Enum.PDFBOX)){
             document = FileOptimizer.optimizeWithPdfBox(document);
         }
@@ -983,7 +987,13 @@ public class MetadataInfo {
         }
 
         if(saveAsVersion>0){
-            document.setVersion(saveAsVersion);
+            if (saveAsVersion >= 1.4F) {
+                document.getDocumentCatalog().setVersion(Float.toString(saveAsVersion));
+                document.getDocument().setVersion(saveAsVersion);
+            } else {
+                document.getDocument().setVersion(saveAsVersion);
+                document.getDocumentCatalog().setVersion(null);
+            }
         }
 
         if(encryptionOptions !=null) {
@@ -1005,7 +1015,7 @@ public class MetadataInfo {
             }
         }
 
-        document.save(pdfFile, new CompressParameters(FileOptimizer.getPdfBoxCompression()));
+        PmeExtension.get().createPdfWriter(document).write(pdfFile);
         return true;
 
     }
@@ -1087,6 +1097,25 @@ public class MetadataInfo {
 
     }
 
+    public void clearDoc() {
+        this.doc = new Basic();
+        this.docEnabled = new BasicEnabled();
+    }
+
+    public void clearXmp() {
+        this.basic = new XmpBasic();
+        this.pdf = new XmpPdf();
+        this.dc = new XmpDublinCore();
+        this.rights = new XmpRights();
+        this.file = new FileInfo();
+
+        this.basicEnabled = new XmpBasicEnabled();
+        this.pdfEnabled = new XmpPdfEnabled();
+        this.dcEnabled = new XmpDublinCoreEnabled();
+        this.rightsEnabled = new XmpRightsEnabled();
+        this.fileEnabled = new FileInfoEnabled();
+    }
+
     public void setEnabled(boolean value) {
         docEnabled.setAll(value);
         basicEnabled.setAll(value);
@@ -1137,6 +1166,10 @@ public class MetadataInfo {
                 set(fieldName, convertor.apply(map.get(fieldName)));
             }
         }
+    }
+
+    public void fromFlatMap(Map<String, Object> map) {
+        fromFlatMap(map, flatMapConvertor());
     }
 
     public MetadataInfo clone() {

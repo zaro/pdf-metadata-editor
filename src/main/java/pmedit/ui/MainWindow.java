@@ -7,9 +7,17 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 import org.apache.xmpbox.xml.XmpParsingException;
 import pmedit.*;
+import pmedit.ext.PmeExtension;
 import pmedit.prefs.Preferences;
+import pmedit.preset.PresetStore;
+import pmedit.preset.PresetValues;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -21,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainWindow extends JFrame {
+    protected static final Dimension MIN_SIZE = new Dimension(640, 480);
     private JPanel contentPane;
     public JButton btnOpenPdf;
     public JTextField filename;
@@ -36,6 +45,9 @@ public class MainWindow extends JFrame {
     private MetadataInfo metadataInfo = new MetadataInfo();
 
     private PreferencesWindow preferencesWindow;
+
+    private PmeExtension extension = PmeExtension.get();
+
 
     final ActionListener saveAction = new ActionListener() {
         public void actionPerformed(ActionEvent e) {
@@ -179,13 +191,15 @@ public class MainWindow extends JFrame {
             }
         });
         setGlassPane(new FileDropSelectMessage());
+
+//        setMinimumSize(MIN_SIZE);
     }
 
     private void initialize() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle(Version.getAppName());
-        setBounds(100, 100, 640, 480);
-        setMinimumSize(new Dimension(640, 480));
+        setBounds(100, 100, MIN_SIZE.width, MIN_SIZE.height);
+//        setMinimumSize(MIN_SIZE);
 
         btnOpenPdf.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
@@ -266,6 +280,93 @@ public class MainWindow extends JFrame {
             }
         });
 
+        actionsAndOptions.loadPresetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                final String currentPresetName = actionsAndOptions.getCurrentPresetName();
+                PresetValues values = PresetStore.loadPreset(currentPresetName);
+                if (values == null) {
+                    JOptionPane.showMessageDialog(MainWindow.this,
+                            "Preset doesn't exist :\n" + currentPresetName);
+                    return;
+                }
+                metadataEditor.onLoadPreset(values);
+            }
+        });
+
+        actionsAndOptions.savePresetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                PresetValues values = PresetStore.getPresetValuesInstance();
+                metadataEditor.onSavePreset(values);
+                PresetStore.savePreset(actionsAndOptions.getCurrentPresetName(), values);
+                actionsAndOptions.updatePresets();
+            }
+        });
+
+        actionsAndOptions.deletePresetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                PresetStore.deletePreset(actionsAndOptions.getCurrentPresetName());
+                actionsAndOptions.updatePresets();
+
+            }
+        });
+
+        actionsAndOptions.selectedPreset.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                actionsAndOptions.updatePresets(true);
+            }
+        });
+
+        actionsAndOptions.documentClearButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                metadataEditor.copyToMetadata(metadataInfo);
+                metadataInfo.clearDoc();
+                metadataEditor.fillFromMetadata(metadataInfo);
+            }
+        });
+
+        actionsAndOptions.xmpClearButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                metadataEditor.copyToMetadata(metadataInfo);
+                metadataInfo.clearXmp();
+                metadataEditor.fillFromMetadata(metadataInfo);
+            }
+        });
+
+        final JTextComponent tc = (JTextComponent) actionsAndOptions.selectedPreset.getEditor().getEditorComponent();
+        tc.getDocument().addDocumentListener(new DocumentListener() {
+            public void update(Document document) {
+                try {
+                    String presetName = document.getText(0, document.getLength());
+                    boolean en = PresetStore.presetExists(presetName);
+                    actionsAndOptions.deletePresetButton.setEnabled(en);
+                    actionsAndOptions.loadPresetButton.setEnabled(en);
+                    actionsAndOptions.savePresetButton.setEnabled(presetName != null && !presetName.isEmpty());
+                } catch (BadLocationException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                update(e.getDocument());
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                update(e.getDocument());
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+            }
+        });
+        actionsAndOptions.updatePresets();
 
         updateSaveButton.run();
 
@@ -274,6 +375,8 @@ public class MainWindow extends JFrame {
         ImageIcon icoImg = new ImageIcon(imgURL);
         setIconImage(icoImg.getImage());
         setVisible(true);
+
+        extension.init();
     }
 
     public File getCurrentFile() {
@@ -332,6 +435,9 @@ public class MainWindow extends JFrame {
 
         metadataEditor.fillFromMetadata(metadataInfo);
 
+
+        extension.onDocumentReload(document, pdfFile, metadataEditor);
+
         actionsAndOptions.setCurrentDocumentVersion(document.getVersion());
 
         metadataInfo.encryptionOptions.userPassword = password;
@@ -364,6 +470,8 @@ public class MainWindow extends JFrame {
             metadataInfo.removeXmp = actionsAndOptions.removeXMPCheckBox.isSelected();
 
             metadataInfo.encryptionOptions = actionsAndOptions.getDocumentProtection();
+
+            extension.beforeDocumentSave(metadataEditor);
 
             if (actionsAndOptions.pdfVersion.getSelectedItem() instanceof Float s) {
                 metadataInfo.saveAsVersion = s;
@@ -421,7 +529,7 @@ public class MainWindow extends JFrame {
         metadataEditor = new MetadataEditPane();
         panel1.add(metadataEditor.$$$getRootComponent$$$(), new GridConstraints(1, 0, 1, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         actionsAndOptions = new ActionsAndOptions();
-        panel1.add(actionsAndOptions.$$$getRootComponent$$$(), new GridConstraints(2, 0, 1, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        panel1.add(actionsAndOptions.$$$getRootComponent$$$(), new GridConstraints(2, 0, 1, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
     }
 
     /**
