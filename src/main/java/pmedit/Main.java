@@ -1,7 +1,6 @@
 package pmedit;
 
 import pmedit.CommandLine.ParseError;
-import pmedit.prefs.FilePreferencesFactory;
 import pmedit.prefs.LocalDataDir;
 import pmedit.ui.BatchOperationWindow;
 import pmedit.ui.MainWindow;
@@ -16,10 +15,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
-import java.util.prefs.Preferences;
+
 
 public class Main {
+    static {
+        java.util.logging.Logger.getLogger("org.apache").setLevel(java.util.logging.Level.FINE);
+        System.setProperty("org.apache.commons.logging.simplelog.defaultlog", "debug");
+        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "debug");
 
+        // Setup log file
+        if(System.getProperty("org.slf4j.simpleLogger.logFile") == null) {
+            System.setProperty("org.slf4j.simpleLogger.logFile", LocalDataDir.getAppDataDir() + "log.txt");
+            System.out.println("Logfile location:" + LocalDataDir.getAppDataDir() + "log.txt");
+        }
+
+
+    }
     final static String debugLog = System.getProperty("debugLog");
     protected static int batchGuiCounter = 0;
     static BlockingQueue<CommandLine> cmdQueue = new LinkedBlockingDeque<CommandLine>();
@@ -145,13 +156,6 @@ public class Main {
         return batchInstances.size() + editorInstances.size();
     }
 
-    public static void setupLogging(){
-        // Setup log file
-        if(System.getProperty("org.slf4j.simpleLogger.logFile") == null) {
-            System.setProperty("org.slf4j.simpleLogger.logFile", LocalDataDir.getAppDataDir() + "log.txt");
-            System.out.println("Logfile location:" + LocalDataDir.getAppDataDir() + "log.txt");
-        }
-    }
 
     public static void main(final String[] args) {
         CommandLine cmdLine = null;
@@ -175,7 +179,6 @@ public class Main {
 //    catch (ClassNotFoundException e) {}
 //    catch (InstantiationException e) {}
 //    catch (IllegalAccessException e) {}
-        setupLogging();
 
         if (OsCheck.isWindows() && WindowsSingletonApplication.isAlreadyRunning()) {
             System.out.println(">>>> already running");
