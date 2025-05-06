@@ -8,7 +8,7 @@
     <properties/>
     <border type="none"/>
     <children>
-      <tabbedpane id="f75c2" binding="tabbedPane1" default-binding="true">
+      <tabbedpane id="f75c2" binding="tabbedPane">
         <constraints>
           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
             <preferred-size width="200" height="200"/>
@@ -253,21 +253,19 @@
                           <model>
                             <item value="True"/>
                             <item value="False"/>
-                            <item value="Unknown"/>
+                            <item value="Unset"/>
                           </model>
                         </properties>
                       </component>
-                      <component id="d7234" class="com.github.lgooddatepicker.components.DateTimePicker" binding="basicCreationDate">
+                      <component id="d7234" class="pmedit.ui.components.DateTimePicker" binding="basicCreationDate">
                         <constraints>
                           <grid row="6" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
-                        <properties/>
                       </component>
-                      <component id="cf962" class="com.github.lgooddatepicker.components.DateTimePicker" binding="basicModificationDate">
+                      <component id="cf962" class="pmedit.ui.components.DateTimePicker" binding="basicModificationDate">
                         <constraints>
                           <grid row="7" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
-                        <properties/>
                       </component>
                     </children>
                   </grid>
@@ -341,11 +339,10 @@
                           <text value=""/>
                         </properties>
                       </component>
-                      <component id="2b375" class="com.github.lgooddatepicker.components.DateTimePicker" binding="xmpBasicCreateDate">
+                      <component id="2b375" class="pmedit.ui.components.DateTimePicker" binding="xmpBasicCreateDate">
                         <constraints>
                           <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
-                        <properties/>
                       </component>
                       <component id="c6423" class="javax.swing.JLabel">
                         <constraints>
@@ -363,11 +360,10 @@
                           <text value=""/>
                         </properties>
                       </component>
-                      <component id="4e5d6" class="com.github.lgooddatepicker.components.DateTimePicker" binding="xmpBasicModifyDate">
+                      <component id="4e5d6" class="pmedit.ui.components.DateTimePicker" binding="xmpBasicModifyDate">
                         <constraints>
                           <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
-                        <properties/>
                       </component>
                       <component id="a6a08" class="javax.swing.JLabel">
                         <constraints>
@@ -539,11 +535,10 @@
                           <text value=""/>
                         </properties>
                       </component>
-                      <component id="7130e" class="com.github.lgooddatepicker.components.DateTimePicker" binding="xmpBasicMetadataDate">
+                      <component id="7130e" class="pmedit.ui.components.DateTimePicker" binding="xmpBasicMetadataDate">
                         <constraints>
                           <grid row="9" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
-                        <properties/>
                       </component>
                     </children>
                   </grid>

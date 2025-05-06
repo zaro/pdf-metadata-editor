@@ -33,6 +33,7 @@
 		<icon.format></icon.format>
 		<archive.format>zip</archive.format>
 		<archive.suffix></archive.suffix>
+		<pdfbox.version>3.0.3</pdfbox.version>
 		<jpackage.goal>exec</jpackage.goal>
 	</properties>
 
@@ -162,7 +163,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.5.1</version>
+				<version>3.6.0</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -320,7 +321,7 @@
 			<plugin>
 				<groupId>com.igormaznitsa</groupId>
 				<artifactId>mvn-jlink-wrapper</artifactId>
-				<version>1.1.0</version>
+				<version>1.2.4</version>
 				<executions>
 					<execution>
 						<id>call-jdeps</id>
@@ -342,6 +343,7 @@
 						<configuration>
 							<jdepsReportPath>${project.build.directory}${file.separator}jdeps.out</jdepsReportPath>
 							<output>${project.build.directory}${file.separator}preparedJDK</output>
+							<addModules>jdk.zipfs</addModules>
 							<options>
 								<option>--compress=2</option>
 								<option>--no-header-files</option>
@@ -459,17 +461,17 @@
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>pdfbox</artifactId>
-			<version>3.0.3</version>
+			<version>${pdfbox.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>fontbox</artifactId>
-			<version>3.0.3</version>
+			<version>${pdfbox.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>xmpbox</artifactId>
-			<version>3.0.3</version>
+			<version>${pdfbox.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
@@ -500,11 +502,6 @@
 			<groupId>com.toedter</groupId>
 			<artifactId>jcalendar</artifactId>
 			<version>1.4</version>
-		</dependency>
-		<dependency>
-			<groupId>com.github.lgooddatepicker</groupId>
-			<artifactId>LGoodDatePicker</artifactId>
-			<version>11.2.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
@@ -553,11 +550,16 @@
 		    <artifactId>jdde-bundle</artifactId>
 		    <version>2.0.3</version>
 		</dependency>
+		<dependency>
+			<groupId>org.reflections</groupId>
+			<artifactId>reflections</artifactId>
+			<version>0.10.2</version>
+		</dependency>
 	</dependencies>
 
 	<repositories>
 		<repository>
-			<id>github</id>
+			<id>github-jdde</id>
 			<url>https://maven.pkg.github.com/zaro/jdde-bundle</url>
 		</repository>
 	</repositories>

@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import pmedit.MetadataInfoTest.PMTuple;
-import pmedit.PDFMetadataEditBatch.ActionStatus;
 
 import static org.junit.jupiter.api.Assertions.*;
 

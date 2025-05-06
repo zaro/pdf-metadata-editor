@@ -4,7 +4,7 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import pmedit.MetadataInfo;
-import pmedit.prefs.FilePreferencesFactory;
+import pmedit.ext.PmeExtension;
 import pmedit.ui.preferences.*;
 
 import javax.swing.*;
@@ -17,7 +17,7 @@ import java.util.prefs.Preferences;
 
 public class PreferencesWindow extends JDialog {
     public JPanel contentPane;
-    public JTabbedPane tabbedPane1;
+    public JTabbedPane tabbedPane;
     public JButton closeButton;
     public DefaultsPreferences defaultMetadataForm;
     public GeneralPreferences generalPreferencesForm;
@@ -27,6 +27,7 @@ public class PreferencesWindow extends JDialog {
     final Preferences prefs = pmedit.prefs.Preferences.getInstance();
     MetadataInfo defaultMetadata = new MetadataInfo();
     Runnable onSave;
+    private PmeExtension extension = PmeExtension.get();
 
     public PreferencesWindow() {
         this(null, null);
@@ -68,6 +69,7 @@ public class PreferencesWindow extends JDialog {
         defaultMetadataForm.init(prefs, defaultMetadata);
         optimizationPreferencesForm.init(prefs);
         licenseForm.init(prefs);
+        extension.initPreferencesTabs(this);
     }
 
     public void save() {
@@ -85,6 +87,7 @@ public class PreferencesWindow extends JDialog {
         defaultMetadataForm.refresh();
         optimizationPreferencesForm.refresh();
         licenseForm.refresh();
+        extension.onPreferencesRefresh(this);
     }
 
     public void onSaveAction(Runnable newAction) {
@@ -108,31 +111,31 @@ public class PreferencesWindow extends JDialog {
     private void $$$setupUI$$$() {
         contentPane = new JPanel();
         contentPane.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
-        tabbedPane1 = new JTabbedPane();
-        contentPane.add(tabbedPane1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(200, 200), null, 0, false));
+        tabbedPane = new JTabbedPane();
+        contentPane.add(tabbedPane, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(200, 200), null, 0, false));
         final JPanel panel1 = new JPanel();
         panel1.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 3, 0), -1, -1));
-        tabbedPane1.addTab("General", panel1);
+        tabbedPane.addTab("General", panel1);
         generalPreferencesForm = new GeneralPreferences();
         panel1.add(generalPreferencesForm.$$$getRootComponent$$$(), new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel2 = new JPanel();
         panel2.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
-        tabbedPane1.addTab("Defaults", panel2);
+        tabbedPane.addTab("Defaults", panel2);
         defaultMetadataForm = new DefaultsPreferences();
         panel2.add(defaultMetadataForm.$$$getRootComponent$$$(), new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel3 = new JPanel();
         panel3.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
-        tabbedPane1.addTab("Compression", panel3);
+        tabbedPane.addTab("Compression", panel3);
         optimizationPreferencesForm = new OptimizationPreferenesPane();
         panel3.add(optimizationPreferencesForm.$$$getRootComponent$$$(), new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel4 = new JPanel();
         panel4.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
-        tabbedPane1.addTab("License", panel4);
+        tabbedPane.addTab("License", panel4);
         licenseForm = new LicensePreferences();
         panel4.add(licenseForm.$$$getRootComponent$$$(), new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel5 = new JPanel();
         panel5.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
-        tabbedPane1.addTab("About", panel5);
+        tabbedPane.addTab("About", panel5);
         final AboutPreferences nestedForm1 = new AboutPreferences();
         panel5.add(nestedForm1.$$$getRootComponent$$$(), new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel6 = new JPanel();

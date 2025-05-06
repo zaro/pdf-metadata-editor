@@ -201,7 +201,7 @@ public class BatchOperationWindow extends JFrame {
         Preferences.getInstance().put(LAST_USED_COMMAND_KEY, command.name);
 
         (new BatchOperationWindow.Worker() {
-            final PDFMetadataEditBatch.ActionStatus actionStatus = new PDFMetadataEditBatch.ActionStatus() {
+            final ActionStatus actionStatus = new ActionStatus() {
                 @Override
                 public void addStatus(String filename, String message) {
                     publish(new BatchOperationWindow.FileOpResult(filename, message, false));

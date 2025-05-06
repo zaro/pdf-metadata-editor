@@ -1,21 +1,34 @@
 package pmedit.ui;
 
-import com.github.lgooddatepicker.components.DateTimePicker;
+import pmedit.ui.components.DateTimePicker;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import com.toedter.calendar.JDateChooser;
-import pmedit.FieldEnabled;
-import pmedit.FieldID;
-import pmedit.MetadataInfo;
+import pmedit.*;
+import pmedit.ext.PmeExtension;
+import pmedit.preset.PresetValues;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.Calendar;
+import java.util.Map;
 
 public class MetadataEditPane {
-    public JTabbedPane tabbedPane1;
+    public JTabbedPane tabbedPane;
     public JPanel panel1;
 
     @FieldID("doc.title")
@@ -192,6 +205,24 @@ public class MetadataEditPane {
     public JCheckBox xmpRightsUsageTermsEnabled;
     @FieldEnabled("rights.webStatement")
     public JCheckBox xmpRightsWebStatementEnabled;
+    private PmeExtension extension = PmeExtension.get();
+    MetadataInfo initialMetadata;
+    Border textFieldDefault;
+    Border textAreaDefault;
+    Border comboBoxDefault;
+    Border datePickerDefault;
+    Border changedBorder;
+
+    public MetadataEditPane() {
+        extension.initTabs(this);
+        initComponents();
+
+        textFieldDefault = basicTitle.getBorder();
+        textAreaDefault = basicSubject.getBorder();
+        comboBoxDefault = basicTrapped.getBorder();
+        datePickerDefault = basicCreationDate.getBorder();
+        changedBorder = BorderFactory.createLineBorder(Color.BLACK, 2);
+    }
 
     private void traverseFields(MetadataEditPane.FieldSetGet setGet, MetadataEditPane.FieldEnabledCheckBox fieldEnabled) {
         for (Field field : this.getClass().getFields()) {
@@ -262,20 +293,26 @@ public class MetadataEditPane {
         traverseFields(new MetadataEditPane.FieldSetGet() {
             @Override
             public void apply(Object field, FieldID anno) {
-                if (field instanceof JTextField) {
-                    ((JTextField) field).setText(null);
+                if (field instanceof JTextField text) {
+                    text.setText(null);
+                    text.setBorder(textFieldDefault);
                 }
-                if (field instanceof JTextArea) {
-                    ((JTextArea) field).setText(null);
+
+                if (field instanceof JTextArea text) {
+                    text.setText(null);
+                    text.setBorder(textAreaDefault);
                 }
-                if (field instanceof JComboBox) {
-                    objectToField((JComboBox) field, null, anno.type() == FieldID.FieldType.BoolField);
-                }
-                if (field instanceof JDateChooser) {
-                    objectToField((JDateChooser) field, null);
+
+                if (field instanceof JComboBox combo) {
+                    objectToField(combo, null, anno.type() == FieldID.FieldType.BoolField, anno.nullValueText());
+                    combo.setBorder(comboBoxDefault);
                 }
                 if (field instanceof JSpinner) {
                     objectToField((JSpinner) field, null);
+                }
+                if (field instanceof DateTimePicker dateTimePicker) {
+                    objectToField(dateTimePicker, null);
+                    dateTimePicker.setBorder(datePickerDefault);
                 }
             }
         }, new MetadataEditPane.FieldEnabledCheckBox() {
@@ -285,13 +322,29 @@ public class MetadataEditPane {
 
             }
         });
+
+        initialMetadata = null;
     }
 
     public void fillFromMetadata(final MetadataInfo metadataInfo) {
+        fillFromMetadata(metadataInfo, false);
+    }
+
+    public void fillFromMetadata(final MetadataInfo metadataInfo, boolean loadPreset) {
+        if (!loadPreset) {
+            initialMetadata = metadataInfo.clone();
+        }
 
         traverseFields(new MetadataEditPane.FieldSetGet() {
             @Override
             public void apply(Object field, FieldID anno) {
+
+                if (loadPreset) {
+                    Object o = metadataInfo.get(anno.value());
+                    if (o == null) {
+                        return;
+                    }
+                }
 
                 if (field instanceof JTextField) {
                     ((JTextField) field).setText(metadataInfo.getString(anno.value()));
@@ -302,13 +355,16 @@ public class MetadataEditPane {
 
                 Object value = metadataInfo.get(anno.value());
                 if (field instanceof JComboBox) {
-                    objectToField((JComboBox) field, value, anno.type() == FieldID.FieldType.BoolField);
+                    objectToField((JComboBox) field, value, anno.type() == FieldID.FieldType.BoolField, anno.nullValueText());
                 }
                 if (field instanceof JDateChooser) {
                     objectToField((JDateChooser) field, value);
                 }
                 if (field instanceof JSpinner) {
                     objectToField((JSpinner) field, value);
+                }
+                if (field instanceof DateTimePicker) {
+                    objectToField((DateTimePicker) field, value);
                 }
             }
         }, new MetadataEditPane.FieldEnabledCheckBox() {
@@ -319,6 +375,19 @@ public class MetadataEditPane {
             }
         });
 
+    }
+
+    protected String getComboBoxValue(JComboBox field, FieldID anno) {
+        String text = (String) ((JComboBox) field).getModel().getSelectedItem();
+        if (text != null && text.length() == 0) {
+            text = null;
+        } else {
+            String nullText = anno.nullValueText().isEmpty() ? "Unset" : anno.nullValueText();
+            if (nullText.equals(text)) {
+                text = null;
+            }
+        }
+        return text;
     }
 
     public void copyToMetadata(final MetadataInfo metadataInfo) {
@@ -346,11 +415,8 @@ public class MetadataEditPane {
 
                     }
                 }
-                if (field instanceof JComboBox) {
-                    String text = (String) ((JComboBox) field).getModel().getSelectedItem();
-                    if (text != null && text.length() == 0) {
-                        text = null;
-                    }
+                if (field instanceof JComboBox comboBox) {
+                    String text = getComboBoxValue(comboBox, anno);
                     switch (anno.type()) {
                         case StringField:
                             metadataInfo.set(anno.value(), text);
@@ -363,10 +429,10 @@ public class MetadataEditPane {
 
                     }
                 }
-                if (field instanceof JDateChooser) {
+                if (field instanceof DateTimePicker) {
                     switch (anno.type()) {
                         case DateField:
-                            metadataInfo.set(anno.value(), ((JDateChooser) field).getCalendar());
+                            metadataInfo.set(anno.value(), ((DateTimePicker) field).getCalendar());
                             break;
                         default:
                             throw new RuntimeException("Cannot store Calendar in :" + anno.type());
@@ -384,17 +450,18 @@ public class MetadataEditPane {
 
     }
 
-    private void objectToField(JComboBox field, Object o, boolean oIsBool) {
+    private void objectToField(JComboBox field, Object o, boolean oIsBool, String nullValueText) {
+        String v = nullValueText == null || nullValueText.isEmpty() ? "Unset" : nullValueText;
+
         if (o instanceof String) {
             field.getModel().setSelectedItem(o);
         } else if (o instanceof Boolean || oIsBool) {
-            String v = "Unset";
             if (o != null) {
                 v = (Boolean) o ? "Yes" : "No";
             }
             field.getModel().setSelectedItem(v);
         } else if (o == null) {
-            field.setSelectedIndex(-1);
+            field.getModel().setSelectedItem(v);
         } else {
             RuntimeException e = new RuntimeException("Cannot store non-String object in JComboBox");
             e.printStackTrace();
@@ -414,6 +481,20 @@ public class MetadataEditPane {
         }
     }
 
+    private void objectToField(DateTimePicker field, Object o) {
+        if (o instanceof LocalDateTime d) {
+            field.setCalendar(d);
+        } else if (o instanceof Calendar c) {
+            field.setCalendar(c);
+        } else if (o == null) {
+            field.setCalendar((Calendar) null);
+        } else {
+            RuntimeException e = new RuntimeException("Cannot store non-(Calendar|LocalDateTime) object in DateTimePicker");
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
     private void objectToField(JSpinner field, Object o) {
         if (o instanceof Integer) {
             field.setValue(o);
@@ -424,6 +505,186 @@ public class MetadataEditPane {
             e.printStackTrace();
             throw e;
         }
+    }
+
+    protected class ChangeBackgroundDocumentListener implements DocumentListener {
+        JTextComponent textComponent;
+        String metadataKey;
+
+        ChangeBackgroundDocumentListener(JTextComponent textComponent, String metadataKey) {
+            this.textComponent = textComponent;
+            this.metadataKey = metadataKey;
+        }
+
+        protected String currentText(DocumentEvent e) {
+            try {
+                return e.getDocument().getText(0, e.getDocument().getLength());
+            } catch (BadLocationException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        public void indicateChange(DocumentEvent e) {
+            // Code to handle changes
+            String current = currentText(e);
+            String initial = initialMetadata != null ? initialMetadata.getString(metadataKey) : "";
+            if (current.equals(initial)) {
+                textComponent.setBorder(textComponent instanceof JTextArea ? textAreaDefault : textFieldDefault);
+            } else {
+                textComponent.setBorder(changedBorder);
+
+            }
+        }
+
+        public void changedUpdate(DocumentEvent e) {
+            indicateChange(e);
+        }
+
+        public void removeUpdate(DocumentEvent e) {
+            indicateChange(e);
+        }
+
+        public void insertUpdate(DocumentEvent e) {
+            indicateChange(e);
+        }
+    }
+
+
+    protected void resetFieldValue(JComponent component, final String fieldName) {
+        if (component instanceof JTextComponent tc) {
+            tc.setText(initialMetadata != null ? initialMetadata.getString(fieldName) : null);
+            ;
+        } else if (component instanceof DateTimePicker dtp) {
+            dtp.setCalendar(initialMetadata != null ? (Calendar) initialMetadata.get(fieldName) : null);
+        } else {
+            throw new RuntimeException("Trying to reset value on unsupported component: " + component.getClass().getName());
+        }
+    }
+
+
+    private void createContextMenu(JComponent component, final String fieldName) {
+        JTextComponent textComponent;
+        if (component instanceof JTextComponent tc) {
+            textComponent = tc;
+        } else if (component instanceof DateTimePicker dtp) {
+            textComponent = dtp.getTextComponent();
+        } else {
+            throw new RuntimeException("Trying to create menu on unsupported component: " + component.getClass().getName());
+        }
+
+        JPopupMenu popupMenu = new JPopupMenu();
+
+        // Create menu items with actions
+        JMenuItem copyItem = new JMenuItem("Copy");
+        JMenuItem cutItem = new JMenuItem("Cut");
+        JMenuItem pasteItem = new JMenuItem("Paste");
+        JMenuItem resetItem = new JMenuItem("Reset");
+
+        // Add action listeners
+        copyItem.addActionListener(e -> textComponent.copy());
+        cutItem.addActionListener(e -> textComponent.cut());
+        pasteItem.addActionListener(e -> textComponent.paste());
+        resetItem.addActionListener(e -> {
+            resetFieldValue(textComponent, fieldName);
+
+        });
+
+        // Add keyboard shortcuts
+        copyItem.setAccelerator(KeyStroke.getKeyStroke("ctrl C"));
+        cutItem.setAccelerator(KeyStroke.getKeyStroke("ctrl X"));
+        pasteItem.setAccelerator(KeyStroke.getKeyStroke("ctrl V"));
+        resetItem.setAccelerator(KeyStroke.getKeyStroke("ctrl R"));
+
+        // Add items to popup menu
+        popupMenu.add(copyItem);
+        popupMenu.add(cutItem);
+        popupMenu.add(pasteItem);
+        popupMenu.add(resetItem);
+
+        textComponent.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showContextMenu(e);
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showContextMenu(e);
+                }
+            }
+
+            private void showContextMenu(MouseEvent e) {
+                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+            }
+        });
+
+        // Register the Ctrl+R key binding for the Reset action
+        String resetKey = "reset-text";
+        InputMap inputMap = textComponent.getInputMap(JComponent.WHEN_FOCUSED);
+        ActionMap actionMap = textComponent.getActionMap();
+
+        // Add the key binding
+        inputMap.put(KeyStroke.getKeyStroke("ctrl R"), resetKey);
+        actionMap.put(resetKey, new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                resetFieldValue(component, fieldName);
+            }
+        });
+    }
+
+    public void initComponents() {
+        traverseFields(new MetadataEditPane.FieldSetGet() {
+
+            @Override
+            public void apply(Object field, FieldID anno) {
+
+                if (field instanceof JTextComponent textComponent) {
+                    textComponent.getDocument().addDocumentListener(new ChangeBackgroundDocumentListener(textComponent, anno.value()));
+                    createContextMenu(textComponent, anno.value());
+                }
+                if (field instanceof JSpinner spinner) {
+                    throw new RuntimeException("JSpinner NOT SUPPORTED!");
+                }
+                if (field instanceof JComboBox combo) {
+                    combo.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            JComboBox<?> cb = (JComboBox<?>) e.getSource();
+                            String selectedValue = getComboBoxValue(cb, anno);
+                            String initial = initialMetadata != null ? (String) initialMetadata.get(anno.value()) : null;
+                            if ((selectedValue != null && selectedValue.equals(initial)) || (selectedValue == null && initial == null)) {
+                                combo.setBorder(comboBoxDefault);
+                            } else {
+                                combo.setBorder(changedBorder);
+
+                            }
+                        }
+                    });
+                }
+                if (field instanceof DateTimePicker dtPicker) {
+                    dtPicker.addPropertyChangeListener("date", new PropertyChangeListener() {
+                        @Override
+                        public void propertyChange(PropertyChangeEvent evt) {
+                            Calendar selectedValueC = dtPicker.getCalendar();
+                            Calendar initialC = initialMetadata != null ? (Calendar) initialMetadata.get(anno.value()) : null;
+
+                            if ((selectedValueC == null && initialC == null) || (selectedValueC != null && initialC != null && (selectedValueC.compareTo(initialC) == 0))) {
+                                dtPicker.setBorder(datePickerDefault);
+                            } else {
+                                dtPicker.setBorder(changedBorder);
+                            }
+                        }
+                    });
+                    createContextMenu(dtPicker, anno.value());
+                }
+            }
+        }, null);
+
+
     }
 
     {
@@ -443,11 +704,11 @@ public class MetadataEditPane {
     private void $$$setupUI$$$() {
         panel1 = new JPanel();
         panel1.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
-        tabbedPane1 = new JTabbedPane();
-        panel1.add(tabbedPane1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(200, 200), null, 0, false));
+        tabbedPane = new JTabbedPane();
+        panel1.add(tabbedPane, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(200, 200), null, 0, false));
         final JPanel panel2 = new JPanel();
         panel2.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
-        tabbedPane1.addTab("Document", panel2);
+        tabbedPane.addTab("Document", panel2);
         final JScrollPane scrollPane1 = new JScrollPane();
         panel2.add(scrollPane1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel3 = new JPanel();
@@ -529,7 +790,7 @@ public class MetadataEditPane {
         final DefaultComboBoxModel defaultComboBoxModel1 = new DefaultComboBoxModel();
         defaultComboBoxModel1.addElement("True");
         defaultComboBoxModel1.addElement("False");
-        defaultComboBoxModel1.addElement("Unknown");
+        defaultComboBoxModel1.addElement("Unset");
         basicTrapped.setModel(defaultComboBoxModel1);
         panel3.add(basicTrapped, new GridConstraints(8, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         basicCreationDate = new DateTimePicker();
@@ -538,7 +799,7 @@ public class MetadataEditPane {
         panel3.add(basicModificationDate, new GridConstraints(7, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JPanel panel4 = new JPanel();
         panel4.setLayout(new GridLayoutManager(11, 3, new Insets(0, 0, 0, 0), -1, -1));
-        tabbedPane1.addTab("XMP Basic", panel4);
+        tabbedPane.addTab("XMP Basic", panel4);
         final JScrollPane scrollPane4 = new JScrollPane();
         panel4.add(scrollPane4, new GridConstraints(0, 0, 11, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel5 = new JPanel();
@@ -632,7 +893,7 @@ public class MetadataEditPane {
         panel5.add(xmpBasicMetadataDate, new GridConstraints(9, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JPanel panel6 = new JPanel();
         panel6.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
-        tabbedPane1.addTab("XMP PDF", panel6);
+        tabbedPane.addTab("XMP PDF", panel6);
         final JScrollPane scrollPane7 = new JScrollPane();
         panel6.add(scrollPane7, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel7 = new JPanel();
@@ -669,7 +930,7 @@ public class MetadataEditPane {
         panel7.add(xmpPdfProducer, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
         final JPanel panel8 = new JPanel();
         panel8.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
-        tabbedPane1.addTab("XMP Dublin Core", panel8);
+        tabbedPane.addTab("XMP Dublin Core", panel8);
         final JScrollPane scrollPane9 = new JScrollPane();
         panel8.add(scrollPane9, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel9 = new JPanel();
@@ -816,7 +1077,7 @@ public class MetadataEditPane {
         scrollPane17.setViewportView(xmpDcTypes);
         final JPanel panel10 = new JPanel();
         panel10.setLayout(new GridLayoutManager(7, 3, new Insets(0, 0, 0, 0), -1, -1));
-        tabbedPane1.addTab("XMP Rights", panel10);
+        tabbedPane.addTab("XMP Rights", panel10);
         final JScrollPane scrollPane18 = new JScrollPane();
         panel10.add(scrollPane18, new GridConstraints(0, 0, 7, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel11 = new JPanel();
@@ -899,5 +1160,39 @@ public class MetadataEditPane {
 
     public interface FieldEnabledCheckBox {
         void apply(JCheckBox field, FieldEnabled anno);
+    }
+
+    public <T extends PresetValues> void onLoadPreset(T values) {
+        extension.onLoadPreset(values);
+        if (values.metadata != null && !values.metadata.isEmpty()) {
+            MetadataInfo presetMetadata = new MetadataInfo();
+            presetMetadata.fromFlatMap(values.metadata);
+            fillFromMetadata(presetMetadata, true);
+        }
+    }
+
+    public <T extends PresetValues> void onDeletePreset(T values) {
+        extension.onDeletePreset(values);
+    }
+
+    public <T extends PresetValues> void onSavePreset(T values) {
+        extension.onSavePreset(values);
+        MetadataInfo initial = initialMetadata != null ? initialMetadata : new MetadataInfo();
+        Map<String, Object> initialMap = initial.asFlatMap();
+        MetadataInfo current = new MetadataInfo();
+        copyToMetadata(current);
+        Map<String, Object> currentMap = current.asFlatMap();
+        for (String k : initialMap.keySet()) {
+            Object oi = initialMap.get(k);
+            Object ci = currentMap.get(k);
+
+            if ((oi == null && ci == null) || (oi != null && oi.equals(ci))) {
+                currentMap.remove(k);
+            }
+        }
+        if (!currentMap.isEmpty()) {
+            values.metadata = currentMap;
+        }
+
     }
 }

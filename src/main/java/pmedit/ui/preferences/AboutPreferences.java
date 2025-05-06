@@ -9,7 +9,7 @@ import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.util.EntityUtils;
 import pmedit.Constants;
-import pmedit.SerDeslUtils;
+import pmedit.serdes.SerDeslUtils;
 import pmedit.Version;
 import pmedit.ui.components.TextPaneWithLinks;
 
