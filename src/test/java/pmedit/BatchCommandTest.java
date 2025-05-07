@@ -29,7 +29,7 @@ public class BatchCommandTest {
 
 		CommandLine c = CommandLine.parse(args);
 		PDFMetadataEditBatch batch =new PDFMetadataEditBatch(c.params);
-		batch.runCommand(c.command, FileList.fileList(c.fileList), new ActionStatus(){
+		batch.runCommand(c.command, FileList.fileList(c.fileList), null, new ActionStatus(){
 			@Override
 			public void addStatus(String filename, String message) {
 			}
@@ -63,7 +63,7 @@ public class BatchCommandTest {
 
 		CommandLine c = CommandLine.parse(args);
 		PDFMetadataEditBatch batch =new PDFMetadataEditBatch(c.params);
-		batch.runCommand(c.command, FileList.fileList(c.fileList), new ActionStatus(){
+		batch.runCommand(c.command, FileList.fileList(c.fileList), null,  new ActionStatus(){
 			@Override
 			public void addStatus(String filename, String message) {
 			}
@@ -100,7 +100,7 @@ public class BatchCommandTest {
 
 		CommandLine c = CommandLine.parse(args);
 		PDFMetadataEditBatch batch = new PDFMetadataEditBatch(c.params);
-		batch.runCommand(c.command, FileList.fileList(c.fileList), new ActionStatus() {
+		batch.runCommand(c.command, FileList.fileList(c.fileList), null,  new ActionStatus() {
 			@Override
 			public void addStatus(String filename, String message) {
 			}
@@ -146,7 +146,7 @@ public class BatchCommandTest {
 
 		CommandLine c = CommandLine.parse(args);
 		PDFMetadataEditBatch batch =new PDFMetadataEditBatch(c.params);
-		batch.runCommand(c.command, FileList.fileList(c.fileList), new ActionStatus(){
+		batch.runCommand(c.command, FileList.fileList(c.fileList), null, new ActionStatus(){
 			@Override
 			public void addStatus(String filename, String message) {
 			}
