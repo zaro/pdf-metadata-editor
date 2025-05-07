@@ -14,5 +14,6 @@ debug/
 jpackage/cert/*.pfx
 .flatpak-builder/
 build-dir/
+test-data/
 .mc/
 .env
