@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Stack;
 
 public class PDFMetadataEditBatch {
 
@@ -36,8 +37,9 @@ public class PDFMetadataEditBatch {
                 action.ignore(file);
             }
         } else if (file.isDirectory()) {
-            for (File f : file.listFiles(filter)) {
-                action.apply(f);
+            File[]  files = file.listFiles(filter);
+            if(files != null) {
+                forFiles(List.of(files), filter, action);
             }
         } else {
             action.ignore(file);
@@ -45,6 +47,9 @@ public class PDFMetadataEditBatch {
     }
 
     public void forFiles(List<File> files, FileFilter filter, FileAction action) {
+        if(files == null){
+            return;
+        }
         for (File file : files) {
             forFiles(file, filter, action);
         }
@@ -58,12 +63,12 @@ public class PDFMetadataEditBatch {
         forFiles(files, defaultFileFilter, action);
     }
 
-    public void edit(List<File> files, final ActionStatus status) {
+    public void edit(List<File> files, File outDir, final ActionStatus status) {
         if (params == null) {
             status.addError("*", "No metadata defined");
             return;
         }
-        forFiles(files, new FileAction() {
+        forFiles(files, new FileAction(outDir) {
 
             @Override
             public void apply(File file) {
@@ -72,7 +77,7 @@ public class PDFMetadataEditBatch {
                     MetadataInfo mdFile = new MetadataInfo();
                     mdFile.loadFromPDF(file);
                     mdFile.copyFromWithExpand(mdParams);
-                    mdFile.saveAsPDF(file);
+                    mdFile.saveAsPDF(file, getOutputFile(file));
                     status.addStatus(file.getName(), "Done");
                 } catch (Exception e) {
                     // TODO Auto-generated catch block
@@ -88,14 +93,14 @@ public class PDFMetadataEditBatch {
         });
     }
 
-    public void clear(List<File> files, final ActionStatus status) {
-        forFiles(files, new FileAction() {
+    public void clear(List<File> files, File outDir, final ActionStatus status) {
+        forFiles(files, new FileAction(outDir) {
 
             @Override
             public void apply(File file) {
                 MetadataInfo md = params != null ? params.metadata : new MetadataInfo();
                 try {
-                    md.saveAsPDF(file);
+                    md.saveAsPDF(file, getOutputFile(file));
                     status.addStatus(file.getName(), "Cleared");
                 } catch (Exception e) {
                     // TODO Auto-generated catch block
@@ -111,7 +116,7 @@ public class PDFMetadataEditBatch {
         });
     }
 
-    public void rename(List<File> files, final ActionStatus status) {
+    public void rename(List<File> files, File outDir, final ActionStatus status) {
         String template = null;
         if (params != null) {
             template = params.renameTemplate;
@@ -124,7 +129,7 @@ public class PDFMetadataEditBatch {
         }
         final TemplateString ts = new TemplateString(template);
 
-        forFiles(files, new FileAction() {
+        forFiles(files, new FileAction(outDir) {
 
             @Override
             public void apply(File file) {
@@ -132,7 +137,7 @@ public class PDFMetadataEditBatch {
                     MetadataInfo md = new MetadataInfo();
                     md.loadFromPDF(file);
                     String toName = ts.process(md);
-                    String toDir = file.getParent();
+                    String toDir = outDir() != null ? outDir().toString() : file.getParent();
                     File to = new File(toDir, toName);
                     if (to.exists()) {
                         status.addError(file.getName(), "Destination file already exists:  " + to.getName());
@@ -157,17 +162,17 @@ public class PDFMetadataEditBatch {
         });
     }
 
-    public void tojson(List<File> files, final ActionStatus status) {
-        forFiles(files, new FileAction() {
+    public void tojson(List<File> files, File outDir, final ActionStatus status) {
+        forFiles(files, new FileAction(outDir) {
 
             @Override
             public void apply(File file) {
                 try {
                     MetadataInfo md = new MetadataInfo();
                     md.loadFromPDF(file);
-                    String outFile = file.getAbsolutePath().replaceFirst("\\.[Pp][Dd][Ff]$", ".json");
+                    String outFile = getOutputFileNonNull(file).getAbsolutePath().replaceFirst("\\.[Pp][Dd][Ff]$", ".json");
                     if (!outFile.endsWith(".json")) {
-                        outFile = file.getAbsolutePath() + ".json";
+                        outFile +=  ".json";
                     }
                     Writer out = new BufferedWriter(new OutputStreamWriter(
                             new FileOutputStream(outFile), StandardCharsets.UTF_8));
@@ -187,17 +192,17 @@ public class PDFMetadataEditBatch {
         });
     }
 
-    public void toyaml(List<File> files, final ActionStatus status) {
-        forFiles(files, new FileAction() {
+    public void toyaml(List<File> files, File outDir, final ActionStatus status) {
+        forFiles(files, new FileAction(outDir) {
 
             @Override
             public void apply(File file) {
                 try {
                     MetadataInfo md = new MetadataInfo();
                     md.loadFromPDF(file);
-                    String outFile = file.getAbsolutePath().replaceFirst("\\.[Pp][Dd][Ff]$", ".yaml");
+                    String outFile = getOutputFileNonNull(file).getAbsolutePath().replaceFirst("\\.[Pp][Dd][Ff]$", ".yaml");
                     if (!outFile.endsWith(".yaml")) {
-                        outFile = file.getAbsolutePath() + ".yaml";
+                        outFile = ".yaml";
                     }
                     Writer out = new BufferedWriter(new OutputStreamWriter(
                             new FileOutputStream(outFile), StandardCharsets.UTF_8));
@@ -217,7 +222,7 @@ public class PDFMetadataEditBatch {
         });
     }
 
-    public void fromcsv(List<File> csvFiles, final ActionStatus status) {
+    public void fromcsv(List<File> csvFiles, File outDir, final ActionStatus status) {
         for (File csvFile : csvFiles) {
             try {
                 List<MetadataInfo> actionList = CsvMetadata.readFile(csvFile);
@@ -242,8 +247,8 @@ public class PDFMetadataEditBatch {
         }
     }
 
-    public void xmptodoc(List<File> files, final ActionStatus status) {
-        forFiles(files, new FileAction() {
+    public void xmptodoc(List<File> files, File outDir, final ActionStatus status) {
+        forFiles(files, new FileAction(outDir) {
 
             @Override
             public void apply(File file) {
@@ -252,7 +257,7 @@ public class PDFMetadataEditBatch {
                     MetadataInfo mdFile = new MetadataInfo();
                     mdFile.loadFromPDF(file);
                     mdFile.copyXMPToDoc();
-                    mdFile.saveAsPDF(file);
+                    mdFile.saveAsPDF(file, getOutputFile(file));
                     status.addStatus(file.getName(), "Done");
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -267,8 +272,8 @@ public class PDFMetadataEditBatch {
         });
     }
 
-    public void doctoxmp(List<File> files, final ActionStatus status) {
-        forFiles(files, new FileAction() {
+    public void doctoxmp(List<File> files, File outDir, final ActionStatus status) {
+        forFiles(files, new FileAction(outDir) {
 
             @Override
             public void apply(File file) {
@@ -277,7 +282,7 @@ public class PDFMetadataEditBatch {
                     MetadataInfo mdFile = new MetadataInfo();
                     mdFile.loadFromPDF(file);
                     mdFile.copyDocToXMP();
-                    mdFile.saveAsPDF(file);
+                    mdFile.saveAsPDF(file, getOutputFile(file));
                     status.addStatus(file.getName(), "Done");
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -292,34 +297,70 @@ public class PDFMetadataEditBatch {
         });
     }
 
-    public void runCommand(CommandDescription command, List<File> batchFileList, ActionStatus actionStatus) {
+    public void runCommand(CommandDescription command, List<File> batchFileList, File outDir, ActionStatus actionStatus) {
         if (!BatchMan.hasBatch()) {
             actionStatus.addError("*", "Invalid license, you can get a license at " + Constants.batchLicenseUrl);
         } else if (command.is("rename")) {
-            rename(batchFileList, actionStatus);
+            rename(batchFileList, outDir,  actionStatus);
         } else if (command.is("edit")) {
-            edit(batchFileList, actionStatus);
+            edit(batchFileList, outDir,  actionStatus);
         } else if (command.is("clear")) {
-            clear(batchFileList, actionStatus);
+            clear(batchFileList, outDir,  actionStatus);
         } else if (command.is("tojson")) {
-            tojson(batchFileList, actionStatus);
+            tojson(batchFileList, outDir,  actionStatus);
         } else if (command.is("toyaml")) {
-            toyaml(batchFileList, actionStatus);
+            toyaml(batchFileList, outDir,  actionStatus);
         } else if (command.is("fromcsv")) {
-            fromcsv(batchFileList, actionStatus);
+            fromcsv(batchFileList, outDir,  actionStatus);
         } else if (command.is("xmptodoc")) {
-            xmptodoc(batchFileList, actionStatus);
+            xmptodoc(batchFileList, outDir,  actionStatus);
         } else if (command.is("doctoxmp")) {
-            doctoxmp(batchFileList, actionStatus);
+            doctoxmp(batchFileList, outDir,  actionStatus);
         } else {
             actionStatus.addError("*", "Invalid command");
         }
     }
 
-    interface FileAction {
-        void apply(File file);
+    abstract class  FileAction {
+        Stack<File> outDirStack = new Stack<>();
+        FileAction(File outDir) {
+            outDirStack.push(outDir);
+        }
 
-        void ignore(File file);
+        File outDir() {
+            return outDirStack.peek();
+        }
+
+        File pushOutDirFromInputFile(File input){
+            if(outDir() == null){
+                return  null;
+            }
+            return outDirStack.push(new File(outDir(), input.getName()));
+        }
+
+        File popOutDir(){
+            return outDirStack.pop();
+        }
+
+        File getOutputFile(File inputFile){
+            File outDir = outDir();
+            if(outDir == null){
+                return null;
+            }
+            return new File(outDir, inputFile.getName());
+        }
+
+        File getOutputFileNonNull(File inputFile){
+            File o = getOutputFile(inputFile);
+            if(o == null) {
+                return inputFile;
+            }
+            return o;
+        }
+
+        abstract void apply(File file);
+
+        abstract void ignore(File file);
     }
 
 }

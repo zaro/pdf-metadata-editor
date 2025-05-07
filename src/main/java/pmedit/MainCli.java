@@ -2,6 +2,8 @@ package pmedit;
 
 import pmedit.CommandLine.ParseError;
 
+import java.io.File;
+
 public class MainCli {
 
     static String helpMessage =
@@ -80,7 +82,8 @@ public class MainCli {
 
         if (cmdLine.hasCommand()) {
             PDFMetadataEditBatch batch = new PDFMetadataEditBatch(cmdLine.params);
-            batch.runCommand(cmdLine.command, FileList.fileList(cmdLine.fileList), status);
+            File outDir = cmdLine.outputDir != null ? new File(cmdLine.outputDir) : null;
+            batch.runCommand(cmdLine.command, FileList.fileList(cmdLine.fileList),outDir,  status);
         } else if (cmdLine.batchGui) {
             status.addError("*", "Batch gui command not allowed in console mode");
         } else {

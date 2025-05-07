@@ -2,11 +2,13 @@ package pmedit.ui;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.intellij.uiDesigner.core.Spacer;
 import pmedit.*;
 import pmedit.prefs.Preferences;
 import pmedit.ui.components.TextPaneWithLinks;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -31,6 +33,10 @@ public class BatchOperationWindow extends JFrame {
     public TextPaneWithLinks txtpnnoBatchLicense;
     public JButton btnCancel;
     public JButton btnAction;
+    public JTextField outputDirField;
+    public JButton selectOutputDir;
+    public JButton addFolderButton;
+    public JButton addFileButton;
 
     //
     final static String LAST_USED_COMMAND_KEY = "lastUsedBatchCommand";
@@ -69,11 +75,7 @@ public class BatchOperationWindow extends JFrame {
         txtpnnoBatchLicense.setText("<p align=center>No batch license. In order to use batch operations please get a license from <a href='" + Constants.batchLicenseUrl + "'>" + Constants.batchLicenseUrl + "<a></p>");
 
         btnCancel.addActionListener(closeWindowActionListener);
-        btnAction.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                runBatch();
-            }
-        });
+
 
         if (command != null) {
             selectedBatchOperation.setModel(new DefaultComboBoxModel<CommandDescription>(new CommandDescription[]{command}));
@@ -93,6 +95,26 @@ public class BatchOperationWindow extends JFrame {
 
         // Add menu
         buildMenu();
+
+        selectOutputDir.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                selectOutputDirAction();
+            }
+        });
+
+        addFileButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                addFileAction();
+            }
+        });
+        addFolderButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                addDirAction();
+            }
+        });
 
         new FileDrop(this, new FileDrop.Listener() {
             public void filesDropped(File[] files, Point where) {
@@ -127,43 +149,98 @@ public class BatchOperationWindow extends JFrame {
             txtpnnoBatchLicense = null;
         }
 
+        reset();
+
         URL imgURL = MainWindow.class
                 .getResource("pdf-metadata-edit.png");
         ImageIcon icoImg = new ImageIcon(imgURL);
         setIconImage(icoImg.getImage());
+
     }
 
     protected void buildMenu() {
         JMenuBar menuBar = new JMenuBar();
-        JMenu fileMenu = new JMenu("File");
+        JMenu inputMenu = new JMenu("Input");
+
         JMenuItem addFile = new JMenuItem("Add File");
         JMenuItem addDir = new JMenuItem("Add Dir");
-        JMenuItem exit = new JMenuItem("Exit");
 
         addFile.addActionListener(e -> {
-            PdfFileChooser fc = new PdfFileChooser();
-            int returnVal = fc.showOpenDialog(this);
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
-                appendFiles(Collections.singletonList(fc.getSelectedFile()));
-            }
+            addFileAction();
         });
 
         addDir.addActionListener(e -> {
-            DirChooser fc = new DirChooser();
-            int returnVal = fc.showOpenDialog(this);
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
-                appendFiles(Collections.singletonList(fc.getSelectedFile()));
-            }
+            addDirAction();
         });
 
-        addFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
+        addFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK));
         addDir.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.CTRL_DOWN_MASK));
+        inputMenu.add(addFile);
+        inputMenu.add(addDir);
 
-        fileMenu.add(addFile);
-        fileMenu.add(addDir);
-        fileMenu.add(exit);
-        menuBar.add(fileMenu);
+        JMenu outputMenu = new JMenu("Output");
+        JMenuItem selectOutDir = new JMenuItem("Select output dir");
+        selectOutDir.addActionListener(e -> {
+            selectOutputDirAction();
+        });
+        selectOutDir.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
+
+        outputMenu.add(selectOutDir);
+
+        menuBar.add(inputMenu);
+        menuBar.add(outputMenu);
         this.setJMenuBar(menuBar);
+    }
+
+    protected void selectOutputDirAction() {
+        DirChooser fc = new DirChooser("Output");
+        fc.setDialogTitle("Select Output Folder");
+        int returnVal = fc.showOpenDialog(this);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            outputDirField.setText(fc.getSelectedFile().getAbsolutePath());
+        }
+    }
+
+    protected void addFileAction() {
+        PdfFileChooser fc = new PdfFileChooser();
+        fc.setDialogTitle("Select File to Add");
+        int returnVal = fc.showOpenDialog(this);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            appendFiles(Collections.singletonList(fc.getSelectedFile()));
+        }
+    }
+
+    protected void addDirAction() {
+        DirChooser fc = new DirChooser();
+        fc.setDialogTitle("Select Folder to Add");
+        int returnVal = fc.showOpenDialog(this);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            appendFiles(Collections.singletonList(fc.getSelectedFile()));
+        }
+    }
+
+
+    protected void reset() {
+        batchFileList.clear();
+        hasErrors = false;
+        Document doc = fileList.getDocument();
+        try {
+            doc.remove(0, doc.getLength());
+        } catch (BadLocationException e) {
+        }
+        StyledDocument outDoc = statusText.getStyledDocument();
+        try {
+            outDoc.remove(0, outDoc.getLength());
+        } catch (BadLocationException e) {
+        }
+
+        clearActionListeners(btnAction);
+        btnAction.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                runBatch();
+            }
+        });
+        btnAction.setText("Begin");
     }
 
     public static void clearActionListeners(AbstractButton btn) {
@@ -256,7 +333,9 @@ public class BatchOperationWindow extends JFrame {
                 params.storeForCommand(command);
 
                 PDFMetadataEditBatch batch = new PDFMetadataEditBatch(params);
-                batch.runCommand(command, batchFileList, actionStatus);
+                String outputDirS = outputDirField.getText();
+                File outputDir = outputDirS != null && !outputDirS.isEmpty() ? new File(outputDirS) : null;
+                batch.runCommand(command, batchFileList, outputDir, actionStatus);
                 return null;
             }
 
@@ -282,11 +361,12 @@ public class BatchOperationWindow extends JFrame {
             } else {
                 append("Done");
             }
+            btnCancel.setText("Close");
             clearActionListeners(btnAction);
-            btnAction.setText("Close");
-            btnAction.addActionListener(closeWindowActionListener);
-            btnCancel.setVisible(false);
-            FileDrop.remove(this);
+            btnAction.setText("Clear");
+            btnAction.addActionListener(l -> {
+                reset();
+            });
         } catch (Exception ignore) {
         }
     }
@@ -355,28 +435,55 @@ public class BatchOperationWindow extends JFrame {
         btnParameters = new JButton();
         btnParameters.setText("Parameters");
         contentPane.add(btnParameters, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, 1, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label1 = new JLabel();
-        label1.setText("Status");
-        contentPane.add(label1, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        statusScrollPane = new JScrollPane();
-        contentPane.add(statusScrollPane, new GridConstraints(3, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        statusText = new JTextPane();
-        statusText.setEditable(false);
-        statusScrollPane.setViewportView(statusText);
-        final JScrollPane scrollPane1 = new JScrollPane();
-        contentPane.add(scrollPane1, new GridConstraints(1, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        fileList = new JTextPane();
-        fileList.setEditable(false);
-        fileList.setText("Drop files here to batch process them ...");
-        scrollPane1.setViewportView(fileList);
         txtpnnoBatchLicense = new TextPaneWithLinks();
-        contentPane.add(txtpnnoBatchLicense, new GridConstraints(4, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        contentPane.add(txtpnnoBatchLicense, new GridConstraints(4, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         btnCancel = new JButton();
         btnCancel.setText("Cancel");
         contentPane.add(btnCancel, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, 1, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         btnAction = new JButton();
         btnAction.setText("Begin");
         contentPane.add(btnAction, new GridConstraints(5, 1, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, 1, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JPanel panel1 = new JPanel();
+        panel1.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
+        contentPane.add(panel1, new GridConstraints(1, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        panel1.setBorder(BorderFactory.createTitledBorder(null, "Input Files", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
+        final JScrollPane scrollPane1 = new JScrollPane();
+        panel1.add(scrollPane1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        fileList = new JTextPane();
+        fileList.setEditable(false);
+        fileList.setText("Drop files here to batch process them ...");
+        scrollPane1.setViewportView(fileList);
+        final JPanel panel2 = new JPanel();
+        panel2.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
+        panel1.add(panel2, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        addFolderButton = new JButton();
+        addFolderButton.setText("Add Folder");
+        panel2.add(addFolderButton, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer1 = new Spacer();
+        panel2.add(spacer1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        addFileButton = new JButton();
+        addFileButton.setText("Add File");
+        panel2.add(addFileButton, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JPanel panel3 = new JPanel();
+        panel3.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
+        contentPane.add(panel3, new GridConstraints(3, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        panel3.setBorder(BorderFactory.createTitledBorder(null, "Output", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
+        statusScrollPane = new JScrollPane();
+        panel3.add(statusScrollPane, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        statusText = new JTextPane();
+        statusText.setEditable(false);
+        statusScrollPane.setViewportView(statusText);
+        final JPanel panel4 = new JPanel();
+        panel4.setLayout(new GridLayoutManager(2, 2, new Insets(0, 0, 0, 0), -1, -1));
+        contentPane.add(panel4, new GridConstraints(2, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        panel4.setBorder(BorderFactory.createTitledBorder(null, "Output Folder", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
+        outputDirField = new JTextField();
+        panel4.add(outputDirField, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final Spacer spacer2 = new Spacer();
+        panel4.add(spacer2, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        selectOutputDir = new JButton();
+        selectOutputDir.setText("Select");
+        panel4.add(selectOutputDir, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 
     /**

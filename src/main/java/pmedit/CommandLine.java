@@ -12,6 +12,7 @@ public class CommandLine {
     public boolean showHelp = false;
     public String licenseEmail;
     public String licenseKey;
+    public String outputDir;
     public CommandLine() {
     }
     public CommandLine(List<String> fileList) {
@@ -80,6 +81,13 @@ public class CommandLine {
                 }
             } else if (arg.equalsIgnoreCase("h") || arg.equalsIgnoreCase("help")) {
                 cmdLine.showHelp = true;
+            } else if (arg.equalsIgnoreCase("o") || arg.equalsIgnoreCase("outputDir")) {
+                if (i + 1 < args.size()) {
+                    cmdLine.outputDir = args.get(i + 1);
+                    ++i;
+                } else {
+                    throw new ParseError("Missing argument for outputDir");
+                }
             } else {
                 throw new ParseError("Invalid option: " + arg);
             }
