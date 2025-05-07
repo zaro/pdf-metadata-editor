@@ -11,6 +11,7 @@ import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.PrintWriter;
@@ -90,6 +91,8 @@ public class BatchOperationWindow extends JFrame {
 
         createBatchParametersWindowButton();
 
+        // Add menu
+        buildMenu();
 
         new FileDrop(this, new FileDrop.Listener() {
             public void filesDropped(File[] files, Point where) {
@@ -128,6 +131,39 @@ public class BatchOperationWindow extends JFrame {
                 .getResource("pdf-metadata-edit.png");
         ImageIcon icoImg = new ImageIcon(imgURL);
         setIconImage(icoImg.getImage());
+    }
+
+    protected void buildMenu() {
+        JMenuBar menuBar = new JMenuBar();
+        JMenu fileMenu = new JMenu("File");
+        JMenuItem addFile = new JMenuItem("Add File");
+        JMenuItem addDir = new JMenuItem("Add Dir");
+        JMenuItem exit = new JMenuItem("Exit");
+
+        addFile.addActionListener(e -> {
+            PdfFileChooser fc = new PdfFileChooser();
+            int returnVal = fc.showOpenDialog(this);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                appendFiles(Collections.singletonList(fc.getSelectedFile()));
+            }
+        });
+
+        addDir.addActionListener(e -> {
+            DirChooser fc = new DirChooser();
+            int returnVal = fc.showOpenDialog(this);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                appendFiles(Collections.singletonList(fc.getSelectedFile()));
+            }
+        });
+
+        addFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
+        addDir.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.CTRL_DOWN_MASK));
+
+        fileMenu.add(addFile);
+        fileMenu.add(addDir);
+        fileMenu.add(exit);
+        menuBar.add(fileMenu);
+        this.setJMenuBar(menuBar);
     }
 
     public static void clearActionListeners(AbstractButton btn) {
