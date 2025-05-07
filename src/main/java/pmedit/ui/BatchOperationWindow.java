@@ -3,12 +3,19 @@ package pmedit.ui;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pmedit.*;
 import pmedit.prefs.Preferences;
 import pmedit.ui.components.TextPaneWithLinks;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.TableModelEvent;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -24,13 +31,14 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class BatchOperationWindow extends JFrame {
+    Logger logger = LoggerFactory.getLogger(BatchOperationWindow.class);
     public JPanel contentPane;
     public JComboBox<CommandDescription> selectedBatchOperation;
     public JButton btnParameters;
     public JTextPane fileList;
-    public JTextPane statusText;
+    public JTable statusTable;
     public JScrollPane statusScrollPane;
-    public TextPaneWithLinks txtpnnoBatchLicense;
+    public TextPaneWithLinks statusSummary;
     public JButton btnCancel;
     public JButton btnAction;
     public JTextField outputDirField;
@@ -41,7 +49,7 @@ public class BatchOperationWindow extends JFrame {
     //
     final static String LAST_USED_COMMAND_KEY = "lastUsedBatchCommand";
     List<File> batchFileList = new ArrayList<File>();
-    boolean hasErrors = false;
+    private FileOpResultTableModel tableModel;
     private final ActionListener closeWindowActionListener = new ActionListener() {
         public void actionPerformed(ActionEvent e) {
             dispatchEvent(new WindowEvent(BatchOperationWindow.this, WindowEvent.WINDOW_CLOSING));
@@ -56,6 +64,10 @@ public class BatchOperationWindow extends JFrame {
         setBounds(100, 100, 640, 480);
         setMinimumSize(new Dimension(640, 480));
         setContentPane(contentPane);
+        tableModel = new FileOpResultTableModel();
+        statusTable.setModel(tableModel);
+        statusTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+
 
         btnParameters.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -68,11 +80,6 @@ public class BatchOperationWindow extends JFrame {
                 createBatchParametersWindowButton();
             }
         });
-
-
-        Style estyle = statusText.addStyle("ERROR", null);
-
-        txtpnnoBatchLicense.setText("<p align=center>No batch license. In order to use batch operations please get a license from <a href='" + Constants.batchLicenseUrl + "'>" + Constants.batchLicenseUrl + "<a></p>");
 
         btnCancel.addActionListener(closeWindowActionListener);
 
@@ -89,7 +96,6 @@ public class BatchOperationWindow extends JFrame {
                 }
             }
         }
-        StyleConstants.setForeground(estyle, Color.red);
 
         createBatchParametersWindowButton();
 
@@ -140,15 +146,6 @@ public class BatchOperationWindow extends JFrame {
             }
         });
         setGlassPane(new FileDropMessage());
-        if (!BatchMan.hasBatch()) {
-            btnAction.setEnabled(false);
-            txtpnnoBatchLicense.setVisible(true);
-        } else {
-            btnAction.setEnabled(true);
-            getContentPane().remove(txtpnnoBatchLicense);
-            txtpnnoBatchLicense = null;
-        }
-
         reset();
 
         URL imgURL = MainWindow.class
@@ -156,6 +153,13 @@ public class BatchOperationWindow extends JFrame {
         ImageIcon icoImg = new ImageIcon(imgURL);
         setIconImage(icoImg.getImage());
 
+        tableModel.addTableModelListener(e -> {
+            if (e.getType() != TableModelEvent.DELETE) {
+                SwingUtilities.invokeLater(() -> {
+                    adjustRowHeights(e.getFirstRow(), e.getLastRow(), statusScrollPane.getViewport().getWidth());
+                });
+            }
+        });
     }
 
     protected void buildMenu() {
@@ -222,17 +226,12 @@ public class BatchOperationWindow extends JFrame {
 
     protected void reset() {
         batchFileList.clear();
-        hasErrors = false;
         Document doc = fileList.getDocument();
         try {
             doc.remove(0, doc.getLength());
         } catch (BadLocationException e) {
         }
-        StyledDocument outDoc = statusText.getStyledDocument();
-        try {
-            outDoc.remove(0, outDoc.getLength());
-        } catch (BadLocationException e) {
-        }
+        tableModel.clearResults();
 
         clearActionListeners(btnAction);
         btnAction.addActionListener(new ActionListener() {
@@ -241,6 +240,29 @@ public class BatchOperationWindow extends JFrame {
             }
         });
         btnAction.setText("Begin");
+        if (!BatchMan.hasBatch()) {
+            btnAction.setEnabled(false);
+            statusSummary.setVisible(true);
+            statusSummary.setText("<p align=center>No batch license. In order to use batch operations please get a license from <a href='" + Constants.batchLicenseUrl + "'>" + Constants.batchLicenseUrl + "<a></p>");
+        } else {
+            btnAction.setEnabled(true);
+            statusSummary.setVisible(false);
+            statusSummary.setText("");
+        }
+
+        // important that it happens here, so that the renderer cache is reset!
+        statusTable.getColumnModel().getColumn(1).setCellRenderer(new MessageCellRenderer());
+
+        SwingUtilities.invokeLater(() -> {
+            int stWidth = statusScrollPane.getViewport().getWidth();
+
+            final int columnCount = statusTable.getColumnCount();
+            for (int i = 0; i < columnCount; i++) {
+                TableColumn column = statusTable.getColumnModel().getColumn(i);
+                column.setPreferredWidth((int) (stWidth / columnCount));
+            }
+        });
+
     }
 
     public static void clearActionListeners(AbstractButton btn) {
@@ -249,40 +271,39 @@ public class BatchOperationWindow extends JFrame {
         }
     }
 
-    public void append(String s) {
-        try {
-            Document doc = statusText.getDocument();
-            doc.insertString(doc.getLength(), s, null);
-            statusScrollPane.getVerticalScrollBar().setValue(statusScrollPane.getVerticalScrollBar().getMaximum());
-        } catch (BadLocationException exc) {
-            exc.printStackTrace();
-        }
-    }
+    private void adjustRowHeights(int startRow, int endRow, int viewportWidth) {
+        JTable table = statusTable;
+        for (int row = startRow; row <= endRow; row++) {
+            int rowHeight = 25; // Default minimum height
+            int totalWidth = 0;
+            for (int column = 0; column < table.getColumnCount(); column++) {
+                Component comp = table.prepareRenderer(table.getCellRenderer(row, column), row, column);
+                Dimension d = comp.getPreferredSize();
+                rowHeight = Math.max(rowHeight, d.height);
+                TableColumn c = table.getColumnModel().getColumn(column);
+                c.setPreferredWidth(d.width);
+                totalWidth += d.width;
+            }
 
-    public void appendError(String s) {
-        hasErrors = true;
-        try {
-            StyledDocument doc = statusText.getStyledDocument();
-            doc.insertString(doc.getLength(), s, statusText.getStyle("ERROR"));
-            statusScrollPane.getVerticalScrollBar().setValue(statusScrollPane.getVerticalScrollBar().getMaximum());
-        } catch (BadLocationException exc) {
-            exc.printStackTrace();
+            if (totalWidth < viewportWidth) {
+                // Distribute extra width proportionally
+                double scale = (double) viewportWidth / totalWidth;
+                for (int i = 0; i < table.getColumnModel().getColumnCount(); i++) {
+                    TableColumn column = table.getColumnModel().getColumn(i);
+                    column.setPreferredWidth((int) (column.getPreferredWidth() * scale));
+                }
+            }
+
+            table.setRowHeight(row, rowHeight);
         }
     }
 
     public void appendError(Throwable e) {
-        hasErrors = true;
-        try {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            e.printStackTrace(pw);
-            sw.toString(); // stack trace as a string
-            StyledDocument doc = statusText.getStyledDocument();
-            doc.insertString(doc.getLength(), sw.toString(), statusText.getStyle("ERROR"));
-            statusScrollPane.getVerticalScrollBar().setValue(statusScrollPane.getVerticalScrollBar().getMaximum());
-        } catch (BadLocationException exc) {
-            exc.printStackTrace();
-        }
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        tableModel.addFileOpResult(new FileOpResult("", sw.toString(), true));
+        logger.error("Unexpected:", e);
     }
 
     public void appendFiles(final List<File> files) {
@@ -307,6 +328,14 @@ public class BatchOperationWindow extends JFrame {
                 batchFileList.addAll(files);
             }
         });
+    }
+
+    protected boolean hasErrors() {
+        boolean hasErr = false;
+        for (FileOpResult o : tableModel.data) {
+            hasErr = hasErr || o.error;
+        }
+        return hasErr;
     }
 
     public void runBatch() {
@@ -355,12 +384,14 @@ public class BatchOperationWindow extends JFrame {
 
     void onDone() {
         try {
-            append("------\n");
-            if (hasErrors) {
-                appendError("Done (with Errors)\n");
+            if (tableModel.data.isEmpty()) {
+                statusSummary.setText("<p align=center style='color:red;'>No PDF files found in selected input files/folders!</p>\n");
+            } else if (hasErrors()) {
+                statusSummary.setText("<p align=center style='color:red;'>There were some errors processing files...</p>\n");
             } else {
-                append("Done");
+                statusSummary.setText("<p align=center style='color:green;'>Finished successfully!</p>");
             }
+            statusSummary.setVisible(true);
             btnCancel.setText("Close");
             clearActionListeners(btnAction);
             btnAction.setText("Clear");
@@ -435,8 +466,9 @@ public class BatchOperationWindow extends JFrame {
         btnParameters = new JButton();
         btnParameters.setText("Parameters");
         contentPane.add(btnParameters, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, 1, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        txtpnnoBatchLicense = new TextPaneWithLinks();
-        contentPane.add(txtpnnoBatchLicense, new GridConstraints(4, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        statusSummary = new TextPaneWithLinks();
+        statusSummary.setText("<html>\n  <head>\n\n  </head>\n  <body>\n    <p style=\"margin-top: 0\">\n      \n    </p>\n  </body>\n</html>\n");
+        contentPane.add(statusSummary, new GridConstraints(4, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));
         btnCancel = new JButton();
         btnCancel.setText("Cancel");
         contentPane.add(btnCancel, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, 1, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -470,9 +502,8 @@ public class BatchOperationWindow extends JFrame {
         panel3.setBorder(BorderFactory.createTitledBorder(null, "Output", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
         statusScrollPane = new JScrollPane();
         panel3.add(statusScrollPane, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        statusText = new JTextPane();
-        statusText.setEditable(false);
-        statusScrollPane.setViewportView(statusText);
+        statusTable = new JTable();
+        statusScrollPane.setViewportView(statusTable);
         final JPanel panel4 = new JPanel();
         panel4.setLayout(new GridLayoutManager(2, 2, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(panel4, new GridConstraints(2, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
@@ -503,18 +534,134 @@ public class BatchOperationWindow extends JFrame {
             this.message = message;
             this.error = error;
         }
+
+        @Override
+        public String toString() {
+            return message; // tab-delimited format for table data
+        }
     }
 
     abstract class Worker extends SwingWorker<Void, FileOpResult> {
         @Override
         protected void process(List<FileOpResult> chunks) {
             for (BatchOperationWindow.FileOpResult chunk : chunks) {
-                if (chunk.error) {
-                    appendError(chunk.filename + " -> " + chunk.message + "\n");
-                } else {
-                    append(chunk.filename + " -> " + chunk.message + "\n");
+                tableModel.addFileOpResult(chunk);
+            }
+        }
+    }
+
+
+    // Table model class
+    static class FileOpResultTableModel extends AbstractTableModel {
+        private final String[] columnNames = {"Filename", "Message"};
+        private final List<FileOpResult> data = new ArrayList<>();
+
+        public void addFileOpResult(FileOpResult result) {
+            data.add(result);
+            fireTableRowsInserted(data.size() - 1, data.size() - 1);
+        }
+
+        public void clearResults() {
+            int size = data.size();
+            data.clear();
+            if (size > 0) {
+                fireTableRowsDeleted(0, size - 1);
+            }
+        }
+
+        @Override
+        public int getRowCount() {
+            return data.size();
+        }
+
+        @Override
+        public int getColumnCount() {
+            return columnNames.length;
+        }
+
+        @Override
+        public String getColumnName(int column) {
+            return columnNames[column];
+        }
+
+        @Override
+        public Object getValueAt(int rowIndex, int columnIndex) {
+            FileOpResult result = data.get(rowIndex);
+            switch (columnIndex) {
+                case 0:
+                    return result.filename;
+                case 1:
+                    return result;  // Return the entire object for the renderer
+                default:
+                    return null;
+            }
+        }
+
+        @Override
+        public Class<?> getColumnClass(int columnIndex) {
+            switch (columnIndex) {
+                case 0:
+                    return String.class;
+                case 1:
+                    return FileOpResult.class;
+                default:
+                    return Object.class;
+            }
+        }
+    }
+
+    // Custom cell renderer for the message column
+    static class MessageCellRenderer extends JTextArea implements TableCellRenderer {
+        private final DefaultTableCellRenderer adaptee = new DefaultTableCellRenderer();
+
+        public MessageCellRenderer() {
+            setOpaque(true);
+            setBorder(BorderFactory.createEmptyBorder(3, 3, 3, 3));
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                                                       boolean isSelected, boolean hasFocus, int row, int column) {
+
+            adaptee.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
+            // Set JTextArea properties from the adaptee
+            setFont(adaptee.getFont());
+
+            if (isSelected) {
+                setForeground(table.getSelectionForeground());
+                setBackground(table.getSelectionBackground());
+            } else {
+                setBackground(table.getBackground());
+
+                if (value instanceof FileOpResult) {
+                    FileOpResult result = (FileOpResult) value;
+                    if (result.error) {
+                        setForeground(Color.RED);
+                    } else {
+                        setForeground(table.getForeground());
+                    }
                 }
             }
+
+            // Set the text
+            if (value instanceof FileOpResult) {
+                FileOpResult result = (FileOpResult) value;
+                setText(result.message);
+            } else {
+                setText("");
+            }
+
+            // Calculate preferred size based on text content
+            int lineHeight = getFontMetrics(getFont()).getHeight();
+            int lineCount = getLineCount();
+
+            // Set preferred size
+            Dimension d = getPreferredSize();
+            d.height = lineHeight * lineCount;
+            setPreferredSize(d);
+
+            return this;
         }
     }
 }
