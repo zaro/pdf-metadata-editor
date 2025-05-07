@@ -38,7 +38,6 @@ public class MainWindow extends JFrame {
     public ActionsAndOptions actionsAndOptions;
 
     //
-    final JFileChooser fc;
     private final MetadataInfo defaultMetadata;
     private File pdfFile;
     private String password;
@@ -141,12 +140,8 @@ public class MainWindow extends JFrame {
     public MainWindow(String filePath) {
         setContentPane(contentPane);
         //
-        fc = new JFileChooser();
         defaultMetadata = new MetadataInfo();
         initialize();
-        PdfFilter pdfFilter = new PdfFilter();
-        fc.addChoosableFileFilter(pdfFilter);
-        fc.setFileFilter(pdfFilter);
         clear();
         if (filePath != null) {
             try {
@@ -203,20 +198,13 @@ public class MainWindow extends JFrame {
 
         btnOpenPdf.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
-                String dir = Preferences.getInstance().get("LastDir", null);
-                if (dir != null) {
-                    try {
-                        fc.setCurrentDirectory(new File(dir));
-                    } catch (Exception e) {
-                    }
-                }
+                final PdfFileChooser fc = new PdfFileChooser();
+
                 int returnVal = fc.showOpenDialog(MainWindow.this);
 
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     // This is where a real application would open the file.
                     loadFile(fc.getSelectedFile());
-                    // save dir as last opened
-                    Preferences.getInstance().put("LastDir", pdfFile.getParent());
                 }
             }
         });
