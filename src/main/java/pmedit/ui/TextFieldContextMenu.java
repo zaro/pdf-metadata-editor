@@ -27,6 +27,9 @@ public class TextFieldContextMenu {
         }
         this.resetHandler = resetHandler;
     }
+    public TextFieldContextMenu(JComponent component) {
+        this(component, null);
+    }
 
     public TextFieldContextMenu createContextMenu() {
 
@@ -36,7 +39,9 @@ public class TextFieldContextMenu {
         Action resetAction = new AbstractAction("Reset") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                resetHandler.accept(textComponent);
+                if(resetHandler != null ) {
+                    resetHandler.accept(textComponent);
+                }
             }
         };
         resetAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("ctrl R"));
@@ -56,6 +61,10 @@ public class TextFieldContextMenu {
         copyItem.setAccelerator(KeyStroke.getKeyStroke("ctrl C"));
         cutItem.setAccelerator(KeyStroke.getKeyStroke("ctrl X"));
         pasteItem.setAccelerator(KeyStroke.getKeyStroke("ctrl V"));
+
+        if(resetHandler == null){
+            resetItem.setEnabled(false);
+        }
 
         // Add items to menu
         popupMenu.add(copyItem);

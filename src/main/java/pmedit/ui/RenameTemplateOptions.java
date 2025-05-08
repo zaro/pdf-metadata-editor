@@ -48,6 +48,10 @@ public class RenameTemplateOptions {
             }
         });
 
+        if (renameTemplateComboBox.getEditor().getEditorComponent() instanceof JTextField tf) {
+            new TextFieldContextMenu(tf).createContextMenu().addTemplatePlaceholders();
+        }
+
         supportedFieldsHelp.setText("Supported fields:<br>\n<pre>\n<i>" + CommandLine.mdFieldsHelpMessage(60, "  {", "}", false) + "</i></pre>");
     }
 
