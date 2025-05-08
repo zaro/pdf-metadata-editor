@@ -3,9 +3,7 @@ package pmedit.ui.preferences;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
-import pmedit.CommandLine;
-import pmedit.MetadataInfo;
-import pmedit.TemplateString;
+import pmedit.ui.RenameTemplateOptions;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -20,15 +18,12 @@ public class GeneralPreferences {
     public JRadioButton rdbtnSave;
     public JRadioButton rdbtnSaveAndRename;
     public JRadioButton rdbtnSaveAs;
-    public JComboBox comboBox;
-    public JLabel previewLabel;
-    public JTextPane txtpnAaa;
     public JPanel topPanel;
+    public RenameTemplateOptions renameTemplateOptions;
 
     public boolean copyBasicToXmp;
     public boolean copyXmpToBasic;
     public String defaultSaveAction;
-    public String renameTemplate;
 
 
     public GeneralPreferences() {
@@ -54,7 +49,6 @@ public class GeneralPreferences {
         });
         copyBasicToXmp = prefs.getBoolean("onsaveCopyBasicTo", false);
         copyXmpToBasic = prefs.getBoolean("onsaveCopyXmpTo", false);
-        renameTemplate = prefs.get("renameTemplate", null);
 
         // Default save action
         ActionListener onDefaultSaveAction = new ActionListener() {
@@ -81,48 +75,27 @@ public class GeneralPreferences {
             rdbtnSave.setSelected(true);
         }
 
-
-        // Rename template
-        comboBox.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent arg0) {
-                showPreview((String) comboBox.getModel().getSelectedItem());
-            }
-        });
-        comboBox.setModel(new DefaultComboBoxModel(new String[]{"", "{doc.author} - {doc.title}.pdf",
-                "{doc.author} - {doc.creationDate}.pdf"}));
-
-        txtpnAaa.setText(
-                "Supported fields:<br>\n<pre>\n<i>" + CommandLine.mdFieldsHelpMessage(60, "  {", "}", false) + "</i></pre>");
-
-    }
-
-    public void showPreview(String template) {
-        renameTemplate = template;
-        TemplateString ts = new TemplateString(template);
-
-        previewLabel.setText("Preview:" + ts.process(MetadataInfo.getSampleMetadata()));
     }
 
     public void init(Preferences prefs) {
+        // Rename template
+        renameTemplateOptions.init("RenameTemplate");
     }
 
     public void refresh() {
         onsaveCopyDocumentTo.setSelected(copyBasicToXmp);
         onsaveCopyXmpTo.setSelected(copyXmpToBasic);
 
-        comboBox.setSelectedItem(renameTemplate);
-        showPreview(renameTemplate);
+        renameTemplateOptions.refresh();
     }
 
     public void save(Preferences prefs) {
         prefs.putBoolean("onsaveCopyXmpTo", copyXmpToBasic);
         prefs.putBoolean("onsaveCopyBasicTo", copyBasicToXmp);
-        if (renameTemplate != null && !renameTemplate.isEmpty())
-            prefs.put("renameTemplate", renameTemplate);
-        else
-            prefs.remove("renameTemplate");
 
         prefs.put("defaultSaveAction", defaultSaveAction);
+
+        renameTemplateOptions.save(prefs);
     }
 
     {
@@ -171,22 +144,8 @@ public class GeneralPreferences {
         rdbtnSaveAs = new JRadioButton();
         rdbtnSaveAs.setText("Save as ...");
         panel2.add(rdbtnSaveAs, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JPanel panel3 = new JPanel();
-        panel3.setLayout(new GridLayoutManager(4, 1, new Insets(0, 0, 0, 0), -1, -1));
-        topPanel.add(panel3, new GridConstraints(1, 0, 1, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        panel3.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Rename template", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
-        final Spacer spacer3 = new Spacer();
-        panel3.add(spacer3, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        comboBox = new JComboBox();
-        panel3.add(comboBox, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        previewLabel = new JLabel();
-        previewLabel.setText("Preview:");
-        panel3.add(previewLabel, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JScrollPane scrollPane1 = new JScrollPane();
-        panel3.add(scrollPane1, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        txtpnAaa = new JTextPane();
-        txtpnAaa.setContentType("text/html");
-        scrollPane1.setViewportView(txtpnAaa);
+        renameTemplateOptions = new RenameTemplateOptions();
+        topPanel.add(renameTemplateOptions.$$$getRootComponent$$$(), new GridConstraints(1, 0, 1, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         ButtonGroup buttonGroup;
         buttonGroup = new ButtonGroup();
         buttonGroup.add(rdbtnSave);

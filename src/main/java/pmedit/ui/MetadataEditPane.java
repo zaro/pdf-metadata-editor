@@ -1,5 +1,7 @@
 package pmedit.ui;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pmedit.ui.components.DateTimePicker;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
@@ -25,9 +27,12 @@ import java.beans.PropertyChangeListener;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Map;
 
 public class MetadataEditPane {
+    Logger logger = LoggerFactory.getLogger(MetadataEditPane.class);
+
     public JTabbedPane tabbedPane;
     public JPanel panel1;
 
@@ -212,6 +217,7 @@ public class MetadataEditPane {
     Border comboBoxDefault;
     Border datePickerDefault;
     Border changedBorder;
+    boolean presetLoadEnableOnlyNonNull = false;
 
     public MetadataEditPane() {
         extension.initTabs(this);
@@ -233,13 +239,8 @@ public class MetadataEditPane {
                         Object f = null;
                         try {
                             f = field.get(this);
-                        } catch (IllegalArgumentException e) {
-                            System.err.println("traverseFields on (" + annos.value() + ")");
-                            e.printStackTrace();
-                            continue;
-                        } catch (IllegalAccessException e) {
-                            System.err.println("traverseFields on (" + annos.value() + ")");
-                            e.printStackTrace();
+                        } catch (IllegalArgumentException | IllegalAccessException e) {
+                            logger.error("traverseFields on ({})", annos.value(), e);
                             continue;
                         }
                         setGet.apply(f, annos);
@@ -252,14 +253,8 @@ public class MetadataEditPane {
                     try {
                         JCheckBox f = (JCheckBox) field.get(this);
                         fieldEnabled.apply(f, annosEnabled);
-                    } catch (IllegalArgumentException e) {
-                        System.err.println("traverseFields on (" + annosEnabled.value() + ")");
-                        e.printStackTrace();
-                        continue;
-                    } catch (IllegalAccessException e) {
-                        System.err.println("traverseFields on (" + annosEnabled.value() + ")");
-                        e.printStackTrace();
-                        continue;
+                    } catch (IllegalArgumentException | IllegalAccessException e) {
+                        logger.error("traverseFields on ({})", annosEnabled.value(), e);
                     }
                 }
             }
@@ -372,6 +367,17 @@ public class MetadataEditPane {
             public void apply(JCheckBox field, FieldEnabled anno) {
                 field.setSelected(metadataInfo.isEnabled(anno.value()));
 
+            }
+        });
+
+    }
+
+    public void fillEnabledFromMetadata(final MetadataInfo metadataInfo) {
+
+        traverseFields(null, new MetadataEditPane.FieldEnabledCheckBox() {
+            @Override
+            public void apply(JCheckBox field, FieldEnabled anno) {
+                field.setSelected(metadataInfo.isEnabled(anno.value()));
             }
         });
 
@@ -1164,11 +1170,22 @@ public class MetadataEditPane {
 
     public <T extends PresetValues> void onLoadPreset(T values) {
         extension.onLoadPreset(values);
+        MetadataInfo presetMetadata = new MetadataInfo();
+
         if (values.metadata != null && !values.metadata.isEmpty()) {
-            MetadataInfo presetMetadata = new MetadataInfo();
             presetMetadata.fromFlatMap(values.metadata);
-            fillFromMetadata(presetMetadata, true);
         }
+
+        if (values.metadataEnabled != null && !values.metadataEnabled.isEmpty()) {
+            presetMetadata.setEnabled(false);
+            for (String k : values.metadataEnabled.keySet()) {
+                presetMetadata.setEnabled(k, values.metadataEnabled.get(k));
+            }
+        } else {
+            presetMetadata.enableOnlyNonNull();
+        }
+
+        fillFromMetadata(presetMetadata, true);
     }
 
     public <T extends PresetValues> void onDeletePreset(T values) {
@@ -1182,16 +1199,25 @@ public class MetadataEditPane {
         MetadataInfo current = new MetadataInfo();
         copyToMetadata(current);
         Map<String, Object> currentMap = current.asFlatMap();
+        Map<String, Boolean> enabledMap = new HashMap<>();
+
         for (String k : initialMap.keySet()) {
             Object oi = initialMap.get(k);
             Object ci = currentMap.get(k);
 
             if ((oi == null && ci == null) || (oi != null && oi.equals(ci))) {
                 currentMap.remove(k);
+            } else {
+                if (initial.isEnabled(k)) {
+                    enabledMap.put(k, true);
+                }
             }
         }
         if (!currentMap.isEmpty()) {
             values.metadata = currentMap;
+        }
+        if (!enabledMap.isEmpty()) {
+            values.metadataEnabled = enabledMap;
         }
 
     }

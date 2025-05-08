@@ -77,17 +77,40 @@ public class BatchOperationWindow extends JFrame {
 
         selectedBatchOperation.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                createBatchParametersWindowButton();
+                Object selected = selectedBatchOperation.getSelectedItem();
+                if (selected instanceof CommandDescription cd) {
+                    if (cd.isGroup()) {
+                        selectedBatchOperation.setSelectedIndex(-1); // Deselect if separator was clicked
+                    }
+                    enableBatchParametersWindowButton();
+                }
             }
         });
 
         btnCancel.addActionListener(closeWindowActionListener);
 
+        selectedBatchOperation.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value,
+                                                          int index, boolean isSelected, boolean cellHasFocus) {
+                JLabel label = (JLabel) super.getListCellRendererComponent(
+                        list, value, index, isSelected, cellHasFocus);
 
+                if (value instanceof CommandDescription cd) {
+                    if (cd.group != null) {
+                        // Make separator item look different
+                        label.setText("--- " + cd.group); // Clear the text
+//                        label.setBorder(new MatteBorder(1, 0, 0, 0, Color.GRAY));
+                        label.setEnabled(false); // Make it non-selectable
+                    }
+                }
+                return label;
+            }
+        });
         if (command != null) {
             selectedBatchOperation.setModel(new DefaultComboBoxModel<CommandDescription>(new CommandDescription[]{command}));
         } else {
-            selectedBatchOperation.setModel(new DefaultComboBoxModel<CommandDescription>(CommandDescription.batchCommands));
+            selectedBatchOperation.setModel(new DefaultComboBoxModel<CommandDescription>(CommandDescription.batchCommandsGuiMenu));
             String lastUsedCommand = Preferences.getInstance().get(LAST_USED_COMMAND_KEY, null);
             if (lastUsedCommand != null) {
                 CommandDescription lastCommand = CommandDescription.getBatchCommand(lastUsedCommand);
@@ -97,7 +120,7 @@ public class BatchOperationWindow extends JFrame {
             }
         }
 
-        createBatchParametersWindowButton();
+        enableBatchParametersWindowButton();
 
         // Add menu
         buildMenu();
@@ -413,6 +436,9 @@ public class BatchOperationWindow extends JFrame {
 
     public void createBatchParametersWindow() {
         final CommandDescription command = ((CommandDescription) selectedBatchOperation.getSelectedItem());
+        if (command.isGroup()) {
+            return;
+        }
 
         if (parametersWindow != null) {
             parametersWindow.setVisible(false);
@@ -438,10 +464,13 @@ public class BatchOperationWindow extends JFrame {
 
     }
 
-    public void createBatchParametersWindowButton() {
+    public void enableBatchParametersWindowButton() {
         final CommandDescription command = ((CommandDescription) selectedBatchOperation.getSelectedItem());
-
-        btnParameters.setEnabled(command.is("clear") || command.is("rename") || command.is("edit"));
+        if (command == null) {
+            btnParameters.setEnabled(false);
+        } else {
+            btnParameters.setEnabled(command.is("clear") || command.is("rename") || command.is("edit"));
+        }
     }
 
     {

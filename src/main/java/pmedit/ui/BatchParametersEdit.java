@@ -4,6 +4,7 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import pmedit.BatchOperationParameters;
+import pmedit.preset.PresetValues;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,6 +18,7 @@ public class BatchParametersEdit extends BatchParametersWindow {
     public JButton selectNoneButton;
     public MetadataEditPane defaultMetadataPane;
     public JLabel hintLabel;
+    public PresetSelector presetSelector;
 
     public BatchParametersEdit() {
         this(null, null);
@@ -35,7 +37,7 @@ public class BatchParametersEdit extends BatchParametersWindow {
             public void actionPerformed(ActionEvent e) {
                 if (parameters != null) {
                     parameters.metadata.setEnabled(true);
-                    defaultMetadataPane.fillFromMetadata(parameters.metadata);
+                    defaultMetadataPane.fillEnabledFromMetadata(parameters.metadata);
                 }
             }
         });
@@ -44,7 +46,7 @@ public class BatchParametersEdit extends BatchParametersWindow {
             public void actionPerformed(ActionEvent e) {
                 if (parameters != null) {
                     parameters.metadata.setEnabled(false);
-                    defaultMetadataPane.fillFromMetadata(parameters.metadata);
+                    defaultMetadataPane.fillEnabledFromMetadata(parameters.metadata);
                 }
             }
         });
@@ -59,6 +61,18 @@ public class BatchParametersEdit extends BatchParametersWindow {
 
         defaultMetadataPane.showEnabled(true);
         defaultMetadataPane.fillFromMetadata(parameters.metadata);
+
+        presetSelector.addActionListener(e -> {
+            if (e.getSource() instanceof PresetSelector.PresetActionData actionData) {
+                if (actionData.isOnLoad()) {
+                    PresetValues values = actionData.getPresetValues();
+                    values.metadataEnabled = null;
+                    defaultMetadataPane.onLoadPreset(values);
+                } else if (actionData.isOnSave()) {
+                    defaultMetadataPane.onSavePreset(actionData.getPresetValues());
+                }
+            }
+        });
     }
 
     protected void setMessage(String message) {
@@ -86,10 +100,10 @@ public class BatchParametersEdit extends BatchParametersWindow {
      */
     private void $$$setupUI$$$() {
         contentPane = new JPanel();
-        contentPane.setLayout(new GridLayoutManager(2, 1, new Insets(10, 10, 10, 10), -1, -1));
+        contentPane.setLayout(new GridLayoutManager(3, 1, new Insets(10, 10, 10, 10), -1, -1));
         final JPanel panel1 = new JPanel();
         panel1.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
-        contentPane.add(panel1, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));
+        contentPane.add(panel1, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));
         final Spacer spacer1 = new Spacer();
         panel1.add(spacer1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final JPanel panel2 = new JPanel();
@@ -112,6 +126,8 @@ public class BatchParametersEdit extends BatchParametersWindow {
         panel3.add(selectNoneButton, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         defaultMetadataPane = new MetadataEditPane();
         panel3.add(defaultMetadataPane.$$$getRootComponent$$$(), new GridConstraints(1, 0, 1, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        presetSelector = new PresetSelector();
+        contentPane.add(presetSelector.$$$getRootComponent$$$(), new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
     }
 
     /**
@@ -120,4 +136,5 @@ public class BatchParametersEdit extends BatchParametersWindow {
     public JComponent $$$getRootComponent$$$() {
         return contentPane;
     }
+
 }

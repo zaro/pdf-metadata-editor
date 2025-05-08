@@ -11,15 +11,36 @@ public class CommandDescription {
             new CommandDescription("xmptodoc", "Copy XMP to Document metadata"),
             new CommandDescription("doctoxmp", "Copy Document to XMP metadata"),
     };
+    public static final CommandDescription[] batchCommandsGuiMenu = {
+            new CommandDescription("Modify Metadata"),
+            new CommandDescription("edit", "Set metadata"),
+            new CommandDescription("clear", "Clear metadata"),
+            new CommandDescription("xmptodoc", "Copy XMP to Document metadata"),
+            new CommandDescription("doctoxmp", "Copy Document to XMP metadata"),
+            new CommandDescription("File operations"),
+            new CommandDescription("rename", "Rename files from metadata"),
+            new CommandDescription("Export metadata"),
+            new CommandDescription("tojson", "Extract metadata as JSON"),
+            new CommandDescription("toyaml", "Extract metadata as YAML/Text"),
+            new CommandDescription("Import metadata"),
+            new CommandDescription("fromcsv", "Set metadata from CSV file"),
+
+    };
     protected static int regKeyCount = 1;
     public String name;
     public String description;
+    public String group;
     String regKey;
 
     protected CommandDescription(String command, String name) {
         this.name = command;
         this.regKey = "pme." + (regKeyCount++) + command;
         this.description = name;
+        this.group = group;
+    }
+    protected CommandDescription(String group) {
+        this.group = group;
+        this.name = "GROUP:" + group;
     }
 
     public static String helpMessage(int descriptionOffset) {
@@ -47,6 +68,10 @@ public class CommandDescription {
     }
 
     public boolean is(String command) {
-        return this.name.equals(command);
+        return this.name != null  && this.name.equals(command);
+    }
+
+    public boolean isGroup(){
+        return group != null;
     }
 }

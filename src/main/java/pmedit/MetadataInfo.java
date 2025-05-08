@@ -1184,6 +1184,12 @@ public class MetadataInfo {
         }
     }
 
+    public void copyEnabled(MetadataInfo other) {
+        for (String fieldName : keys()) {
+            setEnabled(fieldName, other.isEnabled(fieldName));
+        }
+    }
+
     public void copyUnset(MetadataInfo other) {
         for (String fieldName : keys()) {
             Object o = get(fieldName);

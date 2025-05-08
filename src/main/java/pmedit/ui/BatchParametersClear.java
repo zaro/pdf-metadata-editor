@@ -1,8 +1,10 @@
 package pmedit.ui;
 
 import pmedit.BatchOperationParameters;
+import pmedit.preset.PresetValues;
 
 import java.awt.*;
+import java.awt.event.ActionListener;
 
 public class BatchParametersClear extends BatchParametersEdit {
 
@@ -14,6 +16,19 @@ public class BatchParametersClear extends BatchParametersEdit {
         super(params, owner);
         defaultMetadataPane.disableEdit();
         setMessage("Select fields to be cleared below");
+
+        presetSelector.removeActionListeners();
+        presetSelector.addActionListener(e -> {
+            if (e.getSource() instanceof PresetSelector.PresetActionData actionData) {
+                if (actionData.isOnLoad()) {
+                    PresetValues values = actionData.getPresetValues();
+                    values.metadata = null;
+                    defaultMetadataPane.onLoadPreset(values);
+                } else if (actionData.isOnSave()) {
+                    defaultMetadataPane.onSavePreset(actionData.getPresetValues());
+                }
+            }
+        });
     }
 
 }
