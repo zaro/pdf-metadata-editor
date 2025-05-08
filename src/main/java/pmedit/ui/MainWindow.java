@@ -11,6 +11,7 @@ import pmedit.ext.PmeExtension;
 import pmedit.prefs.Preferences;
 import pmedit.preset.PresetStore;
 import pmedit.preset.PresetValues;
+import pmedit.ui.preferences.DefaultsPreferences;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -369,6 +370,13 @@ public class MainWindow extends JFrame {
         return pdfFile;
     }
 
+    protected MetadataInfo getDefaultMetadata() {
+        if (preferencesWindow != null) {
+            return preferencesWindow.getDefaultMetadata();
+        }
+        return DefaultsPreferences.loadDefaultMetadata(Preferences.getInstance());
+    }
+
     private void clear() {
 
         filename.setText("");
@@ -420,7 +428,7 @@ public class MainWindow extends JFrame {
         metadataInfo.expandVariables();
 
         metadataEditor.fillFromMetadata(metadataInfo);
-        metadataEditor.fillFromMetadata(metadataInfo.defaultsToApply(preferencesWindow.getDefaultMetadata()), true);
+        metadataEditor.fillFromMetadata(metadataInfo.defaultsToApply(getDefaultMetadata()), true);
 
 
         extension.onDocumentReload(document, pdfFile, metadataEditor);

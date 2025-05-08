@@ -1,15 +1,14 @@
 package pmedit;
 
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
+import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
 import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
+import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferences;
 import org.apache.xmpbox.*;
 import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
-import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.xmpbox.schema.AdobePDFSchema;
 import org.apache.xmpbox.schema.DublinCoreSchema;
@@ -21,12 +20,10 @@ import org.apache.xmpbox.xml.XmpParsingException;
 import pmedit.CommandLine.ParseError;
 import pmedit.MdStruct.StructType;
 import pmedit.ext.PmeExtension;
-import pmedit.pdf.CompressionAndOptimisation;
 
 import javax.xml.transform.TransformerException;
 import java.io.*;
 import java.lang.reflect.Field;
-import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -77,6 +74,9 @@ public class MetadataInfo {
     @MdStruct
     public XmpRights rights;
 
+    @MdStruct
+    public ViewerOptions viewer;
+
     @MdStruct(name = "file", type = MdStruct.StructType.MdStruct, access = MdStruct.Access.ReadOnly)
     public FileInfo file;
 
@@ -91,6 +91,10 @@ public class MetadataInfo {
     public XmpDublinCoreEnabled dcEnabled;
     @MdStruct(name = "rights", type = MdStruct.StructType.MdEnableStruct)
     public XmpRightsEnabled rightsEnabled;
+
+    @MdStruct(name = "viewer", type = MdStruct.StructType.MdEnableStruct)
+    public ViewerOptionsEnabled viewerEnabled;
+
     @MdStruct(name = "file", type = MdStruct.StructType.MdEnableStruct, access = MdStruct.Access.ReadOnly)
     public FileInfoEnabled fileEnabled;
 
@@ -224,6 +228,7 @@ public class MetadataInfo {
         this.pdf = new XmpPdf();
         this.dc = new XmpDublinCore();
         this.rights = new XmpRights();
+        this.viewer = new ViewerOptions();
         this.file = new FileInfo();
 
         this.docEnabled = new BasicEnabled();
@@ -231,6 +236,7 @@ public class MetadataInfo {
         this.pdfEnabled = new XmpPdfEnabled();
         this.dcEnabled = new XmpDublinCoreEnabled();
         this.rightsEnabled = new XmpRightsEnabled();
+        this.viewerEnabled = new ViewerOptionsEnabled();
         this.fileEnabled = new FileInfoEnabled();
     }
 
@@ -248,8 +254,66 @@ public class MetadataInfo {
         doc.modificationDate = info.getModificationDate();
         doc.trapped = info.getTrapped();
 
-        // Load XMP catalog
+        // Load Document catalog
         PDDocumentCatalog catalog = document.getDocumentCatalog();
+        COSDictionary cd = catalog.getCOSObject();
+        if(cd.containsKey(COSName.PAGE_MODE)){
+            viewer.pageMode = catalog.getPageMode().toString();
+        }
+        if(cd.containsKey(COSName.PAGE_LAYOUT)){
+            viewer.pageLayout = catalog.getPageLayout().toString();
+        }
+        // For initial page and zoom
+        // catalog.getOpenAction()
+        PDViewerPreferences preferences = catalog.getViewerPreferences();
+        if(preferences != null ){
+            COSDictionary pd = preferences.getCOSObject();
+            if(pd.containsKey(COSName.HIDE_TOOLBAR)) {
+                viewer.hideToolbar = preferences.hideToolbar();
+            }
+            if(pd.containsKey(COSName.HIDE_MENUBAR)) {
+                viewer.hideMenuBar = preferences.hideMenubar();
+            }
+            if(pd.containsKey(COSName.HIDE_WINDOWUI)) {
+                viewer.hideWindowUI = preferences.hideWindowUI();
+            }
+            if(pd.containsKey(COSName.FIT_WINDOW)) {
+                viewer.fitWindow = preferences.fitWindow();
+            }
+            if(pd.containsKey(COSName.CENTER_WINDOW)) {
+                viewer.centerWindow = preferences.centerWindow();
+            }
+            if(pd.containsKey(COSName.DISPLAY_DOC_TITLE)) {
+                viewer.displayDocTitle = preferences.displayDocTitle();
+            }
+            if(pd.containsKey(COSName.NON_FULL_SCREEN_PAGE_MODE)) {
+                viewer.nonFullScreenPageMode = preferences.getNonFullScreenPageMode();
+            }
+            if(pd.containsKey(COSName.DIRECTION)) {
+                viewer.readingDirection = preferences.getReadingDirection();
+            }
+            if(pd.containsKey(COSName.VIEW_AREA)) {
+                viewer.viewArea = preferences.getViewArea();
+            }
+            if(pd.containsKey(COSName.VIEW_CLIP)) {
+                viewer.viewClip = preferences.getViewClip();
+            }
+            if(pd.containsKey(COSName.PRINT_AREA)) {
+                viewer.printArea = preferences.getPrintArea();
+            }
+            if(pd.containsKey(COSName.PRINT_CLIP)) {
+                viewer.printClip = preferences.getPrintClip();
+            }
+            if(pd.containsKey(COSName.DUPLEX)) {
+                viewer.duplex = preferences.getDuplex();
+            }
+            if(pd.containsKey(COSName.PRINT_SCALING)) {
+                viewer.printScaling = preferences.getPrintScaling();
+            }
+
+        }
+
+        // Load XMP Metadata
         PDMetadata meta = catalog.getMetadata();
 
 
@@ -435,6 +499,122 @@ public class MetadataInfo {
 
         // XMP
         PDDocumentCatalog catalog = document.getDocumentCatalog();
+
+        if(viewerEnabled.atLeastOne()){
+            COSDictionary cd = catalog.getCOSObject();
+            if(viewerEnabled.pageMode){
+                cd.setName(COSName.PAGE_MODE, viewer.pageMode);
+            }
+            if(viewerEnabled.pageLayout){
+                cd.setName(COSName.PAGE_LAYOUT, viewer.pageLayout);
+            }
+            if(viewerEnabled.atLeastOnePreference()){
+                PDViewerPreferences preferences = catalog.getViewerPreferences();
+                if(preferences == null ) {
+                    preferences = new PDViewerPreferences(cd);
+                }
+                COSDictionary pd = preferences.getCOSObject();
+                if (viewerEnabled.hideToolbar ) {
+                    if(viewer.hideToolbar != null) {
+                        preferences.setHideToolbar(viewer.hideToolbar);
+                    } else {
+                        pd.removeItem(COSName.HIDE_TOOLBAR);
+                    }
+                }
+                if (viewerEnabled.hideMenuBar ) {
+                    if(viewer.hideMenuBar != null) {
+                        preferences.setHideMenubar(viewer.hideMenuBar);
+                    } else {
+                        pd.removeItem(COSName.HIDE_MENUBAR);
+                    }
+                }
+                if (viewerEnabled.hideWindowUI ) {
+                    if(viewer.hideWindowUI != null) {
+                        preferences.setHideWindowUI(viewer.hideWindowUI);
+                    } else {
+                        pd.removeItem(COSName.HIDE_WINDOWUI);
+                    }
+                }
+                if (viewerEnabled.fitWindow ) {
+                    if(viewer.fitWindow != null) {
+                        preferences.setFitWindow(viewer.fitWindow);
+                    } else {
+                        pd.removeItem(COSName.FIT_WINDOW);
+                    }
+                }
+                if (viewerEnabled.centerWindow ) {
+                    if(viewer.centerWindow != null) {
+                        preferences.setCenterWindow(viewer.centerWindow);
+                    } else {
+                        pd.removeItem(COSName.CENTER_WINDOW);
+                    }
+                }
+                if (viewerEnabled.displayDocTitle ) {
+                    if(viewer.displayDocTitle != null) {
+                        preferences.setDisplayDocTitle(viewer.displayDocTitle);
+                    } else {
+                        pd.removeItem(COSName.DISPLAY_DOC_TITLE);
+                    }
+                }
+                if (viewerEnabled.nonFullScreenPageMode ) {
+                    if(viewer.nonFullScreenPageMode != null) {
+                        preferences.setNonFullScreenPageMode(PDViewerPreferences.NON_FULL_SCREEN_PAGE_MODE.valueOf(viewer.nonFullScreenPageMode));
+                    } else {
+                        pd.removeItem(COSName.NON_FULL_SCREEN_PAGE_MODE);
+                    }
+                }
+                if (viewerEnabled.readingDirection ) {
+                    if(viewer.readingDirection != null) {
+                        preferences.setReadingDirection(PDViewerPreferences.READING_DIRECTION.valueOf(viewer.readingDirection));
+                    } else {
+                        pd.removeItem(COSName.DIRECTION);
+                    }
+                }
+                if (viewerEnabled.viewArea ) {
+                    if(viewer.viewArea != null) {
+                        preferences.setViewArea(PDViewerPreferences.BOUNDARY.valueOf(viewer.viewArea));
+                    } else {
+                        pd.removeItem(COSName.VIEW_AREA);
+                    }
+                }
+                if (viewerEnabled.viewClip ) {
+                    if(viewer.viewClip != null) {
+                        preferences.setViewClip(PDViewerPreferences.BOUNDARY.valueOf(viewer.viewClip));
+                    } else {
+                        pd.removeItem(COSName.VIEW_CLIP);
+                    }
+                }
+                if (viewerEnabled.printArea ) {
+                    if(viewer.printArea != null) {
+                        preferences.setPrintArea(PDViewerPreferences.BOUNDARY.valueOf(viewer.printArea));
+                    } else {
+                        pd.removeItem(COSName.PRINT_AREA);
+                    }
+                }
+                if (viewerEnabled.printClip ) {
+                    if(viewer.printClip != null) {
+                        preferences.setPrintClip(PDViewerPreferences.BOUNDARY.valueOf(viewer.printClip));
+                    } else {
+                        pd.removeItem(COSName.PRINT_CLIP);
+                    }
+                }
+                if (viewerEnabled.duplex ) {
+                    if(viewer.duplex != null) {
+                        preferences.setDuplex(PDViewerPreferences.DUPLEX.valueOf(viewer.duplex));
+                    } else {
+                        pd.removeItem(COSName.DUPLEX);
+                    }
+                }
+                if (viewerEnabled.printScaling ) {
+                    if(viewer.printScaling != null) {
+                        preferences.setPrintScaling(PDViewerPreferences.PRINT_SCALING.valueOf(viewer.printScaling));
+                    } else {
+                        pd.removeItem(COSName.PRINT_SCALING);
+                    }
+                }
+                catalog.setViewerPreferences(preferences);
+            }
+        }
         PDMetadata meta = catalog.getMetadata();
 
         XMPMetadata xmpOld = null;
@@ -1122,6 +1302,7 @@ public class MetadataInfo {
         pdfEnabled.setAll(value);
         dcEnabled.setAll(value);
         rightsEnabled.setAll(value);
+        viewerEnabled.setAll(value);
     }
 
     public void setEnabled(String id, boolean value) {
@@ -1249,6 +1430,7 @@ public class MetadataInfo {
         pdfEnabled.setAll(false);
         dcEnabled.setAll(false);
         rightsEnabled.setAll(false);
+        viewerEnabled.setAll(false);
         for (Map.Entry<String, Object> entry : values.entrySet()) {
             if (entry.getValue() != null) {
                 setEnabled(entry.getKey(), true);
@@ -1720,6 +1902,108 @@ public class MetadataInfo {
             owner = value;
             usageTerms = value;
             webStatement = value;
+        }
+    }
+
+    public static class ViewerOptions {
+        public Boolean hideToolbar;
+        public Boolean hideMenuBar;
+        public Boolean hideWindowUI;
+        public Boolean fitWindow;
+        public Boolean centerWindow;
+        public Boolean displayDocTitle;
+        public String nonFullScreenPageMode;
+        public String readingDirection;
+        public String viewArea;
+        public String viewClip;
+        public String printArea;
+        public String printClip;
+        public String duplex;
+        public String printScaling;
+        //
+        public String pageLayout;
+        public String pageMode;
+    }
+
+    public static class ViewerOptionsEnabled {
+        public boolean hideToolbar = true;
+        public boolean hideMenuBar = true;
+        public boolean hideWindowUI = true;
+        public boolean fitWindow = true;
+        public boolean centerWindow = true;
+        public boolean displayDocTitle = true;
+        public boolean nonFullScreenPageMode = true;
+        public boolean readingDirection = true;
+        public boolean viewArea = true;
+        public boolean viewClip = true;
+        public boolean printArea = true;
+        public boolean printClip = true;
+        public boolean duplex = true;
+        public boolean printScaling = true;
+        //
+        public boolean pageMode = true;
+        public boolean pageLayout = true;
+
+        //
+        public boolean initialPage;
+        public boolean pageFit;
+
+        public boolean atLeastOne() {
+            return
+                    hideToolbar ||
+                            hideMenuBar ||
+                            hideWindowUI ||
+                            fitWindow ||
+                            centerWindow ||
+                            displayDocTitle ||
+                            nonFullScreenPageMode ||
+                            readingDirection ||
+                            viewArea ||
+                            viewClip ||
+                            printArea ||
+                            printClip ||
+                            duplex ||
+                            printScaling ||
+                            pageMode ||
+                            pageLayout
+                    ;
+        }
+        public boolean atLeastOnePreference() {
+            return
+                    hideToolbar ||
+                            hideMenuBar ||
+                            hideWindowUI ||
+                            fitWindow ||
+                            centerWindow ||
+                            displayDocTitle ||
+                            nonFullScreenPageMode ||
+                            readingDirection ||
+                            viewArea ||
+                            viewClip ||
+                            printArea ||
+                            printClip ||
+                            duplex ||
+                            printScaling
+                    ;
+        }
+
+        public void setAll(boolean value) {
+            hideToolbar = value;
+            hideMenuBar = value;
+            hideWindowUI = value;
+            fitWindow = value;
+            centerWindow = value;
+            displayDocTitle = value;
+            nonFullScreenPageMode = value;
+            readingDirection = value;
+            viewArea = value;
+            viewClip = value;
+            printArea = value;
+            printClip = value;
+            duplex = value;
+            printScaling = value;
+            pageLayout = value;
+            pageMode = value;
         }
     }
 

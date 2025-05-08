@@ -19,11 +19,7 @@ public class DefaultsPreferences {
     }
 
     public void init(Preferences prefs) {
-        this.defaultMetadata = new MetadataInfo();
-        String defaultMetadataYaml = prefs.get("defaultMetadata", "");
-        if (!defaultMetadataYaml.isEmpty()) {
-            this.defaultMetadata.fromYAML(defaultMetadataYaml);
-        }
+        this.defaultMetadata = loadDefaultMetadata(prefs);
     }
 
     public void refresh() {
@@ -33,6 +29,15 @@ public class DefaultsPreferences {
     public void save(Preferences prefs) {
         defaultMetadataPane.copyToMetadata(defaultMetadata);
         prefs.put("defaultMetadata", defaultMetadata.toYAML());
+    }
+
+    public static MetadataInfo loadDefaultMetadata(Preferences prefs) {
+        MetadataInfo defaultMetadata = new MetadataInfo();
+        String defaultMetadataYaml = prefs.get("defaultMetadata", "");
+        if (!defaultMetadataYaml.isEmpty()) {
+            defaultMetadata.fromYAML(defaultMetadataYaml);
+        }
+        return defaultMetadata;
     }
 
     {

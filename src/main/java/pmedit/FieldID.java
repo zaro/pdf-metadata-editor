@@ -12,13 +12,20 @@ public @interface FieldID {
 
     String nullValueText() default "";
 
+
+    Class<? extends Enum<?>> enumClass() default NoEnumConfigured.class;
+
     enum FieldType {
         StringField,
         TextField,
         LongField,
         IntField,
         DateField,
-        BoolField
+        BoolField,
+        EnumField
     }
 
+    enum NoEnumConfigured {
+
+    }
 }

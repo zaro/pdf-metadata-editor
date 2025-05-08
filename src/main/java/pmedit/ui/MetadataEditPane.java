@@ -1,5 +1,8 @@
 package pmedit.ui;
 
+import org.apache.pdfbox.pdmodel.PageLayout;
+import org.apache.pdfbox.pdmodel.PageMode;
+import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pmedit.ui.components.DateTimePicker;
@@ -123,6 +126,39 @@ public class MetadataEditPane {
     @FieldID("rights.webStatement")
     public JTextField xmpRightsWebStatement;
 
+    @FieldID(value = "viewer.hideToolbar", type = FieldID.FieldType.BoolField)
+    public JComboBox hideToolbar;
+    @FieldID(value = "viewer.hideMenuBar", type = FieldID.FieldType.BoolField)
+    public JComboBox hideMenuBar;
+    @FieldID(value = "viewer.hideWindowUI", type = FieldID.FieldType.BoolField)
+    public JComboBox hideWindowUI;
+    @FieldID(value = "viewer.fitWindow", type = FieldID.FieldType.BoolField)
+    public JComboBox fitWindow;
+    @FieldID(value = "viewer.centerWindow", type = FieldID.FieldType.BoolField)
+    public JComboBox centerWindow;
+    @FieldID(value = "viewer.displayDocTitle", type = FieldID.FieldType.BoolField)
+    public JComboBox displayDocTitle;
+    @FieldID(value = "viewer.nonFullScreenPageMode", type = FieldID.FieldType.EnumField, enumClass = PDViewerPreferences.NON_FULL_SCREEN_PAGE_MODE.class)
+    public JComboBox nonFullScreenPageMode;
+    @FieldID(value = "viewer.readingDirection", type = FieldID.FieldType.EnumField, enumClass = PDViewerPreferences.READING_DIRECTION.class)
+    public JComboBox readingDirection;
+    @FieldID(value = "viewer.pageLayout", type = FieldID.FieldType.EnumField, enumClass = PageLayout.class)
+    public JComboBox pageLayout;
+    @FieldID(value = "viewer.pageMode", type = FieldID.FieldType.EnumField, enumClass = PageMode.class)
+    public JComboBox pageMode;
+    @FieldID(value = "viewer.viewArea", type = FieldID.FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
+    public JComboBox viewArea;
+    @FieldID(value = "viewer.viewClip", type = FieldID.FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
+    public JComboBox viewClip;
+    @FieldID(value = "viewer.printArea", type = FieldID.FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
+    public JComboBox printArea;
+    @FieldID(value = "viewer.printClip", type = FieldID.FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
+    public JComboBox printClip;
+    @FieldID(value = "viewer.duplex", type = FieldID.FieldType.EnumField, enumClass = PDViewerPreferences.DUPLEX.class)
+    public JComboBox duplex;
+    @FieldID(value = "viewer.printScaling", type = FieldID.FieldType.EnumField, enumClass = PDViewerPreferences.PRINT_SCALING.class)
+    public JComboBox printScaling;
+
 
     @FieldEnabled("doc.title")
     public JCheckBox basicTitleEnabled;
@@ -210,6 +246,41 @@ public class MetadataEditPane {
     public JCheckBox xmpRightsUsageTermsEnabled;
     @FieldEnabled("rights.webStatement")
     public JCheckBox xmpRightsWebStatementEnabled;
+
+    @FieldEnabled("viewer.hideToolbar")
+    public JCheckBox hideToolbarEnabled;
+    @FieldEnabled("viewer.hideMenuBar")
+    public JCheckBox hideMenuBarEnabled;
+    @FieldEnabled("viewer.hideWindowUI")
+    public JCheckBox hideWindowUIEnabled;
+    @FieldEnabled("viewer.fitWindow")
+    public JCheckBox fitWindowEnabled;
+    @FieldEnabled("viewer.centerWindow")
+    public JCheckBox centerWindowEnabled;
+    @FieldEnabled("viewer.displayDocTitle")
+    public JCheckBox displayDocTitleEnabled;
+    @FieldEnabled("viewer.nonFullScreenPageMode")
+    public JCheckBox nonFullScreenPageModeEnabled;
+    @FieldEnabled("viewer.readingDirection")
+    public JCheckBox readingDirectionEnabled;
+    @FieldEnabled("viewer.viewArea")
+    public JCheckBox viewAreaEnabled;
+    @FieldEnabled("viewer.viewClip")
+    public JCheckBox viewClipEnabled;
+    @FieldEnabled("viewer.printArea")
+    public JCheckBox printAreaEnabled;
+    @FieldEnabled("viewer.printClip")
+    public JCheckBox printClipEnabled;
+    @FieldEnabled("viewer.duplex")
+    public JCheckBox duplexEnabled;
+    @FieldEnabled("viewer.printScaling")
+    public JCheckBox printScalingEnabled;
+    @FieldEnabled("viewer.pageLayout")
+    public JCheckBox pageLayoutEnabled;
+    @FieldEnabled("viewer.pageMode")
+    public JCheckBox pageModeEnabled;
+
+
     private PmeExtension extension = PmeExtension.get();
     MetadataInfo initialMetadata;
     Border textFieldDefault;
@@ -429,6 +500,9 @@ public class MetadataEditPane {
                             break;
                         case BoolField:
                             metadataInfo.setFromString(anno.value(), text);
+                            break;
+                        case EnumField:
+                            metadataInfo.set(anno.value(), text);
                             break;
                         default:
                             throw new RuntimeException("Cannot (store (choice text) in :" + anno.type());
@@ -663,8 +737,17 @@ public class MetadataEditPane {
                         public void actionPerformed(ActionEvent e) {
                             JComboBox<?> cb = (JComboBox<?>) e.getSource();
                             String selectedValue = getComboBoxValue(cb, anno);
-                            String initial = initialMetadata != null ? (String) initialMetadata.get(anno.value()) : null;
-                            if ((selectedValue != null && selectedValue.equals(initial)) || (selectedValue == null && initial == null)) {
+                            Object initial = initialMetadata != null ? initialMetadata.get(anno.value()) : null;
+                            String initialS = null;
+                            if(initial != null) {
+                                if(initial instanceof String s){
+                                    initialS =s ;
+                                }
+                                if(initial instanceof Boolean b){
+                                    initialS = b ? "Yes": "No";
+                                }
+                            }
+                            if ((selectedValue != null && selectedValue.equals(initialS)) || (selectedValue == null && initialS == null)) {
                                 combo.setBorder(comboBoxDefault);
                             } else {
                                 combo.setBorder(changedBorder);
@@ -672,6 +755,16 @@ public class MetadataEditPane {
                             }
                         }
                     });
+                    if(anno.type() == FieldID.FieldType.EnumField){
+                        var elements = anno.enumClass().getEnumConstants();
+                        String[] model = new String[elements.length + 1];
+                        int i = 0;
+                        model[i++] = "Unset";
+                        for(var e : elements){
+                            model[i++] = e.toString();
+                        }
+                        combo.setModel(new DefaultComboBoxModel(model));
+                    }
                 }
                 if (field instanceof DateTimePicker dtPicker) {
                     dtPicker.addPropertyChangeListener("date", new PropertyChangeListener() {
@@ -1152,6 +1245,196 @@ public class MetadataEditPane {
         panel11.add(xmpRightsWebStatementEnabled, new GridConstraints(5, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpRightsWebStatement = new JTextField();
         panel11.add(xmpRightsWebStatement, new GridConstraints(5, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final JPanel panel12 = new JPanel();
+        panel12.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
+        tabbedPane.addTab("Viewer Options", panel12);
+        final JScrollPane scrollPane22 = new JScrollPane();
+        panel12.add(scrollPane22, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        final JPanel panel13 = new JPanel();
+        panel13.setLayout(new GridLayoutManager(17, 3, new Insets(0, 0, 0, 0), -1, -1));
+        scrollPane22.setViewportView(panel13);
+        final JLabel label44 = new JLabel();
+        label44.setText("Hide tool bars");
+        panel13.add(label44, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer6 = new Spacer();
+        panel13.add(spacer6, new GridConstraints(16, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        hideToolbar = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel3 = new DefaultComboBoxModel();
+        defaultComboBoxModel3.addElement("Unset");
+        defaultComboBoxModel3.addElement("Yes");
+        defaultComboBoxModel3.addElement("No");
+        hideToolbar.setModel(defaultComboBoxModel3);
+        panel13.add(hideToolbar, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        hideToolbarEnabled = new JCheckBox();
+        hideToolbarEnabled.setText("");
+        panel13.add(hideToolbarEnabled, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label45 = new JLabel();
+        label45.setText("Hide menu bar");
+        panel13.add(label45, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label46 = new JLabel();
+        label46.setText("Hide window controls");
+        panel13.add(label46, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label47 = new JLabel();
+        label47.setText("Resize window to inital page");
+        panel13.add(label47, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label48 = new JLabel();
+        label48.setText("Center window on screen");
+        panel13.add(label48, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label49 = new JLabel();
+        label49.setText("Display Title in window caption");
+        panel13.add(label49, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        hideMenuBarEnabled = new JCheckBox();
+        hideMenuBarEnabled.setText("");
+        panel13.add(hideMenuBarEnabled, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        hideWindowUIEnabled = new JCheckBox();
+        hideWindowUIEnabled.setText("");
+        panel13.add(hideWindowUIEnabled, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        fitWindowEnabled = new JCheckBox();
+        fitWindowEnabled.setText("");
+        panel13.add(fitWindowEnabled, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        centerWindowEnabled = new JCheckBox();
+        centerWindowEnabled.setText("");
+        panel13.add(centerWindowEnabled, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        displayDocTitleEnabled = new JCheckBox();
+        displayDocTitleEnabled.setText("");
+        panel13.add(displayDocTitleEnabled, new GridConstraints(5, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        hideMenuBar = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel4 = new DefaultComboBoxModel();
+        defaultComboBoxModel4.addElement("Unset");
+        defaultComboBoxModel4.addElement("Yes");
+        defaultComboBoxModel4.addElement("No");
+        hideMenuBar.setModel(defaultComboBoxModel4);
+        panel13.add(hideMenuBar, new GridConstraints(1, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        hideWindowUI = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel5 = new DefaultComboBoxModel();
+        defaultComboBoxModel5.addElement("Unset");
+        defaultComboBoxModel5.addElement("Yes");
+        defaultComboBoxModel5.addElement("No");
+        hideWindowUI.setModel(defaultComboBoxModel5);
+        panel13.add(hideWindowUI, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        fitWindow = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel6 = new DefaultComboBoxModel();
+        defaultComboBoxModel6.addElement("Unset");
+        defaultComboBoxModel6.addElement("Yes");
+        defaultComboBoxModel6.addElement("No");
+        fitWindow.setModel(defaultComboBoxModel6);
+        panel13.add(fitWindow, new GridConstraints(3, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        centerWindow = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel7 = new DefaultComboBoxModel();
+        defaultComboBoxModel7.addElement("Unset");
+        defaultComboBoxModel7.addElement("Yes");
+        defaultComboBoxModel7.addElement("No");
+        centerWindow.setModel(defaultComboBoxModel7);
+        panel13.add(centerWindow, new GridConstraints(4, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        displayDocTitle = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel8 = new DefaultComboBoxModel();
+        defaultComboBoxModel8.addElement("Unset");
+        defaultComboBoxModel8.addElement("Yes");
+        defaultComboBoxModel8.addElement("No");
+        displayDocTitle.setModel(defaultComboBoxModel8);
+        panel13.add(displayDocTitle, new GridConstraints(5, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label50 = new JLabel();
+        label50.setText("Non full screen page mode");
+        panel13.add(label50, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label51 = new JLabel();
+        label51.setText("Reading direction for text");
+        panel13.add(label51, new GridConstraints(7, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        nonFullScreenPageModeEnabled = new JCheckBox();
+        nonFullScreenPageModeEnabled.setText("");
+        panel13.add(nonFullScreenPageModeEnabled, new GridConstraints(6, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        readingDirectionEnabled = new JCheckBox();
+        readingDirectionEnabled.setText("");
+        panel13.add(readingDirectionEnabled, new GridConstraints(7, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        nonFullScreenPageMode = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel9 = new DefaultComboBoxModel();
+        nonFullScreenPageMode.setModel(defaultComboBoxModel9);
+        panel13.add(nonFullScreenPageMode, new GridConstraints(6, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        readingDirection = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel10 = new DefaultComboBoxModel();
+        readingDirection.setModel(defaultComboBoxModel10);
+        panel13.add(readingDirection, new GridConstraints(7, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label52 = new JLabel();
+        label52.setText("View Area");
+        panel13.add(label52, new GridConstraints(10, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label53 = new JLabel();
+        label53.setText("View Clip");
+        panel13.add(label53, new GridConstraints(11, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label54 = new JLabel();
+        label54.setText("Print Area");
+        panel13.add(label54, new GridConstraints(12, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label55 = new JLabel();
+        label55.setText("Print Clip");
+        panel13.add(label55, new GridConstraints(13, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label56 = new JLabel();
+        label56.setText("Duplex");
+        panel13.add(label56, new GridConstraints(14, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label57 = new JLabel();
+        label57.setText("Print Scaling");
+        panel13.add(label57, new GridConstraints(15, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        viewAreaEnabled = new JCheckBox();
+        viewAreaEnabled.setText("");
+        panel13.add(viewAreaEnabled, new GridConstraints(10, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        viewClipEnabled = new JCheckBox();
+        viewClipEnabled.setText("");
+        panel13.add(viewClipEnabled, new GridConstraints(11, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        printAreaEnabled = new JCheckBox();
+        printAreaEnabled.setText("");
+        panel13.add(printAreaEnabled, new GridConstraints(12, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        printClipEnabled = new JCheckBox();
+        printClipEnabled.setText("");
+        panel13.add(printClipEnabled, new GridConstraints(13, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        duplexEnabled = new JCheckBox();
+        duplexEnabled.setText("");
+        panel13.add(duplexEnabled, new GridConstraints(14, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        printScalingEnabled = new JCheckBox();
+        printScalingEnabled.setText("");
+        panel13.add(printScalingEnabled, new GridConstraints(15, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        viewArea = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel11 = new DefaultComboBoxModel();
+        viewArea.setModel(defaultComboBoxModel11);
+        panel13.add(viewArea, new GridConstraints(10, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        viewClip = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel12 = new DefaultComboBoxModel();
+        viewClip.setModel(defaultComboBoxModel12);
+        panel13.add(viewClip, new GridConstraints(11, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        printArea = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel13 = new DefaultComboBoxModel();
+        printArea.setModel(defaultComboBoxModel13);
+        panel13.add(printArea, new GridConstraints(12, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        printClip = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel14 = new DefaultComboBoxModel();
+        printClip.setModel(defaultComboBoxModel14);
+        panel13.add(printClip, new GridConstraints(13, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        duplex = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel15 = new DefaultComboBoxModel();
+        duplex.setModel(defaultComboBoxModel15);
+        panel13.add(duplex, new GridConstraints(14, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        printScaling = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel16 = new DefaultComboBoxModel();
+        printScaling.setModel(defaultComboBoxModel16);
+        panel13.add(printScaling, new GridConstraints(15, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label58 = new JLabel();
+        label58.setText("Page Layout");
+        panel13.add(label58, new GridConstraints(8, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        pageLayoutEnabled = new JCheckBox();
+        pageLayoutEnabled.setText("");
+        panel13.add(pageLayoutEnabled, new GridConstraints(8, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        pageLayout = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel17 = new DefaultComboBoxModel();
+        pageLayout.setModel(defaultComboBoxModel17);
+        panel13.add(pageLayout, new GridConstraints(8, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label59 = new JLabel();
+        label59.setText("Page mode");
+        panel13.add(label59, new GridConstraints(9, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        pageModeEnabled = new JCheckBox();
+        pageModeEnabled.setText("");
+        panel13.add(pageModeEnabled, new GridConstraints(9, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        pageMode = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel18 = new DefaultComboBoxModel();
+        pageMode.setModel(defaultComboBoxModel18);
+        panel13.add(pageMode, new GridConstraints(9, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer7 = new Spacer();
+        panel12.add(spacer7, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
     }
 
     /**
