@@ -1199,18 +1199,26 @@ public class MetadataInfo {
         }
     }
 
-    public void copyUnsetExpanded(MetadataInfo other, MetadataInfo expandInfo) {
+    public void copyUnsetOnly(MetadataInfo other) {
         for (String fieldName : keys()) {
             Object o = get(fieldName);
-            if (o == null) {
-                Object otherVal = other.get(fieldName);
-                if (otherVal instanceof String) {
-                    TemplateString ts = new TemplateString((String) otherVal);
-                    otherVal = ts.process(expandInfo);
-                }
+            Object otherVal = other.get(fieldName);
+            if (o == null && otherVal != null) {
                 set(fieldName, otherVal);
             }
         }
+    }
+
+    public MetadataInfo defaultsToApply(MetadataInfo defaults) {
+        MetadataInfo diff = new MetadataInfo();
+        for (String fieldName : keys()) {
+            Object o = get(fieldName);
+            Object otherVal = defaults.get(fieldName);
+            if (o == null && otherVal != null) {
+                diff.set(fieldName, otherVal);
+            }
+        }
+        return diff;
     }
 
     public void copyFromWithExpand(MetadataInfo expandInfo) {
@@ -1228,6 +1236,10 @@ public class MetadataInfo {
                 set(fieldName, expandedVal);
             }
         }
+    }
+
+    public void expandVariables(){
+        copyFromWithExpand(this);
     }
 
     public void enableOnlyNonNull() {

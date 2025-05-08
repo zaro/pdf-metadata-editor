@@ -38,7 +38,6 @@ public class MainWindow extends JFrame {
     public ActionsAndOptions actionsAndOptions;
 
     //
-    private final MetadataInfo defaultMetadata;
     private File pdfFile;
     private String password;
     private MetadataInfo metadataInfo = new MetadataInfo();
@@ -140,7 +139,6 @@ public class MainWindow extends JFrame {
     public MainWindow(String filePath) {
         setContentPane(contentPane);
         //
-        defaultMetadata = new MetadataInfo();
         initialize();
         clear();
         if (filePath != null) {
@@ -216,7 +214,7 @@ public class MainWindow extends JFrame {
                     @Override
                     public void run() {
                         if (preferencesWindow == null) {
-                            preferencesWindow = new PreferencesWindow(defaultMetadata, MainWindow.this);
+                            preferencesWindow = new PreferencesWindow(MainWindow.this);
                             preferencesWindow.onSaveAction(updateSaveButton);
                         }
                         preferencesWindow.setVisible(true);
@@ -419,9 +417,10 @@ public class MainWindow extends JFrame {
         filename.setText(pdfFile.getAbsolutePath());
         metadataInfo = new MetadataInfo();
         metadataInfo.loadFromPDF(document);
-        metadataInfo.copyUnsetExpanded(defaultMetadata, metadataInfo);
+        metadataInfo.expandVariables();
 
         metadataEditor.fillFromMetadata(metadataInfo);
+        metadataEditor.fillFromMetadata(metadataInfo.defaultsToApply(preferencesWindow.getDefaultMetadata()), true);
 
 
         extension.onDocumentReload(document, pdfFile, metadataEditor);
@@ -468,7 +467,7 @@ public class MainWindow extends JFrame {
             }
 
             metadataEditor.copyToMetadata(metadataInfo);
-            metadataInfo.copyUnsetExpanded(defaultMetadata, metadataInfo);
+            metadataInfo.expandVariables();
 
             metadataInfo.saveAsPDF(pdfFile, newFile);
 

@@ -18,9 +18,14 @@ public class DefaultsPreferences {
 
     }
 
-    public void init(Preferences prefs, MetadataInfo defaultMetadata) {
-        this.defaultMetadata = defaultMetadata;
+    public void init(Preferences prefs) {
+        this.defaultMetadata = new MetadataInfo();
+        String defaultMetadataYaml = prefs.get("defaultMetadata", "");
+        if (!defaultMetadataYaml.isEmpty()) {
+            this.defaultMetadata.fromYAML(defaultMetadataYaml);
+        }
     }
+
     public void refresh() {
         defaultMetadataPane.fillFromMetadata(defaultMetadata);
     }
@@ -50,18 +55,13 @@ public class DefaultsPreferences {
         defaultMetadataPane = new MetadataEditPane();
         topPanel.add(defaultMetadataPane.$$$getRootComponent$$$(), new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel1 = new JPanel();
-        panel1.setLayout(new GridLayoutManager(2, 1, new Insets(5, 5, 5, 5), -1, -1));
+        panel1.setLayout(new GridLayoutManager(1, 1, new Insets(5, 5, 5, 5), -1, -1));
         topPanel.add(panel1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JLabel label1 = new JLabel();
         label1.setHorizontalAlignment(0);
         label1.setHorizontalTextPosition(0);
-        label1.setText("Here you can define default values for metadata fields");
+        label1.setText("<html>\nHere you can define default values for fields which are unset in the document.<br>\nThe values are populated on file load.\n</html>");
         panel1.add(label1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label2 = new JLabel();
-        label2.setHorizontalAlignment(0);
-        label2.setHorizontalTextPosition(0);
-        label2.setText("These values will be applied only if the respective fields is not set");
-        panel1.add(label2, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 
     /**
