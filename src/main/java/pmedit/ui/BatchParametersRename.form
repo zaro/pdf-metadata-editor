@@ -3,7 +3,7 @@
   <grid id="cbd77" binding="contentPane" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="10" left="10" bottom="10" right="10"/>
     <constraints>
-      <xy x="48" y="54" width="436" height="297"/>
+      <xy x="48" y="54" width="502" height="297"/>
     </constraints>
     <properties/>
     <border type="none"/>
@@ -41,40 +41,11 @@
           </grid>
         </children>
       </grid>
-      <grid id="e3588" layout-manager="GridLayoutManager" row-count="3" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="5">
-        <margin top="5" left="5" bottom="5" right="5"/>
+      <nested-form id="e226b" form-file="pmedit/ui/RenameTemplateOptions.form" binding="renameTemplateOptions">
         <constraints>
-          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
-        <properties/>
-        <border type="line" title="Rename template"/>
-        <children>
-          <component id="6648" class="javax.swing.JComboBox" binding="comboBox">
-            <constraints>
-              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
-            </constraints>
-            <properties>
-              <editable value="true"/>
-            </properties>
-          </component>
-          <component id="f3a68" class="javax.swing.JLabel" binding="previewLabel">
-            <constraints>
-              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-            </constraints>
-            <properties>
-              <text value="Preview: "/>
-            </properties>
-          </component>
-          <component id="17cd9" class="pmedit.ui.components.TextPaneWithLinks" binding="supportedFieldsHelp">
-            <constraints>
-              <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-            </constraints>
-            <properties>
-              <editable value="false"/>
-            </properties>
-          </component>
-        </children>
-      </grid>
+      </nested-form>
     </children>
   </grid>
 </form>

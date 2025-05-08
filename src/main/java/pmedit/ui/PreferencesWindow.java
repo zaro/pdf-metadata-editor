@@ -39,7 +39,6 @@ public class PreferencesWindow extends JDialog {
         setContentPane(contentPane);
         setModal(true);
         setMinimumSize(new Dimension(640, 480));
-        getRootPane().setDefaultButton(closeButton);
         contentPane.doLayout();
 
         if (defaultMetadata != null) {

@@ -7,6 +7,7 @@ import pmedit.BatchOperationParameters;
 import pmedit.CommandLine;
 import pmedit.MetadataInfo;
 import pmedit.TemplateString;
+import pmedit.prefs.Preferences;
 import pmedit.ui.components.TextPaneWithLinks;
 
 import javax.swing.*;
@@ -21,9 +22,8 @@ import java.awt.event.ActionListener;
 public class BatchParametersRename extends BatchParametersWindow {
     private JPanel contentPane;
     private JButton buttonOK;
-    public JComboBox<String> comboBox;
-    public JLabel previewLabel;
-    public TextPaneWithLinks supportedFieldsHelp;
+    public RenameTemplateOptions renameTemplateOptions;
+
 
     public BatchParametersRename() {
         this(null, null);
@@ -33,30 +33,10 @@ public class BatchParametersRename extends BatchParametersWindow {
         super(parameters, owner);
         setContentPane(contentPane);
         setModal(true);
-        getRootPane().setDefaultButton(buttonOK);
         setTitle("Batch rename parameters");
 
-        comboBox.setModel(new DefaultComboBoxModel<String>(new String[]{"", "{doc.author} - {doc.title}.pdf",
-                "{doc.author} - {doc.creationDate}.pdf"}));
-        final JTextComponent tcA = (JTextComponent) comboBox.getEditor().getEditorComponent();
-        tcA.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void changedUpdate(DocumentEvent arg0) {
-                showPreview((String) comboBox.getEditor().getItem());
-            }
+        renameTemplateOptions.init("BatchRenameTemplate");
 
-            @Override
-            public void insertUpdate(DocumentEvent arg0) {
-                showPreview((String) comboBox.getEditor().getItem());
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent arg0) {
-                showPreview((String) comboBox.getEditor().getItem());
-            }
-        });
-
-        supportedFieldsHelp.setText("Supported fields:<br>\n<pre>\n<i>" + CommandLine.mdFieldsHelpMessage(60, "  {", "}", false) + "</i></pre>");
         buttonOK.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
@@ -65,10 +45,9 @@ public class BatchParametersRename extends BatchParametersWindow {
         });
     }
 
-    public void showPreview(String template) {
-        parameters.renameTemplate = template;
-        TemplateString ts = new TemplateString(template);
-        previewLabel.setText("Preview: " + ts.process(MetadataInfo.getSampleMetadata()));
+    public void windowClosed() {
+        parameters.renameTemplate = renameTemplateOptions.renameTemplate;
+        super.windowClosed();
     }
 
     {
@@ -99,19 +78,8 @@ public class BatchParametersRename extends BatchParametersWindow {
         buttonOK = new JButton();
         buttonOK.setText("Close");
         panel2.add(buttonOK, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JPanel panel3 = new JPanel();
-        panel3.setLayout(new GridLayoutManager(3, 1, new Insets(5, 5, 5, 5), -1, 5));
-        contentPane.add(panel3, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        panel3.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Rename template", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
-        comboBox = new JComboBox();
-        comboBox.setEditable(true);
-        panel3.add(comboBox, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        previewLabel = new JLabel();
-        previewLabel.setText("Preview: ");
-        panel3.add(previewLabel, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        supportedFieldsHelp = new TextPaneWithLinks();
-        supportedFieldsHelp.setEditable(false);
-        panel3.add(supportedFieldsHelp, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        renameTemplateOptions = new RenameTemplateOptions();
+        contentPane.add(renameTemplateOptions.$$$getRootComponent$$$(), new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
     }
 
     /**

@@ -17,7 +17,7 @@ public class PDFMetadataEditBatch {
 
         @Override
         public boolean accept(File pathname) {
-            return isPdfExtension(pathname);
+            return isPdfExtension(pathname) || pathname.isDirectory();
         }
     };
     BatchOperationParameters params;
@@ -103,7 +103,10 @@ public class PDFMetadataEditBatch {
 
             @Override
             public void apply(File file) {
-                MetadataInfo md = params != null ? params.metadata : new MetadataInfo();
+                MetadataInfo md =  new MetadataInfo();
+                if(params != null){
+                    md.copyEnabled(params.metadata);
+                }
                 try {
                     md.saveAsPDF(file, getOutputFile(file));
                     status.addStatus(outputFileRelativeName(file), "Cleared");

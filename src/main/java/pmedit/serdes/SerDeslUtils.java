@@ -47,6 +47,16 @@ public class SerDeslUtils {
 
     }
 
+    public static List<String> stringListFromJSON(String jsonString) {
+        try {
+            var mapper = new ObjectMapper(JsonFactory.builder().enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION).build());
+            return  mapper.readerForListOf(String.class).readValue(jsonString);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
     protected static ObjectMapper yamlMapper(){
         ObjectMapper mapper =  new ObjectMapper(new YAMLFactory()
                 .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER))
