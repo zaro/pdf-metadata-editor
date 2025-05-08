@@ -650,7 +650,9 @@ public class MetadataEditPane {
 
                 if (field instanceof JTextComponent textComponent) {
                     textComponent.getDocument().addDocumentListener(new ChangeBackgroundDocumentListener(textComponent, anno.value()));
-                    createContextMenu(textComponent, anno.value());
+                    new TextFieldContextMenu(textComponent, c -> {
+                        resetFieldValue(c, anno.value());
+                    }).createContextMenu().addTemplatePlaceholders();
                 }
                 if (field instanceof JSpinner spinner) {
                     throw new RuntimeException("JSpinner NOT SUPPORTED!");

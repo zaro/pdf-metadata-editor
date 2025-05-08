@@ -23,6 +23,19 @@ public class CommandLine {
         this.batchGui = batchGui;
     }
 
+    public static Map<String, List<String>> mdFieldsGrouped() {
+        Map<String, List<String>> result = new LinkedHashMap<>();
+        for(String f: validMdNames){
+            int firstDot = f.indexOf('.');
+            String group = f.substring(0, firstDot);
+            if(!result.containsKey(group)){
+                result.put(group, new ArrayList<>());
+            }
+            result.get(group).add(f);
+        }
+        return result;
+    }
+
     public static String mdFieldsHelpMessage(int lineLen, boolean markReadOnly) {
         return mdFieldsHelpMessage(lineLen, "  ", "", markReadOnly);
     }

@@ -25,15 +25,14 @@ public class PreferencesWindow extends JDialog {
     public LicensePreferences licenseForm;
 
     final Preferences prefs = pmedit.prefs.Preferences.getInstance();
-    MetadataInfo defaultMetadata = new MetadataInfo();
     Runnable onSave;
     private PmeExtension extension = PmeExtension.get();
 
     public PreferencesWindow() {
-        this(null, null);
+        this(null);
     }
 
-    public PreferencesWindow(MetadataInfo defaultMetadata, final Frame owner) {
+    public PreferencesWindow(final Frame owner) {
         super(owner, "Preferences", ModalityType.APPLICATION_MODAL);
         super.setLocationRelativeTo(owner);
         setContentPane(contentPane);
@@ -41,11 +40,6 @@ public class PreferencesWindow extends JDialog {
         setMinimumSize(new Dimension(640, 480));
         contentPane.doLayout();
 
-        if (defaultMetadata != null) {
-            this.defaultMetadata = defaultMetadata;
-        } else {
-            this.defaultMetadata = new MetadataInfo();
-        }
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent arg0) {
@@ -65,7 +59,7 @@ public class PreferencesWindow extends JDialog {
 
     public void init() {
         generalPreferencesForm.init(prefs);
-        defaultMetadataForm.init(prefs, defaultMetadata);
+        defaultMetadataForm.init(prefs);
         optimizationPreferencesForm.init(prefs);
         licenseForm.init(prefs);
         extension.initPreferencesTabs(this);
@@ -91,6 +85,10 @@ public class PreferencesWindow extends JDialog {
 
     public void onSaveAction(Runnable newAction) {
         onSave = newAction;
+    }
+
+    public MetadataInfo getDefaultMetadata() {
+        return defaultMetadataForm.defaultMetadata;
     }
 
     {
