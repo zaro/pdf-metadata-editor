@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pmedit.*;
 import pmedit.prefs.Preferences;
+import pmedit.serdes.SerDeslUtils;
 import pmedit.ui.components.TextPaneWithLinks;
 
 import javax.swing.*;
@@ -45,9 +46,15 @@ public class BatchOperationWindow extends JFrame {
     public JButton selectOutputDir;
     public JButton addFolderButton;
     public JButton addFileButton;
+    public JButton clearFileList;
+    public JCheckBox persistFileList;
 
     //
     final static String LAST_USED_COMMAND_KEY = "lastUsedBatchCommand";
+    final static String BATCH_FILES_LIST_KEY = "BatchFileList";
+    final static String BATCH_OUTPUT_DIR_KEY = "BatchOutputDir";
+    final static String PERSIST_BATCH_FILES_KEY = "PersistBatchFileList";
+
     List<File> batchFileList = new ArrayList<File>();
     private FileOpResultTableModel tableModel;
     private final ActionListener closeWindowActionListener = new ActionListener() {
@@ -97,16 +104,16 @@ public class BatchOperationWindow extends JFrame {
                         list, value, index, isSelected, cellHasFocus);
 
                 if (value instanceof CommandDescription cd) {
-                    if (cd.group != null) {
+                    if (cd.groupName != null) {
                         // Make separator item look different
-                        label.setText("--- " + cd.group); // Clear the text
-//                        label.setBorder(new MatteBorder(1, 0, 0, 0, Color.GRAY));
+                        label.setText("--- " + cd.groupName); // Clear the text
                         label.setEnabled(false); // Make it non-selectable
                     }
                 }
                 return label;
             }
         });
+        selectedBatchOperation.setMaximumRowCount(20);
         if (command != null) {
             selectedBatchOperation.setModel(new DefaultComboBoxModel<CommandDescription>(new CommandDescription[]{command}));
         } else {
@@ -144,6 +151,19 @@ public class BatchOperationWindow extends JFrame {
                 addDirAction();
             }
         });
+        clearFileList.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                clearInputFiles();
+            }
+        });
+        persistFileList.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Preferences.getInstance().putBoolean(PERSIST_BATCH_FILES_KEY, persistFileList.isSelected());
+            }
+        });
+        persistFileList.setSelected(Preferences.getInstance().getBoolean(PERSIST_BATCH_FILES_KEY, false));
 
         new FileDrop(this, new FileDrop.Listener() {
             public void filesDropped(File[] files, Point where) {
@@ -169,7 +189,7 @@ public class BatchOperationWindow extends JFrame {
             }
         });
         setGlassPane(new FileDropMessage());
-        reset();
+        reset(true);
 
         URL imgURL = MainWindow.class
                 .getResource("pdf-metadata-edit.png");
@@ -246,14 +266,55 @@ public class BatchOperationWindow extends JFrame {
         }
     }
 
-
-    protected void reset() {
+    protected void clearInputFiles() {
         batchFileList.clear();
         Document doc = fileList.getDocument();
         try {
             doc.remove(0, doc.getLength());
         } catch (BadLocationException e) {
         }
+    }
+
+    protected void initInputFiles() {
+        batchFileList.clear();
+        if (persistFileList.isSelected()) {
+            String json = Preferences.getInstance().get(BATCH_FILES_LIST_KEY, "");
+            if (!json.isEmpty()) {
+                for (String f : SerDeslUtils.stringListFromJSON(json)) {
+                    batchFileList.add(new File(f));
+                }
+            }
+            outputDirField.setText(Preferences.getInstance().get(BATCH_OUTPUT_DIR_KEY, ""));
+        }
+        Document doc = fileList.getDocument();
+        try {
+            doc.remove(0, doc.getLength());
+            for (File file : batchFileList) {
+                doc.insertString(doc.getLength(), file.getAbsolutePath() + "\n", null);
+            }
+        } catch (BadLocationException e) {
+        }
+    }
+
+    protected void persistInputFiles() {
+        if (persistFileList.isSelected()) {
+            List<String> files = batchFileList.stream().map(File::getAbsolutePath).toList();
+            Preferences.getInstance().put(BATCH_FILES_LIST_KEY, SerDeslUtils.toJSON(false, files));
+            Preferences.getInstance().put(BATCH_OUTPUT_DIR_KEY, outputDirField.getText());
+        }
+    }
+
+    protected void reset(boolean fullReset) {
+        if (!fullReset) {
+            boolean onlyOutput = hasErrors() || persistFileList.isSelected();
+            if (!onlyOutput) {
+                clearInputFiles();
+            }
+        } else {
+            initInputFiles();
+        }
+
+
         tableModel.clearResults();
 
         clearActionListeners(btnAction);
@@ -364,6 +425,7 @@ public class BatchOperationWindow extends JFrame {
     public void runBatch() {
         final CommandDescription command = ((CommandDescription) selectedBatchOperation.getSelectedItem());
         Preferences.getInstance().put(LAST_USED_COMMAND_KEY, command.name);
+        persistInputFiles();
 
         (new BatchOperationWindow.Worker() {
             final ActionStatus actionStatus = new ActionStatus() {
@@ -398,7 +460,7 @@ public class BatchOperationWindow extends JFrame {
                 } catch (InterruptedException e) {
                     appendError(e);
                 } catch (ExecutionException e) {
-                    appendError(e);
+                    appendError(e.getCause());
                 }
                 onDone();
             }
@@ -417,9 +479,9 @@ public class BatchOperationWindow extends JFrame {
             statusSummary.setVisible(true);
             btnCancel.setText("Close");
             clearActionListeners(btnAction);
-            btnAction.setText("Clear");
+            btnAction.setText("Start Over");
             btnAction.addActionListener(l -> {
-                reset();
+                reset(false);
             });
         } catch (Exception ignore) {
         }
@@ -448,14 +510,17 @@ public class BatchOperationWindow extends JFrame {
 
         BatchOperationParameters params = getBatchParameters(command);
 
-        if (command.is("clear")) {
+        if (command.is(CommandDescription.CLEAR)) {
             parametersWindow = new BatchParametersClear(params, this);
         }
-        if (command.is("edit")) {
+        if (command.is(CommandDescription.EDIT)) {
             parametersWindow = new BatchParametersEdit(params, this);
         }
-        if (command.is("rename")) {
+        if (command.is(CommandDescription.RENAME)) {
             parametersWindow = new BatchParametersRename(params, this);
+        }
+        if (command.isInGroup(CommandDescription.EXPORT_GROUP)) {
+            parametersWindow = new BatchParametersExport(params, this, command);
         }
         if (parametersWindow != null) {
             parametersWindow.setModal(true);
@@ -469,7 +534,7 @@ public class BatchOperationWindow extends JFrame {
         if (command == null) {
             btnParameters.setEnabled(false);
         } else {
-            btnParameters.setEnabled(command.is("clear") || command.is("rename") || command.is("edit"));
+            btnParameters.setEnabled(command.is(CommandDescription.CLEAR) || command.is(CommandDescription.EDIT) || command.is(CommandDescription.RENAME) || command.isInGroup(CommandDescription.EXPORT_GROUP));
         }
     }
 
@@ -496,7 +561,7 @@ public class BatchOperationWindow extends JFrame {
         btnParameters.setText("Parameters");
         contentPane.add(btnParameters, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, 1, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         statusSummary = new TextPaneWithLinks();
-        statusSummary.setText("<html>\n  <head>\n\n  </head>\n  <body>\n    <p style=\"margin-top: 0\">\n      \n    </p>\n  </body>\n</html>\n");
+        statusSummary.setText("<html>\n  <head>\n    \n  </head>\n  <body>\n  </body>\n</html>\n");
         contentPane.add(statusSummary, new GridConstraints(4, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));
         btnCancel = new JButton();
         btnCancel.setText("Cancel");
@@ -515,16 +580,22 @@ public class BatchOperationWindow extends JFrame {
         fileList.setText("Drop files here to batch process them ...");
         scrollPane1.setViewportView(fileList);
         final JPanel panel2 = new JPanel();
-        panel2.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
+        panel2.setLayout(new GridLayoutManager(1, 5, new Insets(0, 0, 0, 0), -1, -1));
         panel1.add(panel2, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         addFolderButton = new JButton();
         addFolderButton.setText("Add Folder");
-        panel2.add(addFolderButton, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel2.add(addFolderButton, new GridConstraints(0, 4, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer1 = new Spacer();
-        panel2.add(spacer1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        panel2.add(spacer1, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         addFileButton = new JButton();
         addFileButton.setText("Add File");
-        panel2.add(addFileButton, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel2.add(addFileButton, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        clearFileList = new JButton();
+        clearFileList.setText("Clear");
+        panel2.add(clearFileList, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        persistFileList = new JCheckBox();
+        persistFileList.setText("Keep file list");
+        panel2.add(persistFileList, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel3 = new JPanel();
         panel3.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(panel3, new GridConstraints(3, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));

@@ -1,19 +1,19 @@
 package pmedit;
 
-import com.opencsv.CSVParser;
-import com.opencsv.CSVParserBuilder;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
+import com.opencsv.*;
+import com.opencsv.exceptions.CsvException;
 
 import java.io.File;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class CsvMetadata {
 
-    public static List<MetadataInfo> readFile(File filename) throws Exception {
+    public static List<MetadataInfo> readFile(File filename) throws IOException, CsvException {
         ArrayList<MetadataInfo> parsed = new ArrayList<MetadataInfo>();
         final CSVParser parser =
                 new CSVParserBuilder()
@@ -30,7 +30,7 @@ public class CsvMetadata {
             header[i] = header[i].trim();
         }
         if (!Arrays.asList(header).contains("file.fullPath")) {
-            throw new Exception("The header must specify a 'file.fullPath' column");
+            throw new RuntimeException("The header must specify a 'file.fullPath' column");
         }
         for (String[] row : entries) {
             MetadataInfo metadata = new MetadataInfo();
@@ -45,5 +45,74 @@ public class CsvMetadata {
             parsed.add(metadata);
         }
         return parsed;
+    }
+
+    public static class Writer {
+        CSVWriter writer;
+        List<String> header;
+
+        Writer(File filename) throws IOException {
+            writer = new CSVWriter(new FileWriter(filename.toString()));
+        }
+
+        public void writeHeader(Map<String, Object> data) {
+            Set<String> headerSet = data.keySet();
+
+            final String prefix = "file.";
+
+            // Split the list using Stream API
+            List<String> withPrefix = headerSet.stream()
+                    .filter(s -> s.startsWith(prefix))
+                    .collect(Collectors.toList());
+
+            List<String> withoutPrefix = headerSet.stream()
+                    .filter(s -> !s.startsWith(prefix))
+                    .collect(Collectors.toList());
+
+            if(withPrefix.contains("file.fullPath")) {
+                withPrefix.remove("file.fullPath");
+            }
+
+            withPrefix.add(0, "file.fullPath");
+
+            header = new ArrayList<>();
+            header.addAll(withPrefix);
+            header.addAll(withoutPrefix);
+            writer.writeNext(header.toArray(new String[0]));
+        }
+
+        public void writeNext(Map<String, Object> data){
+            if(header == null){
+                writeHeader(data);
+            }
+            LinkedHashMap<String, String> out = new LinkedHashMap<>();
+            for(String h: header){
+                Object o = data.get(h);
+                out.put(h, o != null ? o.toString(): null);
+            }
+            writer.writeNext(out.values().toArray(new String[0]));
+        }
+
+        public void close() throws IOException {
+            writer.close();
+        }
+
+    }
+
+    public static Writer newWriter(File filename) throws IOException {
+        return new Writer(filename);
+    }
+
+    public static  void writeFile(File filename, List<Map> data) {
+        try {
+            Writer writer = new Writer(filename);
+            for (Map md : data) {
+                writer.writeNext(md);
+            }
+            writer.close();
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

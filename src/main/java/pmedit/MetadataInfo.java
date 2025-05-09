@@ -20,6 +20,7 @@ import org.apache.xmpbox.xml.XmpParsingException;
 import pmedit.CommandLine.ParseError;
 import pmedit.MdStruct.StructType;
 import pmedit.ext.PmeExtension;
+import pmedit.serdes.SerDeslUtils;
 
 import javax.xml.transform.TransformerException;
 import java.io.*;
@@ -1609,6 +1610,15 @@ public class MetadataInfo {
         return (String) _getStructObject(id, _mdFields, false, true, true, defaultValue);
     }
 
+
+    public List<String> getManyStrings(List<String> keys){
+        List<String> result = new ArrayList<>();
+        for(String key: keys){
+            result.add(getString(key));
+        }
+        return result;
+    }
+
     protected boolean _getObjectEnabled(String id) {
         return (Boolean) _getStructObject(id, _mdEnabledFields, false, false, true, false);
     }
@@ -1666,6 +1676,10 @@ public class MetadataInfo {
 
     protected void _setObjectEnabled(String id, boolean value) {
         _setStructObject(id, value, false, false, _mdEnabledFields);
+    }
+
+    public List<String> enabledKeys(){
+        return keys().stream().filter(this::isEnabled).toList();
     }
 
     // Copy of java.util.functions.Function from Java8

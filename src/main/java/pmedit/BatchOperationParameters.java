@@ -3,8 +3,20 @@ package pmedit;
 import java.util.prefs.Preferences;
 
 public class BatchOperationParameters {
+    public static  final String DEFAULT_OUTPUT_FILENAME = "metadata-export";
     public MetadataInfo metadata = new MetadataInfo();
     public String renameTemplate;
+    public String outputFile = DEFAULT_OUTPUT_FILENAME;
+    public Boolean useRelativePaths;
+    public Boolean perFileExport;
+
+    public boolean isSingleFileExport(){
+        return perFileExport == null || !perFileExport;
+    }
+
+    public boolean shouldUseRelativePaths(){
+        return useRelativePaths == null || useRelativePaths;
+    }
 
     public static BatchOperationParameters loadForCommand(CommandDescription command) {
         BatchOperationParameters params = new BatchOperationParameters();
@@ -27,6 +39,15 @@ public class BatchOperationParameters {
             if (params.renameTemplate == null && command.is("rename")) {
                 params.renameTemplate = pmedit.prefs.Preferences.getInstance().get("renameTemplate", null);
             }
+            params.outputFile = cmdPrefs.get("of", DEFAULT_OUTPUT_FILENAME);
+            String rp = cmdPrefs.get("rp", null);
+            if(rp != null){
+                params.useRelativePaths = rp.equals("true");
+            }
+            String pfe = cmdPrefs.get("pfe", null);
+            if(pfe != null){
+                params.perFileExport = pfe.equals("true");
+            }
         }
 
         return params;
@@ -40,6 +61,15 @@ public class BatchOperationParameters {
         cmdPrefs.put("md", metadata.asPersistenceString());
         if (renameTemplate != null) {
             cmdPrefs.put("rt", renameTemplate);
+        }
+        if(outputFile != null){
+            cmdPrefs.put("of", outputFile);
+        }
+        if(useRelativePaths != null){
+            cmdPrefs.put("rp", useRelativePaths.toString());
+        }
+        if(perFileExport != null){
+            cmdPrefs.put("pfe", perFileExport.toString());
         }
     }
 

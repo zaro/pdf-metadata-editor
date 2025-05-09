@@ -3,6 +3,7 @@ package pmedit.serdes;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.StreamReadFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -13,34 +14,49 @@ import pmedit.ext.PmeExtension;
 import java.io.*;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SerDeslUtils {
+
+    protected static ObjectMapper jsonMapper(){
+        var mapper = new ObjectMapper(JsonFactory.builder().enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION).build())
+                .enable(SerializationFeature.INDENT_OUTPUT)
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        // Register the custom serializer and deserializer
+        SimpleModule module = new SimpleModule();
+        PmeExtension.get().initSerializer(module);
+        mapper.registerModule(module);
+
+        return mapper;
+    }
+
     public static String toJSON(boolean pretty, Object jsonObject) {
         try {
-            var mapper = new ObjectMapper(new JsonFactory())
-                    .enable(SerializationFeature.INDENT_OUTPUT)
-                    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-
-            return mapper.writeValueAsString(jsonObject);
+            return jsonMapper().writeValueAsString(jsonObject);
         } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void toJSONFile(File file, Object jsonObject) {
+        try {
+            jsonMapper().writeValue(file, jsonObject);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     public static HashMap<String, Object> fromJSON(String jsonString) {
         try {
-            var mapper = new ObjectMapper(JsonFactory.builder().enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION).build());
-            return mapper.readValue(jsonString, HashMap.class);
+            return jsonMapper().readValue(jsonString, HashMap.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     public static List<HashMap<String, Object>> listFromJSON(String jsonString) {
         try {
-            var mapper = new ObjectMapper(JsonFactory.builder().enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION).build());
-            return  mapper.readerForListOf(HashMap.class).readValue(jsonString);
+            return  jsonMapper().readerForListOf(HashMap.class).readValue(jsonString);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -49,9 +65,23 @@ public class SerDeslUtils {
 
     public static List<String> stringListFromJSON(String jsonString) {
         try {
-            var mapper = new ObjectMapper(JsonFactory.builder().enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION).build());
-            return  mapper.readerForListOf(String.class).readValue(jsonString);
+            return jsonMapper().readerForListOf(String.class).readValue(jsonString);
         } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static List<Map<String, Object>> fromJSONFileAsList(File file) {
+        try {
+            var mapper = jsonMapper();
+            JsonNode rootNode = mapper.readTree(file);
+            if (rootNode.isArray()) {
+                return mapper.convertValue(rootNode, List.class);
+            } else {
+                Map<String, Object> v = mapper.convertValue(rootNode, Map.class);
+                return List.of(v);
+            }
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
@@ -79,8 +109,7 @@ public class SerDeslUtils {
 
     public static Object fromYAML(String yamlString) {
         try {
-            var mapper = new ObjectMapper(new YAMLFactory());
-            return mapper.readValue(yamlString, HashMap.class);
+            return yamlMapper().readValue(yamlString, HashMap.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -101,6 +130,22 @@ public class SerDeslUtils {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static List<Map<String, Object>> fromYAMLFileAsList(File file) {
+        try {
+            var mapper = yamlMapper();
+            JsonNode rootNode = mapper.readTree(file);
+            if (rootNode.isArray()) {
+                return mapper.convertValue(rootNode, List.class);
+            } else {
+                Map<String, Object> v = mapper.convertValue(rootNode, Map.class);
+                return List.of(v);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     public static boolean objectToFile(Object o, String file ) {
