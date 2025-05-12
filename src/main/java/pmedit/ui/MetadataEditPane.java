@@ -5,6 +5,7 @@ import org.apache.pdfbox.pdmodel.PageMode;
 import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pmedit.annotations.FieldDataType;
 import pmedit.annotations.FieldEnabled;
 import pmedit.annotations.FieldID;
 import pmedit.ui.components.DateTimePicker;
@@ -55,9 +56,9 @@ public class MetadataEditPane {
     public JTextField basicProducer;
     @FieldID("doc.trapped")
     public JComboBox basicTrapped;
-    @FieldID(value = "doc.creationDate", type = FieldID.FieldType.DateField)
+    @FieldID("doc.creationDate")
     public DateTimePicker basicCreationDate;
-    @FieldID(value = "doc.modificationDate", type = FieldID.FieldType.DateField)
+    @FieldID("doc.modificationDate")
     public DateTimePicker basicModificationDate;
     @FieldID("basic.creatorTool")
     public JTextField xmpBasicCreatorTool;
@@ -69,15 +70,15 @@ public class MetadataEditPane {
     public JTextField xmpBasicLabel;
     @FieldID("basic.nickname")
     public JTextField xmpBasicNickname;
-    @FieldID(value = "basic.identifiers", type = FieldID.FieldType.TextField)
+    @FieldID("basic.identifiers")
     public JTextArea xmpBasicIdentifiers;
-    @FieldID(value = "basic.advisories", type = FieldID.FieldType.TextField)
+    @FieldID("basic.advisories")
     public JTextArea xmpBasicAdvisories;
-    @FieldID(value = "basic.modifyDate", type = FieldID.FieldType.DateField)
+    @FieldID("basic.modifyDate")
     public DateTimePicker xmpBasicModifyDate;
-    @FieldID(value = "basic.createDate", type = FieldID.FieldType.DateField)
+    @FieldID("basic.createDate")
     public DateTimePicker xmpBasicCreateDate;
-    @FieldID(value = "basic.metadataDate", type = FieldID.FieldType.DateField)
+    @FieldID("basic.metadataDate")
     public DateTimePicker xmpBasicMetadataDate;
     @FieldID("pdf.keywords")
     public JTextArea xmpPdfKeywords;
@@ -91,7 +92,7 @@ public class MetadataEditPane {
     public JTextField xmpDcCoverage;
     @FieldID("dc.description")
     public JTextField xmpDcDescription;
-    @FieldID(value = "dc.dates", type = FieldID.FieldType.TextField)
+    @FieldID("dc.dates")
     public JTextArea xmpDcDates;
     @FieldID("dc.format")
     public JTextField xmpDcFormat;
@@ -101,64 +102,64 @@ public class MetadataEditPane {
     public JTextField xmpDcRights;
     @FieldID("dc.source")
     public JTextField xmpDcSource;
-    @FieldID(value = "dc.creators", type = FieldID.FieldType.TextField)
+    @FieldID("dc.creators")
     public JTextArea xmpDcCreators;
-    @FieldID(value = "dc.contributors", type = FieldID.FieldType.TextField)
+    @FieldID("dc.contributors")
     public JTextArea xmpDcContributors;
-    @FieldID(value = "dc.languages", type = FieldID.FieldType.TextField)
+    @FieldID("dc.languages")
     public JTextArea xmpDcLanguages;
-    @FieldID(value = "dc.publishers", type = FieldID.FieldType.TextField)
+    @FieldID("dc.publishers")
     public JTextArea xmpDcPublishers;
-    @FieldID(value = "dc.relationships", type = FieldID.FieldType.TextField)
+    @FieldID("dc.relationships")
     public JTextArea xmpDcRelationships;
-    @FieldID(value = "dc.subjects", type = FieldID.FieldType.TextField)
+    @FieldID("dc.subjects")
     public JTextArea xmpDcSubjects;
-    @FieldID(value = "dc.types", type = FieldID.FieldType.TextField)
+    @FieldID("dc.types")
     public JTextArea xmpDcTypes;
     @FieldID("rights.certificate")
     public JTextField xmpRightsCertificate;
-    @FieldID(value = "rights.marked", type = FieldID.FieldType.BoolField)
+    @FieldID("rights.marked")
     public JComboBox xmpRightsMarked;
-    @FieldID(value = "rights.owner", type = FieldID.FieldType.TextField)
+    @FieldID("rights.owner")
     public JTextArea xmpRightsOwner;
-    @FieldID(value = "rights.copyright")
+    @FieldID("rights.copyright")
     public JTextArea xmpRightsCopyright;
     @FieldID("rights.usageTerms")
     public JTextArea xmpRightsUsageTerms;
     @FieldID("rights.webStatement")
     public JTextField xmpRightsWebStatement;
 
-    @FieldID(value = "viewer.hideToolbar", type = FieldID.FieldType.BoolField)
+    @FieldID("viewer.hideToolbar")
     public JComboBox hideToolbar;
-    @FieldID(value = "viewer.hideMenuBar", type = FieldID.FieldType.BoolField)
+    @FieldID("viewer.hideMenuBar")
     public JComboBox hideMenuBar;
-    @FieldID(value = "viewer.hideWindowUI", type = FieldID.FieldType.BoolField)
+    @FieldID("viewer.hideWindowUI")
     public JComboBox hideWindowUI;
-    @FieldID(value = "viewer.fitWindow", type = FieldID.FieldType.BoolField)
+    @FieldID("viewer.fitWindow")
     public JComboBox fitWindow;
-    @FieldID(value = "viewer.centerWindow", type = FieldID.FieldType.BoolField)
+    @FieldID("viewer.centerWindow")
     public JComboBox centerWindow;
-    @FieldID(value = "viewer.displayDocTitle", type = FieldID.FieldType.BoolField)
+    @FieldID("viewer.displayDocTitle")
     public JComboBox displayDocTitle;
-    @FieldID(value = "viewer.nonFullScreenPageMode", type = FieldID.FieldType.EnumField, enumClass = PDViewerPreferences.NON_FULL_SCREEN_PAGE_MODE.class)
+    @FieldID("viewer.nonFullScreenPageMode")
     public JComboBox nonFullScreenPageMode;
-    @FieldID(value = "viewer.readingDirection", type = FieldID.FieldType.EnumField, enumClass = PDViewerPreferences.READING_DIRECTION.class)
+    @FieldID("viewer.readingDirection")
     public JComboBox readingDirection;
-    @FieldID(value = "viewer.pageLayout", type = FieldID.FieldType.EnumField, enumClass = PageLayout.class)
+    @FieldID("viewer.pageLayout")
     public JComboBox pageLayout;
-    @FieldID(value = "viewer.pageMode", type = FieldID.FieldType.EnumField, enumClass = PageMode.class)
+    @FieldID("viewer.pageMode")
     public JComboBox pageMode;
-    @FieldID(value = "viewer.viewArea", type = FieldID.FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
+    @FieldID("viewer.viewArea")
     public JComboBox viewArea;
-    @FieldID(value = "viewer.viewClip", type = FieldID.FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
+    @FieldID("viewer.viewClip")
     public JComboBox viewClip;
-    @FieldID(value = "viewer.printArea", type = FieldID.FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
+    @FieldID("viewer.printArea")
     public JComboBox printArea;
-    @FieldID(value = "viewer.printClip", type = FieldID.FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
+    @FieldID("viewer.printClip")
     public JComboBox printClip;
-    @FieldID(value = "viewer.duplex", type = FieldID.FieldType.EnumField, enumClass = PDViewerPreferences.DUPLEX.class)
+    @FieldID("viewer.duplex")
     public JComboBox duplex;
-    @FieldID(value = "viewer.printScaling", type = FieldID.FieldType.EnumField, enumClass = PDViewerPreferences.PRINT_SCALING.class)
+    @FieldID("viewer.printScaling")
     public JComboBox printScaling;
 
 
@@ -372,7 +373,8 @@ public class MetadataEditPane {
                 }
 
                 if (field instanceof JComboBox combo) {
-                    objectToField(combo, null, anno.type() == FieldID.FieldType.BoolField, anno.nullValueText());
+                    MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(anno.value());
+                    objectToField(combo, null, fd.type == FieldDataType.FieldType.BoolField, fd.nullValueText);
                     combo.setBorder(comboBoxDefault);
                 }
                 if (field instanceof JSpinner) {
@@ -423,7 +425,8 @@ public class MetadataEditPane {
 
                 Object value = metadataInfo.get(anno.value());
                 if (field instanceof JComboBox) {
-                    objectToField((JComboBox) field, value, anno.type() == FieldID.FieldType.BoolField, anno.nullValueText());
+                    MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(anno.value());
+                    objectToField((JComboBox) field, value, fd.type == FieldDataType.FieldType.BoolField, fd.nullValueText);
                 }
                 if (field instanceof JDateChooser) {
                     objectToField((JDateChooser) field, value);
@@ -456,12 +459,12 @@ public class MetadataEditPane {
 
     }
 
-    protected String getComboBoxValue(JComboBox field, FieldID anno) {
+    protected String getComboBoxValue(JComboBox field, MetadataInfo.FieldDescription fieldDescription) {
         String text = (String) ((JComboBox) field).getModel().getSelectedItem();
         if (text != null && text.length() == 0) {
             text = null;
         } else {
-            String nullText = anno.nullValueText().isEmpty() ? "Unset" : anno.nullValueText();
+            String nullText = fieldDescription.nullValueText.isEmpty() ? "Unset" : fieldDescription.nullValueText;
             if (nullText.equals(text)) {
                 text = null;
             }
@@ -484,19 +487,21 @@ public class MetadataEditPane {
                     metadataInfo.setFromString(anno.value(), text);
                 }
                 if (field instanceof JSpinner) {
-                    switch (anno.type()) {
+                    MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(anno.value());
+                    switch (fd.type) {
                         case IntField:
                             Integer i = (Integer) ((JSpinner) field).getModel().getValue();
                             metadataInfo.set(anno.value(), i);
                             break;
                         default:
-                            throw new RuntimeException("Cannot store Integer in :" + anno.type());
+                            throw new RuntimeException("Cannot store Integer in :" + fd.type + " for field "+ fd.name);
 
                     }
                 }
                 if (field instanceof JComboBox comboBox) {
-                    String text = getComboBoxValue(comboBox, anno);
-                    switch (anno.type()) {
+                    MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(anno.value());
+                    String text = getComboBoxValue(comboBox, fd);
+                    switch (fd.type) {
                         case StringField:
                             metadataInfo.set(anno.value(), text);
                             break;
@@ -507,17 +512,18 @@ public class MetadataEditPane {
                             metadataInfo.set(anno.value(), text);
                             break;
                         default:
-                            throw new RuntimeException("Cannot (store (choice text) in :" + anno.type());
+                            throw new RuntimeException("Cannot (store (choice text) in :" + fd.type + " for field "+ fd.name);
 
                     }
                 }
                 if (field instanceof DateTimePicker) {
-                    switch (anno.type()) {
+                    MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(anno.value());
+                    switch (fd.type) {
                         case DateField:
                             metadataInfo.set(anno.value(), ((DateTimePicker) field).getCalendar());
                             break;
                         default:
-                            throw new RuntimeException("Cannot store Calendar in :" + anno.type());
+                            throw new RuntimeException("Cannot store Calendar in :" +  fd.type + " for field "+ fd.name);
 
                     }
                 }
@@ -737,12 +743,13 @@ public class MetadataEditPane {
                     throw new RuntimeException("JSpinner NOT SUPPORTED!");
                 }
                 if (field instanceof JComboBox combo) {
+                    final MetadataInfo.FieldDescription fieldDescription = MetadataInfo.getFieldDescription(anno.value());
                     combo.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             JComboBox<?> cb = (JComboBox<?>) e.getSource();
-                            String selectedValue = getComboBoxValue(cb, anno);
-                            Object initial = initialMetadata != null ? initialMetadata.get(anno.value()) : null;
+                            String selectedValue = getComboBoxValue(cb, fieldDescription);
+                            Object initial = initialMetadata != null ? initialMetadata.get(fieldDescription.name) : null;
                             String initialS = null;
                             if(initial != null) {
                                 if(initial instanceof String s){
@@ -760,8 +767,8 @@ public class MetadataEditPane {
                             }
                         }
                     });
-                    if(anno.type() == FieldID.FieldType.EnumField){
-                        var elements = anno.enumClass().getEnumConstants();
+                    if(fieldDescription.type == FieldDataType.FieldType.EnumField){
+                        var elements = fieldDescription.enumClass.getEnumConstants();
                         String[] model = new String[elements.length + 1];
                         int i = 0;
                         model[i++] = "Unset";

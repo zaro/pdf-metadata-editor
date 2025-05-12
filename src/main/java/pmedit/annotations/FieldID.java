@@ -7,25 +7,4 @@ import java.lang.annotation.RetentionPolicy;
 
 public @interface FieldID {
     String value();
-
-    FieldType type() default FieldType.StringField;
-
-    String nullValueText() default "";
-
-
-    Class<? extends Enum<?>> enumClass() default NoEnumConfigured.class;
-
-    enum FieldType {
-        StringField,
-        TextField,
-        LongField,
-        IntField,
-        DateField,
-        BoolField,
-        EnumField
-    }
-
-    enum NoEnumConfigured {
-
-    }
 }
