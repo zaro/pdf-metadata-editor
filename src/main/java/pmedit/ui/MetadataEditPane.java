@@ -721,6 +721,9 @@ public class MetadataEditPane {
 
             @Override
             public void apply(Object field, FieldID anno) {
+                if(field instanceof JComponent comp){
+                    comp.getAccessibleContext().setAccessibleDescription(anno.value());
+                }
 
                 if (field instanceof JTextComponent textComponent) {
                     textComponent.getDocument().addDocumentListener(new ChangeBackgroundDocumentListener(textComponent, anno.value()));

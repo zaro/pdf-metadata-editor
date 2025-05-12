@@ -70,6 +70,7 @@ public class BatchOperationWindow extends JFrame {
         setTitle("Batch PDF metadata edit");
         setBounds(100, 100, 640, 480);
         setMinimumSize(new Dimension(640, 480));
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setContentPane(contentPane);
         tableModel = new FileOpResultTableModel();
         statusTable.setModel(tableModel);
@@ -763,5 +764,9 @@ public class BatchOperationWindow extends JFrame {
 
             return this;
         }
+    }
+
+    public static void main(String[] args) {
+        new BatchOperationWindow(null);
     }
 }

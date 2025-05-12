@@ -48,7 +48,6 @@ public class Main {
         logLine("makeBatchWindow", commandName);
         BatchOperationWindow bs = new BatchOperationWindow(command);
         bs.appendFiles(FileList.fileList(fileList));
-        bs.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         bs.addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(WindowEvent winEvt) {
                 batchInstances.remove(commandName);
@@ -109,7 +108,6 @@ public class Main {
                 }
                 logLine("open editor", file);
                 final MainWindow window = new MainWindow(file);
-                window.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 window.addWindowListener(new java.awt.event.WindowAdapter() {
                     public void windowClosing(WindowEvent winEvt) {
                         editorInstances.remove(window);
