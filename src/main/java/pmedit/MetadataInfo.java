@@ -18,7 +18,7 @@ import org.apache.xmpbox.type.BadFieldValueException;
 import org.apache.xmpbox.type.TextType;
 import org.apache.xmpbox.xml.XmpParsingException;
 import pmedit.CommandLine.ParseError;
-import pmedit.annotations.FieldID;
+import pmedit.annotations.FieldDataType;
 import pmedit.annotations.MdStruct;
 import pmedit.annotations.MdStruct.StructType;
 import pmedit.ext.PmeExtension;
@@ -150,27 +150,23 @@ public class MetadataInfo {
                     prefix += ".";
                 }
                 String name = mdStruct.name().length() > 0 ? mdStruct.name() : field.getName();
-                FieldDescription t = new FieldDescription(prefix + name, field, null, mdStruct.access() == MdStruct.Access.ReadWrite);
+                FieldDescription t = new FieldDescription(prefix + name, field, mdStruct.access() == MdStruct.Access.ReadWrite);
                 List<FieldDescription> a = new ArrayList<FieldDescription>(ancestors);
                 a.add(t);
                 traverseFields(a, true, field.getType(), mdType, f);
             } else {
-                FieldID fieldId = field.getAnnotation(FieldID.class);
+                FieldDataType fieldType = field.getAnnotation(FieldDataType.class);
                 boolean isParentWritable = ancestors.size() <= 0 || ancestors.get(ancestors.size() - 1).isWritable;
-                if (fieldId != null) {
-                    String prefix = ancestors.size() > 0 ? ancestors.get(ancestors.size() - 1).name : "";
-                    if (prefix.length() > 0) {
-                        prefix += ".";
-                    }
-                    FieldDescription t = new FieldDescription(prefix + fieldId.value(), field, fieldId.type(), isParentWritable);
+                String prefix = ancestors.size() > 0 ? ancestors.get(ancestors.size() - 1).name : "";
+                if (prefix.length() > 0) {
+                    prefix += ".";
+                }
+                if (fieldType != null) {
+                    FieldDescription t = new FieldDescription(prefix + field.getName(), field, fieldType, isParentWritable);
                     List<FieldDescription> a = new ArrayList<FieldDescription>(ancestors);
                     a.add(t);
                     f.apply(a);
                 } else if (all) {
-                    String prefix = ancestors.size() > 0 ? ancestors.get(ancestors.size() - 1).name : "";
-                    if (prefix.length() > 0) {
-                        prefix += ".";
-                    }
                     FieldDescription t = new FieldDescription(prefix + field.getName(), field, isParentWritable);
                     List<FieldDescription> a = new ArrayList<FieldDescription>(ancestors);
                     a.add(t);
@@ -1510,7 +1506,7 @@ public class MetadataInfo {
                     return false;
                 }
             }
-            if (fd.isList && (fd.type == FieldID.FieldType.DateField)) {
+            if (fd.isList && (fd.type == FieldDataType.FieldType.DateField)) {
                 List<Calendar> tl = (List<Calendar>) t;
                 List<Calendar> ol = (List<Calendar>) o;
                 if (tl.size() != ol.size()) {
@@ -1731,7 +1727,9 @@ public class MetadataInfo {
         public String keywords;
         public String creator;
         public String producer;
+        @FieldDataType(FieldDataType.FieldType.DateField)
         public Calendar creationDate;
+        @FieldDataType(FieldDataType.FieldType.DateField)
         public Calendar modificationDate;
         public String trapped;
     }
@@ -1767,14 +1765,19 @@ public class MetadataInfo {
 
     public static class XmpBasic {
         public String creatorTool;
+        @FieldDataType(FieldDataType.FieldType.DateField)
         public Calendar createDate;
+        @FieldDataType(FieldDataType.FieldType.DateField)
         public Calendar modifyDate;
         public String baseURL;
         public Integer rating;
         public String label;
         public String nickname;
+        @FieldDataType(FieldDataType.FieldType.TextField)
         public List<String> identifiers;
+        @FieldDataType(FieldDataType.FieldType.TextField)
         public List<String> advisories;
+        @FieldDataType(FieldDataType.FieldType.DateField)
         public Calendar metadataDate;
     }
 
@@ -1834,19 +1837,26 @@ public class MetadataInfo {
     public static class XmpDublinCore {
         public String title;
         public String description;
+        @FieldDataType(FieldDataType.FieldType.TextField)
         public List<String> creators;
+        @FieldDataType(FieldDataType.FieldType.TextField)
         public List<String> contributors;
         public String coverage;
-        @FieldID(value = "dates", type = FieldID.FieldType.DateField)
+        @FieldDataType(FieldDataType.FieldType.DateField)
         public List<Calendar> dates;
         public String format;
         public String identifier;
+        @FieldDataType(FieldDataType.FieldType.TextField)
         public List<String> languages;
+        @FieldDataType(FieldDataType.FieldType.TextField)
         public List<String> publishers;
+        @FieldDataType(FieldDataType.FieldType.TextField)
         public List<String> relationships;
         public String rights;
         public String source;
+        @FieldDataType(FieldDataType.FieldType.TextField)
         public List<String> subjects;
+        @FieldDataType(FieldDataType.FieldType.TextField)
         public List<String> types;
     }
 
@@ -1894,6 +1904,7 @@ public class MetadataInfo {
     public static class XmpRights {
         public String certificate;
         public Boolean marked;
+        @FieldDataType(FieldDataType.FieldType.TextField)
         public List<String> owner;
         public String copyright;
         public String usageTerms;
@@ -1928,16 +1939,26 @@ public class MetadataInfo {
         public Boolean fitWindow;
         public Boolean centerWindow;
         public Boolean displayDocTitle;
+        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PDViewerPreferences.NON_FULL_SCREEN_PAGE_MODE.class)
         public String nonFullScreenPageMode;
+        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PDViewerPreferences.READING_DIRECTION.class)
         public String readingDirection;
+        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
         public String viewArea;
+        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
         public String viewClip;
+        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
         public String printArea;
+        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
         public String printClip;
+        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PDViewerPreferences.DUPLEX.class)
         public String duplex;
+        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PDViewerPreferences.PRINT_SCALING.class)
         public String printScaling;
         //
+        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PageLayout.class)
         public String pageLayout;
+        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PageMode.class)
         public String pageMode;
     }
 
@@ -2026,15 +2047,19 @@ public class MetadataInfo {
     //////////////////////////////
     public static class FieldDescription {
         public final String name;
-        public final FieldID.FieldType type;
+        public final FieldDataType.FieldType type;
+        public final String nullValueText;
+        public final Class<? extends Enum<?>> enumClass;
         public final boolean isList;
         public final boolean isWritable;
         final Field field;
 
-        public FieldDescription(String name, Field field, FieldID.FieldType type, boolean isWritable) {
+        public FieldDescription(String name, Field field, FieldDataType type, boolean isWritable) {
             this.name = name;
             this.field = field;
-            this.type = type;
+            this.type = type.value();
+            this.nullValueText = type.nullValueText();
+            this.enumClass = type.enumClass() != FieldDataType.NoEnumConfigured.class ? type.enumClass() : null;
             this.isWritable = isWritable;
             isList = List.class.isAssignableFrom(field.getType());
         }
@@ -2042,18 +2067,20 @@ public class MetadataInfo {
         public FieldDescription(String name, Field field, boolean isWritable) {
             Class<?> klass = field.getType();
             if (Boolean.class.isAssignableFrom(klass)) {
-                this.type = FieldID.FieldType.BoolField;
+                this.type = FieldDataType.FieldType.BoolField;
             } else if (Calendar.class.isAssignableFrom(klass)) {
-                this.type = FieldID.FieldType.DateField;
+                this.type = FieldDataType.FieldType.DateField;
             } else if (Integer.class.isAssignableFrom(klass)) {
-                this.type = FieldID.FieldType.IntField;
+                this.type = FieldDataType.FieldType.IntField;
             } else if (Long.class.isAssignableFrom(klass)) {
-                this.type = FieldID.FieldType.LongField;
+                this.type = FieldDataType.FieldType.LongField;
             } else {
-                this.type = FieldID.FieldType.StringField;
+                this.type = FieldDataType.FieldType.StringField;
             }
             this.name = name;
             this.field = field;
+            this.nullValueText = "";
+            this.enumClass = null;
             this.isWritable = isWritable;
             isList = List.class.isAssignableFrom(klass);
         }
@@ -2064,9 +2091,9 @@ public class MetadataInfo {
             }
             if (isList) {
                 return ListFormat.humanReadable((List) value);
-            } else if (type == FieldID.FieldType.DateField) {
+            } else if (type == FieldDataType.FieldType.DateField) {
                 return DateFormat.formatDateTime((Calendar) value);
-            } else if (type == FieldID.FieldType.BoolField) {
+            } else if (type == FieldDataType.FieldType.BoolField) {
                 return ((Boolean) value) ? "true" : "false";
             } else {
                 return value.toString();
@@ -2078,21 +2105,21 @@ public class MetadataInfo {
                 return null;
             }
             if (isList) {
-                if (type == FieldID.FieldType.StringField) {
+                if (type == FieldDataType.FieldType.StringField) {
                     return List.of(value);
-                } else if (type == FieldID.FieldType.TextField) {
+                } else if (type == FieldDataType.FieldType.TextField) {
                     return Arrays.asList(value.split("\n"));
-                } else if (type == FieldID.FieldType.IntField) {
+                } else if (type == FieldDataType.FieldType.IntField) {
                     // TODO: possible allow comma separated interger list
                     return List.of(Integer.parseInt(value));
-                } else if (type == FieldID.FieldType.BoolField) {
+                } else if (type == FieldDataType.FieldType.BoolField) {
                     // TODO: possible allow comma separated boolean list
                     String v = value.toLowerCase().trim();
                     Boolean b = null;
                     if (v.equals("true") || v.equals("yes")) b = true;
                     if (v.equals("false") || v.equals("no")) b = false;
                     return Collections.singletonList(b);
-                } else if (type == FieldID.FieldType.DateField) {
+                } else if (type == FieldDataType.FieldType.DateField) {
                     List<Calendar> rval = new ArrayList<Calendar>();
                     for (String line : value.split("\n")) {
                         try {
@@ -2104,18 +2131,18 @@ public class MetadataInfo {
                     return rval;
                 }
             } else {
-                if (type == FieldID.FieldType.StringField) {
+                if (type == FieldDataType.FieldType.StringField) {
                     return value;
-                } else if (type == FieldID.FieldType.TextField) {
+                } else if (type == FieldDataType.FieldType.TextField) {
                     return value;
-                } else if (type == FieldID.FieldType.IntField) {
+                } else if (type == FieldDataType.FieldType.IntField) {
                     return Integer.parseInt(value);
-                } else if (type == FieldID.FieldType.BoolField) {
+                } else if (type == FieldDataType.FieldType.BoolField) {
                     String v = value.toLowerCase().trim();
                     if (v.equals("true") || v.equals("yes")) return true;
                     if (v.equals("false") || v.equals("no")) return false;
                     return null;
-                } else if (type == FieldID.FieldType.DateField) {
+                } else if (type == FieldDataType.FieldType.DateField) {
                     try {
                         return DateFormat.parseDate(value);
                     } catch (ParseError e) {
