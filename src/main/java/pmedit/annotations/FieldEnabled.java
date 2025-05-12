@@ -1,4 +1,4 @@
-package pmedit;
+package pmedit.annotations;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
