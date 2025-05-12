@@ -5,6 +5,8 @@ import org.apache.pdfbox.pdmodel.PageMode;
 import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pmedit.annotations.FieldEnabled;
+import pmedit.annotations.FieldID;
 import pmedit.ui.components.DateTimePicker;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;

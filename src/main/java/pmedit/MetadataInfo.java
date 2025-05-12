@@ -18,7 +18,9 @@ import org.apache.xmpbox.type.BadFieldValueException;
 import org.apache.xmpbox.type.TextType;
 import org.apache.xmpbox.xml.XmpParsingException;
 import pmedit.CommandLine.ParseError;
-import pmedit.MdStruct.StructType;
+import pmedit.annotations.FieldID;
+import pmedit.annotations.MdStruct;
+import pmedit.annotations.MdStruct.StructType;
 import pmedit.ext.PmeExtension;
 import pmedit.serdes.SerDeslUtils;
 
