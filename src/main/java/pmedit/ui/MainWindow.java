@@ -185,6 +185,7 @@ public class MainWindow extends JFrame {
             }
         });
         setGlassPane(new FileDropSelectMessage());
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
 //        setMinimumSize(MIN_SIZE);
     }
@@ -534,4 +535,8 @@ public class MainWindow extends JFrame {
         return contentPane;
     }
 
+
+    public static void main(String[] args) {
+        new MainWindow(null);
+    }
 }

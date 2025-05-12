@@ -9,7 +9,7 @@ import java.util.List;
 
 
 import org.junit.jupiter.api.Test;
-import pmedit.MetadataInfoTest.PMTuple;
+import pmedit.FilesTestHelper.PMTuple;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,7 +18,7 @@ public class BatchCommandTest {
 	static int NUM_FILES = 5;
 	@Test
 	public void testClearAll() throws FileNotFoundException, IOException, Exception {
-		List<PMTuple> fileList = MetadataInfoTest.randomFiles(NUM_FILES);
+		List<PMTuple> fileList = FilesTestHelper.randomFiles(NUM_FILES);
 		List<String> args = new ArrayList<String>();
 		args.add("clear");
 		args.add("all");
@@ -52,7 +52,7 @@ public class BatchCommandTest {
 
 	@Test
 	public void testClearNone() throws FileNotFoundException, IOException, Exception {
-		List<PMTuple> fileList = MetadataInfoTest.randomFiles(NUM_FILES);
+		List<PMTuple> fileList = FilesTestHelper.randomFiles(NUM_FILES);
 		List<String> args = new ArrayList<String>();
 		args.add("clear");
 		args.add("none");
@@ -86,7 +86,7 @@ public class BatchCommandTest {
 
 	@Test
 	public void testEditSome() throws FileNotFoundException, IOException, Exception {
-		List<PMTuple> fileList = MetadataInfoTest.randomFiles(NUM_FILES);
+		List<PMTuple> fileList = FilesTestHelper.randomFiles(NUM_FILES);
 		List<String> args = new ArrayList<String>();
 		args.add("edit");
 		args.add("doc.title=doc.title");
@@ -130,14 +130,14 @@ public class BatchCommandTest {
 
 	@Test
 	public void testFromCSV() throws FileNotFoundException, IOException, Exception {
-		List<PMTuple> fileList = MetadataInfoTest.randomFiles(NUM_FILES);
+		List<PMTuple> fileList = FilesTestHelper.randomFiles(NUM_FILES);
 		ArrayList<String> csvLines = new ArrayList<String>();
 		csvLines.add("file.fullPath,doc.author,dc.title");
 		for(PMTuple t: fileList){
 			csvLines.add(t.file.getAbsolutePath() + ",AUTHOR-AUTHOR,\"TITLE,TITLE\"");
 		}
 
-		File csvFile = MetadataInfoTest.csvFile(csvLines);
+		File csvFile = FilesTestHelper.csvFile(csvLines);
 		List<String> args = new ArrayList<String>();
 		args.add("fromcsv");
 
