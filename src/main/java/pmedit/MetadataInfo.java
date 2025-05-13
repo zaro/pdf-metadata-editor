@@ -1359,6 +1359,14 @@ public class MetadataInfo {
         }
     }
 
+    public void copyIfEnabled(MetadataInfo other) {
+        for (String fieldName : keys()) {
+            if(other.isEnabled(fieldName)) {
+                set(fieldName, other.get(fieldName));
+            }
+        }
+    }
+
     public MetadataInfo defaultsToApply(MetadataInfo defaults) {
         MetadataInfo diff = new MetadataInfo();
         for (String fieldName : keys()) {
