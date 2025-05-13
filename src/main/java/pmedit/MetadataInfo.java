@@ -399,7 +399,6 @@ public class MetadataInfo {
                     dc.title = "[INVALID FIELD VALUE]";
                 }
                 var c = ri.getProperty("Copyright");
-                rights.copyright = c instanceof TextType ? ((TextType) c).getStringValue() : null;
                 rights.webStatement = ri.getWebStatement();
             }
         }
@@ -1062,19 +1061,6 @@ public class MetadataInfo {
                         newXmp.rights().addOwner(a);
                         atLeastOneXmpRightsSet = true;
                     }
-                }
-            }
-
-            if (rightsEnabled.copyright) {
-                if (rights.copyright != null) {
-                    newXmp.rights().setTextPropertyValue("Copyright", rights.copyright);
-                    atLeastOneXmpRightsSet = true;
-                }
-            } else if (riOld != null) {
-                var old = riOld.getProperty("Copyright");
-                if (old instanceof TextType) {
-                    newXmp.rights().setTextPropertyValue("Copyright", ((TextType) old).getStringValue());
-                    atLeastOneXmpRightsSet = true;
                 }
             }
 
@@ -1894,7 +1880,6 @@ public class MetadataInfo {
         public Boolean marked;
         @FieldDataType(FieldDataType.FieldType.TextField)
         public List<String> owner;
-        public String copyright;
         public String usageTerms;
         public String webStatement;
     }
@@ -1903,7 +1888,6 @@ public class MetadataInfo {
         public boolean certificate = true;
         public boolean marked = true;
         public boolean owner = true;
-        public boolean copyright = true;
         public boolean usageTerms = true;
         public boolean webStatement = true;
 
