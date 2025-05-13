@@ -2,30 +2,23 @@ package pmedit.ui;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.SetSystemProperty;
 import org.netbeans.jemmy.ClassReference;
-import org.netbeans.jemmy.accessibility.AccessibleDescriptionChooser;
 import org.netbeans.jemmy.operators.*;
 import pmedit.*;
-import pmedit.prefs.LocalDataDir;
 import pmedit.prefs.Preferences;
 import pmedit.ui.preferences.DefaultsPreferences;
 
-import java.awt.*;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static pmedit.ui.UiTestHelpers.*;
 
 @SetSystemProperty(key = "junitTest", value = "true")
-public class MainWindowTest {
+public class MainWindowTestLoad {
     final int NUM_FILES = 1;
 
     @BeforeAll
