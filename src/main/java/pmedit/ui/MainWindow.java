@@ -372,9 +372,6 @@ public class MainWindow extends JFrame {
     }
 
     protected MetadataInfo getDefaultMetadata() {
-        if (preferencesWindow != null) {
-            return preferencesWindow.getDefaultMetadata();
-        }
         return DefaultsPreferences.loadDefaultMetadata(Preferences.getInstance());
     }
 
@@ -426,10 +423,11 @@ public class MainWindow extends JFrame {
         filename.setText(pdfFile.getAbsolutePath());
         metadataInfo = new MetadataInfo();
         metadataInfo.loadFromPDF(document);
-        metadataInfo.expandVariables();
 
         metadataEditor.fillFromMetadata(metadataInfo);
-        metadataEditor.fillFromMetadata(metadataInfo.defaultsToApply(getDefaultMetadata()), true);
+        MetadataInfo defaultMetadata = new MetadataInfo();
+        defaultMetadata.copyFromWithExpand(getDefaultMetadata(), metadataInfo);
+        metadataEditor.fillFromMetadata(metadataInfo.defaultsToApply(defaultMetadata), true);
 
 
         extension.onDocumentReload(document, pdfFile, metadataEditor);

@@ -9,7 +9,7 @@ jre_to_bundle/
 test-files/
 ris/
 .vscode/
-test/
+/test/
 debug/
 jpackage/cert/*.pfx
 .flatpak-builder/

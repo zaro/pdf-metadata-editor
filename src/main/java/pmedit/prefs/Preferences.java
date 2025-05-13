@@ -4,6 +4,7 @@ import pmedit.serdes.SerDeslUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.prefs.BackingStoreException;
 
 public class Preferences {
     private static java.util.prefs.Preferences _prefs;
@@ -14,6 +15,14 @@ public class Preferences {
             _prefs = java.util.prefs.Preferences.userRoot().node("PDFMetadataEditor");
         }
         return _prefs;
+    }
+
+    public static void clear(){
+        try {
+            getInstance().clear();
+        } catch (BackingStoreException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static String[] getHistoryLines(String tag, String[] defaultValue) {
