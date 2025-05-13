@@ -51,9 +51,24 @@ public class SerDesTest {
 			rights.certificate: null
 			rights.marked: null
 			rights.owner: null
-			rights.copyright: null
 			rights.usageTerms: null
 			rights.webStatement: null
+			viewer.hideToolbar: null
+			viewer.hideMenuBar: null
+			viewer.hideWindowUI: null
+			viewer.fitWindow: null
+			viewer.centerWindow: null
+			viewer.displayDocTitle: null
+			viewer.nonFullScreenPageMode: null
+			viewer.readingDirection: null
+			viewer.viewArea: null
+			viewer.viewClip: null
+			viewer.printArea: null
+			viewer.printClip: null
+			viewer.duplex: null
+			viewer.printScaling: null
+			viewer.pageLayout: null
+			viewer.pageMode: null
 			file.name: null
 			file.nameWithExt: null
 			file.sizeBytes: null
@@ -105,9 +120,24 @@ public class SerDesTest {
               "rights.certificate" : null,
               "rights.marked" : null,
               "rights.owner" : null,
-              "rights.copyright" : null,
               "rights.usageTerms" : null,
               "rights.webStatement" : null,
+              "viewer.hideToolbar" : null,
+              "viewer.hideMenuBar" : null,
+              "viewer.hideWindowUI" : null,
+              "viewer.fitWindow" : null,
+              "viewer.centerWindow" : null,
+              "viewer.displayDocTitle" : null,
+              "viewer.nonFullScreenPageMode" : null,
+              "viewer.readingDirection" : null,
+              "viewer.viewArea" : null,
+              "viewer.viewClip" : null,
+              "viewer.printArea" : null,
+              "viewer.printClip" : null,
+              "viewer.duplex" : null,
+              "viewer.printScaling" : null,
+              "viewer.pageLayout" : null,
+              "viewer.pageMode" : null,
               "file.name" : null,
               "file.nameWithExt" : null,
               "file.sizeBytes" : null,
