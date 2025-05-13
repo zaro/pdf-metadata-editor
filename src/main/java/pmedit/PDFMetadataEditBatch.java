@@ -87,7 +87,7 @@ public class PDFMetadataEditBatch {
                 try {
                     MetadataInfo mdFile = new MetadataInfo();
                     mdFile.loadFromPDF(file);
-                    mdFile.copyFromWithExpand(mdParams);
+                    mdFile.copyFromWithExpand(mdParams, mdFile);
                     mdFile.saveAsPDF(file, getOutputFile(file));
                     status.addStatus(outputFileRelativeName(file), "Done");
                 } catch (Exception e) {
@@ -352,7 +352,7 @@ public class PDFMetadataEditBatch {
                 try {
                     MetadataInfo mdFile = new MetadataInfo();
                     mdFile.loadFromPDF(inputFile);
-                    mdFile.copyFromWithExpand(mdParams);
+                    mdFile.copyFromWithExpand(mdParams, mdFile);
                     mdFile.saveAsPDF(inputFile, fileProperty.getOutputFile(true));
                     status.addStatus(inputFile.getPath(), "Done");
                 } catch (Exception e) {

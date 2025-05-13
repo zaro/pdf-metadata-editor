@@ -12,7 +12,7 @@ import java.util.prefs.Preferences;
 public class DefaultsPreferences {
     public JPanel topPanel;
     public MetadataEditPane defaultMetadataPane;
-    public MetadataInfo defaultMetadata;
+    protected MetadataInfo defaultMetadata;
 
     public DefaultsPreferences() {
 

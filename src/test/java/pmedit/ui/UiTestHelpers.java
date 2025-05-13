@@ -1,0 +1,125 @@
+package pmedit.ui;
+
+import org.netbeans.jemmy.accessibility.AccessibleDescriptionChooser;
+import org.netbeans.jemmy.operators.*;
+import pmedit.DateFormat;
+import pmedit.MetadataInfo;
+import pmedit.annotations.FieldDataType;
+import pmedit.ui.components.DateTimePicker;
+
+import javax.swing.*;
+import javax.swing.text.JTextComponent;
+import java.awt.*;
+import java.io.File;
+import java.util.Calendar;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class UiTestHelpers {
+    static void openFileChooser(String dialogTitle, File testFile){
+        var chooserFrame = new JDialogOperator(dialogTitle);
+        var fileChooser = new JFileChooserOperator(
+                JFileChooserOperator.findJFileChooser((Container) chooserFrame.getSource()));
+        fileChooser.setCurrentDirectory(testFile.getParentFile());
+        fileChooser.setSelectedFile(testFile);
+        new JButtonOperator(fileChooser, "Open").push();
+    }
+
+    static void ensureTab(JTabbedPaneOperator tab, String findInTabTitle){
+        int tabIndex = tab.findPage(findInTabTitle);
+        if(tabIndex < 0){
+            fail("Can't find "+ findInTabTitle +" in any tab");
+        }
+        if(tabIndex != tab.getSelectedIndex()){
+            tab.setSelectedIndex(tabIndex);
+        }
+    }
+
+    static void checkMetadataPaneValues(ContainerOperator frame,MetadataInfo expected){
+        var tab = new JTabbedPaneOperator(frame);
+
+        for(String k: MetadataInfo.keys()) {
+            String[] parts = k.split("\\.");
+            if(parts[0].startsWith("file")){
+                // Ignore file.* props, they are not shown
+                continue;
+            }
+            String findInTt = parts[0].equals("dc") ? "Dublin" : parts[0].substring(0, 1).toUpperCase() + parts[0].substring(1);
+            ensureTab(tab, findInTt);
+            checkMetadataFieldValue(frame, k, expected);
+        }
+    }
+
+    static void checkMetadataFieldValue(ContainerOperator frame, String name, MetadataInfo expected){
+        Component c = ComponentOperator.findComponent((Container) frame.getSource(), new CustomPropertyComponentChooser("MetadataFieldId", name));
+        if(c == null){
+            fail("Checking "+ name + " - no component found");
+        }
+        String message = "Values differ on '" + name + "' ["+ expected.file.nameWithExt + "]";
+        if(c instanceof JTextField tf ) {
+            assertEquals(expected.getString(name, ""), tf.getText(), message);
+        } else if(c instanceof JTextArea ta ) {
+            assertEquals(expected.getString(name, ""), ta.getText(), message);
+        } else if(c instanceof DateTimePicker dt ) {
+            assertEquals(expected.getString(name, null), DateFormat.formatDateTime(dt.getCalendar()), message);
+        } else if(c instanceof JComboBox cb ) {
+            MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(name);
+            if(fd.type == FieldDataType.FieldType.BoolField){
+                String s = "Unset";
+                Boolean v  = (Boolean) expected.get(name, null);
+                if(v != null){
+                  s = v ? "Yes"  :"No" ;
+                }
+                assertEquals(s, cb.getSelectedItem(), message);
+            } else {
+                assertEquals(expected.getString(name, "Unset"), cb.getSelectedItem(), message);
+            }
+        } else {
+            fail("Unknown component:" + c.getClass());
+        }
+    }
+
+    static void populateMetadataPaneValues(ContainerOperator frame, MetadataInfo info){
+        var tab = new JTabbedPaneOperator(frame);
+
+        for(String k: MetadataInfo.keys()) {
+            String[] parts = k.split("\\.");
+            if(parts[0].startsWith("file")){
+                // Ignore file.* props, they are not shown
+                continue;
+            }
+            if(!info.isEnabled(k)){
+                continue;
+            }
+            String findInTt = parts[0].equals("dc") ? "Dublin" : parts[0].substring(0, 1).toUpperCase() + parts[0].substring(1);
+            ensureTab(tab, findInTt);
+            populateMetadataPaneValue(tab, k, info);
+        }
+    }
+
+    static void populateMetadataPaneValue(JTabbedPaneOperator tab, String name, MetadataInfo expected){
+        Component c = ComponentOperator.findComponent((Container) tab.getSource(), new CustomPropertyComponentChooser("MetadataFieldId", name));
+        if(c == null){
+            fail("Populating "+ name + " - no component found");
+        }
+        if(c instanceof JTextComponent tf ) {
+            tf.setText(expected.getString(name, ""));
+        } else if(c instanceof DateTimePicker dt ) {
+            dt.setCalendar((Calendar) expected.get(name));
+        } else if(c instanceof JComboBox cb ) {
+            MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(name);
+            if(fd.type == FieldDataType.FieldType.BoolField){
+                String s = "Unset";
+                Boolean v  = (Boolean) expected.get(name, null);
+                if(v != null){
+                    s = v ? "Yes"  :"No" ;
+                }
+                cb.setSelectedItem(s);
+            } else {
+                cb.setSelectedItem(expected.getString(name, "Unset"));
+            }
+        } else {
+            fail("Unknown component:" + c.getClass());
+        }
+    }
+}

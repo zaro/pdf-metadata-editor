@@ -1365,12 +1365,12 @@ public class MetadataInfo {
         return diff;
     }
 
-    public void copyFromWithExpand(MetadataInfo expandInfo) {
+    public void copyFromWithExpand(MetadataInfo other,  MetadataInfo expandInfo) {
         for (String fieldName : keys()) {
-            if (!expandInfo.isEnabled(fieldName)) {
+            if (!other.isEnabled(fieldName)) {
                 continue;
             }
-            Object o = expandInfo.get(fieldName);
+            Object o = other.get(fieldName);
             if (o != null) {
                 Object expandedVal = o;
                 if (expandedVal instanceof String) {
@@ -1383,7 +1383,7 @@ public class MetadataInfo {
     }
 
     public void expandVariables(){
-        copyFromWithExpand(this);
+        copyFromWithExpand(this, this);
     }
 
     public void enableOnlyNonNull() {
