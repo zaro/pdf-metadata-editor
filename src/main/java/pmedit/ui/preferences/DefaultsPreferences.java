@@ -31,6 +31,10 @@ public class DefaultsPreferences {
         prefs.put("defaultMetadata", defaultMetadata.toYAML());
     }
 
+    public static void saveDefaultMetadata(Preferences prefs, MetadataInfo defaultMetadata) {
+        prefs.put("defaultMetadata", defaultMetadata.toYAML());
+    }
+
     public static MetadataInfo loadDefaultMetadata(Preferences prefs) {
         MetadataInfo defaultMetadata = new MetadataInfo();
         String defaultMetadataYaml = prefs.get("defaultMetadata", "");

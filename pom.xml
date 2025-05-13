@@ -526,9 +526,16 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.junit-pioneer</groupId>
+			<artifactId>junit-pioneer</artifactId>
+			<version>2.3.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.netbeans</groupId>
 			<artifactId>jemmy</artifactId>
 			<version>2.2.7.5</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>net.java.dev.jna</groupId>

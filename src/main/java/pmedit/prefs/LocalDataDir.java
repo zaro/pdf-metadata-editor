@@ -10,11 +10,19 @@ import java.io.*;
 import java.util.stream.Collectors;
 
 public class LocalDataDir {
+    final static  boolean isTesting = System.getProperty("junitTest", "").equals("true");
 
     // according to : https://msdn.microsoft.com/en-us/library/windows/desktop/dd378457(v=vs.85).aspx
     public static final String FOLDERID_APPDATA = "{F1B32785-6FBA-4FCF-9D55-7B8E7F157091}";
 
     public static String getAppDataDir(){
+        if(isTesting){
+            File tempDir = new File("target/test-preferences-dir");
+            if (!tempDir.exists()) {
+                tempDir.mkdirs();
+            }
+            return tempDir.getAbsolutePath();
+        }
         return get() + File.separator + "pdf-metadata-editor" + File.separator;
     }
 
