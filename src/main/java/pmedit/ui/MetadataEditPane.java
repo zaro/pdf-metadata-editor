@@ -729,8 +729,8 @@ public class MetadataEditPane {
 
             @Override
             public void apply(Object field, FieldID anno) {
-                if(field instanceof JComponent comp){
-                    comp.getAccessibleContext().setAccessibleDescription(anno.value());
+                if(field instanceof JComponent jc){
+                    jc.putClientProperty("MetadataFieldId", anno.value());
                 }
 
                 if (field instanceof JTextComponent textComponent) {
@@ -768,14 +768,7 @@ public class MetadataEditPane {
                         }
                     });
                     if(fieldDescription.type == FieldDataType.FieldType.EnumField){
-                        var elements = fieldDescription.enumClass.getEnumConstants();
-                        String[] model = new String[elements.length + 1];
-                        int i = 0;
-                        model[i++] = "Unset";
-                        for(var e : elements){
-                            model[i++] = e.toString();
-                        }
-                        combo.setModel(new DefaultComboBoxModel(model));
+                        combo.setModel(new DefaultComboBoxModel(fieldDescription.getEnumValuesAsStrings()));
                     }
                 }
                 if (field instanceof DateTimePicker dtPicker) {
