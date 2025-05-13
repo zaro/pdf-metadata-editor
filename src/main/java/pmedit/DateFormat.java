@@ -53,16 +53,16 @@ public class DateFormat {
     }
 
     public static String formatDate(Calendar cal) {
-        return isoDateFormat[3].format(cal.getTime());
+        return cal != null ? isoDateFormat[3].format(cal.getTime()) :null;
 
     }
 
     public static String formatDateTime(Calendar cal) {
-        return isoDateFormat[1].format(cal.getTime());
+        return cal != null? isoDateFormat[1].format(cal.getTime()): null;
     }
 
     public static String formatDateTimeFull(Calendar cal) {
-        return isoDateFormat[0].format(cal.getTime());
+        return cal != null ? isoDateFormat[0].format(cal.getTime()) :  null;
     }
 
 }

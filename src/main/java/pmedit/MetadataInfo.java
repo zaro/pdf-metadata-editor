@@ -27,6 +27,8 @@ import pmedit.serdes.SerDeslUtils;
 import javax.xml.transform.TransformerException;
 import java.io.*;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -257,10 +259,10 @@ public class MetadataInfo {
         PDDocumentCatalog catalog = document.getDocumentCatalog();
         COSDictionary cd = catalog.getCOSObject();
         if(cd.containsKey(COSName.PAGE_MODE)){
-            viewer.pageMode = catalog.getPageMode().toString();
+            viewer.pageMode = catalog.getPageMode().stringValue();
         }
         if(cd.containsKey(COSName.PAGE_LAYOUT)){
-            viewer.pageLayout = catalog.getPageLayout().toString();
+            viewer.pageLayout = catalog.getPageLayout().stringValue();
         }
         // For initial page and zoom
         // catalog.getOpenAction()
@@ -556,60 +558,28 @@ public class MetadataInfo {
                     }
                 }
                 if (viewerEnabled.nonFullScreenPageMode ) {
-                    if(viewer.nonFullScreenPageMode != null) {
-                        preferences.setNonFullScreenPageMode(PDViewerPreferences.NON_FULL_SCREEN_PAGE_MODE.valueOf(viewer.nonFullScreenPageMode));
-                    } else {
-                        pd.removeItem(COSName.NON_FULL_SCREEN_PAGE_MODE);
-                    }
+                    pd.setName(COSName.NON_FULL_SCREEN_PAGE_MODE, viewer.nonFullScreenPageMode);
                 }
                 if (viewerEnabled.readingDirection ) {
-                    if(viewer.readingDirection != null) {
-                        preferences.setReadingDirection(PDViewerPreferences.READING_DIRECTION.valueOf(viewer.readingDirection));
-                    } else {
-                        pd.removeItem(COSName.DIRECTION);
-                    }
+                    pd.setName(COSName.DIRECTION, viewer.readingDirection);
                 }
                 if (viewerEnabled.viewArea ) {
-                    if(viewer.viewArea != null) {
-                        preferences.setViewArea(PDViewerPreferences.BOUNDARY.valueOf(viewer.viewArea));
-                    } else {
-                        pd.removeItem(COSName.VIEW_AREA);
-                    }
+                    pd.setName(COSName.VIEW_AREA, viewer.viewArea);
                 }
                 if (viewerEnabled.viewClip ) {
-                    if(viewer.viewClip != null) {
-                        preferences.setViewClip(PDViewerPreferences.BOUNDARY.valueOf(viewer.viewClip));
-                    } else {
-                        pd.removeItem(COSName.VIEW_CLIP);
-                    }
+                    pd.setName(COSName.VIEW_CLIP, viewer.viewClip);
                 }
                 if (viewerEnabled.printArea ) {
-                    if(viewer.printArea != null) {
-                        preferences.setPrintArea(PDViewerPreferences.BOUNDARY.valueOf(viewer.printArea));
-                    } else {
-                        pd.removeItem(COSName.PRINT_AREA);
-                    }
+                    pd.setName(COSName.PRINT_AREA, viewer.printArea);
                 }
                 if (viewerEnabled.printClip ) {
-                    if(viewer.printClip != null) {
-                        preferences.setPrintClip(PDViewerPreferences.BOUNDARY.valueOf(viewer.printClip));
-                    } else {
-                        pd.removeItem(COSName.PRINT_CLIP);
-                    }
+                    pd.setName(COSName.PRINT_CLIP,viewer.printClip );
                 }
                 if (viewerEnabled.duplex ) {
-                    if(viewer.duplex != null) {
-                        preferences.setDuplex(PDViewerPreferences.DUPLEX.valueOf(viewer.duplex));
-                    } else {
-                        pd.removeItem(COSName.DUPLEX);
-                    }
+                    pd.setName(COSName.DUPLEX, viewer.duplex);
                 }
                 if (viewerEnabled.printScaling ) {
-                    if(viewer.printScaling != null) {
-                        preferences.setPrintScaling(PDViewerPreferences.PRINT_SCALING.valueOf(viewer.printScaling));
-                    } else {
-                        pd.removeItem(COSName.PRINT_SCALING);
-                    }
+                    pd.setName(COSName.PRINT_SCALING, viewer.printScaling);
                 }
                 catalog.setViewerPreferences(preferences);
             }
@@ -1560,7 +1530,7 @@ public class MetadataInfo {
         return SerDeslUtils.toYAML(false, map);
     }
 
-    protected Object _getStructObject(String id, Map<String, List<FieldDescription>> mdFields, boolean parent, boolean toString, boolean useDefault, Object defaultValue) {
+    protected Object _getStructObject(String id, Map<String, List<FieldDescription>> mdFields, boolean parent, FieldDataType.FieldType toType, boolean useDefault, Object defaultValue) {
         List<FieldDescription> fields = mdFields.get(id);
         if (fields == null || fields.size() == 0) {
             if (useDefault) {
@@ -1586,26 +1556,36 @@ public class MetadataInfo {
                 throw new RuntimeException("_getStructObject('" + id + "') IllegalAccessException" + e);
             }
         }
-        if (toString) {
-            return fieldD.makeStringFromValue(current);
+        if(current == null && useDefault){
+            return defaultValue;
+        }
+        if(toType != null) {
+            switch (toType) {
+                case EnumField:
+                    return fieldD.enumValueFromString((String) current);
+                case StringField:
+                    return fieldD.makeStringFromValue(current);
+                default:
+                    return current;
+            }
         }
         return current;
     }
 
     public Object get(String id) {
-        return _getStructObject(id, _mdFields, false, false, false, null);
+        return _getStructObject(id, _mdFields, false, null, false, null);
     }
 
     public String getString(String id) {
-        return (String) _getStructObject(id, _mdFields, false, true, false, null);
+        return (String) _getStructObject(id, _mdFields, false, FieldDataType.FieldType.StringField, false, null);
     }
 
     public Object get(String id, Object defaultValue) {
-        return _getStructObject(id, _mdFields, false, false, true, defaultValue);
+        return _getStructObject(id, _mdFields, false, null, true, defaultValue);
     }
 
     public String getString(String id, String defaultValue) {
-        return (String) _getStructObject(id, _mdFields, false, true, true, defaultValue);
+        return (String) _getStructObject(id, _mdFields, false, FieldDataType.FieldType.StringField, true, defaultValue);
     }
 
 
@@ -1618,7 +1598,7 @@ public class MetadataInfo {
     }
 
     protected boolean _getObjectEnabled(String id) {
-        return (Boolean) _getStructObject(id, _mdEnabledFields, false, false, true, false);
+        return (Boolean) _getStructObject(id, _mdEnabledFields, false, null, true, false);
     }
 
     protected void _setStructObject(String id, Object value, boolean append, boolean fromString, Map<String, List<FieldDescription>> mdFields) {
@@ -1626,7 +1606,7 @@ public class MetadataInfo {
         if (fields == null || fields.size() == 0) {
             throw new RuntimeException("_setStructObject('" + id + "') No such field");
         }
-        Object current = _getStructObject(id, mdFields, true, false, false, null);
+        Object current = _getStructObject(id, mdFields, true, null, false, null);
         if (current == null) {
             throw new RuntimeException("_setStructObject('" + id + "') No such field");
         }
@@ -2049,10 +2029,11 @@ public class MetadataInfo {
         public final String name;
         public final FieldDataType.FieldType type;
         public final String nullValueText;
-        public final Class<? extends Enum<?>> enumClass;
+        public final Class<? extends Enum> enumClass;
         public final boolean isList;
         public final boolean isWritable;
         final Field field;
+        protected Method toStringMethod;
 
         public FieldDescription(String name, Field field, FieldDataType type, boolean isWritable) {
             this.name = name;
@@ -2085,19 +2066,35 @@ public class MetadataInfo {
             isList = List.class.isAssignableFrom(klass);
         }
 
+        String textForNull(){
+            return  nullValueText != null  && !nullValueText.isEmpty() ? nullValueText : "Unset";
+        }
+
+        protected String makeStringFromValueSingle(Object value){
+            if(value instanceof String s){
+                return s;
+            }
+            switch (type) {
+                case DateField:
+                    return DateFormat.formatDateTime((Calendar) value);
+                case BoolField:
+                    return ((Boolean) value) ? "true" : "false";
+                case EnumField:
+                    return enumValueToString((Enum<?>) value);
+                default:
+                    return value.toString();
+            }
+        }
+
         public String makeStringFromValue(Object value) {
             if (value == null) {
                 return "";
             }
             if (isList) {
-                return ListFormat.humanReadable((List) value);
-            } else if (type == FieldDataType.FieldType.DateField) {
-                return DateFormat.formatDateTime((Calendar) value);
-            } else if (type == FieldDataType.FieldType.BoolField) {
-                return ((Boolean) value) ? "true" : "false";
-            } else {
-                return value.toString();
+                List<String> l = ((List) value).stream().map(e -> makeStringFromValueSingle(e)).toList();
+                return String.join("\n", l);
             }
+            return makeStringFromValueSingle(value);
         }
 
         public Object makeValueFromString(String value) {
@@ -2151,6 +2148,53 @@ public class MetadataInfo {
                 }
             }
             throw new RuntimeException("makeValueFromString() :Don't know how to convert to type:" + type);
+        }
+
+        public Enum<?> enumValueFromString(String s){
+            if(s == null || s.isEmpty()){
+                return  null;
+            }
+            if(textForNull().equals(s)){
+                return null;
+            }
+            return Enum.valueOf(enumClass, s);
+        }
+
+        public String enumValueToString(Enum<?> v) {
+            if(toStringMethod == null){
+                try {
+                    toStringMethod  = enumClass.getMethod("stringValue");
+                } catch (NoSuchMethodException e) {
+                }
+                if( toStringMethod == null ){
+                    try {
+                        toStringMethod  = enumClass.getMethod("toString");
+                    } catch (NoSuchMethodException e) {
+                    }
+                }
+            }
+            try {
+                return (String) toStringMethod.invoke(v);
+            } catch (IllegalAccessException ex) {
+            } catch (InvocationTargetException ex) {
+            }
+
+            return "[! Don't know how to convert" + v.getClass().getName() + " to string ]";
+        }
+
+        public String[] getEnumValuesAsStrings(){
+            if(type != FieldDataType.FieldType.EnumField || enumClass == null) {
+                return null;
+            }
+
+            var elements = enumClass.getEnumConstants();
+            String[] model = new String[elements.length + 1];
+            int i = 0;
+            model[i++] = textForNull();
+            for(var e : elements){
+                model[i++] = makeStringFromValue(e);
+            }
+            return model;
         }
     }
     //////////////////////////////
