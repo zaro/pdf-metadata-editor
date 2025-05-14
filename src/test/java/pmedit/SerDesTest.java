@@ -185,7 +185,11 @@ public class SerDesTest {
 		String expected = ALL_NULLS_JSON
 				.replace("\"doc.author\" : null", "\"doc.author\" : \"AUTHOR\"")
 				.replace("\"doc.creationDate\" : null", "\"doc.creationDate\" : \"2020-03-02T01:01:01.000+00:00\"");
-		assertEquals(expected.trim(), md.toJson().trim());;
+		String expectedJson = expected.trim();
+		if(OsCheck.isWindows()){
+			expectedJson = expectedJson.replace("\n", "\r\n");
+		}
+		assertEquals(expectedJson, md.toJson().trim());;
 	}
 
 	@Test
