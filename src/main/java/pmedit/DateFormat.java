@@ -20,6 +20,8 @@ public class DateFormat {
             new SimpleDateFormat("yyyy-MM-dd"),
     };
 
+    private static final SimpleDateFormat isoDateFormatForPath = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+
     public static Calendar parseDateOrNull(String value) {
         try {
             return parseDate(value);
@@ -65,4 +67,7 @@ public class DateFormat {
         return cal != null ? isoDateFormat[0].format(cal.getTime()) :  null;
     }
 
+    public static String formatDateTimeForPath(Calendar cal) {
+        return cal != null? isoDateFormatForPath.format(cal.getTime()): null;
+    }
 }
