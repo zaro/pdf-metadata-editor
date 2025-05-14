@@ -22,7 +22,7 @@ public class FilesTestHelper {
 
     public static File getTempDir(){
         if(tempDir == null){
-            tempDir = new File("target/test-data/run-" +DateFormat.formatDateTime(Calendar.getInstance()));
+            tempDir = new File("target" + File.separator + "test-data" + File.separator + "run-" +DateFormat.formatDateTimeForPath(Calendar.getInstance()));
             if (!tempDir.exists()) {
                 tempDir.mkdirs();
             }
