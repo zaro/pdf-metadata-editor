@@ -51,7 +51,7 @@ APP_VERSION="${FULL_APP_VERSION}"
 
 # Remove beta/rc qualifiers as they cannot be used on windows
 if [ "${machine}" = "win" ]; then
-  PRE_TAG="${APP_VERSION%[0-9].[0-9].[0-9]}"
+  PRE_TAG="${APP_VERSION##[0-9].[0-9].[0-9]}"
   PRE_TYPE=${PRE_TAG%[0-9]*}
   PRE_VERSION=${PRE_TAG##*[!0-9]}
 
@@ -59,13 +59,16 @@ if [ "${machine}" = "win" ]; then
   APP_VERSION="${APP_VERSION%beta[0-9]*}"
 
   if [ "${PRE_TAG}" ]; then
+    echo '>>> Adjusting version for prerelease for Windows'
+    echo ">>> PRE_TAG=${PRE_TAG} PRE_TYPE=${PRE_TYPE} PRE_VERSION=${PRE_VERSION}"
+
     if [ -z "${PRE_VERSION}" ]; then
       PRE_VERSION=1
     fi
-    if [ "${PRE_TAG}" = "beta" ]; then
+    if [ "${PRE_TYPE}" = "beta" ]; then
       PRE_VERSION=$(expr $PRE_VERSION + 100)
     fi
-    if [ "${PRE_TAG}" = "rc" ]; then
+    if [ "${PRE_TYPE}" = "rc" ]; then
       PRE_VERSION=$(expr $PRE_VERSION + 200)
     fi
     APP_VERSION="${APP_VERSION}.${PRE_VERSION}"
