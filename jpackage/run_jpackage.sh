@@ -49,8 +49,8 @@ APP_IMAGE_DIR="${DEST_IMAGE_DIR}/${APP_NAME}/"
 
 APP_VERSION="${FULL_APP_VERSION}"
 
-# Remove beta/rc qualifiers as they cannot be used on windows
-if [ "${machine}" = "win" ]; then
+# Remove beta/rc qualifiers as they cannot be used on windows/macos
+if [ "${machine}" = "win" -o "$machine" = "mac" ]; then
   PRE_TAG="${APP_VERSION##[0-9].[0-9].[0-9]}"
   PRE_TYPE=${PRE_TAG%[0-9]*}
   PRE_VERSION=${PRE_TAG##*[!0-9]}
@@ -58,23 +58,26 @@ if [ "${machine}" = "win" ]; then
   APP_VERSION="${APP_VERSION%rc[0-9]*}"
   APP_VERSION="${APP_VERSION%beta[0-9]*}"
 
-  if [ "${PRE_TAG}" ]; then
-    echo '>>> Adjusting version for prerelease for Windows'
-    echo ">>> PRE_TAG=${PRE_TAG} PRE_TYPE=${PRE_TYPE} PRE_VERSION=${PRE_VERSION}"
+  if [ "${machine}" = "win" ]; then
+    if [ "${PRE_TAG}" ]; then
+      echo '>>> Adjusting version for prerelease for Windows'
+      echo ">>> PRE_TAG=${PRE_TAG} PRE_TYPE=${PRE_TYPE} PRE_VERSION=${PRE_VERSION}"
 
-    if [ -z "${PRE_VERSION}" ]; then
-      PRE_VERSION=1
+      if [ -z "${PRE_VERSION}" ]; then
+        PRE_VERSION=1
+      fi
+      if [ "${PRE_TYPE}" = "beta" ]; then
+        PRE_VERSION=$(expr $PRE_VERSION + 100)
+      fi
+      if [ "${PRE_TYPE}" = "rc" ]; then
+        PRE_VERSION=$(expr $PRE_VERSION + 200)
+      fi
+      APP_VERSION="${APP_VERSION}.${PRE_VERSION}"
+    else
+        APP_VERSION="${APP_VERSION}.1000"
     fi
-    if [ "${PRE_TYPE}" = "beta" ]; then
-      PRE_VERSION=$(expr $PRE_VERSION + 100)
-    fi
-    if [ "${PRE_TYPE}" = "rc" ]; then
-      PRE_VERSION=$(expr $PRE_VERSION + 200)
-    fi
-    APP_VERSION="${APP_VERSION}.${PRE_VERSION}"
-  else
-      APP_VERSION="${APP_VERSION}.1000"
   fi
+
 fi
 
 if [ "$TYPE" = "app-image" ]; then
@@ -223,7 +226,11 @@ if [ "${machine}" = "win" ]; then
     signtool_file "$APP_NAME EXE installer" "$file"
   fi
 
-  # Rename files in case of pre-relase
+fi
+
+# Rename files in case of pre-relase
+if [ "${machine}" = "win" -o "$machine" = "mac" ]; then
+
   if [ "${APP_VERSION}" != "${FULL_APP_VERSION}" ]; then
     D="${STAGING_DIR}/packages/"
 
