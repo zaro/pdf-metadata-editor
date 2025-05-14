@@ -27,7 +27,7 @@ jobs:
         os:
           - windows-2019
           - ubuntu-22.04
-          - macos-12
+          - macos-15
     outputs:
       version: ${{ steps.getVersion.outputs.version }}
       preRelease: ${{ contains( steps.getVersion.outputs.version, 'beta' ) || contains( steps.getVersion.outputs.version, 'rc' )  }}
