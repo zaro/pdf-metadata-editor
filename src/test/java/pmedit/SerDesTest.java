@@ -2,12 +2,14 @@ package pmedit;
 
 
 import org.junit.jupiter.api.Test;
+import org.junitpioneer.jupiter.DefaultTimeZone;
 import pmedit.serdes.SerDeslUtils;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DefaultTimeZone("UTC")
 public class SerDesTest {
 	static final String ALL_NULLS_YAML =
 			"""
@@ -157,7 +159,7 @@ public class SerDesTest {
 		md.doc.creationDate = new GregorianCalendar(2020,2, 2, 1, 1, 1);
 		String expected = ALL_NULLS_YAML
 				.replace("doc.author: null", "doc.author: \"AUTHOR\"")
-				.replace("doc.creationDate: null", "doc.creationDate: \"2020-03-01T23:01:01.000+00:00\"");
+				.replace("doc.creationDate: null", "doc.creationDate: \"2020-03-02T01:01:01.000+00:00\"");
 		assertEquals(expected, md.toYAML());;
 	}
 
@@ -168,7 +170,7 @@ public class SerDesTest {
 		md.doc.creationDate = new GregorianCalendar(2020,2, 2, 1, 1, 1);
 		String yaml = ALL_NULLS_YAML
 				.replace("doc.author: null", "doc.author: \"AUTHOR\"")
-				.replace("doc.creationDate: null", "doc.creationDate: \"2020-03-01T23:01:01.000+00:00\"");
+				.replace("doc.creationDate: null", "doc.creationDate: \"2020-03-02T01:01:01.000+00:00\"");
 		MetadataInfo parsed = new MetadataInfo();
 		parsed.fromYAML(yaml);;
 		assertTrue(md.isEquivalent(parsed));
@@ -182,7 +184,7 @@ public class SerDesTest {
 		md.doc.creationDate = new GregorianCalendar(2020,2, 2, 1, 1, 1);
 		String expected = ALL_NULLS_JSON
 				.replace("\"doc.author\" : null", "\"doc.author\" : \"AUTHOR\"")
-				.replace("\"doc.creationDate\" : null", "\"doc.creationDate\" : \"2020-03-01T23:01:01.000+00:00\"");
+				.replace("\"doc.creationDate\" : null", "\"doc.creationDate\" : \"2020-03-02T01:01:01.000+00:00\"");
 		assertEquals(expected.trim(), md.toJson().trim());;
 	}
 
@@ -193,7 +195,7 @@ public class SerDesTest {
 		md.doc.creationDate = new GregorianCalendar(2020,2, 2, 1, 1, 1);
 		String json = ALL_NULLS_JSON
 				.replace("\"doc.author\" : null", "\"doc.author\" : \"AUTHOR\"")
-				.replace("\"doc.creationDate\" : null", "\"doc.creationDate\" : \"2020-03-01T23:01:01.000+00:00\"");
+				.replace("\"doc.creationDate\" : null", "\"doc.creationDate\" : \"2020-03-02T01:01:01.000+00:00\"");
 		MetadataInfo parsed = new MetadataInfo();
 		parsed.fromJson(json);;
 		assertTrue(md.isEquivalent(parsed));
