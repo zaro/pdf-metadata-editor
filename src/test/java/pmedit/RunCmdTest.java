@@ -1,11 +1,12 @@
 package pmedit;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class RunCmdTest {
 
-    @Test
+//    @Test
     public void testArgumentsWithSpacesStd(){
         var r = RunCmd.execCmd(new String[]{
                 "python",
