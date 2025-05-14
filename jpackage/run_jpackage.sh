@@ -34,17 +34,40 @@ fi
 
 export MSYS_NO_PATHCONV=1
 
+FULL_APP_VERSION="${project.version}"
+
 WINDOWS_UUID="${windows.uuid}"
 STAGING_DIR="${staging.dir}"
 APP_NAME="${project.name}"
 DESCRIPTION="${project.description}"
 MAIN_JAR="${main.jar.name}"
 MAIN_CLASS="pmedit.Main"
-APP_VERSION="${project.version}"
 ICON_FORMAT="${icon.format}"
 DEST_DIR="${STAGING_DIR}/packages"
 DEST_IMAGE_DIR="${STAGING_DIR}/packages-image"
 APP_IMAGE_DIR="${DEST_IMAGE_DIR}/${APP_NAME}/"
+
+APP_VERSION="${FULL_APP_VERSION}"
+
+# Remove beta/rc qualifiers as they cannot be used on windows
+if [ "${machine}" = "win" ]; then
+  PRE_TAG="${APP_VERSION%[0-9].[0-9].[0-9]}"
+  PRE_TYPE=${PRE_TAG%[0-9]*}
+  PRE_VERSION=${PRE_TAG##*[!0-9]}
+
+  APP_VERSION="${APP_VERSION%rc[0-9]*}"
+  APP_VERSION="${APP_VERSION%beta[0-9]*}"
+
+  if [ "${PRE_TAG}" ]; then
+    if [ -z "${PRE_VERSION}" ]; then
+      PRE_VERSION=1
+    fi
+    if [ "${PRE_TAG}" = "rc" ]; then
+      PRE_VERSION=$(expr $PRE_VERSION + 100)
+    fi
+    APP_VERSION="${APP_VERSION}.${PRE_VERSION}"
+  fi
+fi
 
 if [ "$TYPE" = "app-image" ]; then
   rm -rf "${DEST_IMAGE_DIR}"  "${DEST_DIR}/$APP_NAME.app"
@@ -190,6 +213,15 @@ if [ "${machine}" = "win" ]; then
   if [ "$TYPE" = "exe" ]; then
     file=$(ls -1 "${STAGING_DIR}/packages/"*.exe)
     signtool_file "$APP_NAME EXE installer" "$file"
+  fi
+
+  # Rename files in case of pre-relase
+  if [ "${APP_VERSION}" != "${FULL_APP_VERSION}" ]; then
+    D="${STAGING_DIR}/packages/"
+    for file in $(find "${D}" -name "*${APP_VERSION}*"); do
+      ofile="${file//$APP_VERSION/$FULL_APP_VERSION}"
+      mv -v "${D}/$file" "${D}/$ofile"
+    done
   fi
 
 fi
