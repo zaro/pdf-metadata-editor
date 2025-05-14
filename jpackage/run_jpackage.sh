@@ -62,10 +62,15 @@ if [ "${machine}" = "win" ]; then
     if [ -z "${PRE_VERSION}" ]; then
       PRE_VERSION=1
     fi
-    if [ "${PRE_TAG}" = "rc" ]; then
+    if [ "${PRE_TAG}" = "beta" ]; then
       PRE_VERSION=$(expr $PRE_VERSION + 100)
     fi
+    if [ "${PRE_TAG}" = "rc" ]; then
+      PRE_VERSION=$(expr $PRE_VERSION + 200)
+    fi
     APP_VERSION="${APP_VERSION}.${PRE_VERSION}"
+  else
+      APP_VERSION="${APP_VERSION}.1000"
   fi
 fi
 
@@ -218,10 +223,14 @@ if [ "${machine}" = "win" ]; then
   # Rename files in case of pre-relase
   if [ "${APP_VERSION}" != "${FULL_APP_VERSION}" ]; then
     D="${STAGING_DIR}/packages/"
-    for file in $(find "${D}" -name "*${APP_VERSION}*"); do
+
+    OIFS="$IFS"
+    IFS=$'\n'
+    for file in  $(find "${D}" -type f); do
       ofile="${file//$APP_VERSION/$FULL_APP_VERSION}"
-      mv -v "${D}/$file" "${D}/$ofile"
+      mv -v "$file" "$ofile"
     done
+    IFS="$OIFS"
   fi
 
 fi
