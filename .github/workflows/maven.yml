@@ -45,7 +45,7 @@ jobs:
       - name: maven-settings-xml-action
         uses: InstaCode/maven-settings-xml-action@v9
         with:
-          servers: '[{ "id": "github", "username": "zaro", "password": "${{ secrets.JDDE_PACKAGES_TOKEN }}" }]'
+          servers: '[{ "id": "github-jdde", "username": "zaro", "password": "${{ secrets.JDDE_PACKAGES_TOKEN }}" }]'
 
       # Build
       - name: Build with Maven
