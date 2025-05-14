@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>pdf-metadata-edit</groupId>
 	<artifactId>pdf-metadata-editor</artifactId>
-	<version>3.1.1</version>
+	<version>4.0.0beta1</version>
 	<name>Pdf Metadata Editor</name>
 	<description>Simple Editor for PDF metadata</description>
 	<url>https://pdf.metadata.care/</url>
