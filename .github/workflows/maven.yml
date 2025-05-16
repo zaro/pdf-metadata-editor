@@ -47,12 +47,17 @@ jobs:
         with:
           servers: '[{ "id": "github-jdde", "username": "zaro", "password": "${{ secrets.JDDE_PACKAGES_TOKEN }}" }]'
 
+      - name: Run Tests
+        uses: coactions/setup-xvfb@v1
+        with:
+          run: mvn -B test --file pom.xml
+
       # Build
       - name: Build with Maven
         env:
           PME_LICENSE: ${{ secrets.PME_LICENSE }}
           SIGNTOOL_CERT: ${{ secrets.SIGNTOOL_CERT }}
-        run: mvn -B package --file pom.xml
+        run: mvn -B -DskipTests package --file pom.xml
 
       # Publish
       - name: Get Version
