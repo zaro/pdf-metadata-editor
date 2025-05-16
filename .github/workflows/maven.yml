@@ -49,6 +49,8 @@ jobs:
 
       - name: Run Tests
         uses: coactions/setup-xvfb@v1
+        env:
+          PME_LICENSE: ${{ secrets.PME_LICENSE }}
         with:
           run: mvn -B test --file pom.xml
 
