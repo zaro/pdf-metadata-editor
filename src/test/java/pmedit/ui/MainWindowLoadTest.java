@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static pmedit.ui.UiTestHelpers.*;
 
 @SetSystemProperty(key = "junitTest", value = "true")
-public class MainWindowTestLoad {
+public class MainWindowLoadTest {
     final int NUM_FILES = 1;
 
     @BeforeAll
