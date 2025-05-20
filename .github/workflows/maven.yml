@@ -51,6 +51,7 @@ jobs:
         uses: coactions/setup-xvfb@v1
         env:
           PME_LICENSE: ${{ secrets.PME_LICENSE }}
+          NO_GUI_TESTS: ${{ contains( matrix.os, 'macos' }}
         with:
           run: mvn -B test --file pom.xml
 

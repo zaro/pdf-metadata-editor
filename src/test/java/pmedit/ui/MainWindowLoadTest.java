@@ -3,6 +3,7 @@ package pmedit.ui;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junitpioneer.jupiter.SetSystemProperty;
 import org.netbeans.jemmy.ClassReference;
 import org.netbeans.jemmy.operators.*;
@@ -17,6 +18,7 @@ import java.lang.reflect.InvocationTargetException;
 import static org.junit.jupiter.api.Assertions.*;
 import static pmedit.ui.UiTestHelpers.*;
 
+@DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
 @SetSystemProperty(key = "junitTest", value = "true")
 public class MainWindowLoadTest {
     final int NUM_FILES = 1;
