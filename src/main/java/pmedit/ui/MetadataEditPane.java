@@ -1,8 +1,5 @@
 package pmedit.ui;
 
-import org.apache.pdfbox.pdmodel.PageLayout;
-import org.apache.pdfbox.pdmodel.PageMode;
-import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pmedit.annotations.FieldDataType;
@@ -17,6 +14,7 @@ import com.toedter.calendar.JDateChooser;
 import pmedit.*;
 import pmedit.ext.PmeExtension;
 import pmedit.preset.PresetValues;
+import pmedit.ui.components.MetadataFormComponent;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -759,6 +757,10 @@ public class MetadataEditPane {
             public void apply(Object field, FieldID anno) {
                 if(field instanceof JComponent jc){
                     jc.putClientProperty("MetadataFieldId", anno.value());
+                }
+
+                if(field instanceof MetadataFormComponent fc){
+                    fc.initMetadataFieldId(anno.value());
                 }
 
                 if (field instanceof JTextComponent textComponent) {
