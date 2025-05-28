@@ -12,18 +12,23 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class DateTimePicker extends JDateChooser {
+    public static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     public DateTimePicker(){
         super();
-        setDateFormatString("yyyy-MM-dd HH:mm:ss");
+        setDateFormatString(DATE_TIME_FORMAT);
     }
 
-    public void setCalendar(LocalDateTime value){
+    public static Calendar toCalendar(LocalDateTime value){
         Calendar calendar = null;
         if (value != null) {
             calendar = Calendar.getInstance();
             calendar.setTime(Date.from(value.atZone(ZoneId.systemDefault()).toInstant()));
         }
-        setCalendar(calendar);
+        return calendar;
+    }
+
+    public void setCalendar(LocalDateTime value){
+        setCalendar(toCalendar(value));
     }
 
     @Override

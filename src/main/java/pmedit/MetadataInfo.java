@@ -1445,9 +1445,17 @@ public class MetadataInfo {
             }
         };
     }
-
     public boolean isEquivalent(MetadataInfo other) {
+        return isEquivalent(other, false);
+    }
+
+    public boolean isEquivalent(MetadataInfo other, boolean onlyEnabled) {
         for (Entry<String, List<FieldDescription>> e : _mdFields.entrySet()) {
+            if(onlyEnabled){
+                if(!isEnabled(e.getKey())){
+                     continue;
+                }
+            }
             // Skip file.* fields, as they are read only and come from file metadata
             if (e.getKey().startsWith("file.")) {
                 continue;
@@ -1456,10 +1464,6 @@ public class MetadataInfo {
             //if("dc.dates".equals(e.getKey())){
             //	continue;
             //}
-            // Skip "basic.label" for now as it cannot be loaded in jempbox <= 1.8.12
-            if ("basic.label".equals(e.getKey())) {
-                continue;
-            }
             Object t = get(e.getKey());
             Object o = other.get(e.getKey());
             FieldDescription fd = e.getValue().get(e.getValue().size() - 1);

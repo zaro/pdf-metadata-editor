@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import pmedit.annotations.FieldDataType;
 import pmedit.annotations.FieldEnabled;
 import pmedit.annotations.FieldID;
+import pmedit.ui.components.DateTimeList;
 import pmedit.ui.components.DateTimePicker;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
@@ -21,6 +22,8 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
@@ -34,6 +37,7 @@ import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MetadataEditPane {
@@ -93,7 +97,7 @@ public class MetadataEditPane {
     @FieldID("dc.description")
     public JTextField xmpDcDescription;
     @FieldID("dc.dates")
-    public JTextArea xmpDcDates;
+    public DateTimeList xmpDcDates;
     @FieldID("dc.format")
     public JTextField xmpDcFormat;
     @FieldID("dc.identifier")
@@ -433,6 +437,9 @@ public class MetadataEditPane {
                 if (field instanceof DateTimePicker) {
                     objectToField((DateTimePicker) field, value);
                 }
+                if (field instanceof DateTimeList dtl) {
+                    objectToField(dtl, value);
+                }
             }
         }, new MetadataEditPane.FieldEnabledCheckBox() {
             @Override
@@ -523,6 +530,15 @@ public class MetadataEditPane {
 
                     }
                 }
+                if (field instanceof DateTimeList dtl) {
+                    MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(anno.value());
+                    if (fd.type == FieldDataType.FieldType.DateField && fd.isList) {
+                        metadataInfo.set(anno.value(), dtl.getCalendarList());
+                    } else {
+                            throw new RuntimeException("Cannot store List<Calendar> in :" +  fd.type + "[isList=" + fd.isList+ "] for field "+ fd.name);
+
+                    }
+                }
             }
         }, new MetadataEditPane.FieldEnabledCheckBox() {
             @Override
@@ -572,6 +588,22 @@ public class MetadataEditPane {
             field.setCalendar(c);
         } else if (o == null) {
             field.setCalendar((Calendar) null);
+        } else {
+            RuntimeException e = new RuntimeException("Cannot store non-(Calendar|LocalDateTime) object in DateTimePicker");
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
+    private void objectToField(DateTimeList field, Object o) {
+        if (o == null) {
+            field.clearAllDates();
+        } else if (o instanceof List c) {
+            field.setCalendarList(c);
+        } else if (o instanceof LocalDateTime d) {
+            field.setCalendarList(List.of(DateTimePicker.toCalendar(d)));
+        } else if (o instanceof Calendar c) {
+            field.setCalendarList(List.of(c));
         } else {
             RuntimeException e = new RuntimeException("Cannot store non-(Calendar|LocalDateTime) object in DateTimePicker");
             e.printStackTrace();
@@ -782,6 +814,49 @@ public class MetadataEditPane {
                         }
                     });
                     createContextMenu(dtPicker, anno.value());
+                }
+
+                if (field instanceof DateTimeList dtList) {
+                    dtList.addDataChangeLister(new ListDataListener() {
+                        @Override
+                        public void intervalAdded(ListDataEvent e) {
+                            dataChange(e);
+                        }
+
+                        @Override
+                        public void intervalRemoved(ListDataEvent e) {
+                            dataChange(e);
+                        }
+
+                        @Override
+                        public void contentsChanged(ListDataEvent e) {
+                            dataChange(e);
+                        }
+
+                        public void dataChange(ListDataEvent evt) {
+                            List<Calendar> selectedValueC = dtList.getCalendarList();
+                            List<Calendar> initialC = initialMetadata != null ? (List<Calendar>) initialMetadata.get(anno.value()) : null;
+                            List<Calendar> selectedValue = selectedValueC != null ? selectedValueC : List.of();
+                            List<Calendar> initial = initialC != null ? initialC : List.of();
+
+                            boolean hasChange = selectedValue.size() != initial.size();
+                            if(!hasChange){
+                                for(int i = 0; i < selectedValue.size(); i++){
+                                    if(selectedValue.get(i).compareTo(initial.get(i)) != 0){
+                                        hasChange = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (!hasChange) {
+                                dtList.topPanel.setBorder(datePickerDefault);
+                            } else {
+                                dtList.topPanel.setBorder(changedBorder);
+                            }
+                        }
+                    });
+                    createContextMenu(dtList.dateTimePicker, anno.value());
                 }
             }
         }, null);
@@ -1090,11 +1165,8 @@ public class MetadataEditPane {
         xmpDcDatesEnabled = new JCheckBox();
         xmpDcDatesEnabled.setText("");
         panel9.add(xmpDcDatesEnabled, new GridConstraints(5, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JScrollPane scrollPane12 = new JScrollPane();
-        panel9.add(scrollPane12, new GridConstraints(5, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        xmpDcDates = new JTextArea();
-        xmpDcDates.setEditable(false);
-        scrollPane12.setViewportView(xmpDcDates);
+        xmpDcDates = new DateTimeList();
+        panel9.add(xmpDcDates.$$$getRootComponent$$$(), new GridConstraints(5, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JLabel label29 = new JLabel();
         label29.setText("Format");
         panel9.add(label29, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1117,30 +1189,30 @@ public class MetadataEditPane {
         xmpDcLanguagesEnabled = new JCheckBox();
         xmpDcLanguagesEnabled.setText("");
         panel9.add(xmpDcLanguagesEnabled, new GridConstraints(8, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JScrollPane scrollPane13 = new JScrollPane();
-        panel9.add(scrollPane13, new GridConstraints(8, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        final JScrollPane scrollPane12 = new JScrollPane();
+        panel9.add(scrollPane12, new GridConstraints(8, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpDcLanguages = new JTextArea();
-        scrollPane13.setViewportView(xmpDcLanguages);
+        scrollPane12.setViewportView(xmpDcLanguages);
         final JLabel label32 = new JLabel();
         label32.setText("Publishers");
         panel9.add(label32, new GridConstraints(9, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcPublishersEnabled = new JCheckBox();
         xmpDcPublishersEnabled.setText("");
         panel9.add(xmpDcPublishersEnabled, new GridConstraints(9, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JScrollPane scrollPane14 = new JScrollPane();
-        panel9.add(scrollPane14, new GridConstraints(9, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        final JScrollPane scrollPane13 = new JScrollPane();
+        panel9.add(scrollPane13, new GridConstraints(9, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpDcPublishers = new JTextArea();
-        scrollPane14.setViewportView(xmpDcPublishers);
+        scrollPane13.setViewportView(xmpDcPublishers);
         final JLabel label33 = new JLabel();
         label33.setText("Relationships");
         panel9.add(label33, new GridConstraints(10, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcRelationshipsEnabled = new JCheckBox();
         xmpDcRelationshipsEnabled.setText("");
         panel9.add(xmpDcRelationshipsEnabled, new GridConstraints(10, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JScrollPane scrollPane15 = new JScrollPane();
-        panel9.add(scrollPane15, new GridConstraints(10, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        final JScrollPane scrollPane14 = new JScrollPane();
+        panel9.add(scrollPane14, new GridConstraints(10, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpDcRelationships = new JTextArea();
-        scrollPane15.setViewportView(xmpDcRelationships);
+        scrollPane14.setViewportView(xmpDcRelationships);
         final JLabel label34 = new JLabel();
         label34.setText("Rights");
         panel9.add(label34, new GridConstraints(11, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1163,28 +1235,28 @@ public class MetadataEditPane {
         xmpDcSubjectsEnabled = new JCheckBox();
         xmpDcSubjectsEnabled.setText("");
         panel9.add(xmpDcSubjectsEnabled, new GridConstraints(13, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JScrollPane scrollPane16 = new JScrollPane();
-        panel9.add(scrollPane16, new GridConstraints(13, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        final JScrollPane scrollPane15 = new JScrollPane();
+        panel9.add(scrollPane15, new GridConstraints(13, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpDcSubjects = new JTextArea();
-        scrollPane16.setViewportView(xmpDcSubjects);
+        scrollPane15.setViewportView(xmpDcSubjects);
         final JLabel label37 = new JLabel();
         label37.setText("Types");
         panel9.add(label37, new GridConstraints(14, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcTypesEnabled = new JCheckBox();
         xmpDcTypesEnabled.setText("");
         panel9.add(xmpDcTypesEnabled, new GridConstraints(14, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JScrollPane scrollPane17 = new JScrollPane();
-        panel9.add(scrollPane17, new GridConstraints(14, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        final JScrollPane scrollPane16 = new JScrollPane();
+        panel9.add(scrollPane16, new GridConstraints(14, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpDcTypes = new JTextArea();
-        scrollPane17.setViewportView(xmpDcTypes);
+        scrollPane16.setViewportView(xmpDcTypes);
         final JPanel panel10 = new JPanel();
         panel10.setLayout(new GridLayoutManager(7, 3, new Insets(0, 0, 0, 0), -1, -1));
         tabbedPane.addTab("XMP Rights", panel10);
-        final JScrollPane scrollPane18 = new JScrollPane();
-        panel10.add(scrollPane18, new GridConstraints(0, 0, 7, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        final JScrollPane scrollPane17 = new JScrollPane();
+        panel10.add(scrollPane17, new GridConstraints(0, 0, 7, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel11 = new JPanel();
         panel11.setLayout(new GridLayoutManager(6, 3, new Insets(5, 5, 5, 5), -1, -1));
-        scrollPane18.setViewportView(panel11);
+        scrollPane17.setViewportView(panel11);
         final JLabel label38 = new JLabel();
         label38.setText("Certificate");
         panel11.add(label38, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1214,20 +1286,20 @@ public class MetadataEditPane {
         xmpRightsOwnerEnabled = new JCheckBox();
         xmpRightsOwnerEnabled.setText("");
         panel11.add(xmpRightsOwnerEnabled, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JScrollPane scrollPane19 = new JScrollPane();
-        panel11.add(scrollPane19, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        final JScrollPane scrollPane18 = new JScrollPane();
+        panel11.add(scrollPane18, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpRightsOwner = new JTextArea();
-        scrollPane19.setViewportView(xmpRightsOwner);
+        scrollPane18.setViewportView(xmpRightsOwner);
         final JLabel label41 = new JLabel();
         label41.setText("Usage Terms");
         panel11.add(label41, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpRightsUsageTermsEnabled = new JCheckBox();
         xmpRightsUsageTermsEnabled.setText("");
         panel11.add(xmpRightsUsageTermsEnabled, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JScrollPane scrollPane20 = new JScrollPane();
-        panel11.add(scrollPane20, new GridConstraints(3, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        final JScrollPane scrollPane19 = new JScrollPane();
+        panel11.add(scrollPane19, new GridConstraints(3, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpRightsUsageTerms = new JTextArea();
-        scrollPane20.setViewportView(xmpRightsUsageTerms);
+        scrollPane19.setViewportView(xmpRightsUsageTerms);
         final JLabel label42 = new JLabel();
         label42.setText("Web Statement");
         panel11.add(label42, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1239,11 +1311,11 @@ public class MetadataEditPane {
         final JPanel panel12 = new JPanel();
         panel12.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         tabbedPane.addTab("Viewer Options", panel12);
-        final JScrollPane scrollPane21 = new JScrollPane();
-        panel12.add(scrollPane21, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        final JScrollPane scrollPane20 = new JScrollPane();
+        panel12.add(scrollPane20, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel13 = new JPanel();
         panel13.setLayout(new GridLayoutManager(17, 3, new Insets(0, 0, 0, 0), -1, -1));
-        scrollPane21.setViewportView(panel13);
+        scrollPane20.setViewportView(panel13);
         final JLabel label43 = new JLabel();
         label43.setText("Hide tool bars");
         panel13.add(label43, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
