@@ -56,22 +56,14 @@ public class MainWindow extends JFrame {
     };
     final ActionListener saveRenameAction = new ActionListener() {
         public void actionPerformed(ActionEvent e) {
-            saveFile(null);
             String renameTemplate = Preferences.getInstance().get("renameTemplate", null);
             if (renameTemplate == null) {
+                JOptionPane.showMessageDialog(MainWindow.this,
+                        "No Rename template configured!");
                 return;
             }
-            TemplateString ts = new TemplateString(renameTemplate);
-            String toName = ts.process(metadataInfo);
-            String toDir = pdfFile.getParent();
-            File to = new File(toDir, toName);
-            try {
-                Files.move(pdfFile.toPath(), to.toPath());
-                pdfFile = to;
-            } catch (IOException e1) {
-                JOptionPane.showMessageDialog(MainWindow.this,
-                        "Error while renaming file:\n" + e1);
-            }
+
+            pdfFile = saveFile(null, renameTemplate);
             reloadFile();
         }
     };
@@ -83,6 +75,7 @@ public class MainWindow extends JFrame {
             }
 
             final JFileChooser fcSaveAs = new JFileChooser();
+            fcSaveAs.setDialogTitle("Save As");
 
             String dir = Preferences.getInstance().get("LastDir", null);
             if (dir != null) {
@@ -395,7 +388,7 @@ public class MainWindow extends JFrame {
             try {
                 PDDocument document = Loader.loadPDF(pdfFile, password != null ? password : "");
 
-                reloadFileFromDocument(document);
+                reloadFileFromDocument(document, pdfFile);
                 document.close();
                 break;
             } catch (InvalidPasswordException e) {
@@ -419,10 +412,14 @@ public class MainWindow extends JFrame {
 
     }
 
-    protected void reloadFileFromDocument(PDDocument document) throws XmpParsingException, IOException {
+    protected void reloadFileFromDocument(PDDocument document, File pdfFile) throws XmpParsingException, IOException {
         filename.setText(pdfFile.getAbsolutePath());
         metadataInfo = new MetadataInfo();
         metadataInfo.loadFromPDF(document);
+
+        if (pdfFile != null) {
+            metadataInfo.loadPDFFileInfo(pdfFile);
+        }
 
         metadataEditor.fillFromMetadata(metadataInfo);
         MetadataInfo defaultMetadata = new MetadataInfo();
@@ -443,7 +440,7 @@ public class MainWindow extends JFrame {
         try {
             PDDocument document = Loader.loadPDF(pdfFile, password != null ? password : "");
 
-            reloadFileFromDocument(document);
+            reloadFileFromDocument(document, pdfFile);
 
             document.close();
         } catch (Exception e) {
@@ -453,10 +450,14 @@ public class MainWindow extends JFrame {
         }
     }
 
-    private void saveFile(File newFile) {
+    private File saveFile(File newFile) {
+        return saveFile(newFile, null);
+    }
+
+    private File saveFile(File newFile, String renameTemplate) {
         if (pdfFile == null && filename.getText().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please select a pdf file.");
-            return;
+            return null;
         }
 
         try {
@@ -476,16 +477,24 @@ public class MainWindow extends JFrame {
             metadataEditor.copyToMetadata(metadataInfo);
             metadataInfo.expandVariables();
 
+            if (renameTemplate != null) {
+                TemplateString ts = new TemplateString(renameTemplate);
+                String toName = ts.process(metadataInfo);
+                String toDir = pdfFile.getParent();
+                newFile = new File(toDir, toName);
+            }
+
             metadataInfo.saveAsPDF(pdfFile, newFile);
 
-            metadataEditor.fillFromMetadata(metadataInfo);
-
             password = metadataInfo.encryptionOptions.userPassword;
+
+            return newFile;
 
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this,
                     "Error while saving file:\n" + e);
+            return null;
         }
     }
 

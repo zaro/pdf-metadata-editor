@@ -1,17 +1,21 @@
 package pmedit.ui;
 
+import org.netbeans.jemmy.JemmyProperties;
 import org.netbeans.jemmy.accessibility.AccessibleDescriptionChooser;
 import org.netbeans.jemmy.operators.*;
 import pmedit.DateFormat;
 import pmedit.MetadataInfo;
 import pmedit.annotations.FieldDataType;
+import pmedit.ui.components.DateTimeList;
 import pmedit.ui.components.DateTimePicker;
+import pmedit.ui.components.MetadataFormComponent;
 
 import javax.swing.*;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.io.File;
 import java.util.Calendar;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,6 +27,14 @@ public class UiTestHelpers {
         fileChooser.setCurrentDirectory(testFile.getParentFile());
         fileChooser.setSelectedFile(testFile);
         new JButtonOperator(fileChooser, "Open").push();
+    }
+    static void saveFileChooser(String dialogTitle, File testFile){
+        var chooserFrame = new JDialogOperator(dialogTitle);
+        var fileChooser = new JFileChooserOperator(
+                JFileChooserOperator.findJFileChooser((Container) chooserFrame.getSource()));
+        fileChooser.setCurrentDirectory(testFile.getParentFile());
+        fileChooser.setSelectedFile(testFile);
+        new JButtonOperator(fileChooser, "Save").push();
     }
 
     static void ensureTab(JTabbedPaneOperator tab, String findInTabTitle){
@@ -75,7 +87,22 @@ public class UiTestHelpers {
                 assertEquals(expected.getString(name, "Unset"), cb.getSelectedItem(), message);
             }
         } else {
-            fail("Unknown component:" + c.getClass());
+            // Handle form components
+            boolean found = false;
+            if(c instanceof JPanel p) {
+                Object owner = p.getClientProperty(MetadataFormComponent.OWNER_PROPERTY);
+                if(owner != null){
+                    if(owner instanceof DateTimeList dtl){
+                        found = true;
+                        MetadataInfo tmp = new MetadataInfo();
+                        tmp.dc.dates = dtl.getCalendarList();
+                        assertEquals(expected.getString(name, null), tmp.getString("dc.dates", null), message);
+                    }
+                }
+            }
+            if(!found) {
+                fail("Unknown component:" + c.getClass());
+            }
         }
     }
 
@@ -119,7 +146,26 @@ public class UiTestHelpers {
                 cb.setSelectedItem(expected.getString(name, "Unset"));
             }
         } else {
-            fail("Unknown component:" + c.getClass());
+            // Handle form components
+            boolean found = false;
+            if(c instanceof JPanel p) {
+                Object owner = p.getClientProperty(MetadataFormComponent.OWNER_PROPERTY);
+                if(owner != null){
+                    if(owner instanceof DateTimeList dtl){
+                        found = true;
+                        dtl.setCalendarList((List<Calendar>) expected.get(name));
+                    }
+                }
+            }
+            if(!found) {
+                fail("Unknown component:" + c.getClass());
+            }
+
         }
+    }
+
+    void delay(long ms) {
+        JemmyProperties.setCurrentTimeout("MyCustomDelay", ms); // 1 second
+        JemmyProperties.getCurrentTimeouts().sleep("MyCustomDelay");
     }
 }

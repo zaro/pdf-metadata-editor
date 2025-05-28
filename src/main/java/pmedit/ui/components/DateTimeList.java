@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-public class DateTimeList {
+public class DateTimeList extends MetadataFormComponent {
     public JList<Calendar> calendarList;
     public JPanel topPanel;
     public JButton clearAllButton;
@@ -148,6 +148,17 @@ public class DateTimeList {
     public void clearAllDates() {
         listModel.clear();
         dateTimePicker.setDate(null);
+    }
+
+    @Override
+    public Container getContainer() {
+        return topPanel;
+    }
+
+    @Override
+    public void initMetadataFieldId(String id) {
+        topPanel.putClientProperty("MetadataFieldId", id);
+        topPanel.putClientProperty(MetadataFormComponent.OWNER_PROPERTY, this);
     }
 
     private static class CalendarListCellRenderer extends DefaultListCellRenderer {
