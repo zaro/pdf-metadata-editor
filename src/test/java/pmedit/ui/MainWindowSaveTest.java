@@ -15,7 +15,9 @@ import pmedit.MetadataInfo;
 import pmedit.prefs.Preferences;
 import pmedit.ui.preferences.DefaultsPreferences;
 
+import javax.swing.*;
 import javax.swing.plaf.basic.BasicArrowButton;
+import javax.swing.plaf.metal.MetalComboBoxIcon;
 import javax.swing.plaf.metal.MetalScrollButton;
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -91,11 +93,15 @@ public class MainWindowSaveTest {
         md.basicEnabled.baseURL = true;
         populateMetadataPaneValues(topFrame, md);
 
-       new ComponentOperator(
+        new ComponentOperator(
                 topFrame,
                 new JButtonOperator.JButtonFinder() {
                     public boolean checkComponent(Component comp) {
-                        return super.checkComponent(comp) && comp instanceof BasicArrowButton;
+                        boolean r = super.checkComponent(comp);
+                        if(r && comp instanceof JButton b){
+                            r = b.getIcon() instanceof MetalComboBoxIcon;
+                        }
+                        return r;
                     }
                 }).clickMouse();
 
@@ -104,18 +110,7 @@ public class MainWindowSaveTest {
         File savedAs = new File(initialFile.file.getParentFile(), initialFile.file.getName() + ".saveAs.pdf");
         saveFileChooser("Save As", savedAs);
 
-        MetadataInfo saved = new MetadataInfo();
-        saved.loadFromPDF(initialFile.file);
-        assertTrue(saved.isEquivalent(initialFile.md), "Original file metadata differs");
-
-        saved.loadFromPDF(savedAs);
-        saved.docEnabled.author = false;
-        saved.basicEnabled.baseURL = false;
-        assertTrue(saved.isEquivalent(initialFile.md, true), "Non edited metadata differs");
-        saved.setEnabled(false);
-        saved.docEnabled.author = true;
-        saved.basicEnabled.baseURL = true;
-        assertTrue(saved.isEquivalent(md, true), "Edited metadata differs");
+        FilesTestHelper.checkFileHasChangedMetadata(initialFile, savedAs, md);
     }
 
     @Test
@@ -151,7 +146,11 @@ public class MainWindowSaveTest {
                 topFrame,
                 new JButtonOperator.JButtonFinder() {
                     public boolean checkComponent(Component comp) {
-                        return super.checkComponent(comp) && comp instanceof BasicArrowButton;
+                        boolean r = super.checkComponent(comp);
+                        if(r && comp instanceof JButton b){
+                            r = b.getIcon() instanceof MetalComboBoxIcon;
+                        }
+                        return r;
                     }
                 }).clickMouse();
 
@@ -161,18 +160,8 @@ public class MainWindowSaveTest {
         File savedAs = new File(initialFile.file.getParentFile(), fileName);
 
 
-        MetadataInfo saved = new MetadataInfo();
-        saved.loadFromPDF(initialFile.file);
-        assertTrue(saved.isEquivalent(initialFile.md), "Original file metadata differs");
+        FilesTestHelper.checkFileHasChangedMetadata(initialFile, savedAs, md);
 
-        saved.loadFromPDF(savedAs);
-        saved.docEnabled.author = false;
-        saved.basicEnabled.baseURL = false;
-        assertTrue(saved.isEquivalent(initialFile.md, true), "Non edited metadata differs");
-        saved.setEnabled(false);
-        saved.docEnabled.author = true;
-        saved.basicEnabled.baseURL = true;
-        assertTrue(saved.isEquivalent(md, true), "Edited metadata differs");
     }
 
 }
