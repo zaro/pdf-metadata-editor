@@ -63,10 +63,10 @@ class MetadataInfoTest {
 				System.out.println(t.file.getAbsolutePath());
 				System.out.println("SAVED:" );
 				System.out.println("=========" );
-				System.out.println(t.md.toYAML(true));
+				System.out.println(t.md.toYAML());
 				System.out.println("LOADED:" );
 				System.out.println("=========" );
-				System.out.println(loaded.toYAML(true));
+				System.out.println(loaded.toYAML());
 			}
 
 			Assertions.assertTrue(t.md.isEquivalent(loaded));

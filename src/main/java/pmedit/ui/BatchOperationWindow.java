@@ -65,7 +65,6 @@ public class BatchOperationWindow extends JFrame {
     private BatchParametersWindow parametersWindow;
     private final Map<String, BatchOperationParameters> batchParameters = new HashMap<String, BatchOperationParameters>();
 
-
     public BatchOperationWindow(CommandDescription command) {
         setTitle("Batch PDF metadata edit");
         setBounds(100, 100, 640, 480);
@@ -770,6 +769,6 @@ public class BatchOperationWindow extends JFrame {
     }
 
     public static void main(String[] args) {
-        new BatchOperationWindow(null);
+        new BatchOperationWindow(null).setVisible(true);
     }
 }

@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 
 public class MetadataEditPane {
+    final static  boolean isTesting = System.getProperty("junitTest", "").equals("true");
     Logger logger = LoggerFactory.getLogger(MetadataEditPane.class);
 
     public JTabbedPane tabbedPane;
@@ -755,12 +756,14 @@ public class MetadataEditPane {
 
             @Override
             public void apply(Object field, FieldID anno) {
-                if(field instanceof JComponent jc){
-                    jc.putClientProperty("MetadataFieldId", anno.value());
-                }
+                if (isTesting) {
+                    if (field instanceof JComponent jc) {
+                        jc.putClientProperty("MetadataFieldId", anno.value());
+                    }
 
-                if(field instanceof MetadataFormComponent fc){
-                    fc.initMetadataFieldId(anno.value());
+                    if (field instanceof MetadataFormComponent fc) {
+                        fc.initMetadataFieldId(anno.value());
+                    }
                 }
 
                 if (field instanceof JTextComponent textComponent) {
@@ -781,12 +784,12 @@ public class MetadataEditPane {
                             String selectedValue = getComboBoxValue(cb, fieldDescription);
                             Object initial = initialMetadata != null ? initialMetadata.get(fieldDescription.name) : null;
                             String initialS = null;
-                            if(initial != null) {
-                                if(initial instanceof String s){
-                                    initialS =s ;
+                            if (initial != null) {
+                                if (initial instanceof String s) {
+                                    initialS = s;
                                 }
-                                if(initial instanceof Boolean b){
-                                    initialS = b ? "Yes": "No";
+                                if (initial instanceof Boolean b) {
+                                    initialS = b ? "Yes" : "No";
                                 }
                             }
                             if ((selectedValue != null && selectedValue.equals(initialS)) || (selectedValue == null && initialS == null)) {
@@ -797,7 +800,7 @@ public class MetadataEditPane {
                             }
                         }
                     });
-                    if(fieldDescription.type == FieldDataType.FieldType.EnumField){
+                    if (fieldDescription.type == FieldDataType.FieldType.EnumField) {
                         combo.setModel(new DefaultComboBoxModel(fieldDescription.getEnumValuesAsStrings()));
                     }
                 }
@@ -842,9 +845,9 @@ public class MetadataEditPane {
                             List<Calendar> initial = initialC != null ? initialC : List.of();
 
                             boolean hasChange = selectedValue.size() != initial.size();
-                            if(!hasChange){
-                                for(int i = 0; i < selectedValue.size(); i++){
-                                    if(selectedValue.get(i).compareTo(initial.get(i)) != 0){
+                            if (!hasChange) {
+                                for (int i = 0; i < selectedValue.size(); i++) {
+                                    if (selectedValue.get(i).compareTo(initial.get(i)) != 0) {
                                         hasChange = true;
                                         break;
                                     }
@@ -861,7 +864,15 @@ public class MetadataEditPane {
                     createContextMenu(dtList.dateTimePicker, anno.value());
                 }
             }
-        }, null);
+        }, isTesting
+                ? new MetadataEditPane.FieldEnabledCheckBox() {
+                    @Override
+                    public void apply(JCheckBox field, FieldEnabled anno) {
+                        field.putClientProperty("EnabledMetadataFieldId", anno.value());
+                    }
+                }
+                : null
+        );
 
 
     }

@@ -106,7 +106,11 @@ public class UiTestHelpers {
         }
     }
 
-    static void populateMetadataPaneValues(ContainerOperator frame, MetadataInfo info){
+    static void populateMetadataPaneValues(ContainerOperator frame, MetadataInfo info) {
+        populateMetadataPaneValues(frame, info, false);
+    }
+
+    static void populateMetadataPaneValues(ContainerOperator frame, MetadataInfo info, boolean setEnabled){
         var tab = new JTabbedPaneOperator(frame);
 
         for(String k: MetadataInfo.keys()) {
@@ -115,13 +119,24 @@ public class UiTestHelpers {
                 // Ignore file.* props, they are not shown
                 continue;
             }
-            if(!info.isEnabled(k)){
-                continue;
-            }
+
             String findInTt = parts[0].equals("dc") ? "Dublin" : parts[0].substring(0, 1).toUpperCase() + parts[0].substring(1);
             ensureTab(tab, findInTt);
+            if(!info.isEnabled(k)){
+                if(setEnabled) {
+                    populateEnabled(tab, k, false);
+                }
+                continue;
+            }
             populateMetadataPaneValue(tab, k, info);
+            if(setEnabled){
+                populateEnabled(tab, k, info.isEnabled(k));
+            }
         }
+    }
+    static void populateEnabled(JTabbedPaneOperator tab, String name, boolean isEnabled) {
+        JCheckBox c = (JCheckBox)ComponentOperator.findComponent((Container) tab.getSource(), new CustomPropertyComponentChooser("EnabledMetadataFieldId", name));
+        c.setSelected(isEnabled);
     }
 
     static void populateMetadataPaneValue(JTabbedPaneOperator tab, String name, MetadataInfo expected){
@@ -164,7 +179,7 @@ public class UiTestHelpers {
         }
     }
 
-    void delay(long ms) {
+    public static void delay(long ms) {
         JemmyProperties.setCurrentTimeout("MyCustomDelay", ms); // 1 second
         JemmyProperties.getCurrentTimeouts().sleep("MyCustomDelay");
     }

@@ -99,7 +99,7 @@ public class SerDeslUtils {
         return mapper;
     }
 
-    public static String toYAML(boolean pretty, Object yamlObject) {
+    public static String toYAML(Object yamlObject) {
         try {
             return yamlMapper().writeValueAsString(yamlObject);
         } catch (JsonProcessingException e) {

@@ -1,5 +1,8 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Batch" type="Application" factoryName="Application">
+    <option name="envFilePaths">
+      <option value="$PROJECT_DIR$/.env" />
+    </option>
     <option name="MAIN_CLASS_NAME" value="pmedit.Main" />
     <module name="pdf-metadata-editor" />
     <option name="PROGRAM_PARAMETERS" value="batch-gui-cmdline" />

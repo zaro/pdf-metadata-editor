@@ -1268,23 +1268,32 @@ public class MetadataInfo {
         return _getObjectEnabled(id);
     }
 
-    public <T> Map<String, T> asFlatMap(Function<Object, T> convertor) {
+    public <T> Map<String, T> asFlatMap( boolean onlyEnabled, Function<Object, T> convertor) {
         LinkedHashMap<String, T> map = new LinkedHashMap<String, T>();
 
         for (String fieldName : keys()) {
             Object o = get(fieldName);
-            map.put(fieldName, convertor.apply(o));
+            Object v = convertor.apply(o);
+            if(onlyEnabled && !isEnabled(fieldName)) {
+                continue;
+            }
+            map.put(fieldName, (T) v);
+
         }
         return map;
     }
 
-    public Map<String, Object> asFlatMap() {
-        return asFlatMap(new Function<Object, Object>() {
+    public Map<String, Object> asFlatMap(boolean onlyEnabled) {
+        return asFlatMap(onlyEnabled, new Function<Object, Object>() {
             @Override
             public Object apply(Object t) {
                 return t;
             }
         });
+    }
+
+    public Map<String, Object> asFlatMap() {
+        return asFlatMap(false);
     }
 
     public Map<String, String> asFlatStringMap() {
@@ -1419,8 +1428,8 @@ public class MetadataInfo {
         return toYAML(false);
     }
 
-    public String toYAML(boolean pretty) {
-        return SerDeslUtils.toYAML(pretty, asFlatMap());
+    public String toYAML(boolean onlyEnabled) {
+        return SerDeslUtils.toYAML(asFlatMap(onlyEnabled));
     }
     public void fromYAML(String yamlString) {
         Map<String, Object> map = (Map<String, Object>) SerDeslUtils.fromYAML(yamlString);
@@ -1536,7 +1545,7 @@ public class MetadataInfo {
             map.put("_enabled", enabledMap);
         }
 
-        return SerDeslUtils.toYAML(false, map);
+        return SerDeslUtils.toYAML( map);
     }
 
     protected Object _getStructObject(String id, Map<String, List<FieldDescription>> mdFields, boolean parent, FieldDataType.FieldType toType, boolean useDefault, Object defaultValue) {

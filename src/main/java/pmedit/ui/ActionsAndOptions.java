@@ -9,6 +9,7 @@ import pmedit.preset.PresetStore;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.plaf.basic.BasicArrowButton;
+import javax.swing.plaf.metal.MetalComboBoxIcon;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -24,7 +25,7 @@ public class ActionsAndOptions {
     public JCheckBox removeDocumentCheckBox;
     public JCheckBox removeXMPCheckBox;
     public JButton btnSave;
-    public BasicArrowButton btnSaveMenu;
+    public JButton btnSaveMenu;
     public JComboBox<Float> pdfVersion;
     public JButton encryptionButton;
     public JCheckBox enableEncryption;
@@ -38,7 +39,9 @@ public class ActionsAndOptions {
     public EncryptionOptions encryptionOptions;
 
     void createUIComponents() {
-        btnSaveMenu = new BasicArrowButton(BasicArrowButton.SOUTH);
+        btnSaveMenu = new JButton(new MetalComboBoxIcon());
+        btnSaveMenu.setMargin(new Insets(0, 1, 1, 3));
+        btnSaveMenu.setFocusable(false);
     }
 
     public ActionsAndOptions() {
