@@ -126,7 +126,7 @@ public class DateTimeList extends MetadataFormComponent {
 
     // Public methods to access the calendar list
     public List<Calendar> getCalendarList() {
-        List<Calendar> result = new ArrayList<>();
+        List<Calendar> result = new ArrayList<Calendar>();
         for (int i = 0; i < listModel.getSize(); i++) {
             result.add((Calendar) listModel.getElementAt(i).clone());
         }

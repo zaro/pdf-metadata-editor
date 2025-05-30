@@ -3,6 +3,8 @@ package pmedit;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
+import org.apache.xmpbox.xml.XmpParsingException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -16,18 +18,34 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 public class FilesTestHelper {
-    protected static  File tempDir;
+//    protected static  File tempDir;
+    protected static Stack<File> tempDirs = new Stack<>();
+
+    public static void pushTempDir(String name){
+        File tempDir = new File(getTempDir(), name);
+        if(!tempDir.exists()){
+            tempDir.mkdirs();
+        }
+        tempDirs.push(tempDir);
+    }
+
+    public static void popTempDir(){
+        tempDirs.pop();
+    }
 
     public static File getTempDir(){
-        if(tempDir == null){
-            tempDir = new File("target" + File.separator + "test-data" + File.separator + "run-" +DateFormat.formatDateTimeForPath(Calendar.getInstance()));
+        if(tempDirs.isEmpty()){
+            File tempDir = new File("target" + File.separator + "test-data" + File.separator + "run-" +DateFormat.formatDateTimeForPath(Calendar.getInstance()));
             if (!tempDir.exists()) {
                 tempDir.mkdirs();
             }
+            tempDirs.push(tempDir);
         }
-        return tempDir;
+        return tempDirs.peek();
     }
 
     public static File emptyPdf() throws Exception {
@@ -149,11 +167,18 @@ public class FilesTestHelper {
         }
     }
 
+    public static void assertEquals(MetadataInfo expected, MetadataInfo actual, boolean onlyEnabled, String message) {
+        if(!actual.isEquivalent(expected, onlyEnabled)){
+            Assertions.assertEquals(expected.toYAML(true), actual.toYAML(true), message);
+        }
+    }
+
+
     public static void checkFileHasChangedMetadata(PMTuple initialFile, File savedAs, MetadataInfo changed) throws XmpParsingException, IOException {
         MetadataInfo saved = new MetadataInfo();
         if(savedAs != null) {
             saved.loadFromPDF(initialFile.file);
-            assertTrue(saved.isEquivalent(initialFile.md), "Original file metadata differs");
+            assertEquals(initialFile.md, saved , false, "Original file metadata differs");
         } else {
             savedAs = initialFile.file;
         }
@@ -162,12 +187,12 @@ public class FilesTestHelper {
         for(String k: expectedChangedKeys){
             saved.setEnabled(k, false);
         }
-        assertTrue(saved.isEquivalent(initialFile.md, true), "Non edited metadata differs");
+        assertEquals(initialFile.md, saved , true, "Non edited metadata differs");
         saved.setEnabled(false);
         for(String k: expectedChangedKeys){
             saved.setEnabled(k, true);
         }
-        assertTrue(saved.isEquivalent(changed, true), "Edited metadata differs");
+        assertEquals(changed, saved, true, "Edited metadata differs");
 
     }
 
