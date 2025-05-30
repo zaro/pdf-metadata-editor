@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Batch" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="pmedit.Main" />
+    <module name="pdf-metadata-editor" />
+    <option name="PROGRAM_PARAMETERS" value="batch-gui-cmdline" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
