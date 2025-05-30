@@ -149,6 +149,28 @@ public class FilesTestHelper {
         }
     }
 
+    public static void checkFileHasChangedMetadata(PMTuple initialFile, File savedAs, MetadataInfo changed) throws XmpParsingException, IOException {
+        MetadataInfo saved = new MetadataInfo();
+        if(savedAs != null) {
+            saved.loadFromPDF(initialFile.file);
+            assertTrue(saved.isEquivalent(initialFile.md), "Original file metadata differs");
+        } else {
+            savedAs = initialFile.file;
+        }
+        saved.loadFromPDF(savedAs);
+        List<String> expectedChangedKeys = changed.enabledKeys();
+        for(String k: expectedChangedKeys){
+            saved.setEnabled(k, false);
+        }
+        assertTrue(saved.isEquivalent(initialFile.md, true), "Non edited metadata differs");
+        saved.setEnabled(false);
+        for(String k: expectedChangedKeys){
+            saved.setEnabled(k, true);
+        }
+        assertTrue(saved.isEquivalent(changed, true), "Edited metadata differs");
+
+    }
+
     public static class PMTuple {
         public final File file;
         public final MetadataInfo md;
