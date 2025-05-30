@@ -3,7 +3,7 @@ package pmedit;
 import java.util.*;
 
 public class CommandLine {
-    static Set<String> validMdNames = new LinkedHashSet<String>(MetadataInfo.keys());
+    public static Set<String> validMdNames = new LinkedHashSet<String>(MetadataInfo.keys());
     public List<String> fileList = new ArrayList<String>();
     public boolean noGui = System.getProperty("noGui") != null;
     public CommandDescription command;

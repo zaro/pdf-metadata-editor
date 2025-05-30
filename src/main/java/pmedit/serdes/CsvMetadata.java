@@ -1,7 +1,10 @@
-package pmedit;
+package pmedit.serdes;
 
 import com.opencsv.*;
 import com.opencsv.exceptions.CsvException;
+import pmedit.CommandLine;
+import pmedit.MetadataInfo;
+import pmedit.OsCheck;
 
 import java.io.File;
 import java.io.FileReader;
@@ -9,7 +12,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class CsvMetadata {
 
