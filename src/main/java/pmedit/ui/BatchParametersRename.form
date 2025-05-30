@@ -3,7 +3,7 @@
   <grid id="cbd77" binding="contentPane" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="10" left="10" bottom="10" right="10"/>
     <constraints>
-      <xy x="48" y="54" width="502" height="297"/>
+      <xy x="48" y="54" width="546" height="297"/>
     </constraints>
     <properties/>
     <border type="none"/>
@@ -43,7 +43,7 @@
       </grid>
       <nested-form id="e226b" form-file="pmedit/ui/RenameTemplateOptions.form" binding="renameTemplateOptions">
         <constraints>
-          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
         </constraints>
       </nested-form>
     </children>

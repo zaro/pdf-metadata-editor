@@ -520,6 +520,9 @@ public class BatchOperationWindow extends JFrame {
         if (command.is(CommandDescription.RENAME)) {
             parametersWindow = new BatchParametersRename(params, this);
         }
+        if (command.is(CommandDescription.FROM_FILE_NAME)) {
+            parametersWindow = new BatchParametersExtract(params, this);
+        }
         if (command.isInGroup(CommandDescription.EXPORT_GROUP)) {
             parametersWindow = new BatchParametersExport(params, this, command);
         }
@@ -535,7 +538,7 @@ public class BatchOperationWindow extends JFrame {
         if (command == null) {
             btnParameters.setEnabled(false);
         } else {
-            btnParameters.setEnabled(command.is(CommandDescription.CLEAR) || command.is(CommandDescription.EDIT) || command.is(CommandDescription.RENAME) || command.isInGroup(CommandDescription.EXPORT_GROUP));
+            btnParameters.setEnabled(command.is(CommandDescription.CLEAR) || command.is(CommandDescription.EDIT) || command.isInGroup(CommandDescription.FILE_OPERATIONS_GROUP) || command.isInGroup(CommandDescription.EXPORT_GROUP));
         }
     }
 

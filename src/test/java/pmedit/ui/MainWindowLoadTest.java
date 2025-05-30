@@ -97,7 +97,7 @@ public class MainWindowLoadTest {
             new JButtonOperator(frame, "Open PDF").push();
             openFileChooser("Open", testData.file);
             MetadataInfo check = testData.md.clone();
-            check.copyIfEnabled(defaultMetadata);
+            check.copyOnlyEnabled(defaultMetadata);
             check.pdf.keywords = check.doc.title;
             checkMetadataPaneValues(frame, check);
         }

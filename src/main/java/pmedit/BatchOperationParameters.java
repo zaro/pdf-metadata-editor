@@ -6,6 +6,7 @@ public class BatchOperationParameters {
     public static  final String DEFAULT_OUTPUT_FILENAME = "metadata-export";
     public MetadataInfo metadata = new MetadataInfo();
     public String renameTemplate;
+    public String extractTemplate;
     public String outputFile = DEFAULT_OUTPUT_FILENAME;
     public Boolean useRelativePaths;
     public Boolean perFileExport;
@@ -39,6 +40,7 @@ public class BatchOperationParameters {
             if (params.renameTemplate == null && command.is("rename")) {
                 params.renameTemplate = pmedit.prefs.Preferences.getInstance().get("renameTemplate", null);
             }
+            params.extractTemplate = cmdPrefs.get("et", null);
             params.outputFile = cmdPrefs.get("of", DEFAULT_OUTPUT_FILENAME);
             String rp = cmdPrefs.get("rp", null);
             if(rp != null){
@@ -61,6 +63,9 @@ public class BatchOperationParameters {
         cmdPrefs.put("md", metadata.asPersistenceString());
         if (renameTemplate != null) {
             cmdPrefs.put("rt", renameTemplate);
+        }
+        if (extractTemplate != null) {
+            cmdPrefs.put("et", extractTemplate);
         }
         if(outputFile != null){
             cmdPrefs.put("of", outputFile);

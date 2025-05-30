@@ -1345,7 +1345,7 @@ public class MetadataInfo {
         }
     }
 
-    public void copyIfEnabled(MetadataInfo other) {
+    public void copyOnlyEnabled(MetadataInfo other) {
         for (String fieldName : keys()) {
             if(other.isEnabled(fieldName)) {
                 set(fieldName, other.get(fieldName));
@@ -1445,6 +1445,17 @@ public class MetadataInfo {
             }
         };
     }
+
+    public boolean isEmpty(){
+        for (String fieldName : keys()) {
+            Object o = get(fieldName);
+            if( o != null){
+                return false;
+            }
+        }
+        return true;
+    }
+
     public boolean isEquivalent(MetadataInfo other) {
         return isEquivalent(other, false);
     }

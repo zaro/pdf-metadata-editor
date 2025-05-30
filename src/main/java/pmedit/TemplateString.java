@@ -2,6 +2,10 @@ package pmedit;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class TemplateString {
@@ -9,6 +13,7 @@ public class TemplateString {
 
     String template;
     List<Entity> entityList;
+    Pattern extractPattern;
 
     public TemplateString(String template, int maxOutputLenght) {
         length = maxOutputLenght;
@@ -45,6 +50,10 @@ public class TemplateString {
     }
 
     public String process(MetadataInfo md) {
+        return process(md, null);
+    }
+
+    public String process(MetadataInfo md, BiFunction<Entity, String, String> extraProcessor) {
         if (entityList == null)
             parse();
         ArrayList<String> chunks = new ArrayList<String>();
@@ -53,6 +62,12 @@ public class TemplateString {
         for (int i = 0; i < entityList.size(); ++i) {
             Entity e = entityList.get(i);
             String value = e.get(md);
+            if(extraProcessor != null) {
+                value = extraProcessor.apply(e, value);
+                if(value == null) {
+                    value = "";
+                }
+            }
             chunks.add(value);
             if (e.shrinkable() && value.length() > 0)
                 resizable.add(i);
@@ -84,16 +99,53 @@ public class TemplateString {
         return result.toString();
     }
 
+    public MetadataInfo extract(String string) {
+        if (extractPattern == null) {
+            if(entityList == null) {
+                parse();
+            }
+            StringBuilder sb = new StringBuilder();
+            for (Entity e : entityList) {
+                sb.append(e.asRegex());
+            }
+            extractPattern = Pattern.compile(sb.toString());
+        }
+        MetadataInfo md = new MetadataInfo();
+        md.setEnabled(false);
+        Matcher m = extractPattern.matcher(string);
+        if(m.matches()){
+            for (Entity e : entityList) {
+                String groupName = e.groupName();
+                if(groupName != null){
+                    md.setFromString(e.name(), m.group(e.groupName()));
+                    md.setEnabled(e.name(), true);
+                }
+            }
+        }
+
+        return md;
+    }
+
     public interface Entity {
         String get(MetadataInfo md);
 
         boolean shrinkable();
+
+        String asRegex();
+
+        String name();
+        String groupName();
     }
 
     public static class Variable implements Entity {
         String name;
+        boolean nonGreedy;
 
         public Variable(String name) {
+            if(name.endsWith("?")){
+                nonGreedy = true;
+                name = name.substring(0, name.length()-1);
+            }
             this.name = name;
         }
 
@@ -106,6 +158,22 @@ public class TemplateString {
         public boolean shrinkable() {
             return true;
         }
+
+        @Override
+        public String asRegex() {
+            return "(?<"+ groupName() +">.*" + (nonGreedy ? "?" : "") +")";
+        }
+
+        @Override
+        public String name() {
+            return name;
+        }
+
+        @Override
+        public String groupName() {
+            return name.replace('.', '0');
+        }
+
     }
 
     public static class Literal implements Entity {
@@ -123,6 +191,21 @@ public class TemplateString {
         @Override
         public boolean shrinkable() {
             return false;
+        }
+
+        @Override
+        public String asRegex() {
+            return literal.isEmpty() ? literal : Pattern.quote(literal);
+        }
+
+        @Override
+        public String name() {
+            return null;
+        }
+
+        @Override
+        public String groupName() {
+            return null;
         }
     }
 

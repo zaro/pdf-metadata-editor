@@ -3,7 +3,7 @@ package pmedit;
 public class CommandDescription {
     // Groups
     public static final CommandDescription MODIFY_METADATA_GROUP = new CommandDescription("Modify Metadata");
-    public static final CommandDescription FILE_OPERATIONS_GROUP = new CommandDescription("File operations");
+    public static final CommandDescription FILE_OPERATIONS_GROUP = new CommandDescription("File name operations");
     public static final CommandDescription EXPORT_GROUP = new CommandDescription("Export metadata");
     public static final CommandDescription IMPORT_GROUP = new CommandDescription("Import metadata");
 
@@ -11,6 +11,7 @@ public class CommandDescription {
     public static final CommandDescription EDIT = new CommandDescription("edit", "Set metadata", MODIFY_METADATA_GROUP);
     public static final CommandDescription CLEAR = new CommandDescription("clear", "Clear metadata", MODIFY_METADATA_GROUP);
     public static final CommandDescription RENAME = new CommandDescription("rename", "Rename files from metadata", FILE_OPERATIONS_GROUP);
+    public static final CommandDescription FROM_FILE_NAME = new CommandDescription("fromfilename", "Set metadata from file names", FILE_OPERATIONS_GROUP);
     public static final CommandDescription FROM_JSON = new CommandDescription("fromjson", "Set metadata from JSON",IMPORT_GROUP);
     public static final CommandDescription TO_JSON = new CommandDescription("tojson", "Extract metadata as JSON",  EXPORT_GROUP);
     public static final CommandDescription FROM_YAML = new CommandDescription("fromyaml", "Set metadata from YAML",IMPORT_GROUP);
@@ -24,6 +25,7 @@ public class CommandDescription {
             EDIT,
             CLEAR,
             RENAME,
+            FROM_FILE_NAME,
             FROM_JSON,
             TO_JSON,
             FROM_YAML,
@@ -42,6 +44,7 @@ public class CommandDescription {
             DOC_TO_XMP,
             FILE_OPERATIONS_GROUP,
             RENAME,
+            FROM_FILE_NAME,
             EXPORT_GROUP,
             TO_CSV,
             TO_JSON,

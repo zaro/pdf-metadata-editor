@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import pmedit.serdes.SerDeslUtils;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -165,6 +164,37 @@ public class PDFMetadataEditBatch {
                 } catch (Exception e) {
                     logger.error("rename", e);
 
+                    status.addError(inputFileRelativeName(file), "Failed: " + e);
+                }
+            }
+
+            @Override
+            public void ignore(File file) {
+                status.addError(inputFileRelativeName(file), "Invalid file");
+            }
+        });
+    }
+
+    public void fromFilename(List<File> files, File outDir, final ActionStatus status) {
+        if (params == null || params.extractTemplate == null || params.extractTemplate.isEmpty()) {
+            status.addError("*", "Extract template not configured");
+            return;
+        }
+        TemplateString extractor = new TemplateString(params.extractTemplate);
+        forFiles(files, new FileAction(outDir) {
+
+            @Override
+            public void apply(File file) {
+                try {
+                    MetadataInfo mdFile = new MetadataInfo();
+                    mdFile.loadFromPDF(file);
+                    mdFile.loadPDFFileInfo(file);
+                    MetadataInfo mdExtracted = extractor.extract(mdFile.file.name);
+                    mdFile.copyOnlyEnabled(mdExtracted);
+                    mdFile.saveAsPDF(file, getOutputFile(file));
+                    status.addStatus(outputFileRelativeName(file), "Done");
+                } catch (Exception e) {
+                    logger.error("fromFileName", e);
                     status.addError(inputFileRelativeName(file), "Failed: " + e);
                 }
             }
@@ -419,6 +449,8 @@ public class PDFMetadataEditBatch {
             actionStatus.addError("*", "Invalid license, you can get a license at " + Constants.batchLicenseUrl);
         } else if (command.is("rename")) {
             rename(batchFileList, outDir,  actionStatus);
+        } else if (command.is("fromfilename")) {
+            fromFilename(batchFileList, outDir,  actionStatus);
         } else if (command.is("edit")) {
             edit(batchFileList, outDir,  actionStatus);
         } else if (command.is("clear")) {
