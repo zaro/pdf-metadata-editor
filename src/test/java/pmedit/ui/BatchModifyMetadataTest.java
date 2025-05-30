@@ -4,24 +4,16 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junitpioneer.jupiter.SetSystemProperty;
 import org.netbeans.jemmy.ClassReference;
-import org.netbeans.jemmy.JemmyProperties;
-import org.netbeans.jemmy.Timeouts;
 import org.netbeans.jemmy.operators.*;
 import pmedit.CommandDescription;
 import pmedit.FilesTestHelper;
 import pmedit.MetadataInfo;
-import pmedit.prefs.Preferences;
 
-import javax.swing.plaf.basic.BasicArrowButton;
-import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static pmedit.ui.UiTestHelpers.*;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
@@ -29,7 +21,6 @@ import static pmedit.ui.UiTestHelpers.*;
 public class BatchModifyMetadataTest {
     java.util.List<FilesTestHelper.PMTuple> initialFiles;
     JFrameOperator topFrame;
-    Timeouts timeouts = JemmyProperties.getCurrentTimeouts();
 
     @BeforeAll
     static void setUp() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException {

@@ -5,8 +5,6 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.xmpbox.xml.XmpParsingException;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.io.CleanupMode;
-import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,8 +15,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class FilesTestHelper {
@@ -49,7 +45,7 @@ public class FilesTestHelper {
     }
 
     public static File emptyPdf() throws Exception {
-        File temp = File.createTempFile("test-file", ".pdf", getTempDir());
+        File temp = File.createTempFile("test-file-", ".pdf", getTempDir());
         PDDocument doc = new PDDocument();
         try {
             // a valid PDF document requires at least one page
