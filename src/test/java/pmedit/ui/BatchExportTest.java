@@ -4,7 +4,6 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junitpioneer.jupiter.SetSystemProperty;
 import org.netbeans.jemmy.ClassReference;
-import org.netbeans.jemmy.ComponentChooser;
 import org.netbeans.jemmy.operators.*;
 import pmedit.CommandDescription;
 import pmedit.FilesTestHelper;
@@ -12,14 +11,8 @@ import pmedit.MetadataInfo;
 import pmedit.serdes.CsvMetadata;
 import pmedit.serdes.SerDeslUtils;
 
-import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import java.awt.*;
-import java.awt.event.KeyEvent;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,7 +20,7 @@ import static pmedit.ui.UiTestHelpers.openFileChooser;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
 @SetSystemProperty(key = "junitTest", value = "true")
-public class BatchExtractTest {
+public class BatchExportTest {
     java.util.List<FilesTestHelper.PMTuple> initialFiles;
     JFrameOperator topFrame;
 
@@ -65,7 +58,7 @@ public class BatchExtractTest {
 
 
     @Test
-    public void testExtractCsvSingleFile() throws Exception {
+    public void testExportCsvSingleFile() throws Exception {
         selectCommand(CommandDescription.TO_CSV);
         new JButtonOperator(topFrame, "Parameters").push();
         JDialogOperator parameters = new JDialogOperator("Batch Export parameters");
@@ -97,7 +90,7 @@ public class BatchExtractTest {
     }
 
     @Test
-    public void testExtractCsvPerFile() throws Exception {
+    public void testExportCsvPerFile() throws Exception {
         selectCommand(CommandDescription.TO_CSV);
         new JButtonOperator(topFrame, "Parameters").push();
         JDialogOperator parameters = new JDialogOperator("Batch Export parameters");
@@ -130,7 +123,7 @@ public class BatchExtractTest {
     }
 
     @Test
-    public void testExtractJsonSingleFile() throws Exception {
+    public void testExportJsonSingleFile() throws Exception {
         selectCommand(CommandDescription.TO_JSON);
         new JButtonOperator(topFrame, "Parameters").push();
         JDialogOperator parameters = new JDialogOperator("Batch Export parameters");
@@ -166,7 +159,7 @@ public class BatchExtractTest {
     }
 
     @Test
-    public void testExtractJsonPerFile() throws Exception {
+    public void testExportJsonPerFile() throws Exception {
         selectCommand(CommandDescription.TO_JSON);
         new JButtonOperator(topFrame, "Parameters").push();
         JDialogOperator parameters = new JDialogOperator("Batch Export parameters");
@@ -203,7 +196,7 @@ public class BatchExtractTest {
     }
 
     @Test
-    public void testExtractYamlSingleFile() throws Exception {
+    public void testExportYamlSingleFile() throws Exception {
         selectCommand(CommandDescription.TO_YAML);
         new JButtonOperator(topFrame, "Parameters").push();
         JDialogOperator parameters = new JDialogOperator("Batch Export parameters");
@@ -239,7 +232,7 @@ public class BatchExtractTest {
     }
 
     @Test
-    public void testExtractYamlPerFile() throws Exception {
+    public void testExportYamlPerFile() throws Exception {
         selectCommand(CommandDescription.TO_YAML);
         new JButtonOperator(topFrame, "Parameters").push();
         JDialogOperator parameters = new JDialogOperator("Batch Export parameters");
