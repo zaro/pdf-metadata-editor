@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pmedit.serdes.CsvMetadata;
 import pmedit.serdes.SerDeslUtils;
+import pmedit.util.FileAction;
+import pmedit.util.FilesWalker;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -11,18 +13,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
 public class PDFMetadataEditBatch {
     Logger logger = LoggerFactory.getLogger(PDFMetadataEditBatch.class);
 
-    protected FileFilter defaultFileFilter = new FileFilter() {
-
-        @Override
-        public boolean accept(File pathname) {
-            return isPdfExtension(pathname) || pathname.isDirectory();
-        }
-    };
     BatchOperationParameters params;
 
     public PDFMetadataEditBatch() {
@@ -33,53 +27,12 @@ public class PDFMetadataEditBatch {
         this.params = params;
     }
 
-    public static boolean isPdfExtension(File pathname) {
-        return pathname.getName().toLowerCase().endsWith(".pdf");
-    }
-
-    protected void _forFiles(File file, FileFilter filter, FileAction action) {
-        if (file.isFile()) {
-            if (isPdfExtension(file)) {
-                action.beforeEach();
-                action.apply(file);
-                action.afterEach();
-            } else {
-                action.ignore(file);
-            }
-        } else if (file.isDirectory()) {
-            File[]  files = file.listFiles(filter);
-            action.pushOutDirFromInputFile(file);
-            if(files != null) {
-                for (File dirEntry : files) {
-                    _forFiles(dirEntry, filter, action);
-                }
-            }
-            action.popOutDir();
-        } else {
-            action.ignore(file);
-        }
-    }
-
-
-    public void forFiles(List<File> files, FileAction action) {
-        if(files == null || files.isEmpty()){
-            return;
-        }
-        action.setCurrentInputDir(files.get(0));
-        action.beforeAll();
-        for (File file : files) {
-            action.setCurrentInputDir(file);
-            _forFiles(file, defaultFileFilter, action);
-        }
-        action.afterAll();
-    }
-
-    public void edit(List<File> files, File outDir, final ActionStatus status) {
+    public void edit(FilesWalker filesWalker, File outDir, final ActionStatus status) {
         if (params == null) {
             status.addError("*", "No metadata defined");
             return;
         }
-        forFiles(files, new FileAction(outDir) {
+        filesWalker.forFiles(new FileAction(outDir) {
 
             @Override
             public void apply(File file) {
@@ -103,8 +56,8 @@ public class PDFMetadataEditBatch {
         });
     }
 
-    public void clear(List<File> files, File outDir, final ActionStatus status) {
-        forFiles(files, new FileAction(outDir) {
+    public void clear(FilesWalker filesWalker, File outDir, final ActionStatus status) {
+        filesWalker.forFiles(new FileAction(outDir) {
 
             @Override
             public void apply(File file) {
@@ -129,7 +82,7 @@ public class PDFMetadataEditBatch {
         });
     }
 
-    public void rename(List<File> files, File outDir, final ActionStatus status) {
+    public void rename(FilesWalker filesWalker, File outDir, final ActionStatus status) {
         String template = null;
         if (params != null) {
             template = params.renameTemplate;
@@ -142,7 +95,7 @@ public class PDFMetadataEditBatch {
         }
         final TemplateString ts = new TemplateString(template);
 
-        forFiles(files, new FileAction(outDir) {
+        filesWalker.forFiles(new FileAction(outDir) {
 
             @Override
             public void apply(File file) {
@@ -176,13 +129,13 @@ public class PDFMetadataEditBatch {
         });
     }
 
-    public void fromFilename(List<File> files, File outDir, final ActionStatus status) {
+    public void fromFilename(FilesWalker filesWalker, File outDir, final ActionStatus status) {
         if (params == null || params.extractTemplate == null || params.extractTemplate.isEmpty()) {
             status.addError("*", "Extract template not configured");
             return;
         }
         TemplateString extractor = new TemplateString(params.extractTemplate);
-        forFiles(files, new FileAction(outDir) {
+        filesWalker.forFiles(new FileAction(outDir) {
 
             @Override
             public void apply(File file) {
@@ -207,9 +160,9 @@ public class PDFMetadataEditBatch {
         });
     }
 
-    public void fromjson(List<File> jsonFiles, File outDir, final ActionStatus status) {
+    public void fromjson(FilesWalker filesWalker, File outDir, final ActionStatus status) {
         List<ImportFileParsed> imports = new ArrayList<>();
-        for (File jsonFile : jsonFiles) {
+        for (File jsonFile : filesWalker.list()) {
             try {
                 List<MetadataInfo> actionList = SerDeslUtils.fromJSONFileAsList(jsonFile).stream().map(e -> {
                     MetadataInfo md = new MetadataInfo();
@@ -232,8 +185,8 @@ public class PDFMetadataEditBatch {
         return  outFile;
     }
 
-    public void tojson(List<File> files, File outDir, final ActionStatus status) {
-        forFiles(files, new ExportFileAction(outDir, params.isSingleFileExport()) {
+    public void tojson(FilesWalker filesWalker, File outDir, final ActionStatus status) {
+        filesWalker.forFiles(new ExportFileAction(outDir, params.isSingleFileExport()) {
             @Override
             void exportRecords(List<ExportedObject> records) {
                 ExportedObject firstRecord = records.get(0);
@@ -270,9 +223,9 @@ public class PDFMetadataEditBatch {
         });
     }
 
-    public void fromyaml(List<File> jsonFiles, File outDir, final ActionStatus status) {
+    public void fromyaml(FilesWalker filesWalker, File outDir, final ActionStatus status) {
         List<ImportFileParsed> imports = new ArrayList<>();
-        for (File yamlFile : jsonFiles) {
+        for (File yamlFile : filesWalker.list()) {
             try {
                 List<MetadataInfo> actionList = SerDeslUtils.fromYAMLFileAsList(yamlFile).stream().map(e -> {
                     MetadataInfo md = new MetadataInfo();
@@ -287,8 +240,8 @@ public class PDFMetadataEditBatch {
         fromImportFile(imports, outDir, status, "fromyaml");
     }
 
-    public void toyaml(List<File> files, File outDir, final ActionStatus status) {
-        forFiles(files, new ExportFileAction(outDir, params.isSingleFileExport()) {
+    public void toyaml(FilesWalker filesWalker, File outDir, final ActionStatus status) {
+        filesWalker.forFiles(new ExportFileAction(outDir, params.isSingleFileExport()) {
             @Override
             void exportRecords(List<ExportedObject> records) {
                 ExportedObject firstRecord = records.get(0);
@@ -325,9 +278,9 @@ public class PDFMetadataEditBatch {
         });
     }
 
-    public void fromcsv(List<File> csvFiles, File outDir, final ActionStatus status) {
+    public void fromcsv(FilesWalker filesWalker, File outDir, final ActionStatus status) {
         List<ImportFileParsed> imports = new ArrayList<>();
-        for (File csvFile : csvFiles) {
+        for (File csvFile : filesWalker.list()) {
             try {
                 List<MetadataInfo> actionList = CsvMetadata.readFile(csvFile);
                 imports.add(new ImportFileParsed(csvFile, actionList));
@@ -338,8 +291,8 @@ public class PDFMetadataEditBatch {
         fromImportFile(imports, outDir, status, "fromcsv");
     }
 
-    public void tocsv(List<File> files, File outDir, final ActionStatus status) {
-        forFiles(files, new ExportFileAction(outDir, params.isSingleFileExport()) {
+    public void tocsv(FilesWalker filesWalker, File outDir, final ActionStatus status) {
+        filesWalker.forFiles(new ExportFileAction(outDir, params.isSingleFileExport()) {
             @Override
             void exportRecords(List<ExportedObject> records) {
                 ExportedObject firstRecord = records.get(0);
@@ -395,8 +348,8 @@ public class PDFMetadataEditBatch {
         }
     }
 
-    public void xmptodoc(List<File> files, File outDir, final ActionStatus status) {
-        forFiles(files, new FileAction(outDir) {
+    public void xmptodoc(FilesWalker filesWalker, File outDir, final ActionStatus status) {
+        filesWalker.forFiles(new FileAction(outDir) {
 
             @Override
             public void apply(File file) {
@@ -420,8 +373,8 @@ public class PDFMetadataEditBatch {
         });
     }
 
-    public void doctoxmp(List<File> files, File outDir, final ActionStatus status) {
-        forFiles(files, new FileAction(outDir) {
+    public void doctoxmp(FilesWalker filesWalker, File outDir, final ActionStatus status) {
+        filesWalker.forFiles(new FileAction(outDir) {
 
             @Override
             public void apply(File file) {
@@ -446,32 +399,33 @@ public class PDFMetadataEditBatch {
     }
 
     public void runCommand(CommandDescription command, List<File> batchFileList, File outDir, ActionStatus actionStatus) {
+        FilesWalker filesWalker = new FilesWalker(command.inputFileExtensions, batchFileList);
         if (!BatchMan.hasBatch()) {
             actionStatus.addError("*", "Invalid license, you can get a license at " + Constants.batchLicenseUrl);
         } else if (command.is("rename")) {
-            rename(batchFileList, outDir,  actionStatus);
+            rename(filesWalker, outDir,  actionStatus);
         } else if (command.is("fromfilename")) {
-            fromFilename(batchFileList, outDir,  actionStatus);
+            fromFilename(filesWalker, outDir,  actionStatus);
         } else if (command.is("edit")) {
-            edit(batchFileList, outDir,  actionStatus);
+            edit(filesWalker, outDir,  actionStatus);
         } else if (command.is("clear")) {
-            clear(batchFileList, outDir,  actionStatus);
+            clear(filesWalker, outDir,  actionStatus);
         } else if (command.is("fromjson")) {
-            fromjson(batchFileList, outDir,  actionStatus);
+            fromjson(filesWalker, outDir,  actionStatus);
         } else if (command.is("tojson")) {
-            tojson(batchFileList, outDir,  actionStatus);
+            tojson(filesWalker, outDir,  actionStatus);
         } else if (command.is("fromyaml")) {
-            fromyaml(batchFileList, outDir,  actionStatus);
+            fromyaml(filesWalker, outDir,  actionStatus);
         } else if (command.is("toyaml")) {
-            toyaml(batchFileList, outDir,  actionStatus);
+            toyaml(filesWalker, outDir,  actionStatus);
         } else if (command.is("fromcsv")) {
-            fromcsv(batchFileList, outDir,  actionStatus);
+            fromcsv(filesWalker, outDir,  actionStatus);
         } else if (command.is("tocsv")) {
-            tocsv(batchFileList, outDir,  actionStatus);
+            tocsv(filesWalker, outDir,  actionStatus);
         } else if (command.is("xmptodoc")) {
-            xmptodoc(batchFileList, outDir,  actionStatus);
+            xmptodoc(filesWalker, outDir,  actionStatus);
         } else if (command.is("doctoxmp")) {
-            doctoxmp(batchFileList, outDir,  actionStatus);
+            doctoxmp(filesWalker, outDir,  actionStatus);
         } else {
             actionStatus.addError("*", "Invalid command");
         }
@@ -532,118 +486,6 @@ public class PDFMetadataEditBatch {
 
     }
 
-    public abstract static class  FileAction {
-        File currentInputDir;
-        Stack<File> outDirStack = new Stack<>();
-        FileAction(File outDir) {
-            outDirStack.push(outDir);
-        }
-
-        File outDir() {
-            return outDirStack.peek();
-        }
-
-        File pushOutDirFromInputFile(File input){
-            File toPush = null;
-            if(outDir() != null) {
-                toPush = new File(outDir(), input.getName());
-            }
-            return outDirStack.push(toPush);
-        }
-
-        File popOutDir(){
-            return outDirStack.pop();
-        }
-
-        File getOutputFile(File inputFile){
-            File outDir = outDir();
-            if(outDir == null){
-                return null;
-            }
-            if(!outDir.exists()){
-                outDir.mkdirs();
-            }
-            return new File(outDir, inputFile.getName());
-        }
-
-        File getOutputFileNonNull(File inputFile){
-            return getOutputFileNonNull(inputFile, null);
-        }
-
-        File getOutputFileNonNull(File inputFile, File fallbackOutDir){
-            File o = getOutputFile(inputFile);
-            if(o == null) {
-                if(fallbackOutDir == null) {
-                    return inputFile;
-                }
-                return new File(fallbackOutDir, inputFile.getName());
-            }
-            return o;
-        }
-
-
-        File getNewOutputFile(String name){
-            File outDir = outDir();
-            if(outDir == null){
-                outDir = currentInputDir;
-            } else {
-                if(!outDir.exists()){
-                    outDir.mkdirs();
-                }
-            }
-            return new File(outDir, name);
-        }
-
-        String outputFileRelativeName(File file){
-            if(outDir() == null){
-                return file.getName();
-            }
-            Path basePath = outDir().toPath().toAbsolutePath();
-            Path targetPath = file.toPath().toAbsolutePath();
-            if(targetPath.startsWith(basePath)) {
-                return basePath.relativize(targetPath).toString();
-            }
-            return file.getName();
-        }
-
-        void setCurrentInputDir(File inputFile){
-            if(inputFile.isDirectory()){
-                currentInputDir = inputFile;
-            } else {
-                currentInputDir = inputFile.getParentFile();
-            }
-        }
-
-        String inputFileRelativeName(File file){
-            if(currentInputDir == null){
-                return file.getName();
-            }
-            Path basePath =currentInputDir.toPath().toAbsolutePath();
-            Path targetPath = file.toPath().toAbsolutePath();
-            if(targetPath.startsWith(basePath)) {
-                return basePath.relativize(targetPath).toString();
-            }
-            return file.getName();
-        }
-
-        void beforeAll(){
-        }
-
-        void afterAll(){
-        }
-
-        void beforeEach(){
-
-        }
-
-        void afterEach(){
-        }
-
-        abstract void apply(File file);
-
-        abstract void ignore(File file);
-    }
-
     public abstract static class  ExportFileAction extends FileAction {
         public record ExportedObject(File file, Map<String, Object> data){}
 
@@ -656,7 +498,7 @@ public class PDFMetadataEditBatch {
         }
 
 
-        void afterEach(){
+        public void afterEach(){
             if(!singleFile){
                 if(!collection.isEmpty()) {
                     exportRecords(collection);
@@ -665,7 +507,7 @@ public class PDFMetadataEditBatch {
             }
         }
 
-        void afterAll(){
+        public void afterAll(){
             if(singleFile){
                 if(!collection.isEmpty()) {
                     exportRecords(collection);
