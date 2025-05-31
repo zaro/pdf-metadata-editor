@@ -39,9 +39,7 @@ public class BatchExportTest {
         initialFiles = FilesTestHelper.randomFiles(3);
 
         new JButtonOperator(topFrame, "Clear").push();
-        new JButtonOperator(topFrame, "Add Folder").push();
 
-        openFileChooser("Select Folder to Add", FilesTestHelper.getTempDir().getAbsoluteFile());
 
     }
 
@@ -51,15 +49,18 @@ public class BatchExportTest {
         FilesTestHelper.popTempDir();
     }
 
-    void selectCommand(CommandDescription command){
+    void selectCommandAndAddFolder(CommandDescription command){
         JComboBoxOperator commandCombo = new JComboBoxOperator(topFrame);
         commandCombo.selectItem(command.description);
+        new JButtonOperator(topFrame, "Add Folder").push();
+
+        openFileChooser("Select Folder to Add", FilesTestHelper.getTempDir().getAbsoluteFile());
     }
 
 
     @Test
     public void testExportCsvSingleFile() throws Exception {
-        selectCommand(CommandDescription.TO_CSV);
+        selectCommandAndAddFolder(CommandDescription.TO_CSV);
         new JButtonOperator(topFrame, "Parameters").push();
         JDialogOperator parameters = new JDialogOperator("Batch Export parameters");
 
@@ -91,7 +92,7 @@ public class BatchExportTest {
 
     @Test
     public void testExportCsvPerFile() throws Exception {
-        selectCommand(CommandDescription.TO_CSV);
+        selectCommandAndAddFolder(CommandDescription.TO_CSV);
         new JButtonOperator(topFrame, "Parameters").push();
         JDialogOperator parameters = new JDialogOperator("Batch Export parameters");
 
@@ -124,7 +125,7 @@ public class BatchExportTest {
 
     @Test
     public void testExportJsonSingleFile() throws Exception {
-        selectCommand(CommandDescription.TO_JSON);
+        selectCommandAndAddFolder(CommandDescription.TO_JSON);
         new JButtonOperator(topFrame, "Parameters").push();
         JDialogOperator parameters = new JDialogOperator("Batch Export parameters");
 
@@ -160,7 +161,7 @@ public class BatchExportTest {
 
     @Test
     public void testExportJsonPerFile() throws Exception {
-        selectCommand(CommandDescription.TO_JSON);
+        selectCommandAndAddFolder(CommandDescription.TO_JSON);
         new JButtonOperator(topFrame, "Parameters").push();
         JDialogOperator parameters = new JDialogOperator("Batch Export parameters");
 
@@ -197,7 +198,7 @@ public class BatchExportTest {
 
     @Test
     public void testExportYamlSingleFile() throws Exception {
-        selectCommand(CommandDescription.TO_YAML);
+        selectCommandAndAddFolder(CommandDescription.TO_YAML);
         new JButtonOperator(topFrame, "Parameters").push();
         JDialogOperator parameters = new JDialogOperator("Batch Export parameters");
 
@@ -233,7 +234,7 @@ public class BatchExportTest {
 
     @Test
     public void testExportYamlPerFile() throws Exception {
-        selectCommand(CommandDescription.TO_YAML);
+        selectCommandAndAddFolder(CommandDescription.TO_YAML);
         new JButtonOperator(topFrame, "Parameters").push();
         JDialogOperator parameters = new JDialogOperator("Batch Export parameters");
 

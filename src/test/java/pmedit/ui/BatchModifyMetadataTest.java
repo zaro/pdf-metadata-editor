@@ -36,9 +36,6 @@ public class BatchModifyMetadataTest {
         FilesTestHelper.pushTempDir(testInfo.getDisplayName().replaceFirst("\\(.*", ""));
         initialFiles = FilesTestHelper.randomFiles(3);
 
-        new JButtonOperator(topFrame, "Add Folder").push();
-        openFileChooser("Select Folder to Add", FilesTestHelper.getTempDir().getAbsoluteFile());
-
     }
 
     @AfterEach
@@ -47,14 +44,17 @@ public class BatchModifyMetadataTest {
         FilesTestHelper.popTempDir();
     }
 
-    void selectCommand(CommandDescription command){
+    void selectCommandAndAddFolder(CommandDescription command){
         JComboBoxOperator commandCombo = new JComboBoxOperator(topFrame);
         commandCombo.selectItem(command.description);
+
+        new JButtonOperator(topFrame, "Add Folder").push();
+        openFileChooser("Select Folder to Add", FilesTestHelper.getTempDir().getAbsoluteFile());
     }
 
     @Test
     public void testSetMetadata() throws FileNotFoundException, IOException, Exception {
-        selectCommand(CommandDescription.EDIT);
+        selectCommandAndAddFolder(CommandDescription.EDIT);
         new JButtonOperator(topFrame, "Parameters").push();
         JDialogOperator parameters = new JDialogOperator("Batch set parameters");
 
@@ -81,7 +81,7 @@ public class BatchModifyMetadataTest {
 
     @Test
     public void testClearMetadata() throws FileNotFoundException, IOException, Exception {
-        selectCommand(CommandDescription.CLEAR);
+        selectCommandAndAddFolder(CommandDescription.CLEAR);
         new JButtonOperator(topFrame, "Parameters").push();
         JDialogOperator parameters = new JDialogOperator("Batch set parameters");
 
@@ -107,7 +107,7 @@ public class BatchModifyMetadataTest {
 
     @Test
     public void testClearAll() throws FileNotFoundException, IOException, Exception {
-        selectCommand(CommandDescription.CLEAR);
+        selectCommandAndAddFolder(CommandDescription.CLEAR);
         new JButtonOperator(topFrame, "Parameters").push();
         JDialogOperator parameters = new JDialogOperator("Batch set parameters");
 
@@ -129,7 +129,7 @@ public class BatchModifyMetadataTest {
 
     @Test
     public void testCopyDocumentToXmp() throws FileNotFoundException, IOException, Exception {
-        selectCommand(CommandDescription.DOC_TO_XMP);
+        selectCommandAndAddFolder(CommandDescription.DOC_TO_XMP);
 
         new JButtonOperator(topFrame, "Begin").push();
 
@@ -168,7 +168,7 @@ public class BatchModifyMetadataTest {
 
     @Test
     public void testCopyXmpToDocument() throws FileNotFoundException, IOException, Exception {
-        selectCommand(CommandDescription.XMP_TO_DOC);
+        selectCommandAndAddFolder(CommandDescription.XMP_TO_DOC);
 
         new JButtonOperator(topFrame, "Begin").push();
 

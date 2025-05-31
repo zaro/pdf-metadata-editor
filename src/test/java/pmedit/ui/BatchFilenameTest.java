@@ -38,8 +38,6 @@ public class BatchFilenameTest {
         FilesTestHelper.pushTempDir(testInfo.getDisplayName().replaceFirst("\\(.*", ""));
         initialFiles = FilesTestHelper.randomFiles(3);
 
-        new JButtonOperator(topFrame, "Add Folder").push();
-        openFileChooser("Select Folder to Add", FilesTestHelper.getTempDir().getAbsoluteFile());
 
     }
 
@@ -49,15 +47,18 @@ public class BatchFilenameTest {
         FilesTestHelper.popTempDir();
     }
 
-    void selectCommand(CommandDescription command){
+    void selectCommandAndAddFolder(CommandDescription command){
         JComboBoxOperator commandCombo = new JComboBoxOperator(topFrame);
         commandCombo.selectItem(command.description);
+
+        new JButtonOperator(topFrame, "Add Folder").push();
+        openFileChooser("Select Folder to Add", FilesTestHelper.getTempDir().getAbsoluteFile());
     }
 
 
     @Test
     public void testRename() throws Exception {
-        selectCommand(CommandDescription.RENAME);
+        selectCommandAndAddFolder(CommandDescription.RENAME);
         new JButtonOperator(topFrame, "Parameters").push();
         JDialogOperator parameters = new JDialogOperator("Batch rename parameters");
 
@@ -86,7 +87,7 @@ public class BatchFilenameTest {
 
     @Test
     public void testExtract() throws Exception {
-        selectCommand(CommandDescription.FROM_FILE_NAME);
+        selectCommandAndAddFolder(CommandDescription.FROM_FILE_NAME);
         new JButtonOperator(topFrame, "Parameters").push();
         JDialogOperator parameters = new JDialogOperator("Batch Extract parameters");
 
@@ -117,7 +118,7 @@ public class BatchFilenameTest {
 
     @Test
     public void testExtractNonGreedy() throws Exception {
-        selectCommand(CommandDescription.FROM_FILE_NAME);
+        selectCommandAndAddFolder(CommandDescription.FROM_FILE_NAME);
         new JButtonOperator(topFrame, "Parameters").push();
         JDialogOperator parameters = new JDialogOperator("Batch Extract parameters");
 
