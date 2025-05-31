@@ -1,6 +1,5 @@
 package pmedit.ui;
 
-import pmedit.PdfFilter;
 import pmedit.prefs.Preferences;
 
 import javax.swing.*;

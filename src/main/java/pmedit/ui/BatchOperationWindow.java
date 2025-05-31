@@ -249,7 +249,11 @@ public class BatchOperationWindow extends JFrame {
     }
 
     protected void addFileAction() {
-        PdfFileChooser fc = new PdfFileChooser();
+        final CommandDescription command = ((CommandDescription) selectedBatchOperation.getSelectedItem());
+        if (command == null || command.isGroup()) {
+            return;
+        }
+        FileChooser fc = new FileChooser(command.inputFileExtensions);
         fc.setDialogTitle("Select File to Add");
         int returnVal = fc.showOpenDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -537,8 +541,12 @@ public class BatchOperationWindow extends JFrame {
         final CommandDescription command = ((CommandDescription) selectedBatchOperation.getSelectedItem());
         if (command == null) {
             btnParameters.setEnabled(false);
+            addFileButton.setEnabled(false);
+            addFolderButton.setEnabled(false);
         } else {
             btnParameters.setEnabled(command.is(CommandDescription.CLEAR) || command.is(CommandDescription.EDIT) || command.isInGroup(CommandDescription.FILE_OPERATIONS_GROUP) || command.isInGroup(CommandDescription.EXPORT_GROUP));
+            addFileButton.setEnabled(!command.isGroup());
+            addFolderButton.setEnabled(!command.isGroup());
         }
     }
 
