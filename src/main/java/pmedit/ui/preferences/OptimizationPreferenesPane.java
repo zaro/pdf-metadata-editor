@@ -38,7 +38,7 @@ public class OptimizationPreferenesPane {
         defaultCompressionRadioButton.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                compressionLevel.setValue(CompressParameters.DEFAULT_OBJECT_STREAM_SIZE);
+                compressionLevel.setValue((double) CompressParameters.DEFAULT_OBJECT_STREAM_SIZE);
                 compressionLevel.setEnabled(false);
                 FileOptimizer.setPdfBoxCompression(CompressParameters.DEFAULT_OBJECT_STREAM_SIZE);
                 compressionNoteText.setVisible(true);

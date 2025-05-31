@@ -2,6 +2,7 @@ package pmedit.prefs;
 
 import pmedit.serdes.SerDeslUtils;
 
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.BackingStoreException;
@@ -55,4 +56,11 @@ public class Preferences {
         p.put(tag + "History", json);
     }
 
+    public static String getLookAndFeelClass(){
+        return  getInstance().get("LookAndFeel", UIManager.getCrossPlatformLookAndFeelClassName());
+    }
+
+    public static void setLookAndFeelClass(String name){
+        getInstance().put("LookAndFeel", name);
+    }
 }
