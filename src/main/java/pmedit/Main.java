@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pmedit.CommandLine.ParseError;
 import pmedit.prefs.LocalDataDir;
+import pmedit.prefs.Preferences;
 import pmedit.ui.BatchOperationWindow;
 import pmedit.ui.MainWindow;
 
@@ -171,14 +172,16 @@ public class Main {
             MainCli.main(cmdLine);
             return;
         }
-//	    try {
-//    	UIManager.setLookAndFeel(
-//    			UIManager.getCrossPlatformLookAndFeelClassName());
-//    }
-//    catch (UnsupportedLookAndFeelException e) {}
-//    catch (ClassNotFoundException e) {}
-//    catch (InstantiationException e) {}
-//    catch (IllegalAccessException e) {}
+        try {
+
+                UIManager.setLookAndFeel(
+                        Preferences.getLookAndFeelClass());
+
+        } catch (UnsupportedLookAndFeelException e) {
+        } catch (ClassNotFoundException e) {
+        } catch (InstantiationException e) {
+        } catch (IllegalAccessException e) {
+        }
 
         if (OsCheck.isWindows() && WindowsSingletonApplication.isAlreadyRunning()) {
             System.out.println(">>>> already running");
