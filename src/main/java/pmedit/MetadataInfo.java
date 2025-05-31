@@ -1295,27 +1295,31 @@ public class MetadataInfo {
     public Map<String, Object> asFlatMap() {
         return asFlatMap(false);
     }
-
     public Map<String, String> asFlatStringMap() {
+        return asFlatStringMap(false);
+    }
+
+    public Map<String, String> asFlatStringMap(boolean onlyEnabled) {
         LinkedHashMap<String, String> map = new LinkedHashMap<String, String>();
 
         for (String fieldName : keys()) {
+            if(onlyEnabled && !isEnabled(fieldName)) {
+                continue;
+            }
             map.put(fieldName, getString(fieldName));
         }
         return map;
     }
 
-    public void fromFlatMap(Map<String, Object> map, Function<Object, Object> convertor) {
+    public void fromFlatMap(Map<String, Object> map) {
         for (String fieldName : keys()) {
             if (map.containsKey(fieldName)) {
-                set(fieldName, convertor.apply(map.get(fieldName)));
+                FieldDescription fd = getFieldDescription(fieldName);
+                set(fieldName, fd.postProcessDeserializedValue(map.get(fieldName)));
             }
         }
     }
 
-    public void fromFlatMap(Map<String, Object> map) {
-        fromFlatMap(map, flatMapConvertor());
-    }
 
     public MetadataInfo clone() {
         MetadataInfo md = new MetadataInfo();
@@ -1421,7 +1425,7 @@ public class MetadataInfo {
 
     public void fromJson(String jsonString) {
         Map<String, Object> map = (Map<String, Object>) SerDeslUtils.fromJSON(jsonString);
-        fromFlatMap(map, flatMapConvertor());
+        fromFlatMap(map);
     }
 
     public String toYAML() {
@@ -1433,26 +1437,7 @@ public class MetadataInfo {
     }
     public void fromYAML(String yamlString) {
         Map<String, Object> map = (Map<String, Object>) SerDeslUtils.fromYAML(yamlString);
-        fromFlatMap(map, flatMapConvertor());
-    }
-
-    protected Function<Object, Object> flatMapConvertor(){
-        return new Function<Object, Object>() {
-            @Override
-            public Object apply(Object t) {
-                if (t instanceof Date) {
-                    Calendar cal = Calendar.getInstance();
-                    cal.setTime((Date) t);
-                    return cal;
-                }
-                if(t instanceof String s){
-                    if(s.matches("^\\d{4}-[01]\\d-[0-3]\\dT[0-2]\\d:[0-5]\\d:[0-5]\\d\\.\\d+([+-][0-2]\\d:[0-5]\\d|Z)$")){
-                        return DateFormat.parseDateOrNull(s);
-                    }
-                }
-                return t;
-            }
-        };
+        fromFlatMap(map);
     }
 
     public boolean isEmpty(){
@@ -1644,6 +1629,16 @@ public class MetadataInfo {
                     l.add(value);
                 }
                 fieldD.field.set(current, l);
+            }else if (fieldD.isNumeric && value != null){
+                if(value instanceof Number num) {
+                    switch (fieldD.type){
+                        case IntField -> fieldD.field.set(current, num.intValue());
+                        case LongField -> fieldD.field.set(current, num.longValue());
+                        default -> throw new RuntimeException("_setStructObject('" + id + "') Trying to assign number to non numeric field!");
+                    }
+                }else{
+                    throw new RuntimeException("_setStructObject('" + id + "') Trying to assign non number to numeric field!");
+                }
             } else {
                 fieldD.field.set(current, value);
             }
@@ -2048,6 +2043,7 @@ public class MetadataInfo {
         public final Class<? extends Enum> enumClass;
         public final boolean isList;
         public final boolean isWritable;
+        public final boolean isNumeric;
         final Field field;
         protected Method toStringMethod;
 
@@ -2059,6 +2055,7 @@ public class MetadataInfo {
             this.enumClass = type.enumClass() != FieldDataType.NoEnumConfigured.class ? type.enumClass() : null;
             this.isWritable = isWritable;
             isList = List.class.isAssignableFrom(field.getType());
+            isNumeric = this.type == FieldDataType.FieldType.LongField || this.type == FieldDataType.FieldType.IntField;
         }
 
         public FieldDescription(String name, Field field, boolean isWritable) {
@@ -2080,6 +2077,7 @@ public class MetadataInfo {
             this.enumClass = null;
             this.isWritable = isWritable;
             isList = List.class.isAssignableFrom(klass);
+            isNumeric = this.type == FieldDataType.FieldType.LongField || this.type == FieldDataType.FieldType.IntField;
         }
 
         String textForNull(){
@@ -2113,6 +2111,56 @@ public class MetadataInfo {
             return makeStringFromValueSingle(value);
         }
 
+        public Object postProcessDeserializedValue(Object value) {
+            if (value == null) {
+                return null;
+            }
+            if (isList) {
+                if (type == FieldDataType.FieldType.DateField  ) {
+                    List values = value instanceof List<?> ? (List)value : List.of(value);
+                    List<Calendar> rval = new ArrayList<Calendar>();
+                    for(Object singleValue: values) {
+                        if( singleValue instanceof Calendar cal ){
+                            rval.add(cal);
+                        } else if (singleValue instanceof String stringValue) {
+                            for (String line : stringValue.split("\n")) {
+                                try {
+                                    rval.add(DateFormat.parseDate(line.trim()));
+                                } catch (ParseError e) {
+                                    throw new RuntimeException("postProcessDeserializedValue() Invalid date format:" + line);
+                                }
+                            }
+                        } else if (value instanceof Date d) {
+                            Calendar cal = Calendar.getInstance();
+                            cal.setTime(d);
+                            rval.add(cal);
+                        } else {
+                            throw new RuntimeException("postProcessDeserializedValue() Invalid date type:" + singleValue.getClass());
+                        }
+                    }
+                    return rval;
+                }
+            } else {
+               if (type == FieldDataType.FieldType.DateField) {
+                   if(value instanceof String stringValue) {
+
+                       try {
+                           return DateFormat.parseDate(stringValue);
+                       } catch (ParseError e) {
+                           throw new RuntimeException("postProcessDeserializedValue() Invalid date format:" + stringValue);
+                       }
+                   }
+                   if (value instanceof Date d) {
+                       Calendar cal = Calendar.getInstance();
+                       cal.setTime(d);
+                       return cal;
+                   }
+                }
+            }
+            return value;
+        }
+
+
         public Object makeValueFromString(String value) {
             if (value == null) {
                 return null;
@@ -2125,6 +2173,9 @@ public class MetadataInfo {
                 } else if (type == FieldDataType.FieldType.IntField) {
                     // TODO: possible allow comma separated interger list
                     return List.of(Integer.parseInt(value));
+                } else if (type == FieldDataType.FieldType.LongField) {
+                    // TODO: possible allow comma separated interger list
+                    return List.of(Long.parseLong(value));
                 } else if (type == FieldDataType.FieldType.BoolField) {
                     // TODO: possible allow comma separated boolean list
                     String v = value.toLowerCase().trim();
@@ -2150,11 +2201,15 @@ public class MetadataInfo {
                     return value;
                 } else if (type == FieldDataType.FieldType.IntField) {
                     return Integer.parseInt(value);
+                } else if (type == FieldDataType.FieldType.LongField) {
+                    return Long.parseLong(value);
                 } else if (type == FieldDataType.FieldType.BoolField) {
                     String v = value.toLowerCase().trim();
                     if (v.equals("true") || v.equals("yes")) return true;
                     if (v.equals("false") || v.equals("no")) return false;
                     return null;
+                }else if(type == FieldDataType.FieldType.EnumField) {
+                    return value.isEmpty() ? null : value;
                 } else if (type == FieldDataType.FieldType.DateField) {
                     try {
                         return DateFormat.parseDate(value);

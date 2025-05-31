@@ -41,6 +41,7 @@ public class DateFormat {
             for (SimpleDateFormat df : isoDateFormat) {
                 try {
                     d = df.parse(value);
+                    break;
                 } catch (ParseException pe) {
                 }
             }

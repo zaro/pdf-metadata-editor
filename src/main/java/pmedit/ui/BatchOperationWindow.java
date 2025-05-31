@@ -469,6 +469,13 @@ public class BatchOperationWindow extends JFrame {
 
     void onDone() {
         try {
+            btnCancel.setText("Close");
+            clearActionListeners(btnAction);
+            btnAction.setText("Start Over");
+            btnAction.addActionListener(l -> {
+                reset(false);
+            });
+
             if (tableModel.data.isEmpty()) {
                 statusSummary.setText("<p align=center style='color:red;'>No PDF files found in selected input files/folders!</p>\n");
             } else if (hasErrors()) {
@@ -477,12 +484,6 @@ public class BatchOperationWindow extends JFrame {
                 statusSummary.setText("<p align=center style='color:green;'>Finished successfully!</p>");
             }
             statusSummary.setVisible(true);
-            btnCancel.setText("Close");
-            clearActionListeners(btnAction);
-            btnAction.setText("Start Over");
-            btnAction.addActionListener(l -> {
-                reset(false);
-            });
         } catch (Exception ignore) {
         }
     }

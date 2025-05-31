@@ -36,6 +36,7 @@ public class CsvMetadata {
         }
         for (String[] row : entries) {
             MetadataInfo metadata = new MetadataInfo();
+            metadata.setEnabled(false);
             for (int idx = 0; idx < row.length; ++idx) {
                 String id = header[idx];
                 if (CommandLine.validMdNames.contains(id)) {

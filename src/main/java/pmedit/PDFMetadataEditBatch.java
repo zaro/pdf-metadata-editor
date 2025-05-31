@@ -2,6 +2,7 @@ package pmedit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pmedit.serdes.CsvMetadata;
 import pmedit.serdes.SerDeslUtils;
 
 import java.io.*;
@@ -235,14 +236,14 @@ public class PDFMetadataEditBatch {
         forFiles(files, new ExportFileAction(outDir, params.isSingleFileExport()) {
             @Override
             void exportRecords(List<ExportedObject> records) {
+                ExportedObject firstRecord = records.get(0);
                 if(singleFile){
-                    File outFile = new File(makeExportFilename(getOutputFileNonNull(new File(params.outputFile)), ".json"));
+                    File outFile = new File(makeExportFilename(getOutputFileNonNull(new File(params.outputFile), firstRecord.file.getParentFile()), ".json"));
                     SerDeslUtils.toJSONFile(outFile, records.stream().map(e -> e.data).toList());
                     status.addStatus(inputFileRelativeName(outFile), "Wrote: " + outputFileRelativeName(outFile));
                 } else {
-                    ExportedObject record = records.get(0);
-                    File outFile = new File(makeExportFilename(getOutputFileNonNull(record.file), ".json"));
-                    SerDeslUtils.toJSONFile(outFile, record.data);
+                    File outFile = new File(makeExportFilename(getOutputFileNonNull(firstRecord.file), ".json"));
+                    SerDeslUtils.toJSONFile(outFile, firstRecord.data);
                     status.addStatus(inputFileRelativeName(outFile), "Wrote: " + outputFileRelativeName(outFile));
                 }
             }
@@ -290,14 +291,14 @@ public class PDFMetadataEditBatch {
         forFiles(files, new ExportFileAction(outDir, params.isSingleFileExport()) {
             @Override
             void exportRecords(List<ExportedObject> records) {
+                ExportedObject firstRecord = records.get(0);
                 if(singleFile){
-                    File outFile = new File(makeExportFilename(getOutputFileNonNull(new File(params.outputFile)), ".yaml"));
+                    File outFile = new File(makeExportFilename(getOutputFileNonNull(new File(params.outputFile), firstRecord.file.getParentFile()), ".yaml"));
                     SerDeslUtils.toYamlFile(outFile, records.stream().map(e -> e.data).toList());
                     status.addStatus(inputFileRelativeName(outFile), "Wrote: " + outputFileRelativeName(outFile));
                 } else {
-                    ExportedObject record = records.get(0);
-                    File outFile = new File(makeExportFilename(getOutputFileNonNull(record.file), ".yaml"));
-                    SerDeslUtils.toYamlFile(outFile, record.data);
+                    File outFile = new File(makeExportFilename(getOutputFileNonNull(firstRecord.file), ".yaml"));
+                    SerDeslUtils.toYamlFile(outFile, firstRecord.data);
                     status.addStatus(inputFileRelativeName(outFile), "Wrote: " + outputFileRelativeName(outFile));
                 }
             }
@@ -341,12 +342,12 @@ public class PDFMetadataEditBatch {
         forFiles(files, new ExportFileAction(outDir, params.isSingleFileExport()) {
             @Override
             void exportRecords(List<ExportedObject> records) {
+                ExportedObject firstRecord = records.get(0);
                 File outFile;
                 if(singleFile){
-                   outFile = new File(makeExportFilename(getOutputFileNonNull(new File(params.outputFile)), ".csv"));
+                   outFile = new File(makeExportFilename(getOutputFileNonNull(new File(params.outputFile), firstRecord.file.getParentFile()), ".csv"));
                 } else {
-                    ExportedObject record = records.get(0);
-                    outFile = new File(makeExportFilename(getOutputFileNonNull(record.file), ".csv"));
+                    outFile = new File(makeExportFilename(getOutputFileNonNull(firstRecord.file), ".csv"));
                 }
                 CsvMetadata.writeFile(outFile, records.stream().map(e -> (Map)e.data() ).toList());
                 status.addStatus(inputFileRelativeName(outFile), "Wrote: " + outputFileRelativeName(outFile));
@@ -360,7 +361,7 @@ public class PDFMetadataEditBatch {
                     if(params.shouldUseRelativePaths()){
                         md.file.fullPath = inputFileRelativeName(file);
                     }
-                    addRecordForExport(new ExportedObject(file, md.asFlatMap()));
+                    addRecordForExport(new ExportedObject(file, (Map<String, Object>) (Object) md.asFlatStringMap()));
                 } catch (Exception e) {
                     logger.error("tocsv", e);
                     status.addError(inputFileRelativeName(file), "Failed: " + e);
@@ -566,12 +567,20 @@ public class PDFMetadataEditBatch {
         }
 
         File getOutputFileNonNull(File inputFile){
+            return getOutputFileNonNull(inputFile, null);
+        }
+
+        File getOutputFileNonNull(File inputFile, File fallbackOutDir){
             File o = getOutputFile(inputFile);
             if(o == null) {
-                return inputFile;
+                if(fallbackOutDir == null) {
+                    return inputFile;
+                }
+                return new File(fallbackOutDir, inputFile.getName());
             }
             return o;
         }
+
 
         File getNewOutputFile(String name){
             File outDir = outDir();

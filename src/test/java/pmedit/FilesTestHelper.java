@@ -165,7 +165,7 @@ public class FilesTestHelper {
 
     public static void assertEquals(MetadataInfo expected, MetadataInfo actual, boolean onlyEnabled, String message) {
         if(!actual.isEquivalent(expected, onlyEnabled)){
-            Assertions.assertEquals(expected.toYAML(true), actual.toYAML(true), message);
+            Assertions.assertEquals(expected.toYAML(onlyEnabled), actual.toYAML(onlyEnabled), message);
         }
     }
 
