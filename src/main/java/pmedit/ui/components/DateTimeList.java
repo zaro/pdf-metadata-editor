@@ -25,6 +25,7 @@ public class DateTimeList extends MetadataFormComponent {
     public JButton addNewButton;
     public DateTimePicker dateTimePicker;
     private DefaultListModel<Calendar> listModel;
+    private boolean emptyListAsNull = true;
 
     public DateTimeList() {
         listModel = new DefaultListModel<>();
@@ -130,6 +131,9 @@ public class DateTimeList extends MetadataFormComponent {
         for (int i = 0; i < listModel.getSize(); i++) {
             result.add((Calendar) listModel.getElementAt(i).clone());
         }
+        if (result.isEmpty() && emptyListAsNull) {
+            return null;
+        }
         return result;
     }
 
@@ -142,6 +146,9 @@ public class DateTimeList extends MetadataFormComponent {
             if (listModel.getSize() > 0) {
                 calendarList.setSelectedIndex(0);
             }
+            emptyListAsNull = false;
+        } else {
+            emptyListAsNull = true;
         }
     }
 
