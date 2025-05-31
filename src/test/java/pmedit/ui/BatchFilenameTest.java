@@ -45,6 +45,7 @@ public class BatchFilenameTest {
 
     @AfterEach
     void cleanUp() {
+        new JButtonOperator(topFrame, "Start Over").push();
         FilesTestHelper.popTempDir();
     }
 

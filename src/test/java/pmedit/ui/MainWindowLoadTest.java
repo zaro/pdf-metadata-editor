@@ -62,7 +62,7 @@ public class MainWindowLoadTest {
         preferences.close();
         preferences.waitClosed();
         MetadataInfo defaultMetadata = DefaultsPreferences.loadDefaultMetadata(Preferences.getInstance());
-        assertTrue(defaultMetadata.isEquivalent(md), "Default metadata saved differs");
+        FilesTestHelper.assertEquals(defaultMetadata, md, false, "Default metadata saved differs");
     }
 
     @Test

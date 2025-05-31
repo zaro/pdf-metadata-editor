@@ -43,6 +43,7 @@ public class BatchModifyMetadataTest {
 
     @AfterEach
     void cleanUp() {
+        new JButtonOperator(topFrame, "Start Over").push();
         FilesTestHelper.popTempDir();
     }
 

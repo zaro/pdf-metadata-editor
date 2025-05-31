@@ -13,11 +13,11 @@ public class CommandDescription {
     public static final CommandDescription RENAME = new CommandDescription("rename", "Rename files from metadata", FILE_OPERATIONS_GROUP);
     public static final CommandDescription FROM_FILE_NAME = new CommandDescription("fromfilename", "Set metadata from file names", FILE_OPERATIONS_GROUP);
     public static final CommandDescription FROM_JSON = new CommandDescription("fromjson", "Set metadata from JSON",IMPORT_GROUP);
-    public static final CommandDescription TO_JSON = new CommandDescription("tojson", "Extract metadata as JSON",  EXPORT_GROUP);
+    public static final CommandDescription TO_JSON = new CommandDescription("tojson", "Export metadata as JSON",  EXPORT_GROUP);
     public static final CommandDescription FROM_YAML = new CommandDescription("fromyaml", "Set metadata from YAML",IMPORT_GROUP);
-    public static final CommandDescription TO_YAML = new CommandDescription("toyaml", "Extract metadata as YAML",  EXPORT_GROUP);
+    public static final CommandDescription TO_YAML = new CommandDescription("toyaml", "Export metadata as YAML",  EXPORT_GROUP);
     public static final CommandDescription FROM_CSV = new CommandDescription("fromcsv", "Set metadata from CSV file",IMPORT_GROUP);
-    public static final CommandDescription TO_CSV = new CommandDescription("tocsv", "Extract metadata as CSV file",  EXPORT_GROUP);
+    public static final CommandDescription TO_CSV = new CommandDescription("tocsv", "Export metadata as CSV file",  EXPORT_GROUP);
     public static final CommandDescription XMP_TO_DOC = new CommandDescription("xmptodoc", "Copy XMP to Document metadata", MODIFY_METADATA_GROUP);
     public static final CommandDescription DOC_TO_XMP = new CommandDescription("doctoxmp", "Copy Document to XMP metadata", MODIFY_METADATA_GROUP);
 

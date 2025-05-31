@@ -13,12 +13,9 @@ import org.netbeans.jemmy.operators.*;
 import pmedit.FilesTestHelper;
 import pmedit.MetadataInfo;
 import pmedit.prefs.Preferences;
-import pmedit.ui.preferences.DefaultsPreferences;
 
 import javax.swing.*;
-import javax.swing.plaf.basic.BasicArrowButton;
 import javax.swing.plaf.metal.MetalComboBoxIcon;
-import javax.swing.plaf.metal.MetalScrollButton;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.File;
@@ -26,7 +23,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static pmedit.ui.UiTestHelpers.*;
 

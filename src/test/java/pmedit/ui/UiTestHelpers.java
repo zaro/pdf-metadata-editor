@@ -1,5 +1,6 @@
 package pmedit.ui;
 
+import org.netbeans.jemmy.ComponentChooser;
 import org.netbeans.jemmy.JemmyProperties;
 import org.netbeans.jemmy.accessibility.AccessibleDescriptionChooser;
 import org.netbeans.jemmy.operators.*;
@@ -11,6 +12,7 @@ import pmedit.ui.components.DateTimePicker;
 import pmedit.ui.components.MetadataFormComponent;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.io.File;
@@ -177,6 +179,24 @@ public class UiTestHelpers {
             }
 
         }
+    }
+
+    public static ContainerOperator getPanelByTitle(ContainerOperator frame, String title){
+        return new ContainerOperator(frame, new ComponentChooser() {
+            public boolean checkComponent(Component comp) {
+                if (comp instanceof JPanel p) {
+                    if (p.getBorder() instanceof TitledBorder tb) {
+                        return title.equals(tb.getTitle());
+                    }
+                }
+                return false;
+            }
+
+            @Override
+            public String getDescription() {
+                return "JPanel with text \""+  title +"\" as border title";
+            }
+        });
     }
 
     public static void delay(long ms) {
