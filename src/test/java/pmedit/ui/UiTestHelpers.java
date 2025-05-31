@@ -27,7 +27,8 @@ public class UiTestHelpers {
         var fileChooser = new JFileChooserOperator(
                 JFileChooserOperator.findJFileChooser((Container) chooserFrame.getSource()));
         fileChooser.setCurrentDirectory(testFile.getParentFile());
-        fileChooser.setSelectedFile(testFile);
+        fileChooser.clickOnFile(testFile.getName());
+
         new JButtonOperator(fileChooser, "Open").push();
     }
     static void saveFileChooser(String dialogTitle, File testFile){
