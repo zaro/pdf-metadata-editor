@@ -49,8 +49,8 @@ public class LicensePreferences {
     }
 
     public void refresh() {
-        String key = keyField.getText();
-        if (key.trim().isEmpty()) {
+        String key = keyField.getText().trim();
+        if (key.isEmpty()) {
             labelLicenseStatus.setText("No license");
             licensedTo.setText("n/a");
             expirationDate.setText("n/a");
@@ -70,7 +70,7 @@ public class LicensePreferences {
     }
 
     public void save(Preferences prefs) {
-        String key = keyField.getText();
+        String key = keyField.getText().trim();
         if (key.isEmpty()) {
             BatchMan.giveBatch(null);
         } else {

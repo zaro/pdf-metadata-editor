@@ -9,6 +9,7 @@ import pmedit.*;
 import pmedit.prefs.Preferences;
 import pmedit.serdes.SerDeslUtils;
 import pmedit.ui.components.TextPaneWithLinks;
+import pmedit.ui.util.ToggleAction;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -19,16 +20,14 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.text.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URL;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 public class BatchOperationWindow extends JFrame {
@@ -48,6 +47,7 @@ public class BatchOperationWindow extends JFrame {
     public JButton addFileButton;
     public JButton clearFileList;
     public JCheckBox persistFileList;
+    private PreferencesWindow preferencesWindow;
 
     //
     final static String LAST_USED_COMMAND_KEY = "lastUsedBatchCommand";
@@ -59,11 +59,17 @@ public class BatchOperationWindow extends JFrame {
     private FileOpResultTableModel tableModel;
     private final ActionListener closeWindowActionListener = new ActionListener() {
         public void actionPerformed(ActionEvent e) {
-            dispatchEvent(new WindowEvent(BatchOperationWindow.this, WindowEvent.WINDOW_CLOSING));
+            if (worker != null) {
+                worker.cancel(true);
+            } else {
+                dispatchEvent(new WindowEvent(BatchOperationWindow.this, WindowEvent.WINDOW_CLOSING));
+            }
         }
     };
     private BatchParametersWindow parametersWindow;
     private final Map<String, BatchOperationParameters> batchParameters = new HashMap<String, BatchOperationParameters>();
+
+    private Worker worker;
 
     public BatchOperationWindow(CommandDescription command) {
         setTitle("Batch PDF metadata edit");
@@ -76,11 +82,7 @@ public class BatchOperationWindow extends JFrame {
         statusTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
 
-        btnParameters.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                createBatchParametersWindow();
-            }
-        });
+        btnParameters.setAction(openParametersWindow);
 
         selectedBatchOperation.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -121,9 +123,7 @@ public class BatchOperationWindow extends JFrame {
             String lastUsedCommand = Preferences.getInstance().get(LAST_USED_COMMAND_KEY, null);
             if (lastUsedCommand != null) {
                 CommandDescription lastCommand = CommandDescription.getBatchCommand(lastUsedCommand);
-                if (lastCommand != null) {
-                    selectedBatchOperation.setSelectedItem(lastCommand);
-                }
+                setSelectedBatchOperation(lastCommand);
             }
         }
 
@@ -139,31 +139,19 @@ public class BatchOperationWindow extends JFrame {
             }
         });
 
-        addFileButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                addFileAction();
-            }
-        });
-        addFolderButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                addDirAction();
-            }
-        });
-        clearFileList.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                clearInputFiles();
-            }
-        });
+        addFileButton.setAction(addFileAction);
+        addFolderButton.setAction(addDirAction);
+
+        clearFileList.setAction(clearInputFiles);
+
+        persistFileList.setAction(keepFileList);
         persistFileList.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Preferences.getInstance().putBoolean(PERSIST_BATCH_FILES_KEY, persistFileList.isSelected());
             }
         });
-        persistFileList.setSelected(Preferences.getInstance().getBoolean(PERSIST_BATCH_FILES_KEY, false));
+        keepFileList.setSelected(Preferences.getInstance().getBoolean(PERSIST_BATCH_FILES_KEY, false));
 
         new FileDrop(this, new FileDrop.Listener() {
             public void filesDropped(File[] files, Point where) {
@@ -205,28 +193,65 @@ public class BatchOperationWindow extends JFrame {
         });
     }
 
+    protected void setSelectedBatchOperation(CommandDescription cd) {
+        if (cd != null) {
+            selectedBatchOperation.setSelectedItem(cd);
+        } else {
+            selectedBatchOperation.setSelectedIndex(-1);
+        }
+    }
+
     protected void buildMenu() {
         JMenuBar menuBar = new JMenuBar();
+        JMenu commandMenu = new JMenu("Operation");
+        JMenu subMenu = null;
+        for (CommandDescription cd : CommandDescription.batchCommandsGuiMenu) {
+            if (cd.isGroup()) {
+                if (subMenu != null) {
+                    commandMenu.add(subMenu);
+                }
+                subMenu = new JMenu(cd.groupName);
+            } else if (subMenu != null) {
+                JMenuItem item = new JMenuItem(cd.description);
+                item.addActionListener(e -> {
+                    setSelectedBatchOperation(cd);
+                });
+                subMenu.add(item);
+            }
+        }
+        if (subMenu != null) {
+            commandMenu.add(subMenu);
+        }
+        commandMenu.add(subMenu);
+        MainWindow.addCloseQuitMenuItems(commandMenu, e -> {
+            this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+        });
+
         JMenu inputMenu = new JMenu("Input");
 
+        JMenuItem openParameters = new JMenuItem(openParametersWindow);
         JMenuItem addFile = new JMenuItem("Add File");
         JMenuItem addDir = new JMenuItem("Add Dir");
+        JMenuItem keep = new JCheckBoxMenuItem(keepFileList);
+        JMenuItem clear = new JMenuItem(clearInputFiles);
 
-        addFile.addActionListener(e -> {
-            addFileAction();
-        });
-
-        addDir.addActionListener(e -> {
-            addDirAction();
-        });
+        addFile.setAction(addFileAction);
+        addDir.setAction(addDirAction);
+        keep.setAction(keepFileList);
+        clear.setAction(clearInputFiles);
 
         addFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK));
         addDir.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.CTRL_DOWN_MASK));
+        inputMenu.add(openParameters);
+        inputMenu.addSeparator();
         inputMenu.add(addFile);
         inputMenu.add(addDir);
+        inputMenu.addSeparator();
+        inputMenu.add(keep);
+        inputMenu.add(clear);
 
         JMenu outputMenu = new JMenu("Output");
-        JMenuItem selectOutDir = new JMenuItem("Select output dir");
+        JMenuItem selectOutDir = new JMenuItem("Select output Folder");
         selectOutDir.addActionListener(e -> {
             selectOutputDirAction();
         });
@@ -234,9 +259,35 @@ public class BatchOperationWindow extends JFrame {
 
         outputMenu.add(selectOutDir);
 
+        menuBar.add(commandMenu);
         menuBar.add(inputMenu);
         menuBar.add(outputMenu);
+        menuBar.add(Box.createHorizontalGlue());
+
+        MainWindow.addHelpMenu(menuBar, e -> {
+            showPreferences("About");
+        });
         this.setJMenuBar(menuBar);
+    }
+
+    protected void showPreferences(String tabName) {
+        SwingUtilities.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                if (preferencesWindow == null) {
+                    preferencesWindow = new PreferencesWindow(BatchOperationWindow.this);
+                    preferencesWindow.onSaveAction(new Runnable() {
+                        @Override
+                        public void run() {
+                            refreshLicense();
+                        }
+                    });
+                }
+                preferencesWindow.showTab(tabName);
+                preferencesWindow.setVisible(true);
+            }
+        });
     }
 
     protected void selectOutputDirAction() {
@@ -248,40 +299,89 @@ public class BatchOperationWindow extends JFrame {
         }
     }
 
-    protected void addFileAction() {
-        final CommandDescription command = ((CommandDescription) selectedBatchOperation.getSelectedItem());
-        if (command == null || command.isGroup()) {
-            return;
+    protected Action addFileAction = new AbstractAction("Add File") {
+        {
+            putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK));
+            putValue(Action.MNEMONIC_KEY, KeyEvent.VK_F);
+            putValue(Action.SHORT_DESCRIPTION, "Add input File to process");
         }
-        FileChooser fc = new FileChooser(command.inputFileExtensions);
-        fc.setDialogTitle("Select File to Add");
-        int returnVal = fc.showOpenDialog(this);
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
-            appendFiles(Collections.singletonList(fc.getSelectedFile()));
-        }
-    }
 
-    protected void addDirAction() {
-        DirChooser fc = new DirChooser();
-        fc.setDialogTitle("Select Folder to Add");
-        int returnVal = fc.showOpenDialog(this);
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
-            appendFiles(Collections.singletonList(fc.getSelectedFile()));
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            final CommandDescription command = ((CommandDescription) selectedBatchOperation.getSelectedItem());
+            if (command == null || command.isGroup()) {
+                return;
+            }
+            FileChooser fc = new FileChooser(command.inputFileExtensions);
+            fc.setDialogTitle("Select File to Add");
+            int returnVal = fc.showOpenDialog(BatchOperationWindow.this);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                appendFiles(Collections.singletonList(fc.getSelectedFile()));
+            }
         }
-    }
+    };
 
-    protected void clearInputFiles() {
-        batchFileList.clear();
-        Document doc = fileList.getDocument();
-        try {
-            doc.remove(0, doc.getLength());
-        } catch (BadLocationException e) {
+    protected Action addDirAction = new AbstractAction("Add Folder") {
+        {
+            putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.CTRL_DOWN_MASK));
+            putValue(Action.MNEMONIC_KEY, KeyEvent.VK_D);
+            putValue(Action.SHORT_DESCRIPTION, "Add input Folder to process");
         }
-    }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            DirChooser fc = new DirChooser();
+            fc.setDialogTitle("Select Folder to Add");
+            int returnVal = fc.showOpenDialog(BatchOperationWindow.this);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                appendFiles(Collections.singletonList(fc.getSelectedFile()));
+            }
+        }
+    };
+
+    protected Action openParametersWindow = new AbstractAction("Parameters") {
+        {
+            putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_P, InputEvent.CTRL_DOWN_MASK));
+            putValue(Action.MNEMONIC_KEY, KeyEvent.VK_P);
+            putValue(Action.SHORT_DESCRIPTION, "Configure Batch parameters");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            createBatchParametersWindow();
+        }
+    };
+
+    protected Action clearInputFiles = new AbstractAction("Clear") {
+        {
+            putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK));
+            putValue(Action.MNEMONIC_KEY, KeyEvent.VK_L);
+            putValue(Action.SHORT_DESCRIPTION, "Clear Input files");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            batchFileList.clear();
+            Document doc = fileList.getDocument();
+            try {
+                doc.remove(0, doc.getLength());
+            } catch (BadLocationException ignored) {
+            }
+        }
+    };
+
+    protected ToggleAction keepFileList = new ToggleAction("Keep File List", false) {
+        {
+            putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_K, InputEvent.CTRL_DOWN_MASK));
+            putValue(Action.MNEMONIC_KEY, KeyEvent.VK_K);
+            putValue(Action.SHORT_DESCRIPTION, "Keep Input files List");
+        }
+
+    };
 
     protected void initInputFiles() {
         batchFileList.clear();
-        if (persistFileList.isSelected()) {
+        if (keepFileList.isSelected()) {
             String json = Preferences.getInstance().get(BATCH_FILES_LIST_KEY, "");
             if (!json.isEmpty()) {
                 for (String f : SerDeslUtils.stringListFromJSON(json)) {
@@ -301,18 +401,30 @@ public class BatchOperationWindow extends JFrame {
     }
 
     protected void persistInputFiles() {
-        if (persistFileList.isSelected()) {
+        if (keepFileList.isSelected()) {
             List<String> files = batchFileList.stream().map(File::getAbsolutePath).toList();
             Preferences.getInstance().put(BATCH_FILES_LIST_KEY, SerDeslUtils.toJSON(false, files));
             Preferences.getInstance().put(BATCH_OUTPUT_DIR_KEY, outputDirField.getText());
         }
     }
 
+    protected void refreshLicense() {
+        if (!BatchMan.hasBatch()) {
+            btnAction.setEnabled(false);
+            statusSummary.setVisible(true);
+            statusSummary.setText("<p align=center>No batch license. In order to use batch operations please get a license from <a href='" + Constants.batchLicenseUrl + "'>" + Constants.batchLicenseUrl + "<a></p>");
+        } else {
+            btnAction.setEnabled(true);
+            statusSummary.setVisible(false);
+            statusSummary.setText("");
+        }
+    }
+
     protected void reset(boolean fullReset) {
         if (!fullReset) {
-            boolean onlyOutput = hasErrors() || persistFileList.isSelected();
+            boolean onlyOutput = hasErrors() || keepFileList.isSelected();
             if (!onlyOutput) {
-                clearInputFiles();
+                clearInputFiles.actionPerformed(null);
             }
         } else {
             initInputFiles();
@@ -328,15 +440,8 @@ public class BatchOperationWindow extends JFrame {
             }
         });
         btnAction.setText("Begin");
-        if (!BatchMan.hasBatch()) {
-            btnAction.setEnabled(false);
-            statusSummary.setVisible(true);
-            statusSummary.setText("<p align=center>No batch license. In order to use batch operations please get a license from <a href='" + Constants.batchLicenseUrl + "'>" + Constants.batchLicenseUrl + "<a></p>");
-        } else {
-            btnAction.setEnabled(true);
-            statusSummary.setVisible(false);
-            statusSummary.setText("");
-        }
+        btnCancel.setText("Close");
+        refreshLicense();
 
         // important that it happens here, so that the renderer cache is reset!
         statusTable.getColumnModel().getColumn(1).setCellRenderer(new MessageCellRenderer());
@@ -387,10 +492,13 @@ public class BatchOperationWindow extends JFrame {
     }
 
     public void appendError(Throwable e) {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        tableModel.addFileOpResult(new FileOpResult("", sw.toString(), true));
+        tableModel.addFileOpResult(new FileOpResult("", e.toString(), true));
         LOG.error("Exception in FileOpResult:", e);
+    }
+
+    public void appendError(String e) {
+        tableModel.addFileOpResult(new FileOpResult("", e, true));
+        LOG.error("Exception in FileOpResult: {}", e);
     }
 
     public void appendFiles(final List<File> files) {
@@ -430,7 +538,8 @@ public class BatchOperationWindow extends JFrame {
         Preferences.getInstance().put(LAST_USED_COMMAND_KEY, command.name);
         persistInputFiles();
 
-        (new BatchOperationWindow.Worker() {
+        btnCancel.setText("Cancel");
+        worker = new BatchOperationWindow.Worker() {
             final ActionStatus actionStatus = new ActionStatus() {
                 @Override
                 public void addStatus(String filename, String message) {
@@ -464,10 +573,14 @@ public class BatchOperationWindow extends JFrame {
                     appendError(e);
                 } catch (ExecutionException e) {
                     appendError(e.getCause());
+                } catch (CancellationException e) {
+                    appendError("User Cancelled!");
                 }
+                worker = null;
                 onDone();
             }
-        }).execute();
+        };
+        worker.execute();
     }
 
     void onDone() {
@@ -539,13 +652,13 @@ public class BatchOperationWindow extends JFrame {
     public void enableBatchParametersWindowButton() {
         final CommandDescription command = ((CommandDescription) selectedBatchOperation.getSelectedItem());
         if (command == null) {
-            btnParameters.setEnabled(false);
-            addFileButton.setEnabled(false);
-            addFolderButton.setEnabled(false);
+            openParametersWindow.setEnabled(false);
+            addFileAction.setEnabled(false);
+            addDirAction.setEnabled(false);
         } else {
-            btnParameters.setEnabled(command.is(CommandDescription.CLEAR) || command.is(CommandDescription.EDIT) || command.isInGroup(CommandDescription.FILE_OPERATIONS_GROUP) || command.isInGroup(CommandDescription.EXPORT_GROUP));
-            addFileButton.setEnabled(!command.isGroup());
-            addFolderButton.setEnabled(!command.isGroup());
+            openParametersWindow.setEnabled(command.is(CommandDescription.CLEAR) || command.is(CommandDescription.EDIT) || command.isInGroup(CommandDescription.FILE_OPERATIONS_GROUP) || command.isInGroup(CommandDescription.EXPORT_GROUP));
+            addFileAction.setEnabled(!command.isGroup());
+            addDirAction.setEnabled(!command.isGroup());
         }
     }
 
@@ -610,7 +723,7 @@ public class BatchOperationWindow extends JFrame {
         final JPanel panel3 = new JPanel();
         panel3.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(panel3, new GridConstraints(3, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        panel3.setBorder(BorderFactory.createTitledBorder(null, "Output", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
+        panel3.setBorder(BorderFactory.createTitledBorder(null, "Output Log", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
         statusScrollPane = new JScrollPane();
         panel3.add(statusScrollPane, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         statusTable = new JTable();
