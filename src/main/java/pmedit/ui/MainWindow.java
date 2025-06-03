@@ -537,27 +537,11 @@ public class MainWindow extends JFrame {
         JMenuItem saveFile = new JMenuItem("Save");
         JMenuItem saveAsFile = new JMenuItem("Save as");
         JMenuItem saveAndRenameFile = new JMenuItem("Save & Rename");
-        JMenuItem close = new JMenuItem("Close");
-        JMenuItem quit = new JMenuItem("Quit");
 
         openFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
         saveFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK));
         saveAsFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK));
         saveAndRenameFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK | KeyEvent.ALT_DOWN_MASK));
-
-
-        int closeKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
-        close.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, closeKeyMask));
-        close.addActionListener(e -> {
-            this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
-        });
-
-        int quitKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
-        quit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, quitKeyMask));
-        quit.addActionListener(e -> {
-            LOG.info("Exit all instances!");
-            System.exit(0);
-        });
 
         openFile.addActionListener(openAction);
         saveFile.addActionListener(saveAction);
@@ -569,9 +553,9 @@ public class MainWindow extends JFrame {
         inputMenu.add(saveFile);
         inputMenu.add(saveAsFile);
         inputMenu.add(saveAndRenameFile);
-        inputMenu.addSeparator();
-        inputMenu.add(close);
-        inputMenu.add(quit);
+        addCloseQuitMenuItems(inputMenu, e -> {
+            this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+        });
 
         JMenu documentMenu = new JMenu("Metadata");
         JMenu documentMd = new JMenu("Document");
@@ -588,6 +572,17 @@ public class MainWindow extends JFrame {
         documentMenu.add(xmpMd);
 
 
+        menuBar.add(inputMenu);
+        menuBar.add(documentMenu);
+        menuBar.add(Box.createHorizontalGlue());
+
+        addHelpMenu(menuBar, e -> {
+            showPreferences("About");
+        });
+        this.setJMenuBar(menuBar);
+    }
+
+    public static void addHelpMenu(JMenuBar menuBar, ActionListener showAbout) {
         JMenu helpMenu = new JMenu("Help");
         JMenuItem viewHelp = new JMenuItem("View Help");
         JMenuItem website = new JMenuItem("Website");
@@ -600,21 +595,34 @@ public class MainWindow extends JFrame {
         website.addActionListener(e -> {
             TextPaneWithLinks.openURL("https://pdf.metadata.care/");
         });
-        about.addActionListener(e -> {
-            showPreferences("About");
-        });
+        about.addActionListener(showAbout);
 
 
         helpMenu.add(viewHelp);
         helpMenu.add(website);
         helpMenu.add(about);
 
-
-        menuBar.add(inputMenu);
-        menuBar.add(documentMenu);
-        menuBar.add(Box.createHorizontalGlue());
         menuBar.add(helpMenu);
-        this.setJMenuBar(menuBar);
+    }
+
+    public static void addCloseQuitMenuItems(JMenu menu, ActionListener onClose) {
+        JMenuItem close = new JMenuItem("Close");
+        JMenuItem quit = new JMenuItem("Quit");
+
+        int closeKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+        close.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, closeKeyMask));
+        close.addActionListener(onClose);
+
+        int quitKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+        quit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, quitKeyMask));
+        quit.addActionListener(e -> {
+            LOG.info("Exit all instances!");
+            System.exit(0);
+        });
+
+        menu.addSeparator();
+        menu.add(close);
+        menu.add(quit);
     }
 
     {

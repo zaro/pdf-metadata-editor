@@ -76,6 +76,8 @@ public class BatchMan {
     public static boolean giveBatch(String moto) {
         if(moto == null ) {
             Preferences.removeMotoBoto();
+            subject = null;
+            expires = null;
         } if (null != maybeHasBatch(new Preferences.MotoBoto(moto, new Date().getTime()))) {
             Preferences.setMotoBoto(moto);
             return true;
