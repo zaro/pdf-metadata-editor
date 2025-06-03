@@ -102,20 +102,20 @@ public class WindowsRegisterContextMenu {
     }
 
     public static void setRegistryKey(com.sun.jna.platform.win32.WinReg.HKEY root, String keyPath, String name, String value) {
-        System.out.println("Registry Create: " + keyPath + "(" + name + ")=" + value);
+        LOG.info("Registry Create: {} ({})={}" , keyPath ,  name ,  value);
         try {
             Advapi32Util.registrySetStringValue(root, keyPath, name, value);
         } catch (com.sun.jna.platform.win32.Win32Exception e) {
-            System.out.println(e);
+            LOG.error("setRegistryKey", e);
         }
     }
 
     public static void deleteRegistryKey(com.sun.jna.platform.win32.WinReg.HKEY root, String key) {
-        System.out.println("Registry Delete: " + key);
+        LOG.info("Registry Delete: {}",  key);
         try {
             Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, key);
         } catch (com.sun.jna.platform.win32.Win32Exception e) {
-            System.out.println(e);
+            LOG.error("deleteRegistryKey", e);
         }
     }
 

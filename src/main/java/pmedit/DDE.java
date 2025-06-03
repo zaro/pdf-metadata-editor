@@ -24,13 +24,13 @@ public class DDE {
     private static StandaloneDdeClient server = null;
 
     public static void init() {
-        System.out.println("DDE::init start");
+        LOG.info("DDE::init start");
 
         server = new StandaloneDdeClient() {
 
             private final ConnectHandler connectHandler = new ConnectHandler() {
                 public boolean onConnect(int transactionType, HSZ topic, HSZ service, Ddeml.CONVCONTEXT convcontext, boolean sameInstance) {
-                    System.out.printf("DDE::Connect handler connect topic '%s' %b\n", queryString(topic), topicName.equals(queryString(topic)));
+                    LOG.info("DDE::Connect handler connect topic '{}' {}\n", queryString(topic), topicName.equals(queryString(topic)));
                     return topicName.equals(queryString(topic));
                 }
             };
@@ -40,7 +40,7 @@ public class DDE {
                     Pointer[] pointer = new Pointer[]{accessData(commandStringData, null)};
                     try {
                         String commandString = pointer[0].getWideString(0);
-                        System.out.printf("DDE::onExecute topic[%s] %s\n", queryString(topic), commandString);
+                        LOG.info("DDE::onExecute topic[{}] {}\n", queryString(topic), commandString);
                         if (queryString(topic).equals(topicName)) {
                             execute(commandString);
                             return Ddeml.DDE_FACK;
@@ -64,7 +64,7 @@ public class DDE {
         };
 
         server.nameService(serviceName, Ddeml.DNS_REGISTER);
-        System.out.printf("DDE Registered service name '%s'\n", serviceName);
+        LOG.info("DDE Registered service name '{}'\n", serviceName);
 
     }
 
@@ -82,7 +82,7 @@ public class DDE {
     }
 
     public static void execute(String command) {
-        Main.logLine("DDE execute:", command);
+        LOG.info("DDE execute: {}", command);
         if (handler != null) {
             handler.ddeExecute(DDE.splitCommand(command));
         } else {

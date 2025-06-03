@@ -1,5 +1,8 @@
 package pmedit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,6 +10,8 @@ import java.io.InputStreamReader;
 import java.util.*;
 
 public class RunCmd {
+    static final Logger LOG = LoggerFactory.getLogger(RunCmd.class);
+
     public record Result(int status, String out, String err, Exception e, List<String> outLines, List<String> errLines){
         public boolean ok(){
             return status == 0;
@@ -51,7 +56,7 @@ public class RunCmd {
 
         Runtime rt = Runtime.getRuntime();
         try {
-            System.out.println(Arrays.toString(cmdWithArgs));
+            LOG.info("exec: {}", Arrays.toString(cmdWithArgs));
             Process proc = rt.exec(cmdWithArgs);
 
             //String[] commands = {"system.exe", "-get t"};
@@ -65,13 +70,13 @@ public class RunCmd {
             List<String> errLines = new ArrayList<>();
             String s;
             while ((s = stdInput.readLine()) != null) {
-                System.out.println(s);
+                LOG.trace("stdin: {}", s);
                 outLines.add(s);
             }
 
             // Read any errors from the attempted command:
             while ((s = stdError.readLine()) != null) {
-                System.out.println(s);
+                LOG.trace("stderr: {}", s);
                 errLines.add(s);
             }
 
