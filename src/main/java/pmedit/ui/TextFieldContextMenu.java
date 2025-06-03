@@ -1,27 +1,34 @@
 package pmedit.ui;
 
 import pmedit.CommandLine;
+import pmedit.ui.components.DateTimeList;
 import pmedit.ui.components.DateTimePicker;
 
 import javax.swing.*;
 import javax.swing.text.JTextComponent;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class TextFieldContextMenu {
+    private final Object uiComponent;
     private final JTextComponent textComponent;
-    private final Consumer<JComponent> resetHandler;
+    private final BiConsumer<Object, JTextComponent> resetHandler;
     private JPopupMenu popupMenu;
 
-    public TextFieldContextMenu(JComponent component, Consumer<JComponent> resetHandler) {
+    public TextFieldContextMenu(Object component, BiConsumer<Object, JTextComponent> resetHandler) {
+        uiComponent = component;
         if (component instanceof JTextComponent tc) {
             textComponent = tc;
         } else if (component instanceof DateTimePicker dtp) {
             textComponent = dtp.getTextComponent();
+        } else if (component instanceof DateTimeList dtl) {
+            textComponent = dtl.getTextComponent();
         } else {
             throw new RuntimeException("Trying to create menu on unsupported component: " + component.getClass().getName());
         }
@@ -40,7 +47,7 @@ public class TextFieldContextMenu {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if(resetHandler != null ) {
-                    resetHandler.accept(textComponent);
+                    resetHandler.accept(uiComponent, textComponent);
                 }
             }
         };
