@@ -21,7 +21,6 @@ import java.util.concurrent.*;
 
 
 public class Main {
-    static final Logger LOG = LoggerFactory.getLogger(Main.class);
     static {
         java.util.logging.Logger.getLogger("org.apache").setLevel(java.util.logging.Level.FINE);
         System.setProperty("org.apache.commons.logging.simplelog.defaultlog", "debug");
@@ -35,6 +34,8 @@ public class Main {
 
 
     }
+    static final Logger LOG = LoggerFactory.getLogger(Main.class);
+
     protected static int batchGuiCounter = 0;
     static BlockingQueue<CommandLine> cmdQueue = new LinkedBlockingDeque<CommandLine>();
     static Map<String, BatchOperationWindow> batchInstances = new HashMap<String, BatchOperationWindow>();
