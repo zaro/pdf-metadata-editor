@@ -5,40 +5,26 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import pmedit.BatchMan;
 import pmedit.Constants;
-import pmedit.Main;
 import pmedit.ui.components.TextPaneWithLinks;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.util.Base64;
+import java.util.Date;
 import java.util.prefs.Preferences;
 
 public class LicensePreferences {
     public JPanel topPanel;
-    public JTextField emailField;
-    public JTextField keyField;
+    public JTextField licensedTo;
+    public JTextArea keyField;
     public JLabel labelLicenseStatus;
     public TextPaneWithLinks header;
+    public JTextField expirationDate;
 
     public LicensePreferences() {
-        header.setText("<h3 align='center'>Enter license information below to use batch operations.</h3><p align='center'>You can get license at <a href=\"" + Constants.batchLicenseUrl + "\">" + Constants.batchLicenseUrl + "</a></p>");
-        emailField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                refresh();
-            }
-
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                refresh();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-
-            }
-        });
+        header.setText("<h3 align='center'>Enter license information below to unlock full functionality.</h3><p align='center'>You can get license at <a href=\"" + Constants.batchLicenseUrl + "\">" + Constants.batchLicenseUrl + "</a></p>");
         keyField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void removeUpdate(DocumentEvent e) {
@@ -59,28 +45,36 @@ public class LicensePreferences {
 
 
     public void init(Preferences prefs) {
-        keyField.setText(prefs.get("key", ""));
-        emailField.setText(prefs.get("email", ""));
+        keyField.setText(pmedit.prefs.Preferences.getMotoBoto().moto());
     }
 
     public void refresh() {
         String key = keyField.getText();
-        String email = emailField.getText();
-        if (key.isEmpty() && email.isEmpty()) {
+        if (key.trim().isEmpty()) {
             labelLicenseStatus.setText("No license");
-        } else if (BatchMan.maybeHasBatch(key, email)) {
+            licensedTo.setText("n/a");
+            expirationDate.setText("n/a");
+            return;
+        }
+        String sub = BatchMan.maybeHasBatch(new pmedit.prefs.Preferences.MotoBoto(key, new Date().getTime()));
+        if (null != sub && !sub.isEmpty()) {
             labelLicenseStatus.setText("Valid license");
+            licensedTo.setText(sub);
+            expirationDate.setText(BatchMan.getExpiration().toString());
+
         } else {
             labelLicenseStatus.setText("Invalid license");
+            licensedTo.setText("n/a");
+            expirationDate.setText("n/a");
         }
     }
 
     public void save(Preferences prefs) {
         String key = keyField.getText();
-        String email = emailField.getText();
-        if (BatchMan.maybeHasBatch(key, email)) {
-            prefs.put("key", keyField.getText());
-            prefs.put("email", emailField.getText());
+        if (key.isEmpty()) {
+            BatchMan.giveBatch(null);
+        } else {
+            BatchMan.giveBatch(key);
         }
     }
 
@@ -100,25 +94,35 @@ public class LicensePreferences {
      */
     private void $$$setupUI$$$() {
         topPanel = new JPanel();
-        topPanel.setLayout(new GridLayoutManager(5, 2, new Insets(10, 10, 10, 10), -1, -1));
+        topPanel.setLayout(new GridLayoutManager(6, 2, new Insets(10, 10, 10, 10), -1, -1));
         header = new TextPaneWithLinks();
         topPanel.add(header, new GridConstraints(0, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final JLabel label1 = new JLabel();
-        label1.setHorizontalAlignment(4);
-        label1.setText("Email");
+        label1.setText("License key");
         topPanel.add(label1, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        emailField = new JTextField();
-        topPanel.add(emailField, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final JLabel label2 = new JLabel();
-        label2.setText("License key");
-        topPanel.add(label2, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        keyField = new JTextField();
-        topPanel.add(keyField, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
         labelLicenseStatus = new JLabel();
         labelLicenseStatus.setText("No License");
-        topPanel.add(labelLicenseStatus, new GridConstraints(4, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        topPanel.add(labelLicenseStatus, new GridConstraints(5, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final Spacer spacer1 = new Spacer();
         topPanel.add(spacer1, new GridConstraints(1, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(-1, 20), null, 0, false));
+        final JLabel label2 = new JLabel();
+        label2.setHorizontalAlignment(4);
+        label2.setText("Licensed to");
+        topPanel.add(label2, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        licensedTo = new JTextField();
+        licensedTo.setEditable(false);
+        topPanel.add(licensedTo, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final JLabel label3 = new JLabel();
+        label3.setText("Expiration Date");
+        topPanel.add(label3, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        expirationDate = new JTextField();
+        topPanel.add(expirationDate, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final JScrollPane scrollPane1 = new JScrollPane();
+        topPanel.add(scrollPane1, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        keyField = new JTextArea();
+        keyField.setLineWrap(true);
+        keyField.setRows(3);
+        scrollPane1.setViewportView(keyField);
     }
 
     /**

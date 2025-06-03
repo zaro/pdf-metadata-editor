@@ -1,59 +1,83 @@
 package pmedit;
 
+import io.jsonwebtoken.Claims;
 import pmedit.prefs.Preferences;
 
 import java.io.IOException;
+import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Date;
+
+import io.jsonwebtoken.Jwts;
 
 public class BatchMan {
+    static String subject;
+    static Date expires;
 
-    public static boolean maybeHasBatch(String moto, String boto) {
-        if (moto != null && boto != null) {
+    public static String maybeHasBatch(Preferences.MotoBoto mb) {
+        if (mb.moto() != null) {
             try {
-                MessageDigest md = MessageDigest.getInstance("SHA-1");
-                md.update(boto.trim().getBytes());
-                byte[] toto = md.digest();
-                Base64.Decoder decoder = Base64.getDecoder();
-                byte[] binMoto = decoder.decode(moto.trim());
-                if (binMoto.length == toto.length) {
-                    return Arrays.equals(toto, binMoto);
-                } else if (binMoto.length == toto.length + 1) {
-                    byte key = binMoto[0];
-                    byte[] rest = Arrays.copyOfRange(binMoto, 1, binMoto.length);
-                    for (int i = 0; i < rest.length; ++i) {
-                        rest[i] = (byte) (rest[i] ^ key);
-                    }
-                    return Arrays.equals(toto, rest);
+                // Decode Base64
+                byte[] keyBytes = Base64.getDecoder().decode(Version.getPublicKey());
+
+                // Create PublicKey object
+                X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+                KeyFactory kf = null;
+
+                kf = KeyFactory.getInstance("EC");
+                PublicKey publicKey = kf.generatePublic(spec);
+
+                Claims payload =  Jwts.parser()
+                        .verifyWith(publicKey)
+                        .build()
+                        .parseSignedClaims(mb.moto())
+                        .getPayload();
+
+                Date iat = payload.getIssuedAt();
+                Date exp = payload.getExpiration();
+                Date now = new Date();
+                if(now.after(iat) && now.before(exp) && mb.timeMs() <= now.getTime()){
+                    expires = exp;
+                    return payload.getSubject();
                 }
-            } catch (NoSuchAlgorithmException e) {
+            } catch (NoSuchAlgorithmException | InvalidKeySpecException | RuntimeException ignored) {
             }
         }
-        return false;
+        return null;
+    }
+
+    public static String getBatch() {
+        if(subject == null || subject.isEmpty()) {
+            Preferences.MotoBoto mb = Preferences.getMotoBoto();
+            if (mb.moto() == null || mb.moto().isEmpty()) {
+                String ek = System.getenv("PME_LICENSE");
+                mb = new Preferences.MotoBoto(ek, new Date().getTime());
+            }
+            subject = maybeHasBatch(mb);
+        }
+        return subject;
+    }
+
+    public static Date getExpiration() {
+        return expires;
     }
 
     public static boolean hasBatch() {
-        String moto = Preferences.getInstance().get("key", null);
-        String boto = Preferences.getInstance().get("email", null);
-        if (moto == null || boto == null) {
-            String ek = System.getenv("PME_LICENSE");
-            if (ek != null) {
-                int comaPos = ek.indexOf(",");
-                if (comaPos > 0) {
-                    boto = ek.substring(0, comaPos);
-                    moto = ek.substring(comaPos + 1);
-                }
-            }
-        }
-        return maybeHasBatch(moto, boto);
+        getBatch();
+        return subject != null && !subject.isEmpty();
     }
 
-    public static boolean giveBatch(String moto, String boto) {
-        if (maybeHasBatch(moto, boto)) {
-            Preferences.getInstance().put("key", moto);
-            Preferences.getInstance().put("email", boto);
+    public static boolean giveBatch(String moto) {
+        if(moto == null ) {
+            Preferences.removeMotoBoto();
+        } if (null != maybeHasBatch(new Preferences.MotoBoto(moto, new Date().getTime()))) {
+            Preferences.setMotoBoto(moto);
             return true;
         }
         return false;
