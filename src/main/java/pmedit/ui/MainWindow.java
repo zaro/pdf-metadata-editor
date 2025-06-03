@@ -150,7 +150,7 @@ public class MainWindow extends JFrame {
             if (metadataInfo != null) {
                 metadataEditor.copyToMetadata(metadataInfo);
                 metadataInfo.copyXMPToDoc();
-                metadataEditor.fillFromMetadata(metadataInfo, true);
+                metadataEditor.fillFromMetadata(metadataInfo, true, false);
             }
         }
     };
@@ -160,7 +160,7 @@ public class MainWindow extends JFrame {
             if (metadataInfo != null) {
                 metadataEditor.copyToMetadata(metadataInfo);
                 metadataInfo.copyDocToXMP();
-                metadataEditor.fillFromMetadata(metadataInfo, true);
+                metadataEditor.fillFromMetadata(metadataInfo, true, false);
             }
         }
     };
