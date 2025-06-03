@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Base64;
 
 public class BatchMan {
 
@@ -15,7 +16,8 @@ public class BatchMan {
                 MessageDigest md = MessageDigest.getInstance("SHA-1");
                 md.update(boto.trim().getBytes());
                 byte[] toto = md.digest();
-                byte[] binMoto = Base64.decode(moto.trim());
+                Base64.Decoder decoder = Base64.getDecoder();
+                byte[] binMoto = decoder.decode(moto.trim());
                 if (binMoto.length == toto.length) {
                     return Arrays.equals(toto, binMoto);
                 } else if (binMoto.length == toto.length + 1) {
@@ -27,7 +29,6 @@ public class BatchMan {
                     return Arrays.equals(toto, rest);
                 }
             } catch (NoSuchAlgorithmException e) {
-            } catch (IOException e) {
             }
         }
         return false;
