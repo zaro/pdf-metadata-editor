@@ -2,11 +2,14 @@ package pmedit;
 
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.URISyntaxException;
 
 public class WindowsRegisterContextMenu {
+    static final Logger LOG = LoggerFactory.getLogger(WindowsRegisterContextMenu.class);
 
     public static String exePath() throws Exception {
         String thisJarDir;
@@ -195,14 +198,14 @@ public class WindowsRegisterContextMenu {
             try {
                 register();
             } catch (Exception e) {
-                e.printStackTrace();
+                LOG.error("main", e);
             }
         }
         if (args[0].equalsIgnoreCase("unregister")) {
             try {
                 unregister();
             } catch (Exception e) {
-                e.printStackTrace();
+                LOG.error("main", e);
             }
         }
     }

@@ -1,11 +1,16 @@
 package pmedit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Version {
+    static final Logger LOG = LoggerFactory.getLogger(Main.class);
+
     protected static String version;
     protected static String appName;
 
@@ -16,7 +21,7 @@ public class Version {
                 prop.load(VersionTuple.class.getClassLoader().getResourceAsStream("pmedit/version.properties"));
                 version = prop.getProperty("app.version", "0.0.0-dev");
             } catch (IOException e) {
-                e.printStackTrace();
+                LOG.error("get", e);
                 version = "0.0.0-dev";
             }
         }
@@ -30,7 +35,7 @@ public class Version {
                 prop.load(VersionTuple.class.getClassLoader().getResourceAsStream("pmedit/version.properties"));
                 appName = prop.getProperty("app.name", "Pdf Metadata Editor");
             } catch (IOException e) {
-                e.printStackTrace();
+                LOG.error("getAppName", e);
                 appName = "Pdf Metadata Editor";
             }
         }

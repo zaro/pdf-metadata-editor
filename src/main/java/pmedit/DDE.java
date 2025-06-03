@@ -7,12 +7,16 @@ import com.sun.jna.platform.win32.Ddeml.HSZ;
 import com.sun.jna.platform.win32.DdemlUtil.ConnectHandler;
 import com.sun.jna.platform.win32.DdemlUtil.ExecuteHandler;
 import com.sun.jna.platform.win32.DdemlUtil.StandaloneDdeClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pmedit.CommandLine.ParseError;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class DDE {
+    static final Logger LOG = LoggerFactory.getLogger(Main.class);
+
     private static final String serviceName = Version.getAppName();
     private static final String topicName = "System";
     public static boolean launcherDDE = System.getProperty("launcherDDE") != null;
@@ -85,22 +89,20 @@ public class DDE {
             try {
                 Main.executeCommand(CommandLine.parse(DDE.splitCommand(command)));
             } catch (ParseError e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                LOG.error("execute", e);
             }
         }
     }
 
     public static void activate(String command) {
-        Main.logLine("DDE activate:", command);
+        LOG.info("DDE activate: {}", command);
         if (handler != null) {
             handler.ddeActivate(DDE.splitCommand(command));
         } else {
             try {
                 Main.executeCommand(CommandLine.parse(DDE.splitCommand(command)));
             } catch (ParseError e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                LOG.error("activate", e);
             }
         }
     }
