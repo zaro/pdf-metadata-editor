@@ -21,7 +21,7 @@ public class BatchParametersWindow extends JDialog {
     public BatchParametersWindow(BatchOperationParameters parameters, final Frame owner) {
         super(owner, true);
         setLocationRelativeTo(owner);
-        setTitle("Batch PDF metadata edit");
+        setTitle("Batch PDF Metadata Process Parameters");
         setMinimumSize(new Dimension(640, 480));
 
         if (parameters != null) {

@@ -72,7 +72,7 @@ public class BatchOperationWindow extends JFrame {
     private Worker worker;
 
     public BatchOperationWindow(CommandDescription command) {
-        setTitle("Batch PDF metadata edit");
+        setTitle("Batch PDF Metadata Process");
         setBounds(100, 100, 640, 480);
         setMinimumSize(new Dimension(640, 480));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);

@@ -31,7 +31,7 @@ public class BatchModifyMetadataTest {
     @BeforeEach
     void loadFile(TestInfo testInfo) throws Exception {
         if(topFrame == null) {
-            topFrame = new JFrameOperator("Batch PDF metadata edit");
+            topFrame = new JFrameOperator("Batch PDF Metadata Process");
         }
         FilesTestHelper.pushTempDir(testInfo.getDisplayName().replaceFirst("\\(.*", ""));
         initialFiles = FilesTestHelper.randomFiles(3);
