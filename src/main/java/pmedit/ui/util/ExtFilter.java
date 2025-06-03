@@ -31,7 +31,6 @@ public class ExtFilter extends FileFilter {
         }
         String fn = f.getName();
         String ext = fn.substring(fn.lastIndexOf('.') + 1).toLowerCase();
-        //System.out.println(ext);
         for(String e: extenstions){
             if(ext.equals(e)){
                 return  true;

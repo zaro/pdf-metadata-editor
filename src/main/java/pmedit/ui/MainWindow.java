@@ -26,6 +26,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -149,7 +150,7 @@ public class MainWindow extends JFrame {
             if (metadataInfo != null) {
                 metadataEditor.copyToMetadata(metadataInfo);
                 metadataInfo.copyXMPToDoc();
-                metadataEditor.fillFromMetadata(metadataInfo);
+                metadataEditor.fillFromMetadata(metadataInfo, true);
             }
         }
     };
@@ -159,7 +160,7 @@ public class MainWindow extends JFrame {
             if (metadataInfo != null) {
                 metadataEditor.copyToMetadata(metadataInfo);
                 metadataInfo.copyDocToXMP();
-                metadataEditor.fillFromMetadata(metadataInfo);
+                metadataEditor.fillFromMetadata(metadataInfo, true);
             }
         }
     };
@@ -171,7 +172,7 @@ public class MainWindow extends JFrame {
 
                 metadataEditor.copyToMetadata(metadataInfo);
                 metadataInfo.clearDoc();
-                metadataEditor.fillFromMetadata(metadataInfo);
+                metadataEditor.fillFromMetadata(metadataInfo, true, false);
             }
         }
     };
@@ -182,7 +183,7 @@ public class MainWindow extends JFrame {
             if (metadataInfo != null) {
                 metadataEditor.copyToMetadata(metadataInfo);
                 metadataInfo.clearXmp();
-                metadataEditor.fillFromMetadata(metadataInfo);
+                metadataEditor.fillFromMetadata(metadataInfo, true, false);
             }
         }
     };
@@ -216,6 +217,7 @@ public class MainWindow extends JFrame {
                 for (File file : files) {
                     fileNames.add(file.getAbsolutePath());
                 }
+                LOG.info("Received Dropped files: {}", fileNames);
                 Main.executeCommand(new CommandLine(fileNames, fdm.isBatchOperation()));
             }
 
@@ -379,7 +381,7 @@ public class MainWindow extends JFrame {
     }
 
     private void clear() {
-
+        actionsAndOptions.setEnabled(false);
         filename.setText("");
         metadataEditor.clear();
     }
@@ -389,6 +391,7 @@ public class MainWindow extends JFrame {
     }
 
     public void loadFile(File file) {
+        LOG.info("loadFile({}) begin", file.getAbsolutePath());
         if (!file.equals(pdfFile)) {
             password = null;
         }
@@ -400,8 +403,10 @@ public class MainWindow extends JFrame {
 
                 reloadFileFromDocument(document, pdfFile);
                 document.close();
+                LOG.info("loadFile({}) success", file.getAbsolutePath());
                 break;
             } catch (InvalidPasswordException e) {
+                LOG.error("loadFile({})", file.getAbsolutePath(), e);
                 password = (String) JOptionPane.showInputDialog(
                         this,
                         "File is encrypted, provide user password:\n",
@@ -443,6 +448,7 @@ public class MainWindow extends JFrame {
 
         metadataInfo.encryptionOptions.userPassword = password;
         actionsAndOptions.setDocumentProtection(metadataInfo.encryptionOptions);
+        actionsAndOptions.setEnabled(true);
     }
 
     public void reloadFile() {
@@ -543,13 +549,15 @@ public class MainWindow extends JFrame {
         int closeKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
         close.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, closeKeyMask));
         close.addActionListener(e -> {
-            this.dispose();
-            Main.maybeExit();
+            this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
         });
 
         int quitKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
         quit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, quitKeyMask));
-        quit.addActionListener(e -> System.exit(0));
+        quit.addActionListener(e -> {
+            LOG.info("Exit all instances!");
+            System.exit(0);
+        });
 
         openFile.addActionListener(openAction);
         saveFile.addActionListener(saveAction);
@@ -562,6 +570,7 @@ public class MainWindow extends JFrame {
         inputMenu.add(saveAsFile);
         inputMenu.add(saveAndRenameFile);
         inputMenu.addSeparator();
+        inputMenu.add(close);
         inputMenu.add(quit);
 
         JMenu documentMenu = new JMenu("Metadata");

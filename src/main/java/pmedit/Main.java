@@ -25,6 +25,13 @@ public class Main {
         java.util.logging.Logger.getLogger("org.apache").setLevel(java.util.logging.Level.FINE);
         System.setProperty("org.apache.commons.logging.simplelog.defaultlog", "debug");
         System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "debug");
+        System.setProperty("org.slf4j.simpleLogger.showDateTime", "true");
+        System.setProperty("org.slf4j.simpleLogger.dateTimeFormat", "[yyyy-MM-dd HH:mm:ss.SSS]");
+        System.setProperty("org.slf4j.simpleLogger.levelInBrackets", "true");
+        System.setProperty("org.slf4j.simpleLogger.showThreadName", "false");
+        System.setProperty("org.slf4j.simpleLogger.showShortLogName", "true");
+
+        System.setProperty("simplelogger.properties", "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n");
 
         // Setup log file
         if(System.getProperty("org.slf4j.simpleLogger.logFile") == null) {
@@ -47,7 +54,7 @@ public class Main {
 
     // this must be swing worker
     public static void makeBatchWindow(final String commandName, final CommandDescription command, final List<String> fileList) {
-        logLine("makeBatchWindow", commandName);
+        LOG.info("makeBatchWindow: {}", commandName);
         BatchOperationWindow bs = new BatchOperationWindow(command);
         bs.appendFiles(FileList.fileList(fileList));
         bs.addWindowListener(new java.awt.event.WindowAdapter() {
@@ -61,7 +68,7 @@ public class Main {
     }
 
     protected static void executeCommandSwingWorker(final CommandLine cmdLine) {
-        logLine("executeCommandSwingWorker", cmdLine.toString());
+        LOG.info("executeCommandSwingWorker: {}", cmdLine.toString());
 
         if (cmdLine.hasCommand()) {
             try {
@@ -87,18 +94,25 @@ public class Main {
         for (final String file : files) {
             try {
                 String fileAbsPath = file != null ? new File(file).getAbsolutePath() : null;
+
                 // If we have file, and a single open empty window, load the file in it
                 if (fileAbsPath != null && editorInstances.size() == 1 && editorInstances.get(0).getCurrentFile() == null) {
+                    LOG.info("executeCommand Found empty editor, using it to load : {}", fileAbsPath);
                     editorInstances.get(0).loadFile(fileAbsPath);
-                    return;
+                    // If it is only one file to load, there is nothing more to do
+                    if(files.size() == 1) {
+                        return;
+                    } else {
+                        continue;
+                    }
                 }
 
-                logLine("executeCommand fileName", fileAbsPath);
+                LOG.info("executeCommand fileName: {}", fileAbsPath);
                 for (MainWindow window : editorInstances) {
                     File wFile = window.getCurrentFile();
-                    logLine("check ", wFile != null ? wFile.getAbsolutePath() : null);
-                    if ((fileAbsPath == null && wFile == null) || (wFile != null && wFile.getAbsolutePath().equals(fileAbsPath))) {
-                        logLine("match", null);
+                    boolean matched = (fileAbsPath == null && wFile == null) || (wFile != null && wFile.getAbsolutePath().equals(fileAbsPath));
+                    LOG.info("check {} -> matched={}", wFile != null ? wFile.getAbsolutePath() : null, matched);
+                    if (matched) {
                         if (window.getState() == JFrame.ICONIFIED) {
                             window.setState(JFrame.NORMAL);
                         }
@@ -108,10 +122,11 @@ public class Main {
                         return;
                     }
                 }
-                logLine("open editor", file);
+                LOG.info("open editor: {}", file);
                 final MainWindow window = new MainWindow(file);
                 window.addWindowListener(new java.awt.event.WindowAdapter() {
                     public void windowClosing(WindowEvent winEvt) {
+                        LOG.info("Received windowClosing for {}", window);
                         editorInstances.remove(window);
                         maybeExit();
                     }
@@ -133,13 +148,10 @@ public class Main {
         }
     }
 
-    protected static void logLine(String context, String line) {
-        LOG.debug("logLine[{}] {}", context, line);
-    }
-
     public static void maybeExit() {
         LOG.info("maybeExit() batchInstances={}, editorInstances={}, cmdQueue={}", batchInstances.size(), editorInstances.size(), cmdQueue.size());
         if (batchInstances.isEmpty() && editorInstances.isEmpty() && cmdQueue.isEmpty()) {
+            LOG.info("No instances left, exiting...");
             System.exit(0);
         }
     }
@@ -154,33 +166,28 @@ public class Main {
         try {
             cmdLine = CommandLine.parse(args);
         } catch (ParseError e) {
-            Main.logLine("ParseError", e.toString());
-            System.err.println(e);
+            LOG.error("CommandLine.ParseError", e);
+            System.err.println(e.toString());
             return;
         }
-        //System.out.println(cmdLine);
+        LOG.info("Parsed command line: {}", cmdLine);
         if (cmdLine.noGui) {
             MainCli.main(cmdLine);
             return;
         }
         try {
-
-                UIManager.setLookAndFeel(
-                        Preferences.getLookAndFeelClass());
-
-        } catch (UnsupportedLookAndFeelException e) {
-        } catch (ClassNotFoundException e) {
-        } catch (InstantiationException e) {
-        } catch (IllegalAccessException e) {
+            UIManager.setLookAndFeel(Preferences.getLookAndFeelClass());
+        } catch (UnsupportedLookAndFeelException| ClassNotFoundException| InstantiationException | IllegalAccessException e) {
+            LOG.error("UIManager.setLookAndFeel", e);
         }
 
         if (OsCheck.isWindows() && WindowsSingletonApplication.isAlreadyRunning()) {
-            System.out.println(">>>> already running");
+            LOG.info("WindowsSingletonApplication.isAlreadyRunning() = true");
         }
         executeCommand(cmdLine);
         if (OsCheck.isWindows()) {
             DDE.init();
-            Main.logLine("DDE:", "DONE");
+            LOG.info("DDE: DONE");
         }
         CommandsExecutor commandsExecutor = new CommandsExecutor();
         commandsExecutor.execute();
@@ -211,7 +218,7 @@ public class Main {
                 CommandLine cmdLine;
                 try {
                     cmdLine = cmdQueue.take();
-                    logLine("publish", cmdLine.toString());
+                    LOG.info("publish: {}", cmdLine.toString());
 
                     publish(cmdLine);
                 } catch (InterruptedException e) {

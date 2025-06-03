@@ -305,33 +305,38 @@ public class MetadataEditPane {
     }
 
     private void traverseFields(MetadataEditPane.FieldSetGet setGet, MetadataEditPane.FieldEnabledCheckBox fieldEnabled) {
-        for (Field field : this.getClass().getFields()) {
-            if (setGet != null) {
-                FieldID annos = field.getAnnotation(FieldID.class);
-                if (annos != null) {
-                    if (annos.value() != null && annos.value().length() > 0) {
-                        Object f = null;
-                        try {
-                            f = field.get(this);
-                        } catch (IllegalArgumentException | IllegalAccessException e) {
-                            logger.error("traverseFields on ({})", annos.value(), e);
-                            continue;
+        try {
+            for (Field field : this.getClass().getFields()) {
+                if (setGet != null) {
+                    FieldID annos = field.getAnnotation(FieldID.class);
+                    if (annos != null) {
+                        if (annos.value() != null && annos.value().length() > 0) {
+                            Object f = null;
+                            try {
+                                f = field.get(this);
+                            } catch (IllegalArgumentException | IllegalAccessException e) {
+                                logger.error("traverseFields on ({})", annos.value(), e);
+                                continue;
+                            }
+                            setGet.apply(f, annos);
                         }
-                        setGet.apply(f, annos);
+                    }
+                }
+                if (fieldEnabled != null) {
+                    FieldEnabled annosEnabled = field.getAnnotation(FieldEnabled.class);
+                    if (annosEnabled != null) {
+                        try {
+                            JCheckBox f = (JCheckBox) field.get(this);
+                            fieldEnabled.apply(f, annosEnabled);
+                        } catch (IllegalArgumentException | IllegalAccessException e) {
+                            logger.error("traverseFields on ({})", annosEnabled.value(), e);
+                        }
                     }
                 }
             }
-            if (fieldEnabled != null) {
-                FieldEnabled annosEnabled = field.getAnnotation(FieldEnabled.class);
-                if (annosEnabled != null) {
-                    try {
-                        JCheckBox f = (JCheckBox) field.get(this);
-                        fieldEnabled.apply(f, annosEnabled);
-                    } catch (IllegalArgumentException | IllegalAccessException e) {
-                        logger.error("traverseFields on ({})", annosEnabled.value(), e);
-                    }
-                }
-            }
+        } catch (Exception e){
+            LOG.error("traverseFields", e);
+            throw e;
         }
     }
 
@@ -397,19 +402,24 @@ public class MetadataEditPane {
     }
 
     public void fillFromMetadata(final MetadataInfo metadataInfo) {
-        fillFromMetadata(metadataInfo, false);
+        fillFromMetadata(metadataInfo, false, false);
     }
 
     public void fillFromMetadata(final MetadataInfo metadataInfo, boolean loadPreset) {
+        fillFromMetadata(metadataInfo, loadPreset, true);
+
+    }
+
+    public void fillFromMetadata(final MetadataInfo metadataInfo, boolean loadPreset, boolean ignoreNulls) {
         if (!loadPreset) {
             initialMetadata = metadataInfo.clone();
         }
-
+        LOG.debug("fillFromMetadata(loadPreset={}, ignoreNulls={})", loadPreset, ignoreNulls);
         traverseFields(new MetadataEditPane.FieldSetGet() {
             @Override
             public void apply(Object field, FieldID anno) {
 
-                if (loadPreset) {
+                if (ignoreNulls) {
                     Object o = metadataInfo.get(anno.value());
                     if (o == null) {
                         return;

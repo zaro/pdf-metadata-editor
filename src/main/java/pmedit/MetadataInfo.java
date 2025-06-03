@@ -2085,6 +2085,9 @@ public class MetadataInfo {
         }
 
         protected String makeStringFromValueSingle(Object value){
+            if (value == null) {
+                return "";
+            }
             if(value instanceof String s){
                 return s;
             }
