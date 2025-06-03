@@ -676,90 +676,17 @@ public class MetadataEditPane {
     }
 
 
-    protected void resetFieldValue(JComponent component, final String fieldName) {
+    protected void resetFieldValue(Object component, final String fieldName) {
         if (component instanceof JTextComponent tc) {
             tc.setText(initialMetadata != null ? initialMetadata.getString(fieldName) : null);
             ;
         } else if (component instanceof DateTimePicker dtp) {
             dtp.setCalendar(initialMetadata != null ? (Calendar) initialMetadata.get(fieldName) : null);
+        } else if (component instanceof DateTimeList dtl) {
+            dtl.setCalendarList(initialMetadata != null ? (List) initialMetadata.get(fieldName) : null);
         } else {
             throw new RuntimeException("Trying to reset value on unsupported component: " + component.getClass().getName());
         }
-    }
-
-
-    private void createContextMenu(JComponent component, final String fieldName) {
-        JTextComponent textComponent;
-        if (component instanceof JTextComponent tc) {
-            textComponent = tc;
-        } else if (component instanceof DateTimePicker dtp) {
-            textComponent = dtp.getTextComponent();
-        } else {
-            throw new RuntimeException("Trying to create menu on unsupported component: " + component.getClass().getName());
-        }
-
-        JPopupMenu popupMenu = new JPopupMenu();
-
-        // Create menu items with actions
-        JMenuItem copyItem = new JMenuItem("Copy");
-        JMenuItem cutItem = new JMenuItem("Cut");
-        JMenuItem pasteItem = new JMenuItem("Paste");
-        JMenuItem resetItem = new JMenuItem("Reset");
-
-        // Add action listeners
-        copyItem.addActionListener(e -> textComponent.copy());
-        cutItem.addActionListener(e -> textComponent.cut());
-        pasteItem.addActionListener(e -> textComponent.paste());
-        resetItem.addActionListener(e -> {
-            resetFieldValue(textComponent, fieldName);
-
-        });
-
-        // Add keyboard shortcuts
-        copyItem.setAccelerator(KeyStroke.getKeyStroke("ctrl C"));
-        cutItem.setAccelerator(KeyStroke.getKeyStroke("ctrl X"));
-        pasteItem.setAccelerator(KeyStroke.getKeyStroke("ctrl V"));
-        resetItem.setAccelerator(KeyStroke.getKeyStroke("ctrl R"));
-
-        // Add items to popup menu
-        popupMenu.add(copyItem);
-        popupMenu.add(cutItem);
-        popupMenu.add(pasteItem);
-        popupMenu.add(resetItem);
-
-        textComponent.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                if (e.isPopupTrigger()) {
-                    showContextMenu(e);
-                }
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                if (e.isPopupTrigger()) {
-                    showContextMenu(e);
-                }
-            }
-
-            private void showContextMenu(MouseEvent e) {
-                popupMenu.show(e.getComponent(), e.getX(), e.getY());
-            }
-        });
-
-        // Register the Ctrl+R key binding for the Reset action
-        String resetKey = "reset-text";
-        InputMap inputMap = textComponent.getInputMap(JComponent.WHEN_FOCUSED);
-        ActionMap actionMap = textComponent.getActionMap();
-
-        // Add the key binding
-        inputMap.put(KeyStroke.getKeyStroke("ctrl R"), resetKey);
-        actionMap.put(resetKey, new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                resetFieldValue(component, fieldName);
-            }
-        });
     }
 
     public void initComponents() {
@@ -779,8 +706,8 @@ public class MetadataEditPane {
 
                 if (field instanceof JTextComponent textComponent) {
                     textComponent.getDocument().addDocumentListener(new ChangeBackgroundDocumentListener(textComponent, anno.value()));
-                    new TextFieldContextMenu(textComponent, c -> {
-                        resetFieldValue(c, anno.value());
+                    new TextFieldContextMenu(textComponent, (component, ignored) -> {
+                        resetFieldValue(component, anno.value());
                     }).createContextMenu().addTemplatePlaceholders();
                 }
                 if (field instanceof JSpinner spinner) {
@@ -829,7 +756,9 @@ public class MetadataEditPane {
                             }
                         }
                     });
-                    createContextMenu(dtPicker, anno.value());
+                    new TextFieldContextMenu(dtPicker, (component, textComponent) -> {
+                        resetFieldValue(component, anno.value());
+                    }).createContextMenu();
                 }
 
                 if (field instanceof DateTimeList dtList) {
@@ -872,7 +801,9 @@ public class MetadataEditPane {
                             }
                         }
                     });
-                    createContextMenu(dtList.dateTimePicker, anno.value());
+                    new TextFieldContextMenu(dtList, (component, textComponent) -> {
+                        resetFieldValue(component, anno.value());
+                    }).createContextMenu();
                 }
             }
         }, isTesting

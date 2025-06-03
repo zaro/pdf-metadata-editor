@@ -6,6 +6,7 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListDataListener;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -155,6 +156,10 @@ public class DateTimeList extends MetadataFormComponent {
     public void clearAllDates() {
         listModel.clear();
         dateTimePicker.setDate(null);
+    }
+
+    public JTextComponent getTextComponent() {
+        return dateTimePicker.getTextComponent();
     }
 
     @Override
