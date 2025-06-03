@@ -6,11 +6,14 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 import org.apache.xmpbox.xml.XmpParsingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pmedit.*;
 import pmedit.ext.PmeExtension;
 import pmedit.prefs.Preferences;
 import pmedit.preset.PresetStore;
 import pmedit.preset.PresetValues;
+import pmedit.ui.components.TextPaneWithLinks;
 import pmedit.ui.preferences.DefaultsPreferences;
 
 import javax.swing.*;
@@ -22,15 +25,17 @@ import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainWindow extends JFrame {
-    protected static final Dimension MIN_SIZE = new Dimension(640, 480);
+    static final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
+
+    protected static final Dimension MIN_SIZE = new Dimension(640, 530);
     private JPanel contentPane;
     public JButton btnOpenPdf;
     public JTextField filename;
@@ -101,8 +106,21 @@ public class MainWindow extends JFrame {
             }
         }
     };
-    final Runnable updateSaveButton = new Runnable() {
+    final ActionListener openAction = new ActionListener() {
+        public void actionPerformed(ActionEvent arg0) {
+            final PdfFileChooser fc = new PdfFileChooser();
 
+            int returnVal = fc.showOpenDialog(MainWindow.this);
+
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                // This is where a real application would open the file.
+                loadFile(fc.getSelectedFile());
+            }
+        }
+    };
+    ;
+
+    final Runnable updateSaveButton = new Runnable() {
         @Override
         public void run() {
             JButton btnSave = actionsAndOptions.btnSave;
@@ -122,6 +140,49 @@ public class MainWindow extends JFrame {
                 btnSave.setText("Save");
                 btnSave.addActionListener(saveAction);
 
+            }
+        }
+    };
+
+    final ActionListener onCopyXmpToDoc = new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+            if (metadataInfo != null) {
+                metadataEditor.copyToMetadata(metadataInfo);
+                metadataInfo.copyXMPToDoc();
+                metadataEditor.fillFromMetadata(metadataInfo);
+            }
+        }
+    };
+
+    final ActionListener onCopyDocToXmp = new ActionListener() {
+        public void actionPerformed(ActionEvent arg0) {
+            if (metadataInfo != null) {
+                metadataEditor.copyToMetadata(metadataInfo);
+                metadataInfo.copyDocToXMP();
+                metadataEditor.fillFromMetadata(metadataInfo);
+            }
+        }
+    };
+
+    final ActionListener clearDocument = new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (metadataInfo != null) {
+
+                metadataEditor.copyToMetadata(metadataInfo);
+                metadataInfo.clearDoc();
+                metadataEditor.fillFromMetadata(metadataInfo);
+            }
+        }
+    };
+
+    final ActionListener clearXmp = new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (metadataInfo != null) {
+                metadataEditor.copyToMetadata(metadataInfo);
+                metadataInfo.clearXmp();
+                metadataEditor.fillFromMetadata(metadataInfo);
             }
         }
     };
@@ -180,7 +241,8 @@ public class MainWindow extends JFrame {
         setGlassPane(new FileDropSelectMessage());
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-//        setMinimumSize(MIN_SIZE);
+        buildMenu();
+        setMinimumSize(MIN_SIZE);
     }
 
     private void initialize() {
@@ -189,56 +251,18 @@ public class MainWindow extends JFrame {
         setBounds(100, 100, MIN_SIZE.width, MIN_SIZE.height);
 //        setMinimumSize(MIN_SIZE);
 
-        btnOpenPdf.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent arg0) {
-                final PdfFileChooser fc = new PdfFileChooser();
-
-                int returnVal = fc.showOpenDialog(MainWindow.this);
-
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    // This is where a real application would open the file.
-                    loadFile(fc.getSelectedFile());
-                }
-            }
-        });
+        btnOpenPdf.addActionListener(openAction);
 
         btnPreferences.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                SwingUtilities.invokeLater(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        if (preferencesWindow == null) {
-                            preferencesWindow = new PreferencesWindow(MainWindow.this);
-                            preferencesWindow.onSaveAction(updateSaveButton);
-                        }
-                        preferencesWindow.setVisible(true);
-                    }
-                });
-
+                showPreferences(null);
             }
         });
 
         metadataEditor.showEnabled(false);
 
-        actionsAndOptions.copyXMPToDocumentButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (metadataInfo != null) {
-                    metadataEditor.copyToMetadata(metadataInfo);
-                    metadataInfo.copyXMPToDoc();
-                    metadataEditor.fillFromMetadata(metadataInfo);
-                }
-            }
-        });
-        actionsAndOptions.copyDocumentToXMPButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent arg0) {
-                if (metadataInfo != null) {
-                    metadataEditor.copyToMetadata(metadataInfo);
-                    metadataInfo.copyDocToXMP();
-                    metadataEditor.fillFromMetadata(metadataInfo);
-                }
-            }
-        });
+        actionsAndOptions.copyXMPToDocumentButton.addActionListener(onCopyXmpToDoc);
+        actionsAndOptions.copyDocumentToXMPButton.addActionListener(onCopyDocToXmp);
 
 
         actionsAndOptions.btnSaveMenu.addActionListener(new ActionListener() {
@@ -301,23 +325,9 @@ public class MainWindow extends JFrame {
             }
         });
 
-        actionsAndOptions.documentClearButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                metadataEditor.copyToMetadata(metadataInfo);
-                metadataInfo.clearDoc();
-                metadataEditor.fillFromMetadata(metadataInfo);
-            }
-        });
+        actionsAndOptions.documentClearButton.addActionListener(clearDocument);
 
-        actionsAndOptions.xmpClearButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                metadataEditor.copyToMetadata(metadataInfo);
-                metadataInfo.clearXmp();
-                metadataEditor.fillFromMetadata(metadataInfo);
-            }
-        });
+        actionsAndOptions.xmpClearButton.addActionListener(clearXmp);
 
         final JTextComponent tc = (JTextComponent) actionsAndOptions.selectedPreset.getEditor().getEditorComponent();
         tc.getDocument().addDocumentListener(new DocumentListener() {
@@ -402,7 +412,7 @@ public class MainWindow extends JFrame {
                     break;
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                LOG.error("Error while opening file", e);
                 JOptionPane.showMessageDialog(this,
                         "Error while opening file:\n" + e);
                 break;
@@ -444,7 +454,7 @@ public class MainWindow extends JFrame {
 
             document.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.error("Error while opening file", e);
             JOptionPane.showMessageDialog(this,
                     "Error while opening file:\n" + e);
         }
@@ -491,11 +501,111 @@ public class MainWindow extends JFrame {
             return newFile;
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.error("Error while saving file", e);
             JOptionPane.showMessageDialog(this,
                     "Error while saving file:\n" + e);
             return null;
         }
+    }
+
+    protected void showPreferences(String tabName) {
+        SwingUtilities.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                if (preferencesWindow == null) {
+                    preferencesWindow = new PreferencesWindow(MainWindow.this);
+                    preferencesWindow.onSaveAction(updateSaveButton);
+                }
+                preferencesWindow.showTab(tabName);
+                preferencesWindow.setVisible(true);
+            }
+        });
+    }
+
+    protected void buildMenu() {
+        JMenuBar menuBar = new JMenuBar();
+        JMenu inputMenu = new JMenu("File");
+
+        JMenuItem openFile = new JMenuItem("Open File");
+        JMenuItem saveFile = new JMenuItem("Save");
+        JMenuItem saveAsFile = new JMenuItem("Save as");
+        JMenuItem saveAndRenameFile = new JMenuItem("Save & Rename");
+        JMenuItem close = new JMenuItem("Close");
+        JMenuItem quit = new JMenuItem("Quit");
+
+        openFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
+        saveFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK));
+        saveAsFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK));
+        saveAndRenameFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK | KeyEvent.ALT_DOWN_MASK));
+
+
+        int closeKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+        close.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, closeKeyMask));
+        close.addActionListener(e -> {
+            this.dispose();
+            Main.maybeExit();
+        });
+
+        int quitKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+        quit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, quitKeyMask));
+        quit.addActionListener(e -> System.exit(0));
+
+        openFile.addActionListener(openAction);
+        saveFile.addActionListener(saveAction);
+        saveAsFile.addActionListener(saveAsAction);
+        saveAndRenameFile.addActionListener(saveRenameAction);
+
+
+        inputMenu.add(openFile);
+        inputMenu.add(saveFile);
+        inputMenu.add(saveAsFile);
+        inputMenu.add(saveAndRenameFile);
+        inputMenu.addSeparator();
+        inputMenu.add(quit);
+
+        JMenu documentMenu = new JMenu("Metadata");
+        JMenu documentMd = new JMenu("Document");
+        JMenuItem copyToXMP = new JMenuItem("Copy to XMP");
+        JMenuItem clearDoc = new JMenuItem("Clear fields");
+        JMenu xmpMd = new JMenu("XMP");
+        JMenuItem copyToDoc = new JMenuItem("Copy to Document");
+        JMenuItem clearXmp = new JMenuItem("Clear fields");
+        documentMd.add(copyToXMP);
+        documentMd.add(clearDoc);
+        documentMenu.add(documentMd);
+        xmpMd.add(copyToDoc);
+        xmpMd.add(clearXmp);
+        documentMenu.add(xmpMd);
+
+
+        JMenu helpMenu = new JMenu("Help");
+        JMenuItem viewHelp = new JMenuItem("View Help");
+        JMenuItem website = new JMenuItem("Website");
+        JMenuItem about = new JMenuItem("About");
+
+        viewHelp.addActionListener(e -> {
+            TextPaneWithLinks.openURL("https://pdf.metadata.care/help/");
+        });
+
+        website.addActionListener(e -> {
+            TextPaneWithLinks.openURL("https://pdf.metadata.care/");
+        });
+        about.addActionListener(e -> {
+            showPreferences("About");
+        });
+
+
+        helpMenu.add(viewHelp);
+        helpMenu.add(website);
+        helpMenu.add(about);
+
+
+        menuBar.add(inputMenu);
+        menuBar.add(documentMenu);
+        menuBar.add(Box.createHorizontalGlue());
+        menuBar.add(helpMenu);
+        this.setJMenuBar(menuBar);
     }
 
     {

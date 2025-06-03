@@ -21,6 +21,7 @@ import java.util.concurrent.*;
 
 
 public class Main {
+    static final Logger LOG = LoggerFactory.getLogger(Main.class);
     static {
         java.util.logging.Logger.getLogger("org.apache").setLevel(java.util.logging.Level.FINE);
         System.setProperty("org.apache.commons.logging.simplelog.defaultlog", "debug");
@@ -34,7 +35,6 @@ public class Main {
 
 
     }
-    final static String debugLog = System.getProperty("debugLog");
     protected static int batchGuiCounter = 0;
     static BlockingQueue<CommandLine> cmdQueue = new LinkedBlockingDeque<CommandLine>();
     static Map<String, BatchOperationWindow> batchInstances = new HashMap<String, BatchOperationWindow>();
@@ -71,7 +71,7 @@ public class Main {
                     makeBatchWindow(cmdLine.command.name, cmdLine.command, cmdLine.fileList);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                LOG.error("executeCommandSwingWorker", e);
             }
             return;
         }
@@ -117,38 +117,28 @@ public class Main {
                 });
                 editorInstances.add(window);
             } catch (Exception e) {
-                e.printStackTrace();
+                LOG.error("executeCommandSwingWorker", e);
             }
         }
     }
 
     public static void executeCommand(final CommandLine cmdLine) {
-        Main.logLine("executeCommand:", cmdLine.toString());
+        LOG.debug("executeCommand: {}", cmdLine.toString());
 
         try {
             cmdQueue.put(cmdLine);
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOG.error("executeCommand",e);
         }
     }
 
     protected static void logLine(String context, String line) {
-        if (debugLog == null) {
-            return;
-        }
-        System.out.println(context + ":: " + line);
-        try {
-            PrintWriter output = new PrintWriter(new FileWriter(System.getProperty("java.io.tmpdir") + File.separator + "pdf-metada-editor-log.txt", true));
-
-            output.printf("%s:: %s\r\n", context, line == null ? "null" : line);
-            output.close();
-        } catch (Exception e) {
-        }
+        LOG.debug("logLine[{}] {}", context, line);
     }
 
     public static void maybeExit() {
-        if (batchInstances.size() == 0 && editorInstances.size() == 0 && cmdQueue.size() == 0) {
+        LOG.info("maybeExit() batchInstances={}, editorInstances={}, cmdQueue={}", batchInstances.size(), editorInstances.size(), cmdQueue.size());
+        if (batchInstances.isEmpty() && editorInstances.isEmpty() && cmdQueue.isEmpty()) {
             System.exit(0);
         }
     }
@@ -203,10 +193,8 @@ public class Main {
                 } catch (TimeoutException e) {
                 }
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
+        } catch (InterruptedException| ExecutionException e) {
+            LOG.error("main", e);
         }
     }
 
@@ -226,8 +214,7 @@ public class Main {
 
                     publish(cmdLine);
                 } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    LOG.error("doInBackground", e);
                 }
             }
         }

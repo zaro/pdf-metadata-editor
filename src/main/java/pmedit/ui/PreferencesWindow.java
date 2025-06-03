@@ -86,6 +86,13 @@ public class PreferencesWindow extends JDialog {
         extension.onPreferencesRefresh(this);
     }
 
+    public void showTab(String tabName) {
+        int idx = tabName == null || tabName.isEmpty() ? 0 : tabbedPane.indexOfTab(tabName);
+        if (idx >= 0) {
+            tabbedPane.setSelectedIndex(idx);
+        }
+    }
+
     public void onSaveAction(Runnable newAction) {
         onSave = newAction;
     }

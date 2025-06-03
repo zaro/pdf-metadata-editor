@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 
 public class MetadataEditPane {
+    static final Logger LOG = LoggerFactory.getLogger(MetadataEditPane.class);
     final static  boolean isTesting = System.getProperty("junitTest", "").equals("true");
     Logger logger = LoggerFactory.getLogger(MetadataEditPane.class);
 
@@ -563,7 +564,7 @@ public class MetadataEditPane {
             field.getModel().setSelectedItem(v);
         } else {
             RuntimeException e = new RuntimeException("Cannot store non-String object in JComboBox");
-            e.printStackTrace();
+            LOG.error("objectToField(JComboBox)", e);
             throw e;
         }
     }
@@ -575,7 +576,7 @@ public class MetadataEditPane {
             field.setCalendar(null);
         } else {
             RuntimeException e = new RuntimeException("Cannot store non-Calendar object in JDateChooser");
-            e.printStackTrace();
+            LOG.error("objectToField(JDateChooser)", e);
             throw e;
         }
     }
@@ -589,7 +590,7 @@ public class MetadataEditPane {
             field.setCalendar((Calendar) null);
         } else {
             RuntimeException e = new RuntimeException("Cannot store non-(Calendar|LocalDateTime) object in DateTimePicker");
-            e.printStackTrace();
+            LOG.error("objectToField(DateTimePicker)", e);
             throw e;
         }
     }
@@ -605,7 +606,7 @@ public class MetadataEditPane {
             field.setCalendarList(List.of(c));
         } else {
             RuntimeException e = new RuntimeException("Cannot store non-(Calendar|LocalDateTime) object in DateTimePicker");
-            e.printStackTrace();
+            LOG.error("objectToField(DateTimeList)", e);
             throw e;
         }
     }
@@ -617,7 +618,7 @@ public class MetadataEditPane {
             field.setValue(0);
         } else {
             RuntimeException e = new RuntimeException("Cannot store non-Integerr object in JSpinner");
-            e.printStackTrace();
+            LOG.error("objectToField(JSpinner)", e);
             throw e;
         }
     }

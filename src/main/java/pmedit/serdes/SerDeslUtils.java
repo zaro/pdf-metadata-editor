@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pmedit.ext.PmeExtension;
 
 import java.io.*;
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 public class SerDeslUtils {
+    static final Logger LOG = LoggerFactory.getLogger(SerDeslUtils.class);
 
     protected static ObjectMapper jsonMapper(){
         var mapper = new ObjectMapper(JsonFactory.builder().enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION).build())
@@ -34,6 +37,7 @@ public class SerDeslUtils {
         try {
             return jsonMapper().writeValueAsString(jsonObject);
         } catch (JsonProcessingException e) {
+            LOG.error("toJSON", e);
             throw new RuntimeException(e);
         }
     }
@@ -42,6 +46,7 @@ public class SerDeslUtils {
         try {
             jsonMapper().writeValue(file, jsonObject);
         } catch (IOException e) {
+            LOG.error("toJSONFile", e);
             throw new RuntimeException(e);
         }
     }
@@ -50,6 +55,7 @@ public class SerDeslUtils {
         try {
             return jsonMapper().readValue(jsonString, HashMap.class);
         } catch (JsonProcessingException e) {
+            LOG.error("fromJSON", e);
             throw new RuntimeException(e);
         }
     }
@@ -58,6 +64,7 @@ public class SerDeslUtils {
         try {
             return  jsonMapper().readerForListOf(HashMap.class).readValue(jsonString);
         } catch (JsonProcessingException e) {
+            LOG.error("listFromJSON", e);
             throw new RuntimeException(e);
         }
 
@@ -67,6 +74,7 @@ public class SerDeslUtils {
         try {
             return jsonMapper().readerForListOf(String.class).readValue(jsonString);
         } catch (JsonProcessingException e) {
+            LOG.error("stringListFromJSON", e);
             throw new RuntimeException(e);
         }
     }
@@ -82,6 +90,7 @@ public class SerDeslUtils {
                 return List.of(v);
             }
         } catch (IOException e) {
+            LOG.error("fromJSONFileAsList", e);
             throw new RuntimeException(e);
         }
 
@@ -103,6 +112,7 @@ public class SerDeslUtils {
         try {
             return yamlMapper().writeValueAsString(yamlObject);
         } catch (JsonProcessingException e) {
+            LOG.error("toYAML", e);
             throw new RuntimeException(e);
         }
     }
@@ -111,6 +121,7 @@ public class SerDeslUtils {
         try {
             return yamlMapper().readValue(yamlString, HashMap.class);
         } catch (JsonProcessingException e) {
+            LOG.error("fromYAML", e);
             throw new RuntimeException(e);
         }
 
@@ -120,6 +131,7 @@ public class SerDeslUtils {
         try {
             yamlMapper().writeValue(file, yamlObject);
         } catch (IOException e) {
+            LOG.error("toYamlFile", e);
             throw new RuntimeException(e);
         }
     }
@@ -128,6 +140,7 @@ public class SerDeslUtils {
         try {
             return yamlMapper().readValue(file, clazz);
         } catch (IOException e) {
+            LOG.error("fromYamlFile", e);
             throw new RuntimeException(e);
         }
     }
@@ -143,6 +156,7 @@ public class SerDeslUtils {
                 return List.of(v);
             }
         } catch (IOException e) {
+            LOG.error("fromYAMLFileAsList", e);
             throw new RuntimeException(e);
         }
 
@@ -156,7 +170,7 @@ public class SerDeslUtils {
             objectOutputStream.writeObject(o);
             return true;
         } catch ( IOException e) {
-            e.printStackTrace();
+            LOG.error("objectToFile", e);
             return false;
         }
     }
@@ -167,7 +181,7 @@ public class SerDeslUtils {
             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
             return  objectInputStream.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            LOG.error("objectFromFile", e);
             return null;
         }
     }

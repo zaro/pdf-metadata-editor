@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class BatchOperationWindow extends JFrame {
-    Logger logger = LoggerFactory.getLogger(BatchOperationWindow.class);
+    Logger LOG = LoggerFactory.getLogger(BatchOperationWindow.class);
     public JPanel contentPane;
     public JComboBox<CommandDescription> selectedBatchOperation;
     public JButton btnParameters;
@@ -389,9 +389,8 @@ public class BatchOperationWindow extends JFrame {
     public void appendError(Throwable e) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
-        e.printStackTrace(pw);
         tableModel.addFileOpResult(new FileOpResult("", sw.toString(), true));
-        logger.error("Unexpected:", e);
+        LOG.error("Exception in FileOpResult:", e);
     }
 
     public void appendFiles(final List<File> files) {
@@ -410,7 +409,7 @@ public class BatchOperationWindow extends JFrame {
                         Document doc = fileList.getDocument();
                         doc.insertString(doc.getLength(), file.getAbsolutePath() + "\n", null);
                     } catch (BadLocationException exc) {
-                        exc.printStackTrace();
+                        LOG.error("appendFiles", exc);
                     }
                 }
                 batchFileList.addAll(files);
