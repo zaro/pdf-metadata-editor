@@ -3,6 +3,12 @@ package pmedit.prefs;
 import pmedit.serdes.SerDeslUtils;
 
 import javax.swing.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.BackingStoreException;
@@ -62,5 +68,39 @@ public class Preferences {
 
     public static void setLookAndFeelClass(String name){
         getInstance().put("LookAndFeel", name);
+    }
+
+    public record MotoBoto(String moto, long timeMs){
+    }
+
+    public static MotoBoto getMotoBoto(){
+        Path f = FileSystems.getDefault().getPath(LocalDataDir.getAppDataDir(), "lic");
+        String moto = "";
+        long timeMs = 0;
+        try {
+            timeMs = Files.readAttributes(f, BasicFileAttributes.class).creationTime().toMillis();
+            moto = Files.readString(f);
+        } catch (IOException e) {
+        }
+        return new MotoBoto(moto, timeMs);
+    }
+
+    public static void setMotoBoto(String moto){
+        Path f = FileSystems.getDefault().getPath(LocalDataDir.getAppDataDir(), "lic");
+        MotoBoto exist = getMotoBoto();
+        try {
+            if(exist.moto.isEmpty() || !exist.moto.equals(moto)) {
+                Files.writeString(f, moto);
+            }
+        } catch (IOException e) {
+        }
+    }
+
+    public static void removeMotoBoto(){
+        Path f = FileSystems.getDefault().getPath(LocalDataDir.getAppDataDir(), "lic");
+        try {
+            Files.delete(f);
+        } catch (IOException e) {
+        }
     }
 }
