@@ -204,6 +204,7 @@ public class BatchOperationWindow extends JFrame {
     protected void buildMenu() {
         JMenuBar menuBar = new JMenuBar();
         JMenu commandMenu = new JMenu("Operation");
+        commandMenu.setMnemonic(KeyEvent.VK_O);
         JMenu subMenu = null;
         for (CommandDescription cd : CommandDescription.batchCommandsGuiMenu) {
             if (cd.isGroup()) {
@@ -211,8 +212,12 @@ public class BatchOperationWindow extends JFrame {
                     commandMenu.add(subMenu);
                 }
                 subMenu = new JMenu(cd.groupName);
+                subMenu.setMnemonic(cd.groupName.charAt(0));
             } else if (subMenu != null) {
                 JMenuItem item = new JMenuItem(cd.description);
+                if (cd.menuMnemonic > 0) {
+                    item.setMnemonic(cd.menuMnemonic);
+                }
                 item.addActionListener(e -> {
                     setSelectedBatchOperation(cd);
                 });
