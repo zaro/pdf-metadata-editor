@@ -64,26 +64,34 @@ public class CommandLine {
         return sb.toString();
     }
 
+    protected record OptionArgument(String arg, int advance){
+    }
+
+    protected static OptionArgument getOptionArgument(String arg, int argIndex, List<String> args) throws ParseError {
+        if(arg.contains("=")){
+            return new OptionArgument(arg.split("=", 2)[1], 0);
+        }
+        if (argIndex + 1 < args.size()) {
+            return new OptionArgument(args.get(argIndex + 1), 1);
+        } else {
+            throw new ParseError("Missing argument for '--" + arg + "'");
+        }
+    }
+
     protected static int processOptions(int startIndex, List<String> args, CommandLine cmdLine) throws ParseError {
         int i = startIndex;
         while ((i < args.size()) && args.get(i).startsWith("-")) {
             String arg = args.get(i).startsWith("--") ? args.get(i).substring(2) : args.get(i).substring(1);
             if (arg.equalsIgnoreCase("nogui") || arg.equalsIgnoreCase("console")) {
                 cmdLine.noGui = true;
-            } else if (arg.equalsIgnoreCase("rt") || arg.equalsIgnoreCase("renameTemplate")) {
-                if (i + 1 < args.size()) {
-                    cmdLine.params.renameTemplate = args.get(i + 1);
-                    ++i;
-                } else {
-                    throw new ParseError("Missing argument for renameTemplate");
-                }
-            } else if (arg.equalsIgnoreCase("license")) {
-                if (i + 1 < args.size()) {
-                    cmdLine.licenseKey = args.get(i + 1).trim();
-                    ++i;
-                } else {
-                    throw new ParseError("Missing argument for license");
-                }
+            } else if (arg.startsWith("rt") || arg.startsWith("renameTemplate")) {
+                OptionArgument oa = getOptionArgument(arg, i, args);
+                cmdLine.params.renameTemplate = oa.arg.trim();
+                i+=oa.advance;
+            } else if (arg.startsWith("license")) {
+                OptionArgument oa = getOptionArgument(arg, i, args);
+                cmdLine.licenseKey = oa.arg.trim();
+                i+=oa.advance;
             } else if (arg.equalsIgnoreCase("h") || arg.equalsIgnoreCase("help")) {
                 cmdLine.showHelp = true;
             } else if (arg.equalsIgnoreCase("o") || arg.equalsIgnoreCase("outputDir")) {

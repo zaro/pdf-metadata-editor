@@ -159,8 +159,29 @@ public class CommandLineTest {
 		assertTrue(c.fileList.isEmpty());
 	}
 
-	
-	
+
+	@Test
+	public void testOptions() throws ParseError {
+		CommandLine c;
+		c = CommandLine.parse(new String[]{
+				"--license=XXX"
+		});
+		assertEquals("XXX", c.licenseKey);
+		c = CommandLine.parse(new String[]{
+				"--license", "XXX"
+		});
+		assertEquals("XXX", c.licenseKey);
+		c = CommandLine.parse(new String[]{
+				"--renameTemplate=XXX"
+		});
+		assertEquals("XXX", c.params.renameTemplate);
+		c = CommandLine.parse(new String[]{
+				"--rt", "XXX"
+		});
+		assertEquals("XXX", c.params.renameTemplate);
+
+	}
+
 	@Test
 	public void testValid2() throws ParseError {
 		CommandLine c;
