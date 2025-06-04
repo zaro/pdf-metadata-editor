@@ -1,0 +1,37 @@
+<configuration>
+    <!-- Define properties for configuration -->
+    <property name="LOG_FILE" value="${logFileName:-application.log}" />
+    <property name="LOG_LEVEL" value="${logLevel:-info}" />
+    <property name="DEV_LOG" value="${devLog:-false}" />
+
+    <!-- Console appender - only enabled when devLog is true -->
+    <if condition='property("DEV_LOG").equalsIgnoreCase("true")'>
+        <then>
+            <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+                    <pattern>[%d{yyyy-MM-dd HH:mm:ss}] [%-5level] [%logger{36}] - %msg%n</pattern>
+                </encoder>
+            </appender>
+        </then>
+    </if>
+
+    <!-- File appender -->
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${LOG_FILE}</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss}] [%-5level] [%logger{36}] - %msg%n</pattern>
+        </encoder>
+        <append>false</append>
+    </appender>
+
+    <!-- Root logger configuration -->
+    <root level="${LOG_LEVEL}">
+        <!-- Only reference STDOUT if devLog is true -->
+        <if condition='property("DEV_LOG").equalsIgnoreCase("true")'>
+            <then>
+                <appender-ref ref="STDOUT" />
+            </then>
+        </if>
+        <appender-ref ref="FILE" />
+    </root>
+</configuration>
