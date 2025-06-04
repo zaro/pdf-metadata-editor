@@ -5,7 +5,7 @@ import java.awt.event.ActionEvent;
 
 // Custom ToggleAction class
 public class ToggleAction extends AbstractAction {
-    private boolean selected;
+    protected boolean selected;
 
     public ToggleAction(String name, boolean initialState) {
         super(name);

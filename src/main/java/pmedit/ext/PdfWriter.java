@@ -13,8 +13,8 @@ public class PdfWriter {
         this.pdDocument = document;
     }
 
-    public void write(File file) throws IOException{
-        final CompressionAndOptimisation compressParameters= new CompressionAndOptimisation(FileOptimizer.getPdfBoxCompression());
+    public void write(File file, int pdfBoxCompression) throws IOException{
+        final CompressionAndOptimisation compressParameters= new CompressionAndOptimisation(pdfBoxCompression);
         pdDocument.save(file, compressParameters.getCompressParameters());
 
     }

@@ -46,7 +46,7 @@ public class BatchCommandTest {
 			MetadataInfo loaded = new MetadataInfo();
 			loaded.loadFromPDF(t.file);
 			//System.out.println(pdf.getAbsolutePath());
-			assertTrue(empty.isEquivalent(loaded));
+			FilesTestHelper.assertEquals(empty, loaded, false, "File metadata not cleared");
 		}
 	}
 

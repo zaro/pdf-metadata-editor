@@ -66,7 +66,10 @@ public class MainWindowSaveTest {
         md.docEnabled.author = true;
         md.basicEnabled.baseURL = true;
         populateMetadataPaneValues(topFrame, md);
-        new JButtonOperator(topFrame, "Save").push();
+        JButtonOperator saveBtn =new JButtonOperator(topFrame, "Save");
+        assertTrue(saveBtn.isEnabled());
+        saveBtn.push();
+
         MetadataInfo saved = new MetadataInfo();
         saved.loadFromPDF(initialFile.file);
         saved.docEnabled.author = false;
@@ -75,7 +78,7 @@ public class MainWindowSaveTest {
         saved.setEnabled(false);
         saved.docEnabled.author = true;
         saved.basicEnabled.baseURL = true;
-        assertTrue(saved.isEquivalent(md, true), "Edited metadata differs");
+        FilesTestHelper.assertEquals(md, saved,  true, "Edited metadata differs");
     }
 
 

@@ -2,6 +2,8 @@ package pmedit.serdes;
 
 import com.opencsv.*;
 import com.opencsv.exceptions.CsvException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pmedit.CommandLine;
 import pmedit.MetadataInfo;
 import pmedit.OsCheck;
@@ -14,6 +16,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class CsvMetadata {
+    static Logger LOG = LoggerFactory.getLogger(CsvMetadata.class);
 
     public static List<MetadataInfo> readFile(File filename) throws IOException, CsvException {
         ArrayList<MetadataInfo> parsed = new ArrayList<MetadataInfo>();
@@ -32,20 +35,27 @@ public class CsvMetadata {
             header[i] = header[i].trim();
         }
         if (!Arrays.asList(header).contains("file.fullPath")) {
-            throw new RuntimeException("The header must specify a 'file.fullPath' column");
+            RuntimeException e = new RuntimeException("The header must specify a 'file.fullPath' column");
+            LOG.error("Invalid CSV header", e);
+            throw e;
         }
-        for (String[] row : entries) {
-            MetadataInfo metadata = new MetadataInfo();
-            metadata.setEnabled(false);
-            for (int idx = 0; idx < row.length; ++idx) {
-                String id = header[idx];
-                if (CommandLine.validMdNames.contains(id)) {
-                    String value = row[idx].trim();
-                    metadata.setAppendFromString(id, value);
-                    metadata.setEnabled(id, true);
+        try {
+            for (String[] row : entries) {
+                MetadataInfo metadata = new MetadataInfo();
+                metadata.setEnabled(false);
+                for (int idx = 0; idx < row.length; ++idx) {
+                    String id = header[idx];
+                    if (CommandLine.validMdNames.contains(id)) {
+                        String value = row[idx].trim();
+                        metadata.setAppendFromString(id, value);
+                        metadata.setEnabled(id, true);
+                    }
                 }
+                parsed.add(metadata);
             }
-            parsed.add(metadata);
+        } catch (RuntimeException e){
+            LOG.error("Error while parsing CSV data", e);
+            throw e;
         }
         return parsed;
     }

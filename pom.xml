@@ -240,6 +240,12 @@
 									</includes>
 								</filter>
 								<filter>
+									<artifact>io.jsonwebtoken:*</artifact>
+									<includes>
+										<include>**</include>
+									</includes>
+								</filter>
+								<filter>
 									<artifact>*:*</artifact>
 									<excludes>
 										<exclude>META-INF/LICENSE*</exclude>

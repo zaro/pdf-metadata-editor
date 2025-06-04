@@ -381,7 +381,6 @@ public class BatchOperationWindow extends JFrame {
             putValue(Action.MNEMONIC_KEY, KeyEvent.VK_K);
             putValue(Action.SHORT_DESCRIPTION, "Keep Input files List");
         }
-
     };
 
     protected void initInputFiles() {

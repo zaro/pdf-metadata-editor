@@ -163,6 +163,9 @@
       <item class="pmedit.ui.preferences.LookAndFeelPreferences" icon="" removable="true" auto-create-binding="false" can-attach-label="false">
         <default-constraints vsize-policy="3" hsize-policy="3" anchor="0" fill="0" />
       </item>
+      <item class="pmedit.ui.components.PdfVersionPicker" icon="/com/intellij/uiDesigner/icons/comboBox.svg" removable="true" auto-create-binding="false" can-attach-label="false">
+        <default-constraints vsize-policy="3" hsize-policy="3" anchor="0" fill="0" />
+      </item>
     </group>
   </component>
   <component name="uidesigner-configuration">

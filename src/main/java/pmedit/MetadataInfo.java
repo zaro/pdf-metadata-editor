@@ -105,7 +105,6 @@ public class MetadataInfo {
 
     public boolean removeDocumentInfo;
     public boolean removeXmp;
-    public float saveAsVersion;
     public EncryptionOptions encryptionOptions;
 
 
@@ -254,6 +253,7 @@ public class MetadataInfo {
         doc.creationDate = info.getCreationDate();
         doc.modificationDate = info.getModificationDate();
         doc.trapped = info.getTrapped();
+        file.pdfVersion = document.getVersion();
 
         // Load Document catalog
         PDDocumentCatalog catalog = document.getDocumentCatalog();
@@ -1121,6 +1121,7 @@ public class MetadataInfo {
             document.getDocumentCatalog().setMetadata(null);
         }
 
+        float saveAsVersion = file.pdfVersion != null ? file.pdfVersion : 0;
         if(saveAsVersion>0){
             if (saveAsVersion >= 1.4F) {
                 document.getDocumentCatalog().setVersion(Float.toString(saveAsVersion));
@@ -1150,7 +1151,7 @@ public class MetadataInfo {
             }
         }
 
-        PmeExtension.get().createPdfWriter(document).write(pdfFile);
+        PmeExtension.get().createPdfWriter(document).write(pdfFile, saveAsVersion >= 1.6 ? FileOptimizer.getPdfBoxCompression() : 0);
         return true;
 
     }
@@ -1179,8 +1180,10 @@ public class MetadataInfo {
     public void copyDocToXMP() {
         pdf.keywords = doc.keywords;
         pdf.producer = doc.producer;
+        pdf.pdfVersion = String.format("%.1f", file.pdfVersion);
         pdfEnabled.keywords = docEnabled.keywords;
         pdfEnabled.producer = docEnabled.producer;
+        pdfEnabled.pdfVersion = fileEnabled.pdfVersion;
 
         basic.createDate = doc.creationDate;
         basic.modifyDate = doc.modificationDate;
@@ -1203,6 +1206,15 @@ public class MetadataInfo {
         doc.producer = pdf.producer;
         docEnabled.keywords = pdfEnabled.keywords;
         docEnabled.producer = pdfEnabled.producer;
+        if(pdf.pdfVersion != null) {
+            try {
+                file.pdfVersion = Float.valueOf(pdf.pdfVersion);
+            } catch (NumberFormatException ignored) {
+            }
+        } else {
+            file.pdfVersion = null;
+        }
+        fileEnabled.pdfVersion = pdfEnabled.pdfVersion;
 
         doc.creationDate = basic.createDate;
         doc.modificationDate = basic.modifyDate;
@@ -1634,6 +1646,7 @@ public class MetadataInfo {
                     switch (fieldD.type){
                         case IntField -> fieldD.field.set(current, num.intValue());
                         case LongField -> fieldD.field.set(current, num.longValue());
+                        case FloatField -> fieldD.field.set(current, num.floatValue());
                         default -> throw new RuntimeException("_setStructObject('" + id + "') Trying to assign number to non numeric field!");
                     }
                 }else{
@@ -1686,6 +1699,7 @@ public class MetadataInfo {
         public String createTime;
         public String modifyTime;
         public String fullPath;
+        public Float pdfVersion;
 
     }
 
@@ -1697,9 +1711,10 @@ public class MetadataInfo {
         public boolean createTime = false;
         public boolean modifyTime = false;
         public boolean fullPath = false;
+        public boolean pdfVersion = true;
 
         public boolean atLeastOne() {
-            return false;
+            return pdfVersion;
         }
 
         public void setAll(boolean value) {
@@ -1740,7 +1755,7 @@ public class MetadataInfo {
 
         public boolean atLeastOne() {
             return title || author || subject || keywords || creator || producer || creationDate || modificationDate
-                    || trapped;
+                    || trapped ;
         }
 
         public void setAll(boolean value) {
@@ -2055,7 +2070,7 @@ public class MetadataInfo {
             this.enumClass = type.enumClass() != FieldDataType.NoEnumConfigured.class ? type.enumClass() : null;
             this.isWritable = isWritable;
             isList = List.class.isAssignableFrom(field.getType());
-            isNumeric = this.type == FieldDataType.FieldType.LongField || this.type == FieldDataType.FieldType.IntField;
+            isNumeric = this.type == FieldDataType.FieldType.LongField || this.type == FieldDataType.FieldType.IntField || this.type == FieldDataType.FieldType.FloatField;
         }
 
         public FieldDescription(String name, Field field, boolean isWritable) {
@@ -2068,8 +2083,12 @@ public class MetadataInfo {
                 this.type = FieldDataType.FieldType.IntField;
             } else if (Long.class.isAssignableFrom(klass)) {
                 this.type = FieldDataType.FieldType.LongField;
-            } else {
+            } else if (Float.class.isAssignableFrom(klass)) {
+                this.type = FieldDataType.FieldType.FloatField;
+            } else if (String.class.isAssignableFrom(klass)){
                 this.type = FieldDataType.FieldType.StringField;
+            } else {
+                this.type = null;
             }
             this.name = name;
             this.field = field;
@@ -2077,7 +2096,7 @@ public class MetadataInfo {
             this.enumClass = null;
             this.isWritable = isWritable;
             isList = List.class.isAssignableFrom(klass);
-            isNumeric = this.type == FieldDataType.FieldType.LongField || this.type == FieldDataType.FieldType.IntField;
+            isNumeric = this.type == FieldDataType.FieldType.LongField || this.type == FieldDataType.FieldType.IntField || this.type == FieldDataType.FieldType.FloatField;
         }
 
         String textForNull(){
@@ -2158,7 +2177,12 @@ public class MetadataInfo {
                        cal.setTime(d);
                        return cal;
                    }
-                }
+               }
+               if(type == FieldDataType.FieldType.FloatField){
+                   if(value instanceof Number n){
+                       return n.floatValue();
+                   }
+               }
             }
             return value;
         }
@@ -2166,6 +2190,9 @@ public class MetadataInfo {
 
         public Object makeValueFromString(String value) {
             if (value == null) {
+                return null;
+            }
+            if(isNumeric && value.isEmpty()){
                 return null;
             }
             if (isList) {
@@ -2179,6 +2206,9 @@ public class MetadataInfo {
                 } else if (type == FieldDataType.FieldType.LongField) {
                     // TODO: possible allow comma separated interger list
                     return List.of(Long.parseLong(value));
+                } else if (type == FieldDataType.FieldType.FloatField) {
+                    // TODO: possible allow comma separated interger list
+                    return List.of(Float.parseFloat(value));
                 } else if (type == FieldDataType.FieldType.BoolField) {
                     // TODO: possible allow comma separated boolean list
                     String v = value.toLowerCase().trim();
@@ -2206,6 +2236,8 @@ public class MetadataInfo {
                     return Integer.parseInt(value);
                 } else if (type == FieldDataType.FieldType.LongField) {
                     return Long.parseLong(value);
+                } else if (type == FieldDataType.FieldType.FloatField) {
+                    return Float.parseFloat(value);
                 } else if (type == FieldDataType.FieldType.BoolField) {
                     String v = value.toLowerCase().trim();
                     if (v.equals("true") || v.equals("yes")) return true;

@@ -18,6 +18,7 @@ public @interface FieldDataType {
         TextField,
         LongField,
         IntField,
+        FloatField,
         DateField,
         BoolField,
         EnumField

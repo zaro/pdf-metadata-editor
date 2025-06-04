@@ -15,6 +15,9 @@ import pmedit.preset.PresetStore;
 import pmedit.preset.PresetValues;
 import pmedit.ui.components.TextPaneWithLinks;
 import pmedit.ui.preferences.DefaultsPreferences;
+import pmedit.ui.util.PersistentRadioAction;
+import pmedit.ui.util.PersistentToggleAction;
+import pmedit.ui.util.ToggleAction;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -23,10 +26,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -36,7 +36,7 @@ import java.util.List;
 public class MainWindow extends JFrame {
     static final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
 
-    protected static final Dimension MIN_SIZE = new Dimension(640, 530);
+    protected static final Dimension MIN_SIZE = new Dimension(660, 600);
     private JPanel contentPane;
     public JButton btnOpenPdf;
     public JTextField filename;
@@ -165,7 +165,12 @@ public class MainWindow extends JFrame {
         }
     };
 
-    final ActionListener clearDocument = new ActionListener() {
+    final Action clearDocument = new AbstractAction("Clear Document") {
+        {
+            putValue(Action.MNEMONIC_KEY, KeyEvent.VK_D);
+            putValue(Action.SHORT_DESCRIPTION, "Remove Document/Info metadata");
+        }
+
         @Override
         public void actionPerformed(ActionEvent e) {
             if (metadataInfo != null) {
@@ -177,7 +182,12 @@ public class MainWindow extends JFrame {
         }
     };
 
-    final ActionListener clearXmp = new ActionListener() {
+    final Action clearXmp = new AbstractAction("Clear XMP") {
+        {
+            putValue(Action.MNEMONIC_KEY, KeyEvent.VK_X);
+            putValue(Action.SHORT_DESCRIPTION, "Remove XMP metadata");
+        }
+
         @Override
         public void actionPerformed(ActionEvent e) {
             if (metadataInfo != null) {
@@ -185,6 +195,35 @@ public class MainWindow extends JFrame {
                 metadataInfo.clearXmp();
                 metadataEditor.fillFromMetadata(metadataInfo, true, false);
             }
+        }
+    };
+
+    protected PersistentToggleAction removeDocumentOnSave = new PersistentToggleAction("Remove Document", "onsaveRemoveDoc") {
+        {
+            putValue(Action.MNEMONIC_KEY, KeyEvent.VK_D);
+            putValue(Action.SHORT_DESCRIPTION, "Remove Document/Info metadata on Save");
+        }
+    };
+
+    protected PersistentToggleAction removeXmpOnSave = new PersistentToggleAction("Remove Xmp", "onsaveRemoveXmp") {
+        {
+            putValue(Action.MNEMONIC_KEY, KeyEvent.VK_X);
+            putValue(Action.SHORT_DESCRIPTION, "Remove Document/Info metadata on Save");
+        }
+    };
+
+    protected ButtonGroup copyOnSave = new ButtonGroup();
+    protected PersistentRadioAction copyDocumentOnSave = new PersistentRadioAction("Copy Doc to Xmp", copyOnSave, "onsaveCopyBasicTo") {
+        {
+            putValue(Action.MNEMONIC_KEY, KeyEvent.VK_C);
+            putValue(Action.SHORT_DESCRIPTION, "Copy Document/Info metadata to Xmp on Save");
+        }
+    };
+
+    protected PersistentRadioAction copyXmpOnSave = new PersistentRadioAction("Copy Xmp to Doc", copyOnSave, "onsaveCopyXmpTo") {
+        {
+            putValue(Action.MNEMONIC_KEY, KeyEvent.VK_P);
+            putValue(Action.SHORT_DESCRIPTION, "Copy Xmp metadata to Document/Info on Save");
         }
     };
 
@@ -265,6 +304,10 @@ public class MainWindow extends JFrame {
 
         actionsAndOptions.copyXMPToDocumentButton.addActionListener(onCopyXmpToDoc);
         actionsAndOptions.copyDocumentToXMPButton.addActionListener(onCopyDocToXmp);
+        actionsAndOptions.removeXMPCheckBox.setAction(removeXmpOnSave);
+        actionsAndOptions.removeDocumentCheckBox.setAction(removeDocumentOnSave);
+        actionsAndOptions.copyDocToXmpRadioButton.setAction(copyDocumentOnSave);
+        actionsAndOptions.copyXmpToDocRadioButton.setAction(copyXmpOnSave);
 
 
         actionsAndOptions.btnSaveMenu.addActionListener(new ActionListener() {
@@ -327,9 +370,9 @@ public class MainWindow extends JFrame {
             }
         });
 
-        actionsAndOptions.documentClearButton.addActionListener(clearDocument);
+        actionsAndOptions.documentClearButton.setAction(clearDocument);
 
-        actionsAndOptions.xmpClearButton.addActionListener(clearXmp);
+        actionsAndOptions.xmpClearButton.setAction(clearXmp);
 
         final JTextComponent tc = (JTextComponent) actionsAndOptions.selectedPreset.getEditor().getEditorComponent();
         tc.getDocument().addDocumentListener(new DocumentListener() {
@@ -477,18 +520,25 @@ public class MainWindow extends JFrame {
         }
 
         try {
-            metadataInfo.removeDocumentInfo = actionsAndOptions.removeDocumentCheckBox.isSelected();
-            metadataInfo.removeXmp = actionsAndOptions.removeXMPCheckBox.isSelected();
+            metadataInfo.removeDocumentInfo = removeDocumentOnSave.isSelected();
+            metadataInfo.removeXmp = removeXmpOnSave.isSelected();
+
+            if (actionsAndOptions.pdfVersion.getSelectedItem() instanceof Float s) {
+                metadataInfo.file.pdfVersion = s;
+            } else {
+                metadataInfo.file.pdfVersion = 0f;
+            }
+
+            if (copyDocumentOnSave.isSelected()) {
+                metadataInfo.copyDocToXMP();
+            }
+            if (copyXmpOnSave.isSelected()) {
+                metadataInfo.copyXMPToDoc();
+            }
 
             metadataInfo.encryptionOptions = actionsAndOptions.getDocumentProtection();
 
             extension.beforeDocumentSave(metadataEditor);
-
-            if (actionsAndOptions.pdfVersion.getSelectedItem() instanceof Float s) {
-                metadataInfo.saveAsVersion = s;
-            } else {
-                metadataInfo.saveAsVersion = 0;
-            }
 
             metadataEditor.copyToMetadata(metadataInfo);
             metadataInfo.expandVariables();
@@ -531,7 +581,8 @@ public class MainWindow extends JFrame {
 
     protected void buildMenu() {
         JMenuBar menuBar = new JMenuBar();
-        JMenu inputMenu = new JMenu("File");
+        JMenu fileMenu = new JMenu("File");
+        fileMenu.setMnemonic('F');
 
         JMenuItem openFile = new JMenuItem("Open File");
         JMenuItem saveFile = new JMenuItem("Save");
@@ -549,19 +600,22 @@ public class MainWindow extends JFrame {
         saveAndRenameFile.addActionListener(saveRenameAction);
 
 
-        inputMenu.add(openFile);
-        inputMenu.add(saveFile);
-        inputMenu.add(saveAsFile);
-        inputMenu.add(saveAndRenameFile);
-        addCloseQuitMenuItems(inputMenu, e -> {
+        fileMenu.add(openFile);
+        fileMenu.add(saveFile);
+        fileMenu.add(saveAsFile);
+        fileMenu.add(saveAndRenameFile);
+        addCloseQuitMenuItems(fileMenu, e -> {
             this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
         });
 
         JMenu documentMenu = new JMenu("Metadata");
+        documentMenu.setMnemonic('M');
         JMenu documentMd = new JMenu("Document");
+        documentMd.setMnemonic('D');
         JMenuItem copyToXMP = new JMenuItem("Copy to XMP");
         JMenuItem clearDoc = new JMenuItem("Clear fields");
         JMenu xmpMd = new JMenu("XMP");
+        xmpMd.setMnemonic('X');
         JMenuItem copyToDoc = new JMenuItem("Copy to Document");
         JMenuItem clearXmp = new JMenuItem("Clear fields");
         documentMd.add(copyToXMP);
@@ -571,8 +625,20 @@ public class MainWindow extends JFrame {
         xmpMd.add(clearXmp);
         documentMenu.add(xmpMd);
 
+        JMenu onSaveMd = new JMenu("On Save");
+        onSaveMd.setMnemonic('S');
+        JMenuItem removeDoc = new JCheckBoxMenuItem(removeDocumentOnSave);
+        JMenuItem removeXMP = new JCheckBoxMenuItem(removeXmpOnSave);
+        JMenuItem copyDoc = new JRadioButtonMenuItem(copyDocumentOnSave);
+        JMenuItem copyXmp = new JRadioButtonMenuItem(copyXmpOnSave);
+        onSaveMd.add(removeDoc);
+        onSaveMd.add(removeXMP);
+        onSaveMd.add(copyDoc);
+        onSaveMd.add(copyXmp);
+        documentMenu.add(onSaveMd);
 
-        menuBar.add(inputMenu);
+
+        menuBar.add(fileMenu);
         menuBar.add(documentMenu);
         menuBar.add(Box.createHorizontalGlue());
 
@@ -584,6 +650,7 @@ public class MainWindow extends JFrame {
 
     public static void addHelpMenu(JMenuBar menuBar, ActionListener showAbout) {
         JMenu helpMenu = new JMenu("Help");
+        helpMenu.setMnemonic('H');
         JMenuItem viewHelp = new JMenuItem("View Help");
         JMenuItem website = new JMenuItem("Website");
         JMenuItem about = new JMenuItem("About");

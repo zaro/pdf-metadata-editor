@@ -111,6 +111,11 @@ public class FilesTestHelper {
                     continue;
                 }
 
+                if (field.equals("doc.pdfVersion")) {
+                    md.setAppend(field, Arrays.asList(1.3f, 1.4f, 1.5f, 1.6f, 1.7f).get(rand.nextInt(3)));
+                    continue;
+                }
+
                 MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(field);
                 switch (fd.type) {
                     case LongField:
