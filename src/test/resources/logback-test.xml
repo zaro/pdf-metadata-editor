@@ -1,0 +1,18 @@
+<configuration>
+    <!-- Define properties for configuration -->
+    <property name="LOG_FILE" value="target/test-data/log.txt" />
+
+
+    <!-- File appender -->
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${LOG_FILE}</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss}] [%-5level] [%logger{36}] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Root logger configuration -->
+    <root level="debug">
+        <appender-ref ref="FILE" />
+    </root>
+</configuration>

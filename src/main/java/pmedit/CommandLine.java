@@ -5,7 +5,7 @@ import java.util.*;
 public class CommandLine {
     public static Set<String> validMdNames = new LinkedHashSet<String>(MetadataInfo.keys());
     public List<String> fileList = new ArrayList<String>();
-    public boolean noGui = System.getProperty("noGui") != null;
+    public boolean noGui = Main.isCli();
     public CommandDescription command;
     public BatchOperationParameters params = new BatchOperationParameters();
     public boolean batchGui = false;

@@ -6,6 +6,7 @@
     <option name="MAIN_CLASS_NAME" value="pmedit.Main" />
     <module name="pdf-metadata-editor" />
     <option name="PROGRAM_PARAMETERS" value="batch-gui-cmdline" />
+    <option name="VM_PARAMETERS" value="-DdevLog=true" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

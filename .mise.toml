@@ -19,4 +19,4 @@ run = "mvn clean package -DskipTests"
 
 [tasks.set-test-license]
 description = "Set license for JUnit tests"
-run = 'java -DnoGui -DjunitTest=true -jar target/jar/pdf-metadata-editor-*.jar   --license "${PME_LICENSE}"'
+run = 'java -DnoGui -DjunitTest=true -DdevLog=true -jar target/jar/pdf-metadata-editor-*.jar   --license "${PME_LICENSE}"'

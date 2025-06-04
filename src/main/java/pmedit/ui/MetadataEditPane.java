@@ -15,6 +15,7 @@ import pmedit.*;
 import pmedit.ext.PmeExtension;
 import pmedit.preset.PresetValues;
 import pmedit.ui.components.MetadataFormComponent;
+import pmedit.ui.components.PdfVersionPicker;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -60,6 +61,8 @@ public class MetadataEditPane {
     public JTextField basicProducer;
     @FieldID("doc.trapped")
     public JComboBox basicTrapped;
+    @FieldID("file.pdfVersion")
+    public PdfVersionPicker basicPdfVersion;
     @FieldID("doc.creationDate")
     public DateTimePicker basicCreationDate;
     @FieldID("doc.modificationDate")
@@ -183,6 +186,8 @@ public class MetadataEditPane {
     public JCheckBox basicModificationDateEnabled;
     @FieldEnabled("doc.trapped")
     public JCheckBox basicTrappedEnabled;
+    @FieldEnabled("file.pdfVersion")
+    public JCheckBox basicPdfVersionEnabled;
     @FieldEnabled("basic.creatorTool")
     public JCheckBox xmpBasicCreatorToolEnabled;
     @FieldEnabled("basic.createDate")
@@ -376,8 +381,10 @@ public class MetadataEditPane {
                     text.setText(null);
                     text.setBorder(textAreaDefault);
                 }
-
-                if (field instanceof JComboBox combo) {
+                if(field instanceof PdfVersionPicker vp) {
+                    objectToField(vp, null);
+                    vp.setBorder(comboBoxDefault);
+                }else if (field instanceof JComboBox combo) {
                     MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(anno.value());
                     objectToField(combo, null, fd.type == FieldDataType.FieldType.BoolField, fd.nullValueText);
                     combo.setBorder(comboBoxDefault);
@@ -434,7 +441,9 @@ public class MetadataEditPane {
                 }
 
                 Object value = metadataInfo.get(anno.value());
-                if (field instanceof JComboBox) {
+                if (field instanceof PdfVersionPicker vp) {
+                    objectToField(vp, value);
+                } else if (field instanceof JComboBox) {
                     MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(anno.value());
                     objectToField((JComboBox) field, value, fd.type == FieldDataType.FieldType.BoolField, fd.nullValueText);
                 }
@@ -511,7 +520,15 @@ public class MetadataEditPane {
 
                     }
                 }
-                if (field instanceof JComboBox comboBox) {
+                if (field instanceof PdfVersionPicker vp) {
+                    MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(anno.value());
+                    if (fd.type == FieldDataType.FieldType.FloatField) {
+                        metadataInfo.set(anno.value(), vp.getVersion());
+                    } else {
+                        throw new RuntimeException("Cannot store List<Calendar> in :" +  fd.type + "[isList=" + fd.isList+ "] for field "+ fd.name);
+
+                    }
+                } else if (field instanceof JComboBox comboBox) {
                     MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(anno.value());
                     String text = getComboBoxValue(comboBox, fd);
                     switch (fd.type) {
@@ -584,6 +601,16 @@ public class MetadataEditPane {
             field.setCalendar((Calendar) o);
         } else if (o == null) {
             field.setCalendar(null);
+        } else {
+            RuntimeException e = new RuntimeException("Cannot store non-Calendar object in JDateChooser");
+            LOG.error("objectToField(JDateChooser)", e);
+            throw e;
+        }
+    }
+
+    private void objectToField(PdfVersionPicker field, Object o) {
+        if (o == null || o instanceof Float) {
+            field.setVersion((Float) o);
         } else {
             RuntimeException e = new RuntimeException("Cannot store non-Calendar object in JDateChooser");
             LOG.error("objectToField(JDateChooser)", e);
@@ -713,7 +740,22 @@ public class MetadataEditPane {
                 if (field instanceof JSpinner spinner) {
                     throw new RuntimeException("JSpinner NOT SUPPORTED!");
                 }
-                if (field instanceof JComboBox combo) {
+                if(field instanceof PdfVersionPicker vp) {
+                    final MetadataInfo.FieldDescription fieldDescription = MetadataInfo.getFieldDescription(anno.value());
+                    vp.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            Float selectedValue = vp.getVersion();
+                            Object initial = initialMetadata != null ? initialMetadata.get(fieldDescription.name) : null;
+                            if ((selectedValue != null && selectedValue.equals(initial)) || (selectedValue == null && initial == null)) {
+                                vp.setBorder(comboBoxDefault);
+                            } else {
+                                vp.setBorder(changedBorder);
+
+                            }
+                        }
+                    });
+                } else if (field instanceof JComboBox combo) {
                     final MetadataInfo.FieldDescription fieldDescription = MetadataInfo.getFieldDescription(anno.value());
                     combo.addActionListener(new ActionListener() {
                         @Override
@@ -844,13 +886,13 @@ public class MetadataEditPane {
         final JScrollPane scrollPane1 = new JScrollPane();
         panel2.add(scrollPane1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel3 = new JPanel();
-        panel3.setLayout(new GridLayoutManager(10, 3, new Insets(5, 5, 5, 5), -1, -1));
+        panel3.setLayout(new GridLayoutManager(11, 3, new Insets(5, 5, 5, 5), -1, -1));
         scrollPane1.setViewportView(panel3);
         final JLabel label1 = new JLabel();
         label1.setText("Title");
         panel3.add(label1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer1 = new Spacer();
-        panel3.add(spacer1, new GridConstraints(9, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        panel3.add(spacer1, new GridConstraints(10, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         basicTitleEnabled = new JCheckBox();
         basicTitleEnabled.setText("");
         panel3.add(basicTitleEnabled, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -929,6 +971,14 @@ public class MetadataEditPane {
         panel3.add(basicCreationDate, new GridConstraints(6, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         basicModificationDate = new DateTimePicker();
         panel3.add(basicModificationDate, new GridConstraints(7, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        final JLabel label10 = new JLabel();
+        label10.setText("PDF Version");
+        panel3.add(label10, new GridConstraints(9, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        basicPdfVersionEnabled = new JCheckBox();
+        basicPdfVersionEnabled.setText("");
+        panel3.add(basicPdfVersionEnabled, new GridConstraints(9, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        basicPdfVersion = new PdfVersionPicker();
+        panel3.add(basicPdfVersion, new GridConstraints(9, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
         final JPanel panel4 = new JPanel();
         panel4.setLayout(new GridLayoutManager(11, 3, new Insets(0, 0, 0, 0), -1, -1));
         tabbedPane.addTab("XMP Basic", panel4);
@@ -937,9 +987,9 @@ public class MetadataEditPane {
         final JPanel panel5 = new JPanel();
         panel5.setLayout(new GridLayoutManager(11, 3, new Insets(5, 5, 5, 5), -1, -1));
         scrollPane4.setViewportView(panel5);
-        final JLabel label10 = new JLabel();
-        label10.setText("Creator tool");
-        panel5.add(label10, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label11 = new JLabel();
+        label11.setText("Creator tool");
+        panel5.add(label11, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer2 = new Spacer();
         panel5.add(spacer2, new GridConstraints(10, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpBasicCreatorToolEnabled = new JCheckBox();
@@ -947,57 +997,57 @@ public class MetadataEditPane {
         panel5.add(xmpBasicCreatorToolEnabled, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpBasicCreatorTool = new JTextField();
         panel5.add(xmpBasicCreatorTool, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final JLabel label11 = new JLabel();
-        label11.setText("Create Date");
-        panel5.add(label11, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label12 = new JLabel();
+        label12.setText("Create Date");
+        panel5.add(label12, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpBasicCreateDateEnabled = new JCheckBox();
         xmpBasicCreateDateEnabled.setText("");
         panel5.add(xmpBasicCreateDateEnabled, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpBasicCreateDate = new DateTimePicker();
         panel5.add(xmpBasicCreateDate, new GridConstraints(1, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        final JLabel label12 = new JLabel();
-        label12.setText("Modify Date");
-        panel5.add(label12, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label13 = new JLabel();
+        label13.setText("Modify Date");
+        panel5.add(label13, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpBasicModifyDateEnabled = new JCheckBox();
         xmpBasicModifyDateEnabled.setText("");
         panel5.add(xmpBasicModifyDateEnabled, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpBasicModifyDate = new DateTimePicker();
         panel5.add(xmpBasicModifyDate, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        final JLabel label13 = new JLabel();
-        label13.setText("Base URL");
-        panel5.add(label13, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label14 = new JLabel();
+        label14.setText("Base URL");
+        panel5.add(label14, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpBasicBaseURLEnabled = new JCheckBox();
         xmpBasicBaseURLEnabled.setText("");
         panel5.add(xmpBasicBaseURLEnabled, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpBasicBaseURL = new JTextField();
         panel5.add(xmpBasicBaseURL, new GridConstraints(3, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final JLabel label14 = new JLabel();
-        label14.setText("Rating");
-        panel5.add(label14, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label15 = new JLabel();
+        label15.setText("Rating");
+        panel5.add(label15, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpBasicRatingEnable = new JCheckBox();
         xmpBasicRatingEnable.setText("");
         panel5.add(xmpBasicRatingEnable, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpBasicRating = new JTextField();
         panel5.add(xmpBasicRating, new GridConstraints(4, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final JLabel label15 = new JLabel();
-        label15.setText("Label");
-        panel5.add(label15, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label16 = new JLabel();
+        label16.setText("Label");
+        panel5.add(label16, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpBasicLabelEnabled = new JCheckBox();
         xmpBasicLabelEnabled.setText("");
         panel5.add(xmpBasicLabelEnabled, new GridConstraints(5, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpBasicLabel = new JTextField();
         panel5.add(xmpBasicLabel, new GridConstraints(5, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final JLabel label16 = new JLabel();
-        label16.setText("Nickname");
-        panel5.add(label16, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label17 = new JLabel();
+        label17.setText("Nickname");
+        panel5.add(label17, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpBasicNicknameEnabled = new JCheckBox();
         xmpBasicNicknameEnabled.setText("");
         panel5.add(xmpBasicNicknameEnabled, new GridConstraints(6, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpBasicNickname = new JTextField();
         panel5.add(xmpBasicNickname, new GridConstraints(6, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final JLabel label17 = new JLabel();
-        label17.setText("Identifiers");
-        panel5.add(label17, new GridConstraints(7, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label18 = new JLabel();
+        label18.setText("Identifiers");
+        panel5.add(label18, new GridConstraints(7, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpBasicIdentifiersEnabled = new JCheckBox();
         xmpBasicIdentifiersEnabled.setText("");
         panel5.add(xmpBasicIdentifiersEnabled, new GridConstraints(7, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1005,9 +1055,9 @@ public class MetadataEditPane {
         panel5.add(scrollPane5, new GridConstraints(7, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpBasicIdentifiers = new JTextArea();
         scrollPane5.setViewportView(xmpBasicIdentifiers);
-        final JLabel label18 = new JLabel();
-        label18.setText("Advisories");
-        panel5.add(label18, new GridConstraints(8, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label19 = new JLabel();
+        label19.setText("Advisories");
+        panel5.add(label19, new GridConstraints(8, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpBasicAdvisoriesEnabled = new JCheckBox();
         xmpBasicAdvisoriesEnabled.setText("");
         panel5.add(xmpBasicAdvisoriesEnabled, new GridConstraints(8, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1015,9 +1065,9 @@ public class MetadataEditPane {
         panel5.add(scrollPane6, new GridConstraints(8, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpBasicAdvisories = new JTextArea();
         scrollPane6.setViewportView(xmpBasicAdvisories);
-        final JLabel label19 = new JLabel();
-        label19.setText("Metadata Date");
-        panel5.add(label19, new GridConstraints(9, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label20 = new JLabel();
+        label20.setText("Metadata Date");
+        panel5.add(label20, new GridConstraints(9, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpBasicMetadataDateEnabled = new JCheckBox();
         xmpBasicMetadataDateEnabled.setText("");
         panel5.add(xmpBasicMetadataDateEnabled, new GridConstraints(9, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1031,9 +1081,9 @@ public class MetadataEditPane {
         final JPanel panel7 = new JPanel();
         panel7.setLayout(new GridLayoutManager(4, 3, new Insets(5, 5, 5, 5), -1, -1));
         scrollPane7.setViewportView(panel7);
-        final JLabel label20 = new JLabel();
-        label20.setText("Keywords");
-        panel7.add(label20, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label21 = new JLabel();
+        label21.setText("Keywords");
+        panel7.add(label21, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer3 = new Spacer();
         panel7.add(spacer3, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpPdfKeywordsEnabled = new JCheckBox();
@@ -1043,18 +1093,18 @@ public class MetadataEditPane {
         panel7.add(scrollPane8, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpPdfKeywords = new JTextArea();
         scrollPane8.setViewportView(xmpPdfKeywords);
-        final JLabel label21 = new JLabel();
-        label21.setText("PDF Version");
-        panel7.add(label21, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label22 = new JLabel();
+        label22.setText("PDF Version");
+        panel7.add(label22, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpPdfVersionEnabled = new JCheckBox();
         xmpPdfVersionEnabled.setText("");
         panel7.add(xmpPdfVersionEnabled, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpPdfVersion = new JTextField();
-        xmpPdfVersion.setEditable(false);
+        xmpPdfVersion.setEditable(true);
         panel7.add(xmpPdfVersion, new GridConstraints(1, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final JLabel label22 = new JLabel();
-        label22.setText("Producer");
-        panel7.add(label22, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label23 = new JLabel();
+        label23.setText("Producer");
+        panel7.add(label23, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpPdfProducerEnabled = new JCheckBox();
         xmpPdfProducerEnabled.setText("");
         panel7.add(xmpPdfProducerEnabled, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1068,9 +1118,9 @@ public class MetadataEditPane {
         final JPanel panel9 = new JPanel();
         panel9.setLayout(new GridLayoutManager(16, 3, new Insets(5, 5, 5, 5), -1, -1));
         scrollPane9.setViewportView(panel9);
-        final JLabel label23 = new JLabel();
-        label23.setText("Title");
-        panel9.add(label23, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label24 = new JLabel();
+        label24.setText("Title");
+        panel9.add(label24, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer4 = new Spacer();
         panel9.add(spacer4, new GridConstraints(15, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmlDcTitleEnabled = new JCheckBox();
@@ -1078,17 +1128,17 @@ public class MetadataEditPane {
         panel9.add(xmlDcTitleEnabled, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcTitle = new JTextField();
         panel9.add(xmpDcTitle, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final JLabel label24 = new JLabel();
-        label24.setText("Description");
-        panel9.add(label24, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label25 = new JLabel();
+        label25.setText("Description");
+        panel9.add(label25, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcDescriptionEnabled = new JCheckBox();
         xmpDcDescriptionEnabled.setText("");
         panel9.add(xmpDcDescriptionEnabled, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcDescription = new JTextField();
         panel9.add(xmpDcDescription, new GridConstraints(1, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final JLabel label25 = new JLabel();
-        label25.setText("Creators");
-        panel9.add(label25, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label26 = new JLabel();
+        label26.setText("Creators");
+        panel9.add(label26, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcCreatorsEnabled = new JCheckBox();
         xmpDcCreatorsEnabled.setText("");
         panel9.add(xmpDcCreatorsEnabled, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1096,9 +1146,9 @@ public class MetadataEditPane {
         panel9.add(scrollPane10, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpDcCreators = new JTextArea();
         scrollPane10.setViewportView(xmpDcCreators);
-        final JLabel label26 = new JLabel();
-        label26.setText("Contributors");
-        panel9.add(label26, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label27 = new JLabel();
+        label27.setText("Contributors");
+        panel9.add(label27, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcContributorsEnabled = new JCheckBox();
         xmpDcContributorsEnabled.setText("");
         panel9.add(xmpDcContributorsEnabled, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1106,41 +1156,41 @@ public class MetadataEditPane {
         panel9.add(scrollPane11, new GridConstraints(3, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpDcContributors = new JTextArea();
         scrollPane11.setViewportView(xmpDcContributors);
-        final JLabel label27 = new JLabel();
-        label27.setText("Coverage");
-        panel9.add(label27, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label28 = new JLabel();
+        label28.setText("Coverage");
+        panel9.add(label28, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcCoverageEnabled = new JCheckBox();
         xmpDcCoverageEnabled.setText("");
         panel9.add(xmpDcCoverageEnabled, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcCoverage = new JTextField();
         panel9.add(xmpDcCoverage, new GridConstraints(4, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final JLabel label28 = new JLabel();
-        label28.setText("Dates");
-        panel9.add(label28, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label29 = new JLabel();
+        label29.setText("Dates");
+        panel9.add(label29, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcDatesEnabled = new JCheckBox();
         xmpDcDatesEnabled.setText("");
         panel9.add(xmpDcDatesEnabled, new GridConstraints(5, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcDates = new DateTimeList();
         panel9.add(xmpDcDates.$$$getRootComponent$$$(), new GridConstraints(5, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        final JLabel label29 = new JLabel();
-        label29.setText("Format");
-        panel9.add(label29, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label30 = new JLabel();
+        label30.setText("Format");
+        panel9.add(label30, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcFormatEnabled = new JCheckBox();
         xmpDcFormatEnabled.setText("");
         panel9.add(xmpDcFormatEnabled, new GridConstraints(6, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcFormat = new JTextField();
         panel9.add(xmpDcFormat, new GridConstraints(6, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final JLabel label30 = new JLabel();
-        label30.setText("Identifier");
-        panel9.add(label30, new GridConstraints(7, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label31 = new JLabel();
+        label31.setText("Identifier");
+        panel9.add(label31, new GridConstraints(7, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcIdentifierEnabled = new JCheckBox();
         xmpDcIdentifierEnabled.setText("");
         panel9.add(xmpDcIdentifierEnabled, new GridConstraints(7, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcIdentifier = new JTextField();
         panel9.add(xmpDcIdentifier, new GridConstraints(7, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final JLabel label31 = new JLabel();
-        label31.setText("Languages");
-        panel9.add(label31, new GridConstraints(8, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label32 = new JLabel();
+        label32.setText("Languages");
+        panel9.add(label32, new GridConstraints(8, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcLanguagesEnabled = new JCheckBox();
         xmpDcLanguagesEnabled.setText("");
         panel9.add(xmpDcLanguagesEnabled, new GridConstraints(8, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1148,9 +1198,9 @@ public class MetadataEditPane {
         panel9.add(scrollPane12, new GridConstraints(8, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpDcLanguages = new JTextArea();
         scrollPane12.setViewportView(xmpDcLanguages);
-        final JLabel label32 = new JLabel();
-        label32.setText("Publishers");
-        panel9.add(label32, new GridConstraints(9, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label33 = new JLabel();
+        label33.setText("Publishers");
+        panel9.add(label33, new GridConstraints(9, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcPublishersEnabled = new JCheckBox();
         xmpDcPublishersEnabled.setText("");
         panel9.add(xmpDcPublishersEnabled, new GridConstraints(9, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1158,9 +1208,9 @@ public class MetadataEditPane {
         panel9.add(scrollPane13, new GridConstraints(9, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpDcPublishers = new JTextArea();
         scrollPane13.setViewportView(xmpDcPublishers);
-        final JLabel label33 = new JLabel();
-        label33.setText("Relationships");
-        panel9.add(label33, new GridConstraints(10, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label34 = new JLabel();
+        label34.setText("Relationships");
+        panel9.add(label34, new GridConstraints(10, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcRelationshipsEnabled = new JCheckBox();
         xmpDcRelationshipsEnabled.setText("");
         panel9.add(xmpDcRelationshipsEnabled, new GridConstraints(10, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1168,25 +1218,25 @@ public class MetadataEditPane {
         panel9.add(scrollPane14, new GridConstraints(10, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpDcRelationships = new JTextArea();
         scrollPane14.setViewportView(xmpDcRelationships);
-        final JLabel label34 = new JLabel();
-        label34.setText("Rights");
-        panel9.add(label34, new GridConstraints(11, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label35 = new JLabel();
+        label35.setText("Rights");
+        panel9.add(label35, new GridConstraints(11, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcRightsEnabled = new JCheckBox();
         xmpDcRightsEnabled.setText("");
         panel9.add(xmpDcRightsEnabled, new GridConstraints(11, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcRights = new JTextField();
         panel9.add(xmpDcRights, new GridConstraints(11, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final JLabel label35 = new JLabel();
-        label35.setText("Source");
-        panel9.add(label35, new GridConstraints(12, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label36 = new JLabel();
+        label36.setText("Source");
+        panel9.add(label36, new GridConstraints(12, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcSourceEnabled = new JCheckBox();
         xmpDcSourceEnabled.setText("");
         panel9.add(xmpDcSourceEnabled, new GridConstraints(12, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcSource = new JTextField();
         panel9.add(xmpDcSource, new GridConstraints(12, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final JLabel label36 = new JLabel();
-        label36.setText("Subjects");
-        panel9.add(label36, new GridConstraints(13, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label37 = new JLabel();
+        label37.setText("Subjects");
+        panel9.add(label37, new GridConstraints(13, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcSubjectsEnabled = new JCheckBox();
         xmpDcSubjectsEnabled.setText("");
         panel9.add(xmpDcSubjectsEnabled, new GridConstraints(13, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1194,9 +1244,9 @@ public class MetadataEditPane {
         panel9.add(scrollPane15, new GridConstraints(13, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpDcSubjects = new JTextArea();
         scrollPane15.setViewportView(xmpDcSubjects);
-        final JLabel label37 = new JLabel();
-        label37.setText("Types");
-        panel9.add(label37, new GridConstraints(14, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label38 = new JLabel();
+        label38.setText("Types");
+        panel9.add(label38, new GridConstraints(14, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpDcTypesEnabled = new JCheckBox();
         xmpDcTypesEnabled.setText("");
         panel9.add(xmpDcTypesEnabled, new GridConstraints(14, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1212,9 +1262,9 @@ public class MetadataEditPane {
         final JPanel panel11 = new JPanel();
         panel11.setLayout(new GridLayoutManager(6, 3, new Insets(5, 5, 5, 5), -1, -1));
         scrollPane17.setViewportView(panel11);
-        final JLabel label38 = new JLabel();
-        label38.setText("Certificate");
-        panel11.add(label38, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label39 = new JLabel();
+        label39.setText("Certificate");
+        panel11.add(label39, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer5 = new Spacer();
         panel11.add(spacer5, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpRightsCertificateEnabled = new JCheckBox();
@@ -1222,9 +1272,9 @@ public class MetadataEditPane {
         panel11.add(xmpRightsCertificateEnabled, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpRightsCertificate = new JTextField();
         panel11.add(xmpRightsCertificate, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final JLabel label39 = new JLabel();
-        label39.setText("Marked");
-        panel11.add(label39, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label40 = new JLabel();
+        label40.setText("Marked");
+        panel11.add(label40, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpRightsMarkedEnabled = new JCheckBox();
         xmpRightsMarkedEnabled.setText("");
         panel11.add(xmpRightsMarkedEnabled, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1235,9 +1285,9 @@ public class MetadataEditPane {
         defaultComboBoxModel2.addElement("No");
         xmpRightsMarked.setModel(defaultComboBoxModel2);
         panel11.add(xmpRightsMarked, new GridConstraints(1, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label40 = new JLabel();
-        label40.setText("Owners");
-        panel11.add(label40, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label41 = new JLabel();
+        label41.setText("Owners");
+        panel11.add(label41, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpRightsOwnerEnabled = new JCheckBox();
         xmpRightsOwnerEnabled.setText("");
         panel11.add(xmpRightsOwnerEnabled, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1245,9 +1295,9 @@ public class MetadataEditPane {
         panel11.add(scrollPane18, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpRightsOwner = new JTextArea();
         scrollPane18.setViewportView(xmpRightsOwner);
-        final JLabel label41 = new JLabel();
-        label41.setText("Usage Terms");
-        panel11.add(label41, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label42 = new JLabel();
+        label42.setText("Usage Terms");
+        panel11.add(label42, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpRightsUsageTermsEnabled = new JCheckBox();
         xmpRightsUsageTermsEnabled.setText("");
         panel11.add(xmpRightsUsageTermsEnabled, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1255,9 +1305,9 @@ public class MetadataEditPane {
         panel11.add(scrollPane19, new GridConstraints(3, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         xmpRightsUsageTerms = new JTextArea();
         scrollPane19.setViewportView(xmpRightsUsageTerms);
-        final JLabel label42 = new JLabel();
-        label42.setText("Web Statement");
-        panel11.add(label42, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label43 = new JLabel();
+        label43.setText("Web Statement");
+        panel11.add(label43, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpRightsWebStatementEnabled = new JCheckBox();
         xmpRightsWebStatementEnabled.setText("");
         panel11.add(xmpRightsWebStatementEnabled, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1271,9 +1321,9 @@ public class MetadataEditPane {
         final JPanel panel13 = new JPanel();
         panel13.setLayout(new GridLayoutManager(17, 3, new Insets(0, 0, 0, 0), -1, -1));
         scrollPane20.setViewportView(panel13);
-        final JLabel label43 = new JLabel();
-        label43.setText("Hide tool bars");
-        panel13.add(label43, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label44 = new JLabel();
+        label44.setText("Hide tool bars");
+        panel13.add(label44, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer6 = new Spacer();
         panel13.add(spacer6, new GridConstraints(16, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         hideToolbar = new JComboBox();
@@ -1286,21 +1336,21 @@ public class MetadataEditPane {
         hideToolbarEnabled = new JCheckBox();
         hideToolbarEnabled.setText("");
         panel13.add(hideToolbarEnabled, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label44 = new JLabel();
-        label44.setText("Hide menu bar");
-        panel13.add(label44, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label45 = new JLabel();
-        label45.setText("Hide window controls");
-        panel13.add(label45, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        label45.setText("Hide menu bar");
+        panel13.add(label45, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label46 = new JLabel();
-        label46.setText("Resize window to inital page");
-        panel13.add(label46, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        label46.setText("Hide window controls");
+        panel13.add(label46, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label47 = new JLabel();
-        label47.setText("Center window on screen");
-        panel13.add(label47, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        label47.setText("Resize window to inital page");
+        panel13.add(label47, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label48 = new JLabel();
-        label48.setText("Display Title in window caption");
-        panel13.add(label48, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        label48.setText("Center window on screen");
+        panel13.add(label48, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label49 = new JLabel();
+        label49.setText("Display Title in window caption");
+        panel13.add(label49, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         hideMenuBarEnabled = new JCheckBox();
         hideMenuBarEnabled.setText("");
         panel13.add(hideMenuBarEnabled, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1351,12 +1401,12 @@ public class MetadataEditPane {
         defaultComboBoxModel8.addElement("No");
         displayDocTitle.setModel(defaultComboBoxModel8);
         panel13.add(displayDocTitle, new GridConstraints(5, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label49 = new JLabel();
-        label49.setText("Non full screen page mode");
-        panel13.add(label49, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label50 = new JLabel();
-        label50.setText("Reading direction for text");
-        panel13.add(label50, new GridConstraints(7, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        label50.setText("Non full screen page mode");
+        panel13.add(label50, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label51 = new JLabel();
+        label51.setText("Reading direction for text");
+        panel13.add(label51, new GridConstraints(7, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         nonFullScreenPageModeEnabled = new JCheckBox();
         nonFullScreenPageModeEnabled.setText("");
         panel13.add(nonFullScreenPageModeEnabled, new GridConstraints(6, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1371,24 +1421,24 @@ public class MetadataEditPane {
         final DefaultComboBoxModel defaultComboBoxModel10 = new DefaultComboBoxModel();
         readingDirection.setModel(defaultComboBoxModel10);
         panel13.add(readingDirection, new GridConstraints(7, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label51 = new JLabel();
-        label51.setText("View Area");
-        panel13.add(label51, new GridConstraints(10, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label52 = new JLabel();
-        label52.setText("View Clip");
-        panel13.add(label52, new GridConstraints(11, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        label52.setText("View Area");
+        panel13.add(label52, new GridConstraints(10, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label53 = new JLabel();
-        label53.setText("Print Area");
-        panel13.add(label53, new GridConstraints(12, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        label53.setText("View Clip");
+        panel13.add(label53, new GridConstraints(11, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label54 = new JLabel();
-        label54.setText("Print Clip");
-        panel13.add(label54, new GridConstraints(13, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        label54.setText("Print Area");
+        panel13.add(label54, new GridConstraints(12, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label55 = new JLabel();
-        label55.setText("Duplex");
-        panel13.add(label55, new GridConstraints(14, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        label55.setText("Print Clip");
+        panel13.add(label55, new GridConstraints(13, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label56 = new JLabel();
-        label56.setText("Print Scaling");
-        panel13.add(label56, new GridConstraints(15, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        label56.setText("Duplex");
+        panel13.add(label56, new GridConstraints(14, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label57 = new JLabel();
+        label57.setText("Print Scaling");
+        panel13.add(label57, new GridConstraints(15, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         viewAreaEnabled = new JCheckBox();
         viewAreaEnabled.setText("");
         panel13.add(viewAreaEnabled, new GridConstraints(10, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1431,9 +1481,9 @@ public class MetadataEditPane {
         final DefaultComboBoxModel defaultComboBoxModel16 = new DefaultComboBoxModel();
         printScaling.setModel(defaultComboBoxModel16);
         panel13.add(printScaling, new GridConstraints(15, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label57 = new JLabel();
-        label57.setText("Page Layout");
-        panel13.add(label57, new GridConstraints(8, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label58 = new JLabel();
+        label58.setText("Page Layout");
+        panel13.add(label58, new GridConstraints(8, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         pageLayoutEnabled = new JCheckBox();
         pageLayoutEnabled.setText("");
         panel13.add(pageLayoutEnabled, new GridConstraints(8, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1441,9 +1491,9 @@ public class MetadataEditPane {
         final DefaultComboBoxModel defaultComboBoxModel17 = new DefaultComboBoxModel();
         pageLayout.setModel(defaultComboBoxModel17);
         panel13.add(pageLayout, new GridConstraints(8, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label58 = new JLabel();
-        label58.setText("Page mode");
-        panel13.add(label58, new GridConstraints(9, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label59 = new JLabel();
+        label59.setText("Page mode");
+        panel13.add(label59, new GridConstraints(9, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         pageModeEnabled = new JCheckBox();
         pageModeEnabled.setText("");
         panel13.add(pageModeEnabled, new GridConstraints(9, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));

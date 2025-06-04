@@ -78,6 +78,7 @@ public class SerDesTest {
 			file.createTime: null
 			file.modifyTime: null
 			file.fullPath: null
+			file.pdfVersion: null
 			""";
 	static final String ALL_NULLS_JSON =
 			"""
@@ -146,7 +147,8 @@ public class SerDesTest {
               "file.size" : null,
               "file.createTime" : null,
               "file.modifyTime" : null,
-              "file.fullPath" : null
+              "file.fullPath" : null,
+              "file.pdfVersion" : null
             }
             """;
 

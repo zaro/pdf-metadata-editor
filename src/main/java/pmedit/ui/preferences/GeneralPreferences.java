@@ -13,42 +13,17 @@ import java.awt.event.ActionListener;
 import java.util.prefs.Preferences;
 
 public class GeneralPreferences {
-    public JCheckBox onsaveCopyDocumentTo;
-    public JCheckBox onsaveCopyXmpTo;
     public JRadioButton rdbtnSave;
     public JRadioButton rdbtnSaveAndRename;
     public JRadioButton rdbtnSaveAs;
     public JPanel topPanel;
     public RenameTemplateOptions renameTemplateOptions;
 
-    public boolean copyBasicToXmp;
-    public boolean copyXmpToBasic;
     public String defaultSaveAction;
 
 
     public GeneralPreferences() {
         Preferences prefs = pmedit.prefs.Preferences.getInstance();
-        // Copy metadata
-        onsaveCopyDocumentTo.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent arg0) {
-                if (onsaveCopyDocumentTo.isSelected()) {
-                    onsaveCopyXmpTo.setSelected(false);
-                }
-                copyBasicToXmp = onsaveCopyDocumentTo.isSelected();
-                copyXmpToBasic = onsaveCopyXmpTo.isSelected();
-            }
-        });
-        onsaveCopyXmpTo.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent arg0) {
-                if (onsaveCopyXmpTo.isSelected()) {
-                    onsaveCopyDocumentTo.setSelected(false);
-                }
-                copyBasicToXmp = onsaveCopyDocumentTo.isSelected();
-                copyXmpToBasic = onsaveCopyXmpTo.isSelected();
-            }
-        });
-        copyBasicToXmp = prefs.getBoolean("onsaveCopyBasicTo", false);
-        copyXmpToBasic = prefs.getBoolean("onsaveCopyXmpTo", false);
 
         // Default save action
         ActionListener onDefaultSaveAction = new ActionListener() {
@@ -83,15 +58,11 @@ public class GeneralPreferences {
     }
 
     public void refresh() {
-        onsaveCopyDocumentTo.setSelected(copyBasicToXmp);
-        onsaveCopyXmpTo.setSelected(copyXmpToBasic);
 
         renameTemplateOptions.refresh();
     }
 
     public void save(Preferences prefs) {
-        prefs.putBoolean("onsaveCopyXmpTo", copyXmpToBasic);
-        prefs.putBoolean("onsaveCopyBasicTo", copyBasicToXmp);
 
         prefs.put("defaultSaveAction", defaultSaveAction);
 
@@ -116,34 +87,22 @@ public class GeneralPreferences {
         topPanel = new JPanel();
         topPanel.setLayout(new GridLayoutManager(2, 4, new Insets(10, 10, 10, 10), -1, -1));
         final JPanel panel1 = new JPanel();
-        panel1.setLayout(new GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
-        topPanel.add(panel1, new GridConstraints(0, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        panel1.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "On Save ...", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
-        onsaveCopyDocumentTo = new JCheckBox();
-        onsaveCopyDocumentTo.setText("Copy Document to XMP");
-        panel1.add(onsaveCopyDocumentTo, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final Spacer spacer1 = new Spacer();
-        panel1.add(spacer1, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        onsaveCopyXmpTo = new JCheckBox();
-        onsaveCopyXmpTo.setText("Copy XMP to Document");
-        panel1.add(onsaveCopyXmpTo, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JPanel panel2 = new JPanel();
-        panel2.setLayout(new GridLayoutManager(4, 1, new Insets(0, 0, 0, 0), -1, -1));
-        topPanel.add(panel2, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        panel2.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Default Save Action", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
+        panel1.setLayout(new GridLayoutManager(4, 1, new Insets(0, 0, 0, 0), -1, -1));
+        topPanel.add(panel1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        panel1.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.black), "Default Save Action", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
         rdbtnSave = new JRadioButton();
         rdbtnSave.setText("Save");
-        panel2.add(rdbtnSave, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final Spacer spacer2 = new Spacer();
-        panel2.add(spacer2, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        panel1.add(rdbtnSave, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer1 = new Spacer();
+        panel1.add(spacer1, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         rdbtnSaveAndRename = new JRadioButton();
         rdbtnSaveAndRename.setText("Save  Rename");
         rdbtnSaveAndRename.setMnemonic(' ');
         rdbtnSaveAndRename.setDisplayedMnemonicIndex(5);
-        panel2.add(rdbtnSaveAndRename, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel1.add(rdbtnSaveAndRename, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         rdbtnSaveAs = new JRadioButton();
         rdbtnSaveAs.setText("Save as ...");
-        panel2.add(rdbtnSaveAs, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel1.add(rdbtnSaveAs, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         renameTemplateOptions = new RenameTemplateOptions();
         topPanel.add(renameTemplateOptions.$$$getRootComponent$$$(), new GridConstraints(1, 0, 1, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         ButtonGroup buttonGroup;

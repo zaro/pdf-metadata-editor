@@ -24,22 +24,15 @@ public class Main {
     static {
         java.util.logging.Logger.getLogger("org.apache").setLevel(java.util.logging.Level.FINE);
         System.setProperty("org.apache.commons.logging.simplelog.defaultlog", "debug");
-        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "debug");
-        System.setProperty("org.slf4j.simpleLogger.showDateTime", "true");
-        System.setProperty("org.slf4j.simpleLogger.dateTimeFormat", "[yyyy-MM-dd HH:mm:ss.SSS]");
-        System.setProperty("org.slf4j.simpleLogger.levelInBrackets", "true");
-        System.setProperty("org.slf4j.simpleLogger.showThreadName", "false");
-        System.setProperty("org.slf4j.simpleLogger.showShortLogName", "true");
-
-        System.setProperty("simplelogger.properties", "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n");
-
-        // Setup log file
-        if(System.getProperty("org.slf4j.simpleLogger.logFile") == null) {
-            System.setProperty("org.slf4j.simpleLogger.logFile", LocalDataDir.getAppDataDir() + "log.txt");
+        System.setProperty("logLevel","debug");
+        boolean isCli = isCli();
+        if (System.getProperty("devLog") == null) {
+            System.setProperty("devLog", isCli ? "" : devLogValue());
+        }
+        System.setProperty("logFileName", LocalDataDir.getAppDataDir() + "log.txt");
+        if (!isCli) {
             System.out.println("Logfile location:" + LocalDataDir.getAppDataDir() + "log.txt");
         }
-
-
     }
     static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
@@ -47,6 +40,15 @@ public class Main {
     static BlockingQueue<CommandLine> cmdQueue = new LinkedBlockingDeque<CommandLine>();
     static Map<String, BatchOperationWindow> batchInstances = new HashMap<String, BatchOperationWindow>();
     static List<MainWindow> editorInstances = new ArrayList<MainWindow>();
+
+    public static boolean isCli() {
+        return System.getProperty("noGui") != null;
+    }
+
+
+    private static String  devLogValue() {
+        return System.getProperty("devLog", "");
+    }
 
     public static String getBatchGuiCommand() {
         return "batch-gui-" + batchGuiCounter++;
