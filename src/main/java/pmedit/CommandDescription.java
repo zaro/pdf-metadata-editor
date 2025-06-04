@@ -14,18 +14,18 @@ public class CommandDescription {
     public static final CommandDescription IMPORT_GROUP = new CommandDescription("Import metadata");
 
     // Commands
-    public static final CommandDescription EDIT = new CommandDescription("edit", "Set metadata", MODIFY_METADATA_GROUP, PDF_FILE_EXTENSIONS);
-    public static final CommandDescription CLEAR = new CommandDescription("clear", "Clear metadata", MODIFY_METADATA_GROUP, PDF_FILE_EXTENSIONS);
-    public static final CommandDescription RENAME = new CommandDescription("rename", "Rename files from metadata", FILE_OPERATIONS_GROUP, PDF_FILE_EXTENSIONS);
-    public static final CommandDescription FROM_FILE_NAME = new CommandDescription("fromfilename", "Set metadata from file names", FILE_OPERATIONS_GROUP, PDF_FILE_EXTENSIONS);
-    public static final CommandDescription FROM_JSON = new CommandDescription("fromjson", "Set metadata from JSON",IMPORT_GROUP, JSON_FILE_EXTENSIONS);
-    public static final CommandDescription TO_JSON = new CommandDescription("tojson", "Export metadata as JSON",  EXPORT_GROUP, PDF_FILE_EXTENSIONS);
-    public static final CommandDescription FROM_YAML = new CommandDescription("fromyaml", "Set metadata from YAML",IMPORT_GROUP, YAML_FILE_EXTENSIONS);
-    public static final CommandDescription TO_YAML = new CommandDescription("toyaml", "Export metadata as YAML",  EXPORT_GROUP, PDF_FILE_EXTENSIONS);
-    public static final CommandDescription FROM_CSV = new CommandDescription("fromcsv", "Set metadata from CSV file",IMPORT_GROUP, CSV_FILE_EXTENSIONS);
-    public static final CommandDescription TO_CSV = new CommandDescription("tocsv", "Export metadata as CSV file",  EXPORT_GROUP, PDF_FILE_EXTENSIONS);
-    public static final CommandDescription XMP_TO_DOC = new CommandDescription("xmptodoc", "Copy XMP to Document metadata", MODIFY_METADATA_GROUP, PDF_FILE_EXTENSIONS);
-    public static final CommandDescription DOC_TO_XMP = new CommandDescription("doctoxmp", "Copy Document to XMP metadata", MODIFY_METADATA_GROUP, PDF_FILE_EXTENSIONS);
+    public static final CommandDescription EDIT = new CommandDescription("edit", "Set metadata", MODIFY_METADATA_GROUP, PDF_FILE_EXTENSIONS, 'S');
+    public static final CommandDescription CLEAR = new CommandDescription("clear", "Clear metadata", MODIFY_METADATA_GROUP, PDF_FILE_EXTENSIONS, 'C');
+    public static final CommandDescription RENAME = new CommandDescription("rename", "Rename files from metadata", FILE_OPERATIONS_GROUP, PDF_FILE_EXTENSIONS, 'R');
+    public static final CommandDescription FROM_FILE_NAME = new CommandDescription("fromfilename", "Set metadata from file names", FILE_OPERATIONS_GROUP, PDF_FILE_EXTENSIONS, 'S');
+    public static final CommandDescription FROM_JSON = new CommandDescription("fromjson", "Set metadata from JSON",IMPORT_GROUP, JSON_FILE_EXTENSIONS, 'J');
+    public static final CommandDescription TO_JSON = new CommandDescription("tojson", "Export metadata as JSON",  EXPORT_GROUP, PDF_FILE_EXTENSIONS, 'J');
+    public static final CommandDescription FROM_YAML = new CommandDescription("fromyaml", "Set metadata from YAML",IMPORT_GROUP, YAML_FILE_EXTENSIONS, 'Y');
+    public static final CommandDescription TO_YAML = new CommandDescription("toyaml", "Export metadata as YAML",  EXPORT_GROUP, PDF_FILE_EXTENSIONS, 'Y');
+    public static final CommandDescription FROM_CSV = new CommandDescription("fromcsv", "Set metadata from CSV file",IMPORT_GROUP, CSV_FILE_EXTENSIONS, 'C');
+    public static final CommandDescription TO_CSV = new CommandDescription("tocsv", "Export metadata as CSV file",  EXPORT_GROUP, PDF_FILE_EXTENSIONS, 'C');
+    public static final CommandDescription XMP_TO_DOC = new CommandDescription("xmptodoc", "Copy XMP to Document metadata", MODIFY_METADATA_GROUP, PDF_FILE_EXTENSIONS, 'X');
+    public static final CommandDescription DOC_TO_XMP = new CommandDescription("doctoxmp", "Copy Document to XMP metadata", MODIFY_METADATA_GROUP, PDF_FILE_EXTENSIONS, 'D');
 
     public static final CommandDescription[] batchCommands = {
             EDIT,
@@ -68,13 +68,15 @@ public class CommandDescription {
     public String inGroup;
     public String[] inputFileExtensions;
     String regKey;
+    public int menuMnemonic;
 
-    protected CommandDescription(String command, String name, CommandDescription group, String[] inputFileExtensions) {
+    protected CommandDescription(String command, String name, CommandDescription group, String[] inputFileExtensions, int menuMnemonic) {
         this.name = command;
         this.regKey = "pme." + (regKeyCount++) + command;
         this.description = name;
         this.inGroup = group.groupName;
         this.inputFileExtensions = inputFileExtensions;
+        this.menuMnemonic = menuMnemonic;
     }
 
     protected CommandDescription(String group) {
