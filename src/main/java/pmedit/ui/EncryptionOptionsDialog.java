@@ -109,7 +109,7 @@ public class EncryptionOptionsDialog extends JDialog {
             }
             if (options.userPassword != null) {
                 usePasswordTextField.setText(options.userPassword);
-            } else  {
+            } else {
                 usePasswordTextField.setText("");
             }
         }
@@ -180,7 +180,7 @@ public class EncryptionOptionsDialog extends JDialog {
         canAssembleDocumentCheckBox.setText("Can Assemble Document");
         panel3.add(canAssembleDocumentCheckBox, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         canPrintFaithfullCheckBox = new JCheckBox();
-        canPrintFaithfullCheckBox.setText("Can Print Faithfull");
+        canPrintFaithfullCheckBox.setText("Can Print Faithful");
         panel3.add(canPrintFaithfullCheckBox, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label1 = new JLabel();
         label1.setText("Owner Password");
