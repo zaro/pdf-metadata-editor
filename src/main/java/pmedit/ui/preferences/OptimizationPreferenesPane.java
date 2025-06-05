@@ -6,6 +6,7 @@ import com.intellij.uiDesigner.core.Spacer;
 import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import pmedit.FileOptimizer;
 import pmedit.MetadataInfo;
+import pmedit.ext.PdfWriter;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -23,7 +24,7 @@ public class OptimizationPreferenesPane {
     public JRadioButton defaultCompressionRadioButton;
     public JRadioButton customCompressionRadioButton;
     public JSpinner compressionLevel;
-    public JTextPane compressionNoteText;
+    public JLabel compressionMinVersion;
 
     public OptimizationPreferenesPane() {
         noCompresstionRadioButton.addItemListener(new ItemListener() {
@@ -32,7 +33,6 @@ public class OptimizationPreferenesPane {
                 compressionLevel.setValue(0);
                 compressionLevel.setEnabled(false);
                 FileOptimizer.setPdfBoxCompression(0);
-                compressionNoteText.setVisible(false);
             }
         });
         defaultCompressionRadioButton.addItemListener(new ItemListener() {
@@ -41,14 +41,12 @@ public class OptimizationPreferenesPane {
                 compressionLevel.setValue((double) CompressParameters.DEFAULT_OBJECT_STREAM_SIZE);
                 compressionLevel.setEnabled(false);
                 FileOptimizer.setPdfBoxCompression(CompressParameters.DEFAULT_OBJECT_STREAM_SIZE);
-                compressionNoteText.setVisible(true);
             }
         });
         customCompressionRadioButton.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
                 compressionLevel.setEnabled(true);
-                compressionNoteText.setVisible(true);
             }
         });
 
@@ -73,6 +71,7 @@ public class OptimizationPreferenesPane {
         } else {
             customCompressionRadioButton.setSelected(true);
         }
+        compressionMinVersion.setText(String.valueOf(PdfWriter.getCompressionMinimumSupportedVersion()));
     }
 
     protected void storeCustomCompression() {
@@ -135,14 +134,16 @@ public class OptimizationPreferenesPane {
         compressionLevel = new JSpinner();
         compressionLevel.setToolTipText("0 - no compression, higher number has a chance of better compression but may slow down document display");
         panel1.add(compressionLevel, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        compressionNoteText = new JTextPane();
-        compressionNoteText.setEditable(false);
-        compressionNoteText.setText("NOTE!\n\nWhen compression is enabled the  PDF document version will be forced to at least 1.6, as this is the minimum version that supports compresstion");
-        topPanel.add(compressionNoteText, new GridConstraints(1, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(150, 50), null, 0, false));
         final Spacer spacer1 = new Spacer();
         topPanel.add(spacer1, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final Spacer spacer2 = new Spacer();
         topPanel.add(spacer2, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        final JLabel label1 = new JLabel();
+        label1.setText("Minimum PDF Version Supporting Compression");
+        topPanel.add(label1, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        compressionMinVersion = new JLabel();
+        compressionMinVersion.setText("n/a");
+        topPanel.add(compressionMinVersion, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         ButtonGroup buttonGroup;
         buttonGroup = new ButtonGroup();
         buttonGroup.add(noCompresstionRadioButton);
