@@ -14,7 +14,7 @@ public class PdfWriter {
     static public final float COMPRESSION_MIN_VERSION = 1.5f;
     protected PDDocument pdDocument;
 
-    public static float getCompressionMinimumSupportedVersion() {
+    public float getCompressionMinimumSupportedVersion() {
         return COSWriterCompressionPool.MINIMUM_SUPPORTED_VERSION;
     }
 

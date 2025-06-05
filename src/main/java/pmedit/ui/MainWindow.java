@@ -529,6 +529,12 @@ public class MainWindow extends JFrame {
                 metadataInfo.file.pdfVersion = 0f;
             }
 
+            metadataInfo.encryptionOptions = actionsAndOptions.getDocumentProtection();
+
+            extension.beforeDocumentSave(metadataEditor);
+
+            metadataEditor.copyToMetadata(metadataInfo);
+
             if (copyDocumentOnSave.isSelected()) {
                 metadataInfo.copyDocToXMP();
             }
@@ -536,11 +542,6 @@ public class MainWindow extends JFrame {
                 metadataInfo.copyXMPToDoc();
             }
 
-            metadataInfo.encryptionOptions = actionsAndOptions.getDocumentProtection();
-
-            extension.beforeDocumentSave(metadataEditor);
-
-            metadataEditor.copyToMetadata(metadataInfo);
             metadataInfo.expandVariables();
 
             if (renameTemplate != null) {
