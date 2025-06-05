@@ -105,8 +105,14 @@ public class TextFieldContextMenu {
 
         return this;
     }
-
     public TextFieldContextMenu addTemplatePlaceholders() {
+        return addTemplatePlaceholders(true);
+    }
+
+    public TextFieldContextMenu addTemplatePlaceholders(boolean enabled) {
+        if(!enabled){
+            return this ;
+        }
         Map<String, List<String>> fields = CommandLine.mdFieldsGrouped();
         JMenu subMenu = new JMenu("Template Variable");
 

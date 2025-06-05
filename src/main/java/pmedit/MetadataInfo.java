@@ -21,8 +21,10 @@ import pmedit.CommandLine.ParseError;
 import pmedit.annotations.FieldDataType;
 import pmedit.annotations.MdStruct;
 import pmedit.annotations.MdStruct.StructType;
+import pmedit.ext.PdfWriter;
 import pmedit.ext.PmeExtension;
 import pmedit.serdes.SerDeslUtils;
+import pmedit.util.CrossPlatformFileTimeModifier;
 
 import javax.xml.transform.TransformerException;
 import java.io.*;
@@ -254,6 +256,7 @@ public class MetadataInfo {
         doc.modificationDate = info.getModificationDate();
         doc.trapped = info.getTrapped();
         file.pdfVersion = document.getVersion();
+        file.pdfCompression = document.getDocument().isXRefStream();
 
         // Load Document catalog
         PDDocumentCatalog catalog = document.getDocumentCatalog();
@@ -429,8 +432,10 @@ public class MetadataInfo {
         file.nameWithExt = pdfFile.getName();
         BasicFileAttributes attrs = Files.readAttributes(pdfFile.toPath(), BasicFileAttributes.class);
         file.sizeBytes = attrs.size();
-        file.createTime = attrs.creationTime().toString();
-        file.modifyTime = attrs.lastModifiedTime().toString();
+        file.createTime = Calendar.getInstance();
+        file.createTime.setTimeInMillis(attrs.creationTime().toInstant().toEpochMilli());
+        file.modifyTime = Calendar.getInstance();
+        file.modifyTime.setTimeInMillis(attrs.lastModifiedTime().toInstant().toEpochMilli());
 
         // filename w/o extension
         if (file.nameWithExt != null) {
@@ -1151,9 +1156,17 @@ public class MetadataInfo {
             }
         }
 
-        PmeExtension.get().createPdfWriter(document).write(pdfFile, saveAsVersion >= 1.6 ? FileOptimizer.getPdfBoxCompression() : 0);
+        PdfWriter writer = PmeExtension.get().createPdfWriter(document);
+        int pdfCompression = 0 ;
+        if(saveAsVersion >= writer.getCompressionMinimumSupportedVersion()) {
+            if (fileEnabled.pdfCompression ) {
+                pdfCompression = file.pdfCompression ? FileOptimizer.getPdfBoxCompression() : 0;
+            } else {
+                pdfCompression = document.getDocument().isXRefStream() ? FileOptimizer.getPdfBoxCompression() : 0;
+            }
+        }
+        writer.write(pdfFile, pdfCompression);
         return true;
-
     }
 
     public void saveAsPDF(File pdfFile) throws Exception {
@@ -1174,7 +1187,14 @@ public class MetadataInfo {
         document.close();
 
         File target = newFile != null ? newFile : pdfFile;
+        if(fileEnabled.name) {
+            target = new File(target.getParentFile(), file.name + ".pdf");
+        }
         Files.move(writeFile.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        if(fileEnabled.createTime || fileEnabled.modifyTime) {
+            CrossPlatformFileTimeModifier.setFileTimes(target, file.createTime, file.modifyTime);
+        }
+
     }
 
     public void copyDocToXMP() {
@@ -1692,26 +1712,32 @@ public class MetadataInfo {
     }
 
     public static class FileInfo {
-        public String name;
-        public String nameWithExt;
-        public Long sizeBytes;
-        public String size;
-        public String createTime;
-        public String modifyTime;
+        @FieldDataType(value = FieldDataType.FieldType.StringField, readOnly = true)
         public String fullPath;
+        @FieldDataType(value = FieldDataType.FieldType.LongField, readOnly = true)
+        public Long sizeBytes;
+        @FieldDataType(value = FieldDataType.FieldType.StringField, readOnly = true)
+        public String size;
+        @FieldDataType(value = FieldDataType.FieldType.StringField, readOnly = true)
+        public String nameWithExt;
+        public String name;
+        public Calendar createTime;
+        public Calendar modifyTime;
         public Float pdfVersion;
-
+        public Boolean pdfCompression;
     }
 
     public static class FileInfoEnabled {
-        public boolean name = false;
-        public boolean nameWithExt = false;
-        public boolean sizeBytes = false;
-        public boolean size = false;
-        public boolean createTime = false;
-        public boolean modifyTime = false;
-        public boolean fullPath = false;
+        public boolean fullPath = true;
+        public boolean name = true;
+        public boolean nameWithExt = true;
+        public boolean sizeBytes = true;
+        public boolean size = true;
+        public boolean createTime = true;
+        public boolean modifyTime = true;
         public boolean pdfVersion = true;
+        public boolean pdfCompression = true;
+
 
         public boolean atLeastOne() {
             return pdfVersion;
@@ -1725,6 +1751,8 @@ public class MetadataInfo {
             createTime = false;
             modifyTime = false;
             fullPath = false;
+            pdfVersion = false;
+            pdfCompression = false;
         }
     }
 
@@ -2059,6 +2087,7 @@ public class MetadataInfo {
         public final boolean isList;
         public final boolean isWritable;
         public final boolean isNumeric;
+        public final boolean isReadonly;
         final Field field;
         protected Method toStringMethod;
 
@@ -2071,6 +2100,7 @@ public class MetadataInfo {
             this.isWritable = isWritable;
             isList = List.class.isAssignableFrom(field.getType());
             isNumeric = this.type == FieldDataType.FieldType.LongField || this.type == FieldDataType.FieldType.IntField || this.type == FieldDataType.FieldType.FloatField;
+            isReadonly =  type.readOnly();
         }
 
         public FieldDescription(String name, Field field, boolean isWritable) {
@@ -2097,6 +2127,7 @@ public class MetadataInfo {
             this.isWritable = isWritable;
             isList = List.class.isAssignableFrom(klass);
             isNumeric = this.type == FieldDataType.FieldType.LongField || this.type == FieldDataType.FieldType.IntField || this.type == FieldDataType.FieldType.FloatField;
+            isReadonly = false;
         }
 
         String textForNull(){

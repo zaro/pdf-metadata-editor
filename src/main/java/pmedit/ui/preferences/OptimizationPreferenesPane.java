@@ -71,7 +71,7 @@ public class OptimizationPreferenesPane {
         } else {
             customCompressionRadioButton.setSelected(true);
         }
-        compressionMinVersion.setText(String.valueOf(PdfWriter.getCompressionMinimumSupportedVersion()));
+        compressionMinVersion.setText(String.valueOf(new PdfWriter(null).getCompressionMinimumSupportedVersion()));
     }
 
     protected void storeCustomCompression() {

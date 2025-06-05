@@ -10,6 +10,8 @@ public @interface FieldDataType {
 
     String nullValueText() default "";
 
+    boolean readOnly() default false;
+
 
     Class<? extends Enum<?>> enumClass() default NoEnumConfigured.class;
 
