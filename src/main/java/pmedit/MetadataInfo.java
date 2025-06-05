@@ -1,7 +1,6 @@
 package pmedit;
 
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
@@ -242,6 +241,36 @@ public class MetadataInfo {
         this.fileEnabled = new FileInfoEnabled();
     }
 
+    protected static Set<COSName> OBJ_STM_COMPRESSION_FILTERS = Set.of(COSName.FLATE_DECODE, COSName.FLATE_DECODE_ABBREVIATION, COSName.LZW_DECODE, COSName.LZW_DECODE_ABBREVIATION);
+    protected boolean hasCompressedObjects(PDDocument document) {
+        COSDocument cosDoc = document.getDocument();
+
+        // Check if any objects are COSStream with /Type /ObjStm
+        for (COSBase obj : cosDoc.getObjectsByType(COSName.OBJ_STM)) {
+            if (obj instanceof COSObject objStm) {
+                // Get the filter(s) used
+                if(objStm.getObject() instanceof COSDictionary objStmDict ) {
+                    COSBase filterObj = objStmDict.getDictionaryObject(COSName.FILTER);
+
+                    if (filterObj instanceof COSName filter) {
+                        if (OBJ_STM_COMPRESSION_FILTERS.contains(filter)) {
+                            return true;
+                        }
+
+                    } else if (filterObj instanceof COSArray filters) {
+                        for (int i = 0; i < filters.size(); i++) {
+                            COSName filter = (COSName) filters.getObject(i);
+                            if (OBJ_STM_COMPRESSION_FILTERS.contains(filter)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     public void loadFromPDF(PDDocument document) throws IOException, XmpParsingException {
         PDDocumentInformation info = document.getDocumentInformation();
 
@@ -256,7 +285,7 @@ public class MetadataInfo {
         doc.modificationDate = info.getModificationDate();
         doc.trapped = info.getTrapped();
         file.pdfVersion = document.getVersion();
-        file.pdfCompression = document.getDocument().isXRefStream();
+        file.pdfCompression = hasCompressedObjects(document);
 
         // Load Document catalog
         PDDocumentCatalog catalog = document.getDocumentCatalog();
@@ -1169,11 +1198,11 @@ public class MetadataInfo {
         return true;
     }
 
-    public void saveAsPDF(File pdfFile) throws Exception {
-        saveAsPDF(pdfFile, null);
+    public File saveAsPDF(File pdfFile) throws Exception {
+        return saveAsPDF(pdfFile, null);
     }
 
-    public void saveAsPDF(File pdfFile, File newFile) throws Exception {
+    public File saveAsPDF(File pdfFile, File newFile) throws Exception {
         PDDocument document = null;
         String password = encryptionOptions != null ? encryptionOptions.userPassword : "";
         document = Loader.loadPDF(pdfFile, password);
@@ -1194,7 +1223,7 @@ public class MetadataInfo {
         if(fileEnabled.createTime || fileEnabled.modifyTime) {
             CrossPlatformFileTimeModifier.setFileTimes(target, file.createTime, file.modifyTime);
         }
-
+        return target;
     }
 
     public void copyDocToXMP() {
@@ -1226,15 +1255,6 @@ public class MetadataInfo {
         doc.producer = pdf.producer;
         docEnabled.keywords = pdfEnabled.keywords;
         docEnabled.producer = pdfEnabled.producer;
-        if(pdf.pdfVersion != null) {
-            try {
-                file.pdfVersion = Float.valueOf(pdf.pdfVersion);
-            } catch (NumberFormatException ignored) {
-            }
-        } else {
-            file.pdfVersion = null;
-        }
-        fileEnabled.pdfVersion = pdfEnabled.pdfVersion;
 
         doc.creationDate = basic.createDate;
         doc.modificationDate = basic.modifyDate;

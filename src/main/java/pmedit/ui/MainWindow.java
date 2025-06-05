@@ -56,7 +56,7 @@ public class MainWindow extends JFrame {
 
     final ActionListener saveAction = new ActionListener() {
         public void actionPerformed(ActionEvent e) {
-            saveFile(null);
+            pdfFile = saveFile(null);
             reloadFile();
         }
     };
@@ -98,8 +98,7 @@ public class MainWindow extends JFrame {
                     selected = new File(selected.getAbsolutePath() + ".pdf");
                 }
 
-                saveFile(selected);
-                pdfFile = selected;
+                pdfFile = saveFile(selected);
                 reloadFile();
 
                 // save dir as last opened
@@ -551,7 +550,7 @@ public class MainWindow extends JFrame {
                 newFile = new File(toDir, toName);
             }
 
-            metadataInfo.saveAsPDF(pdfFile, newFile);
+            newFile = metadataInfo.saveAsPDF(pdfFile, newFile);
 
             password = metadataInfo.encryptionOptions.userPassword;
 
