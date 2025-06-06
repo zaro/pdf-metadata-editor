@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
-public class BatchOperationWindow extends JFrame {
+public class BatchOperationWindow extends JFrame implements ProgramWindow {
     Logger LOG = LoggerFactory.getLogger(BatchOperationWindow.class);
     public JPanel contentPane;
     public JComboBox<CommandDescription> selectedBatchOperation;
@@ -203,38 +203,43 @@ public class BatchOperationWindow extends JFrame {
 
     protected void buildMenu() {
         JMenuBar menuBar = new JMenuBar();
-        JMenu commandMenu = new JMenu("Operation");
-        commandMenu.setMnemonic(KeyEvent.VK_O);
-        JMenu subMenu = null;
-        for (CommandDescription cd : CommandDescription.batchCommandsGuiMenu) {
-            if (cd.isGroup()) {
-                if (subMenu != null) {
-                    commandMenu.add(subMenu);
+        MainWindow.buildFileMenu(menuBar, fileMenu -> {
+            JMenu commandMenu = new JMenu("Batch Operation");
+            JMenu subMenu = null;
+            for (CommandDescription cd : CommandDescription.batchCommandsGuiMenu) {
+                if (cd.isGroup()) {
+                    if (subMenu != null) {
+                        commandMenu.add(subMenu);
+                    }
+                    subMenu = new JMenu(cd.groupName);
+                    subMenu.setMnemonic(cd.groupName.charAt(0));
+                } else if (subMenu != null) {
+                    JMenuItem item = new JMenuItem(cd.description);
+                    if (cd.menuMnemonic > 0) {
+                        item.setMnemonic(cd.menuMnemonic);
+                    }
+                    item.addActionListener(e -> {
+                        setSelectedBatchOperation(cd);
+                    });
+                    subMenu.add(item);
                 }
-                subMenu = new JMenu(cd.groupName);
-                subMenu.setMnemonic(cd.groupName.charAt(0));
-            } else if (subMenu != null) {
-                JMenuItem item = new JMenuItem(cd.description);
-                if (cd.menuMnemonic > 0) {
-                    item.setMnemonic(cd.menuMnemonic);
-                }
-                item.addActionListener(e -> {
-                    setSelectedBatchOperation(cd);
-                });
-                subMenu.add(item);
             }
-        }
-        if (subMenu != null) {
+            if (subMenu != null) {
+                commandMenu.add(subMenu);
+            }
             commandMenu.add(subMenu);
-        }
-        commandMenu.add(subMenu);
-        MainWindow.addCloseQuitMenuItems(commandMenu, e -> {
-            this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+
+            fileMenu.add(commandMenu);
+
+            MainWindow.addCloseQuitMenuItems(fileMenu, this);
+            return false;
         });
+        JMenu paramsMenu = new JMenu("Parameters");
+        JMenuItem openParameters = new JMenuItem(openParametersWindow);
+        paramsMenu.add(openParameters);
 
         JMenu inputMenu = new JMenu("Input");
 
-        JMenuItem openParameters = new JMenuItem(openParametersWindow);
         JMenuItem addFile = new JMenuItem("Add File");
         JMenuItem addDir = new JMenuItem("Add Dir");
         JMenuItem keep = new JCheckBoxMenuItem(keepFileList);
@@ -247,13 +252,13 @@ public class BatchOperationWindow extends JFrame {
 
         addFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK));
         addDir.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.CTRL_DOWN_MASK));
-        inputMenu.add(openParameters);
         inputMenu.addSeparator();
         inputMenu.add(addFile);
         inputMenu.add(addDir);
         inputMenu.addSeparator();
         inputMenu.add(keep);
         inputMenu.add(clear);
+        paramsMenu.add(inputMenu);
 
         JMenu outputMenu = new JMenu("Output");
         JMenuItem selectOutDir = new JMenuItem("Select output Folder");
@@ -263,37 +268,17 @@ public class BatchOperationWindow extends JFrame {
         selectOutDir.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
 
         outputMenu.add(selectOutDir);
+        paramsMenu.add(outputMenu);
 
-        menuBar.add(commandMenu);
-        menuBar.add(inputMenu);
-        menuBar.add(outputMenu);
+        menuBar.add(paramsMenu);
         menuBar.add(Box.createHorizontalGlue());
 
         MainWindow.addHelpMenu(menuBar, e -> {
-            showPreferences("About");
+            openPreferencesWindow("About");
         });
         this.setJMenuBar(menuBar);
     }
 
-    protected void showPreferences(String tabName) {
-        SwingUtilities.invokeLater(new Runnable() {
-
-            @Override
-            public void run() {
-                if (preferencesWindow == null) {
-                    preferencesWindow = new PreferencesWindow(BatchOperationWindow.this);
-                    preferencesWindow.onSaveAction(new Runnable() {
-                        @Override
-                        public void run() {
-                            refreshLicense();
-                        }
-                    });
-                }
-                preferencesWindow.showTab(tabName);
-                preferencesWindow.setVisible(true);
-            }
-        });
-    }
 
     protected void selectOutputDirAction() {
         DirChooser fc = new DirChooser("Output");
@@ -665,6 +650,33 @@ public class BatchOperationWindow extends JFrame {
             addDirAction.setEnabled(!command.isGroup());
         }
     }
+
+    @Override
+    public void sendCloseEvent() {
+        this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+    }
+
+    @Override
+    public void openPreferencesWindow(String tabName) {
+        SwingUtilities.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                if (preferencesWindow == null) {
+                    preferencesWindow = new PreferencesWindow(BatchOperationWindow.this);
+                    preferencesWindow.onSaveAction(new Runnable() {
+                        @Override
+                        public void run() {
+                            refreshLicense();
+                        }
+                    });
+                }
+                preferencesWindow.showTab(tabName);
+                preferencesWindow.setVisible(true);
+            }
+        });
+    }
+
 
     {
 // GUI initializer generated by IntelliJ IDEA GUI Designer

@@ -1,5 +1,8 @@
 package pmedit.ui.preferences;
 
+import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
@@ -26,16 +29,29 @@ public class LookAndFeelPreferences {
         }
     }
 
-    public LookAndFeelPreferences() {
+    protected static LaF[] lafListCached = null;
 
-        UIManager.LookAndFeelInfo[] lafInfos = UIManager.getInstalledLookAndFeels();
-        LaF[] laf = new LaF[lafInfos.length + 1];
-        laf[0] = new LaF("Flat", FlatLightLaf.class.getName());
+    public static LaF[] lafList() {
+        if (lafListCached == null) {
+            UIManager.LookAndFeelInfo[] lafInfos = UIManager.getInstalledLookAndFeels();
+            final int numFlat = 4;
+            LaF[] laf = new LaF[lafInfos.length + numFlat];
 
-        for (int i = 0; i < lafInfos.length; i++) {
-            laf[i + 1] = new LaF(lafInfos[i].getName(), lafInfos[i].getClassName());
+            laf[0] = new LaF("Flat Light", FlatLightLaf.class.getName());
+            laf[1] = new LaF("Flat Dark", FlatDarkLaf.class.getName());
+            laf[2] = new LaF("Flat IntelliJ", FlatIntelliJLaf.class.getName());
+            laf[3] = new LaF("Flat Darcula", FlatDarculaLaf.class.getName());
+
+            for (int i = 0; i < lafInfos.length; i++) {
+                laf[i + numFlat] = new LaF(lafInfos[i].getName(), lafInfos[i].getClassName());
+            }
+            lafListCached = laf;
         }
-        lookAndFeelSelection.setModel(new DefaultComboBoxModel(laf));
+        return lafListCached;
+    }
+
+    public LookAndFeelPreferences() {
+        lookAndFeelSelection.setModel(new DefaultComboBoxModel(lafList()));
 
     }
 
@@ -45,7 +61,7 @@ public class LookAndFeelPreferences {
         if (c != null) {
             DefaultComboBoxModel<LaF> m = (DefaultComboBoxModel<LaF>) lookAndFeelSelection.getModel();
             for (int i = 0; i < m.getSize(); i++) {
-                if (m.getElementAt(i).className == c) {
+                if (m.getElementAt(i).className.equals(c)) {
                     m.setSelectedItem(m.getElementAt(i));
                 }
             }
