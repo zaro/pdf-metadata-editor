@@ -542,7 +542,7 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
         String outputDirS = outputDirField.getText();
         File outputDir = outputDirS != null && !outputDirS.isEmpty() ? new File(outputDirS) : null;
 
-        File logOut = new FilesWalker(command.inputFileExtensions, batchFileList).outputDir(outputDir);
+        File logOut = saveOutputToLog.isSelected() ? new FilesWalker(command.inputFileExtensions, batchFileList).outputDir(outputDir) : null;
 
         btnCancel.setText("Cancel");
         worker = new BatchOperationWindow.Worker(logOut, command) {
@@ -573,6 +573,8 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
                 out.info("Starting Batch Operation :{}", command.name);
                 LOG.info("Input file list :{}", batchFileList);
                 out.info("Input file list :{}", batchFileList);
+                LOG.info("Output Folder :{}", outputDir);
+                out.info("Output Folder :{}", outputDir);
 
                 batch.runCommand(command, batchFileList, outputDir, actionStatus);
                 return null;
@@ -586,8 +588,8 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
                         LOG.error("Batch Operation {} Completed with ERRORS", command.name);
                         out.error("Batch Operation {} Completed with ERRORS", command.name);
                     } else {
-                        LOG.info("Batch Operation {} Completed SUCCESFULY", command.name);
-                        out.info("Batch Operation {} Completed SUCCESFULY", command.name);
+                        LOG.info("Batch Operation {} Completed SUCCESSFULLY", command.name);
+                        out.info("Batch Operation {} Completed SUCCESSFULLY", command.name);
                     }
                 } catch (InterruptedException e) {
                     LOG.error("Batch Operation {} Terminated with error", command.name, e);
@@ -835,7 +837,7 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
         final Logger out;
 
         Worker(File logOut, CommandDescription command) {
-            out = logOut != null ? OutputLogger.createFileLogger(command.name, new File(logOut, "batch-log.txt").getAbsolutePath()) : OutputLogger.createNullLogger();
+            out = logOut != null ? OutputLogger.createFileLogger(command.name, new File(logOut, PDFMetadataEditBatch.BATCH_OUTPUT_LOG).getAbsolutePath()) : OutputLogger.createNullLogger();
         }
 
         @Override
