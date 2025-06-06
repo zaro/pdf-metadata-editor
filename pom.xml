@@ -246,6 +246,12 @@
 									</includes>
 								</filter>
 								<filter>
+									<artifact>com.formdev:*</artifact>
+									<includes>
+										<include>**</include>
+									</includes>
+								</filter>
+								<filter>
 									<artifact>*:*</artifact>
 									<excludes>
 										<exclude>META-INF/LICENSE*</exclude>
