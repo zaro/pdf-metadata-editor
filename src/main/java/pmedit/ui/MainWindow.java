@@ -36,7 +36,7 @@ import java.util.List;
 public class MainWindow extends JFrame {
     static final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
 
-    protected static final Dimension MIN_SIZE = new Dimension(660, 600);
+    protected static final Dimension MIN_SIZE = new Dimension(660, 660);
     private JPanel contentPane;
     public JButton btnOpenPdf;
     public JTextField filename;

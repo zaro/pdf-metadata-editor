@@ -1,5 +1,6 @@
 package pmedit.ui.preferences;
 
+import com.formdev.flatlaf.FlatLightLaf;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
@@ -28,10 +29,11 @@ public class LookAndFeelPreferences {
     public LookAndFeelPreferences() {
 
         UIManager.LookAndFeelInfo[] lafInfos = UIManager.getInstalledLookAndFeels();
-        LaF[] laf = new LaF[lafInfos.length];
+        LaF[] laf = new LaF[lafInfos.length + 1];
+        laf[0] = new LaF("Flat", FlatLightLaf.class.getName());
 
         for (int i = 0; i < lafInfos.length; i++) {
-            laf[i] = new LaF(lafInfos[i].getName(), lafInfos[i].getClassName());
+            laf[i + 1] = new LaF(lafInfos[i].getName(), lafInfos[i].getClassName());
         }
         lookAndFeelSelection.setModel(new DefaultComboBoxModel(laf));
 

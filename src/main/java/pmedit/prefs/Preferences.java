@@ -1,5 +1,6 @@
 package pmedit.prefs;
 
+import com.formdev.flatlaf.FlatLightLaf;
 import pmedit.serdes.SerDeslUtils;
 
 import javax.swing.*;
@@ -63,7 +64,7 @@ public class Preferences {
     }
 
     public static String getLookAndFeelClass(){
-        return  getInstance().get("LookAndFeel", UIManager.getCrossPlatformLookAndFeelClassName());
+        return  getInstance().get("LookAndFeel", FlatLightLaf.class.getName());
     }
 
     public static void setLookAndFeelClass(String name){
