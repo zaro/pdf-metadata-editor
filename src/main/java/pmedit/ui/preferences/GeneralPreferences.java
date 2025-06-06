@@ -54,7 +54,7 @@ public class GeneralPreferences {
 
     public void init(Preferences prefs) {
         // Rename template
-        renameTemplateOptions.init("RenameTemplate");
+        renameTemplateOptions.init();
     }
 
     public void refresh() {

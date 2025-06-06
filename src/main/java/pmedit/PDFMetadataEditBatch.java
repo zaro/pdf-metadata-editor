@@ -10,6 +10,7 @@ import pmedit.util.FilesWalker;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,10 +30,10 @@ public class PDFMetadataEditBatch {
 
     public void edit(FilesWalker filesWalker, File outDir, final ActionStatus status) {
         if (params == null) {
-            status.addError("*", "No metadata defined");
+            status.addError("*", new Exception("No metadata defined"));
             return;
         }
-        filesWalker.forFiles(new FileAction(outDir) {
+        filesWalker.forFiles(new FileAction(outDir, status) {
 
             @Override
             public void apply(File file) {
@@ -45,19 +46,14 @@ public class PDFMetadataEditBatch {
                     status.addStatus(outputFileRelativeName(file), "Done");
                 } catch (Exception e) {
                     logger.error("edit", e);
-                    status.addError(inputFileRelativeName(file), "Failed: " + e);
+                    status.addError(inputFileRelativeName(file), e);
                 }
-            }
-
-            @Override
-            public void ignore(File file) {
-                status.addError(inputFileRelativeName(file), "Invalid file");
             }
         });
     }
 
     public void clear(FilesWalker filesWalker, File outDir, final ActionStatus status) {
-        filesWalker.forFiles(new FileAction(outDir) {
+        filesWalker.forFiles(new FileAction(outDir,status) {
 
             @Override
             public void apply(File file) {
@@ -71,13 +67,8 @@ public class PDFMetadataEditBatch {
                 } catch (Exception e) {
                     logger.error("clear", e);
 
-                    status.addError(inputFileRelativeName(file), "Failed: " + e);
+                    status.addError(inputFileRelativeName(file), e);
                 }
-            }
-
-            @Override
-            public void ignore(File file) {
-                status.addError(inputFileRelativeName(file), "Invalid file");
             }
         });
     }
@@ -90,12 +81,12 @@ public class PDFMetadataEditBatch {
                 template += ".pdf";
         }
         if (template == null) {
-            status.addError("*", "Rename template not configured");
+            status.addError("*", new Exception("Rename template not configured"));
             return;
         }
         final TemplateString ts = new TemplateString(template);
 
-        filesWalker.forFiles(new FileAction(outDir) {
+        filesWalker.forFiles(new FileAction(outDir,status) {
 
             @Override
             public void apply(File file) {
@@ -103,39 +94,47 @@ public class PDFMetadataEditBatch {
                     MetadataInfo md = new MetadataInfo();
                     md.loadFromPDF(file);
                     String toName = ts.process(md);
-                    String toDir = outDir() != null ? outDir().toString() : file.getParent();
-                    File to = new File(toDir, toName);
+                    File outFile = getOutputFile(file);
+                    File to ;
+                    boolean copy;
+                    if(outFile != null) {
+                        to = new File(outFile.getParentFile(), toName);
+                        copy = true;
+                    } else {
+                        to = new File(file.getParentFile(), toName);
+                        copy = false;
+                    }
                     if (to.exists()) {
-                        status.addError(outputFileRelativeName(file), "Destination file already exists:  " + to.getName());
+                        status.addError(outputFileRelativeName(file), new Exception("Destination file already exists:  " + to.getName()));
                     } else {
                         try {
-                            Files.move(file.toPath(), to.toPath());
+                            if(copy){
+                                Files.copy(file.toPath(), to.toPath(), StandardCopyOption.COPY_ATTRIBUTES);
+                            } else {
+                                Files.move(file.toPath(), to.toPath());
+                            }
                             status.addStatus(outputFileRelativeName(file), to.getName());
                         } catch (IOException e) {
-                            status.addError(outputFileRelativeName(file), "Rename failed with " + to.getName() + " : " + e);
+                            status.addErrorWithCause(outputFileRelativeName(file), "Rename failed",e);
                         }
                     }
                 } catch (Exception e) {
                     logger.error("rename", e);
 
-                    status.addError(inputFileRelativeName(file), "Failed: " + e);
+                    status.addError(inputFileRelativeName(file), e);
                 }
             }
 
-            @Override
-            public void ignore(File file) {
-                status.addError(inputFileRelativeName(file), "Invalid file");
-            }
         });
     }
 
     public void fromFilename(FilesWalker filesWalker, File outDir, final ActionStatus status) {
         if (params == null || params.extractTemplate == null || params.extractTemplate.isEmpty()) {
-            status.addError("*", "Extract template not configured");
+            status.addError("*", new Exception("Extract template not configured"));
             return;
         }
         TemplateString extractor = new TemplateString(params.extractTemplate);
-        filesWalker.forFiles(new FileAction(outDir) {
+        filesWalker.forFiles(new FileAction(outDir, status) {
 
             @Override
             public void apply(File file) {
@@ -149,14 +148,10 @@ public class PDFMetadataEditBatch {
                     status.addStatus(outputFileRelativeName(file), "Done");
                 } catch (Exception e) {
                     logger.error("fromFileName", e);
-                    status.addError(inputFileRelativeName(file), "Failed: " + e);
+                    status.addError(inputFileRelativeName(file),  e);
                 }
             }
 
-            @Override
-            public void ignore(File file) {
-                status.addError(inputFileRelativeName(file), "Invalid file");
-            }
         });
     }
 
@@ -171,7 +166,7 @@ public class PDFMetadataEditBatch {
                 }).toList();
                 imports.add(new ImportFileParsed(jsonFile, actionList));
             } catch (Exception e) {
-                status.addError(jsonFile.getName(), "Failed to parse: " + e);
+                status.addErrorWithCause(jsonFile.getName(), "Failed to parse: " + e, e);
             }
         }
         fromImportFile(imports, outDir, status, "fromjson");
@@ -186,7 +181,7 @@ public class PDFMetadataEditBatch {
     }
 
     public void tojson(FilesWalker filesWalker, File outDir, final ActionStatus status) {
-        filesWalker.forFiles(new ExportFileAction(outDir, params.isSingleFileExport()) {
+        filesWalker.forFiles(new ExportFileAction(outDir, params.isSingleFileExport(), status) {
             @Override
             void exportRecords(List<ExportedObject> records) {
                 ExportedObject firstRecord = records.get(0);
@@ -212,13 +207,13 @@ public class PDFMetadataEditBatch {
                     addRecordForExport(new ExportedObject(file, md.asFlatMap()));
                 } catch (Exception e) {
                     logger.error("tojson", e);
-                    status.addError(inputFileRelativeName(file), "Failed: " + e);
+                    status.addError(inputFileRelativeName(file), e);
                 }
             }
 
             @Override
             public void ignore(File file) {
-                status.addError(file.getName(), "Invalid file" );
+                status.addError(file.getName(), new Exception("Invalid file: " + file.getAbsolutePath()) );
             }
         });
     }
@@ -234,14 +229,14 @@ public class PDFMetadataEditBatch {
                 }).toList();
                 imports.add(new ImportFileParsed(yamlFile, actionList));
             } catch (Exception e) {
-                status.addError(yamlFile.getName(), "Failed to parse: " + e);
+                status.addErrorWithCause(yamlFile.getName(), "Failed to parse YAML: " + e, e);
             }
         }
         fromImportFile(imports, outDir, status, "fromyaml");
     }
 
     public void toyaml(FilesWalker filesWalker, File outDir, final ActionStatus status) {
-        filesWalker.forFiles(new ExportFileAction(outDir, params.isSingleFileExport()) {
+        filesWalker.forFiles(new ExportFileAction(outDir, params.isSingleFileExport(), status) {
             @Override
             void exportRecords(List<ExportedObject> records) {
                 ExportedObject firstRecord = records.get(0);
@@ -267,13 +262,13 @@ public class PDFMetadataEditBatch {
                     addRecordForExport(new ExportedObject(file, md.asFlatMap()));
                 } catch (Exception e) {
                     logger.error("toyaml", e);
-                    status.addError(inputFileRelativeName(file), "Failed: " + e);
+                    status.addError(inputFileRelativeName(file), e);
                 }
             }
 
             @Override
             public void ignore(File file) {
-                status.addError(file.getName(), "Invalid file" );
+                status.addError(file.getName(), new Exception("Invalid file: " + file.getAbsolutePath()) );
             }
         });
     }
@@ -285,14 +280,14 @@ public class PDFMetadataEditBatch {
                 List<MetadataInfo> actionList = CsvMetadata.readFile(csvFile);
                 imports.add(new ImportFileParsed(csvFile, actionList));
             } catch (Exception e) {
-                status.addError(csvFile.getName(), "Failed to parse: " + e);
+                status.addErrorWithCause(csvFile.getName(), "Failed to parse CSV: " + e,e);
             }
         }
         fromImportFile(imports, outDir, status, "fromcsv");
     }
 
     public void tocsv(FilesWalker filesWalker, File outDir, final ActionStatus status) {
-        filesWalker.forFiles(new ExportFileAction(outDir, params.isSingleFileExport()) {
+        filesWalker.forFiles(new ExportFileAction(outDir, params.isSingleFileExport(), status) {
             @Override
             void exportRecords(List<ExportedObject> records) {
                 ExportedObject firstRecord = records.get(0);
@@ -317,13 +312,13 @@ public class PDFMetadataEditBatch {
                     addRecordForExport(new ExportedObject(file, (Map<String, Object>) (Object) md.asFlatStringMap()));
                 } catch (Exception e) {
                     logger.error("tocsv", e);
-                    status.addError(inputFileRelativeName(file), "Failed: " + e);
+                    status.addError(inputFileRelativeName(file), e);
                 }
             }
 
             @Override
             public void ignore(File file) {
-                status.addError(file.getName(), "Invalid file" );
+                status.addError(file.getName(), new Exception("Invalid file: " + file.getAbsolutePath()));
             }
         });
     }
@@ -341,7 +336,7 @@ public class PDFMetadataEditBatch {
                     status.addStatus(inputFile.getPath(), "Done");
                 } catch (Exception e) {
                     logger.error(commandName, e);
-                    status.addError(inputFile.getPath(), "Failed: " + e);
+                    status.addError(inputFile.getPath(), e);
                 }
             }
 
@@ -349,7 +344,7 @@ public class PDFMetadataEditBatch {
     }
 
     public void xmptodoc(FilesWalker filesWalker, File outDir, final ActionStatus status) {
-        filesWalker.forFiles(new FileAction(outDir) {
+        filesWalker.forFiles(new FileAction(outDir, status) {
 
             @Override
             public void apply(File file) {
@@ -362,19 +357,14 @@ public class PDFMetadataEditBatch {
                     status.addStatus(outputFileRelativeName(file), "Done");
                 } catch (Exception e) {
                     logger.error("xmptodoc", e);
-                    status.addError(inputFileRelativeName(file), "Failed: " + e);
+                    status.addError(inputFileRelativeName(file), e);
                 }
-            }
-
-            @Override
-            public void ignore(File file) {
-                status.addError(inputFileRelativeName(file), "Invalid file");
             }
         });
     }
 
     public void doctoxmp(FilesWalker filesWalker, File outDir, final ActionStatus status) {
-        filesWalker.forFiles(new FileAction(outDir) {
+        filesWalker.forFiles(new FileAction(outDir,status) {
 
             @Override
             public void apply(File file) {
@@ -387,13 +377,8 @@ public class PDFMetadataEditBatch {
                     status.addStatus(outputFileRelativeName(file), "Done");
                 } catch (Exception e) {
                     logger.error("doctoxmp", e);
-                    status.addError(inputFileRelativeName(file), "Failed: " + e);
+                    status.addError(inputFileRelativeName(file), e);
                 }
-            }
-
-            @Override
-            public void ignore(File file) {
-                status.addError(inputFileRelativeName(file), "Invalid file");
             }
         });
     }
@@ -401,7 +386,7 @@ public class PDFMetadataEditBatch {
     public void runCommand(CommandDescription command, List<File> batchFileList, File outDir, ActionStatus actionStatus) {
         FilesWalker filesWalker = new FilesWalker(command.inputFileExtensions, batchFileList);
         if (!BatchMan.hasBatch()) {
-            actionStatus.addError("*", "Invalid license, you can get a license at " + Constants.batchLicenseUrl);
+            actionStatus.addError("*", new Exception("Invalid license, you can get a license at " + Constants.batchLicenseUrl));
         } else if (command.is("rename")) {
             rename(filesWalker, outDir,  actionStatus);
         } else if (command.is("fromfilename")) {
@@ -427,7 +412,7 @@ public class PDFMetadataEditBatch {
         } else if (command.is("doctoxmp")) {
             doctoxmp(filesWalker, outDir,  actionStatus);
         } else {
-            actionStatus.addError("*", "Invalid command");
+            actionStatus.addError("*", new Exception("Invalid command"));
         }
     }
 
@@ -492,8 +477,8 @@ public class PDFMetadataEditBatch {
         boolean singleFile;
         List<ExportedObject> collection = new ArrayList<>();
 
-        ExportFileAction(File outDir, boolean singleFile) {
-            super(outDir);
+        ExportFileAction(File outDir, boolean singleFile, ActionStatus status) {
+            super(outDir, status);
             this.singleFile = singleFile;
         }
 

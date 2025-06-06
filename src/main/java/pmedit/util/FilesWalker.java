@@ -74,7 +74,7 @@ public class FilesWalker {
 
     public List<File> list(){
         List<File> out = new ArrayList<>();
-        forFiles(new FileAction(null) {
+        forFiles(new FileAction(null, null) {
             @Override
             public void apply(File file) {
                 out.add(file);

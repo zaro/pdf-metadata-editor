@@ -481,12 +481,12 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
     }
 
     public void appendError(Throwable e) {
-        tableModel.addFileOpResult(new FileOpResult("", e.toString(), true));
+        tableModel.addFileOpResult(new FileOpResult("", e.toString(), e));
         LOG.error("Exception in FileOpResult:", e);
     }
 
-    public void appendError(String e) {
-        tableModel.addFileOpResult(new FileOpResult("", e, true));
+    public void appendError(String e, Throwable err) {
+        tableModel.addFileOpResult(new FileOpResult("", e, err));
         LOG.error("Exception in FileOpResult: {}", e);
     }
 
@@ -517,7 +517,7 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
     protected boolean hasErrors() {
         boolean hasErr = false;
         for (FileOpResult o : tableModel.data) {
-            hasErr = hasErr || o.error;
+            hasErr = hasErr || (o.error != null);
         }
         return hasErr;
     }
@@ -530,14 +530,14 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
         btnCancel.setText("Cancel");
         worker = new BatchOperationWindow.Worker() {
             final ActionStatus actionStatus = new ActionStatus() {
-                @Override
-                public void addStatus(String filename, String message) {
-                    publish(new BatchOperationWindow.FileOpResult(filename, message, false));
+                public void showStatus(String filename, String message) {
+                    LOG.info("{} : {}", filename, message);
+                    publish(new BatchOperationWindow.FileOpResult(filename, message));
                 }
 
-                @Override
-                public void addError(String filename, String error) {
-                    publish(new BatchOperationWindow.FileOpResult(filename, error, true));
+                public void showError(String filename, Throwable error) {
+                    LOG.error("{}", filename, error);
+                    publish(new BatchOperationWindow.FileOpResult(filename, error.getMessage(), error));
                 }
 
             };
@@ -563,7 +563,7 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
                 } catch (ExecutionException e) {
                     appendError(e.getCause());
                 } catch (CancellationException e) {
-                    appendError("User Cancelled!");
+                    appendError(new Exception("User Cancelled!"));
                 }
                 worker = null;
                 onDone();
@@ -767,9 +767,15 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
     static class FileOpResult {
         String filename;
         String message;
-        boolean error;
+        protected Throwable error;
 
-        public FileOpResult(String filename, String message, boolean error) {
+        public FileOpResult(String filename, String message) {
+            this.filename = filename;
+            this.message = message;
+            this.error = null;
+        }
+
+        public FileOpResult(String filename, String message, Throwable error) {
             this.filename = filename;
             this.message = message;
             this.error = error;
@@ -778,6 +784,10 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
         @Override
         public String toString() {
             return message; // tab-delimited format for table data
+        }
+
+        public boolean hasError() {
+            return error != null;
         }
     }
 
@@ -876,7 +886,7 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
 
                 if (value instanceof FileOpResult) {
                     FileOpResult result = (FileOpResult) value;
-                    if (result.error) {
+                    if (result.hasError()) {
                         setForeground(Color.RED);
                     } else {
                         setForeground(table.getForeground());

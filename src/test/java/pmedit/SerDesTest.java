@@ -71,14 +71,15 @@ public class SerDesTest {
 			viewer.printScaling: null
 			viewer.pageLayout: null
 			viewer.pageMode: null
-			file.name: null
-			file.nameWithExt: null
+			file.fullPath: null
 			file.sizeBytes: null
 			file.size: null
+			file.nameWithExt: null
+			file.name: null
 			file.createTime: null
 			file.modifyTime: null
-			file.fullPath: null
 			file.pdfVersion: null
+			file.pdfCompression: null
 			""";
 	static final String ALL_NULLS_JSON =
 			"""
@@ -141,14 +142,15 @@ public class SerDesTest {
               "viewer.printScaling" : null,
               "viewer.pageLayout" : null,
               "viewer.pageMode" : null,
-              "file.name" : null,
-              "file.nameWithExt" : null,
+              "file.fullPath" : null,
               "file.sizeBytes" : null,
               "file.size" : null,
+              "file.nameWithExt" : null,
+              "file.name" : null,
               "file.createTime" : null,
               "file.modifyTime" : null,
-              "file.fullPath" : null,
-              "file.pdfVersion" : null
+              "file.pdfVersion" : null,
+              "file.pdfCompression" : null
             }
             """;
 

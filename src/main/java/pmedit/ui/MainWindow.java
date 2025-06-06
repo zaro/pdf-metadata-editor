@@ -63,7 +63,7 @@ public class MainWindow extends JFrame implements  ProgramWindow {
     };
     final ActionListener saveRenameAction = new ActionListener() {
         public void actionPerformed(ActionEvent e) {
-            String renameTemplate = Preferences.getInstance().get("renameTemplate", null);
+            String renameTemplate = Preferences.getInstance().get(RenameTemplateOptions.RENAME_TEMPLATE_KEY, null);
             if (renameTemplate == null) {
                 JOptionPane.showMessageDialog(MainWindow.this,
                         "No Rename template configured!");

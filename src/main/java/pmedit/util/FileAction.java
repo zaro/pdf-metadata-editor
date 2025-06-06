@@ -1,5 +1,7 @@
 package pmedit.util;
 
+import pmedit.ActionStatus;
+
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Stack;
@@ -7,9 +9,11 @@ import java.util.Stack;
 public abstract class FileAction {
     File currentInputDir;
     Stack<File> outDirStack = new Stack<>();
+    ActionStatus status;
 
-    public FileAction(File outDir) {
+    public FileAction(File outDir, ActionStatus status) {
         outDirStack.push(outDir);
+        this.status = status;
     }
 
     public File outDir() {
@@ -114,5 +118,7 @@ public abstract class FileAction {
 
     public abstract void apply(File file);
 
-    public abstract void ignore(File file);
+    public void ignore(File file){
+        status.addError(file.getName(), new Exception("Ignore file: " + file.getAbsolutePath()) );
+    }
 }

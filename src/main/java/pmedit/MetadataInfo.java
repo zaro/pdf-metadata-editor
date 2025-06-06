@@ -1215,12 +1215,17 @@ public class MetadataInfo {
 
         document.close();
 
-        File target = newFile != null ? newFile : pdfFile;
-        if(fileEnabled.name) {
-            target = new File(target.getParentFile(), file.name + ".pdf");
+        File target;
+        if(newFile != null){
+            target = newFile;
+        } else {
+            target = pdfFile;
+            if (fileEnabled.name && file.name != null) {
+                target = new File(target.getParentFile(), file.name + ".pdf");
+            }
         }
         Files.move(writeFile.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        if(fileEnabled.createTime || fileEnabled.modifyTime) {
+        if((fileEnabled.createTime && file.createTime != null) || (fileEnabled.modifyTime && file.modifyTime != null)) {
             CrossPlatformFileTimeModifier.setFileTimes(target, file.createTime, file.modifyTime);
         }
         return target;
@@ -1310,10 +1315,19 @@ public class MetadataInfo {
         dcEnabled.setAll(value);
         rightsEnabled.setAll(value);
         viewerEnabled.setAll(value);
+        fileEnabled.setAll(value);
     }
 
     public void setEnabled(String id, boolean value) {
         _setObjectEnabled(id, value);
+    }
+
+    public void setEnabledForPrefix(String prefix, boolean value){
+        for(String field: _mdEnabledFields.keySet()){
+            if(field.startsWith(prefix)){
+                setEnabled(field, value);
+            }
+        }
     }
 
     public boolean isEnabled(String id) {

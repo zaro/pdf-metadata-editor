@@ -65,18 +65,16 @@ public class MainCli {
             return;
         }
         ActionStatus status = new ActionStatus() {
-            @Override
-            public void addStatus(String filename, String message) {
+            public void showStatus(String filename, String message) {
                 System.out.print(filename);
                 System.out.print(" -> ");
                 System.out.println(message);
             }
 
-            @Override
-            public void addError(String filename, String error) {
+            public void showError(String filename, Throwable error) {
                 System.out.print(filename);
                 System.out.print(" -> ");
-                System.out.println(error);
+                System.out.println(error.getMessage());
             }
         };
 
@@ -85,9 +83,9 @@ public class MainCli {
             File outDir = cmdLine.outputDir != null ? new File(cmdLine.outputDir) : null;
             batch.runCommand(cmdLine.command, FileList.fileList(cmdLine.fileList),outDir,  status);
         } else if (cmdLine.batchGui) {
-            status.addError("*", "Batch gui command not allowed in console mode");
+            status.addError("*", new Exception("Batch gui command not allowed in console mode"));
         } else {
-            status.addError("*", "No command specified");
+            status.addError("*", new Exception("No command specified"));
         }
     }
 
