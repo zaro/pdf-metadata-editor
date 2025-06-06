@@ -1,5 +1,6 @@
 package pmedit;
 
+import com.formdev.flatlaf.FlatLightLaf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pmedit.CommandLine.ParseError;
@@ -181,6 +182,12 @@ public class Main {
             UIManager.setLookAndFeel(Preferences.getLookAndFeelClass());
         } catch (UnsupportedLookAndFeelException| ClassNotFoundException| InstantiationException | IllegalAccessException e) {
             LOG.error("UIManager.setLookAndFeel", e);
+        }
+
+        if(OsCheck.isMacOs()){
+            System.setProperty( "apple.laf.useScreenMenuBar", "true" );
+            System.setProperty( "apple.awt.application.name", Version.getAppName() );
+            System.setProperty( "apple.awt.application.appearance", "system" );
         }
 
         if (OsCheck.isWindows() && WindowsSingletonApplication.isAlreadyRunning()) {
