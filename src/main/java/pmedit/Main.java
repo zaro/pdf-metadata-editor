@@ -8,6 +8,7 @@ import pmedit.prefs.LocalDataDir;
 import pmedit.prefs.Preferences;
 import pmedit.ui.BatchOperationWindow;
 import pmedit.ui.MainWindow;
+import pmedit.ui.PreferencesWindow;
 
 import javax.swing.*;
 import java.awt.event.WindowEvent;
@@ -59,7 +60,9 @@ public class Main {
     public static void makeBatchWindow(final String commandName, final CommandDescription command, final List<String> fileList) {
         LOG.info("makeBatchWindow: {}", commandName);
         BatchOperationWindow bs = new BatchOperationWindow(command);
-        bs.appendFiles(FileList.fileList(fileList));
+        if(fileList!= null) {
+            bs.appendFiles(FileList.fileList(fileList));
+        }
         bs.addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(WindowEvent winEvt) {
                 batchInstances.remove(commandName);
@@ -68,6 +71,19 @@ public class Main {
         });
         batchInstances.put(commandName, bs);
         bs.setVisible(true);
+    }
+
+    public static void makeEditorWindow(String file) {
+        LOG.info("open editor: {}", file);
+        final MainWindow window = new MainWindow(file);
+        window.addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(WindowEvent winEvt) {
+                LOG.info("Received windowClosing for {}", window);
+                editorInstances.remove(window);
+                maybeExit();
+            }
+        });
+        editorInstances.add(window);
     }
 
     protected static void executeCommandSwingWorker(final CommandLine cmdLine) {
@@ -125,16 +141,7 @@ public class Main {
                         return;
                     }
                 }
-                LOG.info("open editor: {}", file);
-                final MainWindow window = new MainWindow(file);
-                window.addWindowListener(new java.awt.event.WindowAdapter() {
-                    public void windowClosing(WindowEvent winEvt) {
-                        LOG.info("Received windowClosing for {}", window);
-                        editorInstances.remove(window);
-                        maybeExit();
-                    }
-                });
-                editorInstances.add(window);
+                makeEditorWindow(file);
             } catch (Exception e) {
                 LOG.error("executeCommandSwingWorker", e);
             }
@@ -178,11 +185,6 @@ public class Main {
             MainCli.main(cmdLine);
             return;
         }
-        try {
-            UIManager.setLookAndFeel(Preferences.getLookAndFeelClass());
-        } catch (UnsupportedLookAndFeelException| ClassNotFoundException| InstantiationException | IllegalAccessException e) {
-            LOG.error("UIManager.setLookAndFeel", e);
-        }
 
         if(OsCheck.isMacOs()){
             System.setProperty( "apple.laf.useScreenMenuBar", "true" );
@@ -190,9 +192,23 @@ public class Main {
             System.setProperty( "apple.awt.application.appearance", "system" );
         }
 
+        String lafClass = Preferences.getLookAndFeelClass();
+        try {
+            UIManager.setLookAndFeel(lafClass);
+        } catch (UnsupportedLookAndFeelException| ClassNotFoundException| InstantiationException | IllegalAccessException e) {
+            LOG.error("UIManager.setLookAndFeel", e);
+        }
+
+        if( OsCheck.isLinux()  && lafClass.startsWith("com.formdev.flatlaf")) {
+            // enable custom window decorations
+            JFrame.setDefaultLookAndFeelDecorated( true );
+            JDialog.setDefaultLookAndFeelDecorated( true );
+        }
+
         if (OsCheck.isWindows() && WindowsSingletonApplication.isAlreadyRunning()) {
             LOG.info("WindowsSingletonApplication.isAlreadyRunning() = true");
         }
+
         executeCommand(cmdLine);
         if (OsCheck.isWindows()) {
             DDE.init();

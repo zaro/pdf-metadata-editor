@@ -32,8 +32,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
-public class MainWindow extends JFrame {
+public class MainWindow extends JFrame implements  ProgramWindow {
     static final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
 
     protected static final Dimension MIN_SIZE = new Dimension(660, 660);
@@ -295,7 +296,7 @@ public class MainWindow extends JFrame {
 
         btnPreferences.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                showPreferences(null);
+                openPreferencesWindow(null);
             }
         });
 
@@ -433,7 +434,10 @@ public class MainWindow extends JFrame {
     }
 
     public void loadFile(File file) {
-        LOG.info("loadFile({}) begin", file.getAbsolutePath());
+        LOG.info("loadFile({}) begin", file != null ? file.getAbsolutePath() : null);
+        if (file == null) {
+            return;
+        }
         if (!file.equals(pdfFile)) {
             password = null;
         }
@@ -494,6 +498,10 @@ public class MainWindow extends JFrame {
     }
 
     public void reloadFile() {
+        LOG.info("reloadFile begin pdfFile={}", pdfFile != null ? pdfFile.getAbsolutePath() : null);
+        if (pdfFile == null) {
+            return;
+        }
         clear();
         try {
             PDDocument document = Loader.loadPDF(pdfFile, password != null ? password : "");
@@ -564,49 +572,36 @@ public class MainWindow extends JFrame {
         }
     }
 
-    protected void showPreferences(String tabName) {
-        SwingUtilities.invokeLater(new Runnable() {
-
-            @Override
-            public void run() {
-                if (preferencesWindow == null) {
-                    preferencesWindow = new PreferencesWindow(MainWindow.this);
-                    preferencesWindow.onSaveAction(updateSaveButton);
-                }
-                preferencesWindow.showTab(tabName);
-                preferencesWindow.setVisible(true);
-            }
-        });
-    }
 
     protected void buildMenu() {
         JMenuBar menuBar = new JMenuBar();
-        JMenu fileMenu = new JMenu("File");
-        fileMenu.setMnemonic('F');
 
-        JMenuItem openFile = new JMenuItem("Open File");
-        JMenuItem saveFile = new JMenuItem("Save");
-        JMenuItem saveAsFile = new JMenuItem("Save as");
-        JMenuItem saveAndRenameFile = new JMenuItem("Save & Rename");
+        buildFileMenu(menuBar, fileMenu -> {
 
-        openFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
-        saveFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK));
-        saveAsFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK));
-        saveAndRenameFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK | KeyEvent.ALT_DOWN_MASK));
+            JMenuItem openFile = new JMenuItem("Open");
+            JMenuItem saveFile = new JMenuItem("Save");
+            JMenuItem saveAsFile = new JMenuItem("Save as");
+            JMenuItem saveAndRenameFile = new JMenuItem("Save & Rename");
+            fileMenu.addSeparator();
+            fileMenu.add(openFile);
+            fileMenu.add(saveFile);
+            fileMenu.add(saveAsFile);
+            fileMenu.add(saveAndRenameFile);
 
-        openFile.addActionListener(openAction);
-        saveFile.addActionListener(saveAction);
-        saveAsFile.addActionListener(saveAsAction);
-        saveAndRenameFile.addActionListener(saveRenameAction);
+            openFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
+            saveFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK));
+            saveAsFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK));
+            saveAndRenameFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK | KeyEvent.ALT_DOWN_MASK));
 
+            openFile.addActionListener(openAction);
+            saveFile.addActionListener(saveAction);
+            saveAsFile.addActionListener(saveAsAction);
+            saveAndRenameFile.addActionListener(saveRenameAction);
 
-        fileMenu.add(openFile);
-        fileMenu.add(saveFile);
-        fileMenu.add(saveAsFile);
-        fileMenu.add(saveAndRenameFile);
-        addCloseQuitMenuItems(fileMenu, e -> {
-            this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+            addCloseQuitMenuItems(fileMenu, this);
+            return false;
         });
+
 
         JMenu documentMenu = new JMenu("Metadata");
         documentMenu.setMnemonic('M');
@@ -638,14 +633,41 @@ public class MainWindow extends JFrame {
         documentMenu.add(onSaveMd);
 
 
-        menuBar.add(fileMenu);
         menuBar.add(documentMenu);
         menuBar.add(Box.createHorizontalGlue());
 
         addHelpMenu(menuBar, e -> {
-            showPreferences("About");
+            openPreferencesWindow("About");
         });
         this.setJMenuBar(menuBar);
+    }
+
+    public static JMenu buildFileMenu(JMenuBar menuBar, Function<JMenu, Boolean> mod) {
+        JMenu fileMenu = new JMenu("File");
+        fileMenu.setMnemonic('F');
+        JMenu newMenu = new JMenu("New");
+        newMenu.setMnemonic('N');
+        JMenuItem newEditor = new JMenuItem("File Editor");
+        newEditor.setMnemonic('F');
+        JMenuItem newBatch = new JMenuItem("Batch Editor");
+        newBatch.setMnemonic('B');
+        newMenu.add(newEditor);
+        newMenu.add(newBatch);
+
+        newEditor.addActionListener(e -> {
+            Main.makeEditorWindow(null);
+        });
+        newBatch.addActionListener(e -> {
+            Main.makeBatchWindow(null, null, null);
+        });
+
+        fileMenu.add(newMenu);
+
+        mod.apply(fileMenu);
+
+
+        menuBar.add(fileMenu);
+        return fileMenu;
     }
 
     public static void addHelpMenu(JMenuBar menuBar, ActionListener showAbout) {
@@ -672,13 +694,15 @@ public class MainWindow extends JFrame {
         menuBar.add(helpMenu);
     }
 
-    public static void addCloseQuitMenuItems(JMenu menu, ActionListener onClose) {
+    public static void addCloseQuitMenuItems(JMenu menu, ProgramWindow targetWindow) {
         JMenuItem close = new JMenuItem("Close");
         JMenuItem quit = new JMenuItem("Quit");
 
         int closeKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
         close.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, closeKeyMask));
-        close.addActionListener(onClose);
+        close.addActionListener(e -> {
+            targetWindow.sendCloseEvent();
+        });
 
         int quitKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
         quit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, quitKeyMask));
@@ -686,6 +710,13 @@ public class MainWindow extends JFrame {
             LOG.info("Exit all instances!");
             System.exit(0);
         });
+        menu.addSeparator();
+        JMenuItem preferences = new JMenuItem("Preferences");
+        preferences.setMnemonic('P');
+        preferences.addActionListener(e -> {
+            targetWindow.openPreferencesWindow(null);
+        });
+        menu.add(preferences);
 
         menu.addSeparator();
         menu.add(close);
@@ -739,5 +770,27 @@ public class MainWindow extends JFrame {
 
     public static void main(String[] args) {
         new MainWindow(null);
+    }
+
+    @Override
+    public void sendCloseEvent() {
+        this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+
+    }
+
+    @Override
+    public void openPreferencesWindow(String tabName) {
+        SwingUtilities.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                if (preferencesWindow == null) {
+                    preferencesWindow = new PreferencesWindow(MainWindow.this);
+                    preferencesWindow.onSaveAction(updateSaveButton);
+                }
+                preferencesWindow.showTab(tabName);
+                preferencesWindow.setVisible(true);
+            }
+        });
     }
 }

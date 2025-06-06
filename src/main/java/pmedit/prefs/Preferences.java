@@ -63,8 +63,20 @@ public class Preferences {
         p.put(tag + "History", json);
     }
 
+    public static String getDefaultLookAndFeelClass(){
+        return  FlatLightLaf.class.getName();
+    }
+
     public static String getLookAndFeelClass(){
-        return  getInstance().get("LookAndFeel", FlatLightLaf.class.getName());
+        return  getInstance().get("LookAndFeel", getDefaultLookAndFeelClass());
+    }
+
+    public static boolean isLookAndFeelDark(){
+        String s = getLookAndFeelClass();
+        if(s.contains("Dark") || s.contains("Darcula")){
+            return true;
+        }
+        return false;
     }
 
     public static void setLookAndFeelClass(String name){

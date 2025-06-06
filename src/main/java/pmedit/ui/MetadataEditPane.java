@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import pmedit.annotations.FieldDataType;
 import pmedit.annotations.FieldEnabled;
 import pmedit.annotations.FieldID;
+import pmedit.prefs.Preferences;
 import pmedit.ui.components.*;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
@@ -16,6 +17,7 @@ import pmedit.preset.PresetValues;
 
 import javax.swing.*;
 import javax.swing.border.Border;
+import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListDataEvent;
@@ -327,6 +329,20 @@ public class MetadataEditPane {
     Border changedBorder;
     boolean presetLoadEnableOnlyNonNull = false;
 
+    public static Color darken(Color color, double factor) {
+        int red = (int) (color.getRed() * factor);
+        int green = (int) (color.getGreen() * factor);
+        int blue = (int) (color.getBlue() * factor);
+        return new Color(red, green, blue, color.getAlpha());
+    }
+
+    public static Color lighten(Color color, double factor) {
+        int red = Math.min((int) (color.getRed() * factor), 255);
+        int green = Math.min((int) (color.getGreen() * factor), 255);
+        int blue = Math.min((int) (color.getBlue() * factor), 255);
+        return new Color(red, green, blue, color.getAlpha());
+    }
+
     public MetadataEditPane() {
         extension.initTabs(this);
         initComponents();
@@ -335,7 +351,16 @@ public class MetadataEditPane {
         textAreaDefault = basicSubject.getBorder();
         comboBoxDefault = basicTrapped.getBorder();
         datePickerDefault = basicCreationDate.getBorder();
-        changedBorder = BorderFactory.createLineBorder(Color.BLACK, 2);
+        LOG.warn("UIDefaults keys:{}", UIManager.getDefaults().keySet());
+        UIDefaults defaults = UIManager.getDefaults();
+        Color focusColor = defaults.contains("Button.default.focusColor")
+                ? defaults.getColor("Button.default.focusColor")
+                : (defaults.contains("Button.focus")
+                ? defaults.getColor("Button.focus")
+                : defaults.getColor("Button.highlight")
+        );
+        Color changedColor = Preferences.isLookAndFeelDark() ? lighten(focusColor, 1.3) : darken(focusColor, 0.7);
+        changedBorder = BorderFactory.createLineBorder(changedColor, 2);
         licenseRequiredText.setText("<a href='" + Constants.batchLicenseUrl + "'>(Pro License Required)<a>");
 
     }
