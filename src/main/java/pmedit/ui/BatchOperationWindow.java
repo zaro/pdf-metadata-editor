@@ -9,7 +9,10 @@ import pmedit.*;
 import pmedit.prefs.Preferences;
 import pmedit.serdes.SerDeslUtils;
 import pmedit.ui.components.TextPaneWithLinks;
+import pmedit.ui.util.PersistentToggleAction;
 import pmedit.ui.util.ToggleAction;
+import pmedit.util.FilesWalker;
+import pmedit.util.OutputLogger;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -22,8 +25,6 @@ import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.net.URL;
 import java.util.*;
 import java.util.List;
@@ -47,6 +48,7 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
     public JButton addFileButton;
     public JButton clearFileList;
     public JCheckBox persistFileList;
+    public JCheckBox saveOutputLogFile;
     private PreferencesWindow preferencesWindow;
 
     //
@@ -145,13 +147,7 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
         clearFileList.setAction(clearInputFiles);
 
         persistFileList.setAction(keepFileList);
-        persistFileList.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Preferences.getInstance().putBoolean(PERSIST_BATCH_FILES_KEY, persistFileList.isSelected());
-            }
-        });
-        keepFileList.setSelected(Preferences.getInstance().getBoolean(PERSIST_BATCH_FILES_KEY, false));
+        saveOutputLogFile.setAction(saveOutputToLog);
 
         new FileDrop(this, new FileDrop.Listener() {
             public void filesDropped(File[] files, Point where) {
@@ -360,11 +356,23 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
         }
     };
 
-    protected ToggleAction keepFileList = new ToggleAction("Keep File List", false) {
+    protected PersistentToggleAction keepFileList = new PersistentToggleAction("Keep File List", PERSIST_BATCH_FILES_KEY) {
         {
             putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_K, InputEvent.CTRL_DOWN_MASK));
             putValue(Action.MNEMONIC_KEY, KeyEvent.VK_K);
-            putValue(Action.SHORT_DESCRIPTION, "Keep Input files List");
+            putValue(Action.SHORT_DESCRIPTION, "Keep Input files List  and load on next start");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            super.actionPerformed(e);
+            persistInputFiles(true);
+        }
+    };
+
+    PersistentToggleAction saveOutputToLog = new PersistentToggleAction("Save to File", "batchLogOutput") {
+        {
+            putValue(Action.SHORT_DESCRIPTION, "Save output to batch-log.txt in output folder");
         }
     };
 
@@ -389,8 +397,12 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
         }
     }
 
-    protected void persistInputFiles() {
-        if (keepFileList.isSelected()) {
+    protected void persistInputFiles(boolean clear) {
+        if (clear) {
+            List<String> files = batchFileList.stream().map(File::getAbsolutePath).toList();
+            Preferences.getInstance().remove(BATCH_FILES_LIST_KEY);
+            Preferences.getInstance().remove(BATCH_OUTPUT_DIR_KEY);
+        } else if (keepFileList.isSelected()) {
             List<String> files = batchFileList.stream().map(File::getAbsolutePath).toList();
             Preferences.getInstance().put(BATCH_FILES_LIST_KEY, SerDeslUtils.toJSON(false, files));
             Preferences.getInstance().put(BATCH_OUTPUT_DIR_KEY, outputDirField.getText());
@@ -525,18 +537,27 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
     public void runBatch() {
         final CommandDescription command = ((CommandDescription) selectedBatchOperation.getSelectedItem());
         Preferences.getInstance().put(LAST_USED_COMMAND_KEY, command.name);
-        persistInputFiles();
+        persistInputFiles(false);
+
+        String outputDirS = outputDirField.getText();
+        File outputDir = outputDirS != null && !outputDirS.isEmpty() ? new File(outputDirS) : null;
+
+        File logOut = new FilesWalker(command.inputFileExtensions, batchFileList).outputDir(outputDir);
 
         btnCancel.setText("Cancel");
-        worker = new BatchOperationWindow.Worker() {
+        worker = new BatchOperationWindow.Worker(logOut, command) {
+            boolean hasErrors = false;
             final ActionStatus actionStatus = new ActionStatus() {
                 public void showStatus(String filename, String message) {
                     LOG.info("{} : {}", filename, message);
+                    out.info("{} : {}", filename, message);
                     publish(new BatchOperationWindow.FileOpResult(filename, message));
                 }
 
                 public void showError(String filename, Throwable error) {
-                    LOG.error("{}", filename, error);
+                    hasErrors = true;
+                    LOG.error("Input file: {}", filename, error);
+                    out.error("Input file: {}", filename, error);
                     publish(new BatchOperationWindow.FileOpResult(filename, error.getMessage(), error));
                 }
 
@@ -548,8 +569,11 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
                 params.storeForCommand(command);
 
                 PDFMetadataEditBatch batch = new PDFMetadataEditBatch(params);
-                String outputDirS = outputDirField.getText();
-                File outputDir = outputDirS != null && !outputDirS.isEmpty() ? new File(outputDirS) : null;
+                LOG.info("Starting Batch Operation :{}", command.name);
+                out.info("Starting Batch Operation :{}", command.name);
+                LOG.info("Input file list :{}", batchFileList);
+                out.info("Input file list :{}", batchFileList);
+
                 batch.runCommand(command, batchFileList, outputDir, actionStatus);
                 return null;
             }
@@ -558,11 +582,24 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
             protected void done() {
                 try {
                     get();
+                    if (hasErrors) {
+                        LOG.error("Batch Operation {} Completed with ERRORS", command.name);
+                        out.error("Batch Operation {} Completed with ERRORS", command.name);
+                    } else {
+                        LOG.info("Batch Operation {} Completed SUCCESFULY", command.name);
+                        out.info("Batch Operation {} Completed SUCCESFULY", command.name);
+                    }
                 } catch (InterruptedException e) {
+                    LOG.error("Batch Operation {} Terminated with error", command.name, e);
+                    out.error("Batch Operation {} Terminated with error", command.name, e);
                     appendError(e);
                 } catch (ExecutionException e) {
+                    LOG.error("Batch Operation {} Terminated with error", command.name, e.getCause());
+                    out.error("Batch Operation {} Terminated with error", command.name, e.getCause());
                     appendError(e.getCause());
                 } catch (CancellationException e) {
+                    LOG.error("Batch Operation {} Cancelled by User!", command.name);
+                    out.error("Batch Operation {} Cancelled by User!", command.name);
                     appendError(new Exception("User Cancelled!"));
                 }
                 worker = null;
@@ -737,13 +774,16 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
         persistFileList.setText("Keep file list");
         panel2.add(persistFileList, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel3 = new JPanel();
-        panel3.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel3.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(panel3, new GridConstraints(3, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        panel3.setBorder(BorderFactory.createTitledBorder(null, "Output Log", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
+        panel3.setBorder(BorderFactory.createTitledBorder(null, "Output ", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
         statusScrollPane = new JScrollPane();
-        panel3.add(statusScrollPane, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        panel3.add(statusScrollPane, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         statusTable = new JTable();
         statusScrollPane.setViewportView(statusTable);
+        saveOutputLogFile = new JCheckBox();
+        saveOutputLogFile.setText("Save to file");
+        panel3.add(saveOutputLogFile, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel4 = new JPanel();
         panel4.setLayout(new GridLayoutManager(2, 2, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(panel4, new GridConstraints(2, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
@@ -792,6 +832,12 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
     }
 
     abstract class Worker extends SwingWorker<Void, FileOpResult> {
+        final Logger out;
+
+        Worker(File logOut, CommandDescription command) {
+            out = logOut != null ? OutputLogger.createFileLogger(command.name, new File(logOut, "batch-log.txt").getAbsolutePath()) : OutputLogger.createNullLogger();
+        }
+
         @Override
         protected void process(List<FileOpResult> chunks) {
             for (BatchOperationWindow.FileOpResult chunk : chunks) {

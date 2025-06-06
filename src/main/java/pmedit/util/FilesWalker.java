@@ -87,4 +87,41 @@ public class FilesWalker {
         });
         return out;
     }
+
+    public File outputDir(File outDir){
+        if(outDir != null){
+            if(!outDir.isDirectory()){
+                outDir =outDir.getParentFile();
+            }
+            if(!outDir.exists()){
+                outDir.mkdirs();
+            }
+            return outDir;
+        }
+        try {
+            forFiles(new FileAction(null, null) {
+                @Override
+                public void apply(File file){
+                    throw new FileFound(file);
+                }
+
+                @Override
+                public void ignore(File file) {
+
+                }
+            });
+        } catch (FileFound e) {
+            return e.file.isDirectory() ?e.file : e.file.getParentFile();
+        }
+        return null;
+    }
+
+    static class FileFound extends RuntimeException{
+        File file;
+        public FileFound(File found) {
+            super("Found!");
+            file= found;
+        }
+
+    }
 }
