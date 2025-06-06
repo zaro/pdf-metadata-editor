@@ -35,7 +35,7 @@ public class FilesWalker {
         };
     }
 
-    protected void _forFiles(File file, FileFilter filter, FileAction action) {
+    protected void _forFiles(File file, FileFilter filter, FileAction action, int level) {
         if (file.isFile()) {
             if (filter.accept(file)) {
                 action.beforeEach();
@@ -46,13 +46,20 @@ public class FilesWalker {
             }
         } else if (file.isDirectory()) {
             File[]  files = file.listFiles(filter);
-            action.pushOutDirFromInputFile(file);
+
+            // Don't push outputDirs for directories from the original input list
+            // as it creates additional directory level
+            if(level > 0) {
+                action.pushOutDirFromInputFile(file);
+            }
             if(files != null) {
                 for (File dirEntry : files) {
-                    _forFiles(dirEntry, filter, action);
+                    _forFiles(dirEntry, filter, action, level + 1);
                 }
             }
-            action.popOutDir();
+            if(level >0) {
+                action.popOutDir();
+            }
         } else {
             action.ignore(file);
         }
@@ -67,7 +74,7 @@ public class FilesWalker {
         action.beforeAll();
         for (File file : files) {
             action.setCurrentInputDir(file);
-            _forFiles(file, fileFilter, action);
+            _forFiles(file, fileFilter, action, 0);
         }
         action.afterAll();
     }

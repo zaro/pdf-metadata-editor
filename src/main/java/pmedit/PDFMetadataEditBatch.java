@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 public class PDFMetadataEditBatch {
+    public static final String BATCH_OUTPUT_LOG = "batch-log.txt";
     Logger logger = LoggerFactory.getLogger(PDFMetadataEditBatch.class);
 
     BatchOperationParameters params;
