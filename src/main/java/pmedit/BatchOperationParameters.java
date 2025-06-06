@@ -1,5 +1,7 @@
 package pmedit;
 
+import pmedit.ui.RenameTemplateOptions;
+
 import java.util.prefs.Preferences;
 
 public class BatchOperationParameters {
@@ -37,8 +39,10 @@ public class BatchOperationParameters {
                 params.metadata = MetadataInfo.fromPersistenceString(mdP);
             }
             params.renameTemplate = cmdPrefs.get("rt", null);
+
             if (params.renameTemplate == null && command.is("rename")) {
-                params.renameTemplate = pmedit.prefs.Preferences.getInstance().get("renameTemplate", null);
+                // If not set previously, try to initialise it from teh general preferences
+                params.renameTemplate = pmedit.prefs.Preferences.getInstance().get(RenameTemplateOptions.RENAME_TEMPLATE_KEY, null);
             }
             params.extractTemplate = cmdPrefs.get("et", null);
             params.outputFile = cmdPrefs.get("of", DEFAULT_OUTPUT_FILENAME);

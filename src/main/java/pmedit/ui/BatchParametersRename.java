@@ -35,7 +35,7 @@ public class BatchParametersRename extends BatchParametersWindow {
         setModal(true);
         setTitle("Batch rename parameters");
 
-        renameTemplateOptions.init("BatchRenameTemplate");
+        renameTemplateOptions.init("BatchRenameTemplate", () -> parameters.renameTemplate);
 
         buttonOK.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {

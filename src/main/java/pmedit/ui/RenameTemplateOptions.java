@@ -20,29 +20,39 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Locale;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class RenameTemplateOptions {
+    public static final String RENAME_TEMPLATE_KEY = "renameTemplate";
     private JPanel contentPane;
     public JComboBox<String> renameTemplateComboBox;
     public JLabel previewLabel;
     public TextPaneWithLinks supportedFieldsHelp;
 
     public String renameTemplate;
+    protected String preferencesKey = RENAME_TEMPLATE_KEY;
 
     public RenameTemplateOptions() {
     }
 
-    public void init(String name) {
-        renameTemplate = Preferences.getInstance().get("renameTemplate", null);
+    public void init() {
+        init(RENAME_TEMPLATE_KEY,  () -> Preferences.getInstance().get(RENAME_TEMPLATE_KEY, null));
+    }
 
-        String[] renameTemplateOptions = Preferences.getHistoryLines(name, new String[]{"", "{doc.author} - {doc.title}.pdf",
+    public void init(String name, Supplier<String> initialOption) {
+        preferencesKey = name;
+        renameTemplate = initialOption.get();
+
+
+        String[] renameTemplateOptions = Preferences.getHistoryLines(preferencesKey, new String[]{"", "{doc.author} - {doc.title}.pdf",
                 "{doc.author} - {doc.creationDate}.pdf"});
         renameTemplateComboBox.setModel(new DefaultComboBoxModel<String>(renameTemplateOptions));
         final JTextComponent tcA = (JTextComponent) renameTemplateComboBox.getEditor().getEditorComponent();
         renameTemplateComboBox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
                 if (showPreview((String) renameTemplateComboBox.getModel().getSelectedItem())) {
-                    Preferences.appendHistoryLines(name, new String[]{renameTemplate});
+                    Preferences.appendHistoryLines(preferencesKey, new String[]{renameTemplate});
                 }
                 ;
             }
@@ -53,6 +63,8 @@ public class RenameTemplateOptions {
         }
 
         supportedFieldsHelp.setText("Supported fields:<br>\n<pre>\n<i>" + CommandLine.mdFieldsHelpMessage(60, "  {", "}", false) + "</i></pre>");
+
+        refresh();
     }
 
     public boolean showPreview(String template) {
@@ -71,9 +83,9 @@ public class RenameTemplateOptions {
 
     public void save(java.util.prefs.Preferences prefs) {
         if (renameTemplate != null && !renameTemplate.isEmpty())
-            prefs.put("renameTemplate", renameTemplate);
+            prefs.put(preferencesKey, renameTemplate);
         else
-            prefs.remove("renameTemplate");
+            prefs.remove(preferencesKey);
     }
 
     {

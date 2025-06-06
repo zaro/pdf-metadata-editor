@@ -64,9 +64,9 @@ public class BatchFilenameTest {
 
         String template = "{dc.creators}-{dc.title}-{file.size}.pdf";
         JComboBoxOperator renameCombo = new JComboBoxOperator(parameters);
-        renameCombo.typeText(template);
-        renameCombo.pressKey(KeyEvent.VK_ENTER);
-        renameCombo.releaseKey(KeyEvent.VK_ENTER);
+        renameCombo.clearText();
+        renameCombo.enterText(template);
+
 
         parameters.close();
         parameters.waitClosed();
@@ -93,9 +93,8 @@ public class BatchFilenameTest {
 
         String template = "{dc.creators}-{dc.title}";
         JComboBoxOperator renameCombo = new JComboBoxOperator(parameters);
-        renameCombo.typeText(template);
-        renameCombo.pressKey(KeyEvent.VK_ENTER);
-        renameCombo.releaseKey(KeyEvent.VK_ENTER);
+        renameCombo.clearText();
+        renameCombo.enterText(template);
 
         parameters.close();
         parameters.waitClosed();
@@ -124,9 +123,8 @@ public class BatchFilenameTest {
 
         String template = "{dc.creators?}-{dc.title}";
         JComboBoxOperator renameCombo = new JComboBoxOperator(parameters);
-        renameCombo.typeText(template);
-        renameCombo.pressKey(KeyEvent.VK_ENTER);
-        renameCombo.releaseKey(KeyEvent.VK_ENTER);
+        renameCombo.clearText();
+        renameCombo.enterText(template);
 
         parameters.close();
         parameters.waitClosed();

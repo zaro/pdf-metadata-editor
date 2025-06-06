@@ -153,7 +153,9 @@ public class FilesTestHelper {
             if(beforeSave != null ){
                 beforeSave.accept(md);
             }
+            md.setEnabledForPrefix("file.", false);
             md.saveAsPDF(pdf);
+            md.setEnabledForPrefix("file.", true);
             md.loadPDFFileInfo(pdf);
             rval.add(new PMTuple(pdf, md));
         }

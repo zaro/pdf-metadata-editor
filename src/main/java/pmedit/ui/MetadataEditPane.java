@@ -351,7 +351,6 @@ public class MetadataEditPane {
         textAreaDefault = basicSubject.getBorder();
         comboBoxDefault = basicTrapped.getBorder();
         datePickerDefault = basicCreationDate.getBorder();
-        LOG.warn("UIDefaults keys:{}", UIManager.getDefaults().keySet());
         UIDefaults defaults = UIManager.getDefaults();
         Color focusColor = defaults.contains("Button.default.focusColor")
                 ? defaults.getColor("Button.default.focusColor")

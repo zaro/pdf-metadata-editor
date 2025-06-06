@@ -1,9 +1,6 @@
 package pmedit.ui;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junitpioneer.jupiter.SetSystemProperty;
 import org.netbeans.jemmy.ClassReference;
@@ -40,10 +37,11 @@ public class MainWindowSaveTest {
     }
 
     @BeforeEach
-    void loadFile() throws Exception {
+    void loadFile(TestInfo testInfo) throws Exception {
         if(topFrame == null) {
             topFrame = new JFrameOperator("Pdf Metadata Editor");
         }
+        FilesTestHelper.pushTempDir(testInfo.getDisplayName().replaceFirst("\\(.*", ""));
         initialFile = FilesTestHelper.randomFiles(1).get(0);
 
         new JButtonOperator(topFrame, "Open PDF").push();
@@ -55,6 +53,7 @@ public class MainWindowSaveTest {
     @AfterEach
     void cleanUp() {
         Preferences.clear();
+        FilesTestHelper.popTempDir();
     }
 
     @Test

@@ -30,13 +30,10 @@ public class BatchCommandTest {
 		CommandLine c = CommandLine.parse(args);
 		PDFMetadataEditBatch batch =new PDFMetadataEditBatch(c.params);
 		batch.runCommand(c.command, FileList.fileList(c.fileList), null, new ActionStatus(){
-			@Override
-			public void addStatus(String filename, String message) {
+			public void showStatus(String filename, String message) {
 			}
 
-			@Override
-			public void addError(String filename, String error) {
-				System.out.println(error);
+			public void showError(String filename, Throwable error) {
                 fail(error);
 			}
 
@@ -64,13 +61,10 @@ public class BatchCommandTest {
 		CommandLine c = CommandLine.parse(args);
 		PDFMetadataEditBatch batch =new PDFMetadataEditBatch(c.params);
 		batch.runCommand(c.command, FileList.fileList(c.fileList), null,  new ActionStatus(){
-			@Override
-			public void addStatus(String filename, String message) {
+			public void showStatus(String filename, String message) {
 			}
 
-			@Override
-			public void addError(String filename, String error) {
-				System.out.println(error);
+			public void showError(String filename, Throwable error) {
 				fail(error);
 			}
 
@@ -101,12 +95,10 @@ public class BatchCommandTest {
 		CommandLine c = CommandLine.parse(args);
 		PDFMetadataEditBatch batch = new PDFMetadataEditBatch(c.params);
 		batch.runCommand(c.command, FileList.fileList(c.fileList), null,  new ActionStatus() {
-			@Override
-			public void addStatus(String filename, String message) {
+			public void showStatus(String filename, String message) {
 			}
 
-			@Override
-			public void addError(String filename, String error) {
+			public void showError(String filename, Throwable error) {
 				System.out.println(error);
 				fail(error);
 			}
@@ -147,12 +139,10 @@ public class BatchCommandTest {
 		CommandLine c = CommandLine.parse(args);
 		PDFMetadataEditBatch batch =new PDFMetadataEditBatch(c.params);
 		batch.runCommand(c.command, FileList.fileList(c.fileList), null, new ActionStatus(){
-			@Override
-			public void addStatus(String filename, String message) {
+			public void showStatus(String filename, String message) {
 			}
 
-			@Override
-			public void addError(String filename, String error) {
+			public void showError(String filename, Throwable error) {
 				System.out.println(error);
 				fail(error);
 			}
