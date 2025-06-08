@@ -23,15 +23,20 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class UiTestHelpers {
     static void openFileChooser(String dialogTitle, File testFile){
+        if(!testFile.isAbsolute()){
+            testFile = testFile.getAbsoluteFile();
+        }
         var chooserFrame = new JDialogOperator(dialogTitle);
         var fileChooser = new JFileChooserOperator(
                 JFileChooserOperator.findJFileChooser((Container) chooserFrame.getSource()));
         fileChooser.setCurrentDirectory(testFile.getParentFile());
-        fileChooser.clickOnFile(testFile.getName());
-
+        fileChooser.setSelectedFile(testFile);
         new JButtonOperator(fileChooser, "Open").push();
     }
     static void saveFileChooser(String dialogTitle, File testFile){
+        if(!testFile.isAbsolute()){
+            testFile = testFile.getAbsoluteFile();
+        }
         var chooserFrame = new JDialogOperator(dialogTitle);
         var fileChooser = new JFileChooserOperator(
                 JFileChooserOperator.findJFileChooser((Container) chooserFrame.getSource()));
@@ -50,17 +55,19 @@ public class UiTestHelpers {
         }
     }
 
+    static String tabNameForField(String field) {
+        String[] parts = field.split("\\.");
+        return switch(parts[0]) {
+            case "dc" -> "Dublin";
+            case "prop" -> "PDF Properties";
+            default ->  parts[0].substring(0, 1).toUpperCase() + parts[0].substring(1);
+        };
+    }
     static void checkMetadataPaneValues(ContainerOperator frame,MetadataInfo expected){
         var tab = new JTabbedPaneOperator(frame);
 
         for(String k: MetadataInfo.keys()) {
-            String[] parts = k.split("\\.");
-            if(parts[0].startsWith("file")){
-                // Ignore file.* props, they are not shown
-                continue;
-            }
-            String findInTt = parts[0].equals("dc") ? "Dublin" : parts[0].substring(0, 1).toUpperCase() + parts[0].substring(1);
-            ensureTab(tab, findInTt);
+            ensureTab(tab, tabNameForField(k));
             checkMetadataFieldValue(frame, k, expected);
         }
     }
@@ -80,12 +87,18 @@ public class UiTestHelpers {
         } else if(c instanceof JComboBox cb ) {
             MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(name);
             if(fd.type == FieldDataType.FieldType.BoolField){
-                String s = "Unset";
+                String s = fd.textForNull();
                 Boolean v  = (Boolean) expected.get(name, null);
                 if(v != null){
                   s = v ? "Yes"  :"No" ;
                 }
                 assertEquals(s, cb.getSelectedItem(), message);
+            } else if(fd.isNumeric){
+                Object item = cb.getSelectedItem();
+                if(fd.textForNull().equals(item)){
+                    item = null;
+                }
+                assertEquals(expected.get(name), item , message);
             } else {
                 assertEquals(expected.getString(name, "Unset"), cb.getSelectedItem(), message);
             }
@@ -117,14 +130,8 @@ public class UiTestHelpers {
         var tab = new JTabbedPaneOperator(frame);
 
         for(String k: MetadataInfo.keys()) {
-            String[] parts = k.split("\\.");
-            if(parts[0].startsWith("file")){
-                // Ignore file.* props, they are not shown
-                continue;
-            }
+            ensureTab(tab, tabNameForField(k));
 
-            String findInTt = parts[0].equals("dc") ? "Dublin" : parts[0].substring(0, 1).toUpperCase() + parts[0].substring(1);
-            ensureTab(tab, findInTt);
             if(!info.isEnabled(k)){
                 if(setEnabled) {
                     populateEnabled(tab, k, false);
@@ -139,6 +146,7 @@ public class UiTestHelpers {
     }
     static void populateEnabled(JTabbedPaneOperator tab, String name, boolean isEnabled) {
         JCheckBox c = (JCheckBox)ComponentOperator.findComponent((Container) tab.getSource(), new CustomPropertyComponentChooser("EnabledMetadataFieldId", name));
+        assertNotNull(c, "Can't find enabled checkbox for " + name);
         c.setSelected(isEnabled);
     }
 

@@ -2,9 +2,9 @@ package pmedit;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.xmpbox.xml.XmpParsingException;
 import org.junit.jupiter.api.Assertions;
+import pmedit.ext.PdfWriter;
 
 import java.io.File;
 import java.io.IOException;
@@ -67,22 +67,31 @@ public class FilesTestHelper {
     }
 
     public static List<PMTuple> randomFiles(int numFiles) throws Exception {
-        return randomFiles(numFiles, null, true, null);
+        return randomFiles(numFiles, true, null);
     }
     public static List<PMTuple> randomFiles(int numFiles, Consumer<MetadataInfo> beforeSave) throws Exception {
-        return randomFiles(numFiles, null, true, beforeSave);
+        return randomFiles(numFiles,  true, beforeSave);
     }
 
     public static List<PMTuple> randomFiles(int numFiles, boolean allFields) throws Exception {
-        return randomFiles(numFiles, null, allFields, null);
-    }
-    public static List<PMTuple> randomFiles(int numFiles, AccessPermission permission, boolean allFields) throws Exception {
-        return randomFiles(numFiles, permission, allFields, null);
+        return randomFiles(numFiles, allFields, null);
     }
 
-    public static List<PMTuple> randomFiles(int numFiles, AccessPermission permission, boolean allFields, Consumer<MetadataInfo> beforeSave) throws Exception {
+    public static List<PMTuple> randomFiles(int numFiles,  boolean allFields, Consumer<MetadataInfo> beforeSave) throws Exception {
         List<String> fields = MetadataInfo.keys();
         List<PMTuple> rval = new ArrayList<FilesTestHelper.PMTuple>();
+
+        // Filter out fields, that should not be random
+        fields = fields.stream().filter(f -> {
+            return !(
+                    f.startsWith("file.") || (
+                            f.startsWith("prop.")
+                            && !f.equals("prop.version")
+                            && !f.equals("prop.compression")
+                    )
+            );
+        }).toList();
+
 
         Random rand = new Random();
         for (int i = 0; i < numFiles; ++i) {
@@ -102,7 +111,6 @@ public class FilesTestHelper {
                    }
                }
            }
-           genFields = genFields.stream().filter( f -> !f.startsWith("file.")).toList();
             for (int j = 0; j < genFields.size(); ++j) {
                 String field = fields.get(j);
 
@@ -111,10 +119,11 @@ public class FilesTestHelper {
                     continue;
                 }
 
-                if (field.equals("doc.pdfVersion")) {
-                    md.setAppend(field, Arrays.asList(1.3f, 1.4f, 1.5f, 1.6f, 1.7f).get(rand.nextInt(3)));
+                if (field.equals("prop.version")) {
+                    md.setAppend(field, Arrays.asList(1.3f, 1.4f, 1.5f, 1.6f, 1.7f).get(rand.nextInt(5)));
                     continue;
                 }
+
 
                 MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(field);
                 switch (fd.type) {
@@ -146,13 +155,23 @@ public class FilesTestHelper {
                         break;
                 }
             }
+
             File pdf = emptyPdf();
-            if (permission != null) {
-                md.encryptionOptions = new EncryptionOptions(true, permission, "pass", "");
-            }
+
             if(beforeSave != null ){
                 beforeSave.accept(md);
             }
+
+            // Ensure there keyLength
+            if(md.prop.encryption != null && md.prop.encryption && md.prop.keyLength == null) {
+                md.prop.keyLength  = Arrays.asList(40, 128, 256).get(rand.nextInt(3));
+            }
+
+            //Ensure we are not using compression if not supported by PDF version
+            if(md.prop.version != null && md.prop.version < new PdfWriter(null).getCompressionMinimumSupportedVersion()) {
+                md.prop.compression = false;
+            }
+
             md.setEnabledForPrefix("file.", false);
             md.saveAsPDF(pdf);
             md.setEnabledForPrefix("file.", true);
@@ -170,9 +189,21 @@ public class FilesTestHelper {
         }
     }
 
-    public static void assertEquals(MetadataInfo expected, MetadataInfo actual, boolean onlyEnabled, String message) {
-        if(!actual.isEquivalent(expected, onlyEnabled)){
-            Assertions.assertEquals(expected.toYAML(onlyEnabled), actual.toYAML(onlyEnabled), message);
+    public static void assertEqualsOnlyEnabledExceptFile(MetadataInfo expected, MetadataInfo actual, String message) {
+        if(!actual.isEquivalent(expected, EnumSet.of(MetadataInfo.EqualityOptions.ONLY_ENABLED, MetadataInfo.EqualityOptions.IGNORE_FILE_PROPERTIES))){
+            Assertions.assertEquals(expected.toYAML(false), actual.toYAML(false), message);
+        }
+    }
+
+    public static void assertEqualsAllExceptFileProps(MetadataInfo expected, MetadataInfo actual,  String message) {
+        if(!actual.isEquivalent(expected, EnumSet.of(MetadataInfo.EqualityOptions.IGNORE_FILE_PROPERTIES))){
+            Assertions.assertEquals(expected.toYAML(false), actual.toYAML(false), message);
+        }
+    }
+
+    public static void assertEqualsAll(MetadataInfo expected, MetadataInfo actual,  String message) {
+        if(!actual.isEquivalent(expected, EnumSet.noneOf(MetadataInfo.EqualityOptions.class))){
+            Assertions.assertEquals(expected.toYAML(false), actual.toYAML(false), message);
         }
     }
 
@@ -181,7 +212,7 @@ public class FilesTestHelper {
         MetadataInfo saved = new MetadataInfo();
         if(savedAs != null) {
             saved.loadFromPDF(initialFile.file);
-            assertEquals(initialFile.md, saved , false, "Original file metadata differs");
+            assertEqualsAll(initialFile.md, saved , "Original file metadata differs");
         } else {
             savedAs = initialFile.file;
         }
@@ -190,12 +221,12 @@ public class FilesTestHelper {
         for(String k: expectedChangedKeys){
             saved.setEnabled(k, false);
         }
-        assertEquals(initialFile.md, saved , true, "Non edited metadata differs");
+        assertEqualsOnlyEnabledExceptFile(initialFile.md, saved , "Non edited metadata differs");
         saved.setEnabled(false);
         for(String k: expectedChangedKeys){
             saved.setEnabled(k, true);
         }
-        assertEquals(changed, saved, true, "Edited metadata differs");
+        assertEqualsOnlyEnabledExceptFile(changed, saved, "Edited metadata differs");
 
     }
 

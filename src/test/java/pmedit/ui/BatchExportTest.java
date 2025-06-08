@@ -11,6 +11,8 @@ import pmedit.MetadataInfo;
 import pmedit.serdes.CsvMetadata;
 import pmedit.serdes.SerDeslUtils;
 
+import java.awt.*;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -20,15 +22,26 @@ import static pmedit.ui.UiTestHelpers.openFileChooser;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
 @SetSystemProperty(key = "junitTest", value = "true")
-public class BatchExportTest {
+public class BatchExportTest extends  BaseJemmyTest {
     java.util.List<FilesTestHelper.PMTuple> initialFiles;
-    JFrameOperator topFrame;
+    static JFrameOperator topFrame;
 
     @BeforeAll
     static void setUp() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException {
         ClassReference cr = new ClassReference("pmedit.ui.BatchOperationWindow");
         cr.startApplication();
+        topFrame = new JFrameOperator("Batch PDF Metadata Process");
     }
+
+    @AfterAll
+    static void tearDown() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException {
+        topFrame.getOutput().printLine("Disposing window!");
+        topFrame.setVisible(false);
+        topFrame.dispose();
+        topFrame.waitClosed();
+
+    }
+
 
     @BeforeEach
     void loadFile(TestInfo testInfo) throws Exception {
@@ -55,6 +68,7 @@ public class BatchExportTest {
         new JButtonOperator(topFrame, "Add Folder").push();
 
         openFileChooser("Select Folder to Add", FilesTestHelper.getTempDir().getAbsoluteFile());
+        assertEquals(FilesTestHelper.getTempDir().getAbsolutePath(), new JTextPaneOperator(topFrame, 0).getText().stripTrailing());
     }
 
 
@@ -68,7 +82,7 @@ public class BatchExportTest {
         ContainerOperator outPanel = UiTestHelpers.getPanelByTitle(parameters, "Output");
         new JRadioButtonOperator(outPanel, "Single output file").push();
         new JTextFieldOperator(outPanel).setText(outputFile);
-        new JCheckBoxOperator(outPanel, "Use relative paths in output").setSelected(false);
+        new JCheckBoxOperator(outPanel, "Use relative paths in output").changeSelection(false);
 
 
         new JButtonOperator(parameters, "Select all").push();
@@ -86,7 +100,7 @@ public class BatchExportTest {
             md.loadFromPDF(f);
             md.loadPDFFileInfo(f);
 
-            FilesTestHelper.assertEquals(md, csvMd, false, "CSV Exported metadata");
+            FilesTestHelper.assertEqualsAllExceptFileProps(md, csvMd, "CSV Exported metadata");
         }
     }
 
@@ -98,7 +112,7 @@ public class BatchExportTest {
 
         ContainerOperator outPanel = UiTestHelpers.getPanelByTitle(parameters, "Output");
         new JRadioButtonOperator(outPanel, "Separate file for each input file").push();
-        new JCheckBoxOperator(outPanel, "Use relative paths in output").setSelected(true);
+        new JCheckBoxOperator(outPanel, "Use relative paths in output").changeSelection(true);
 
 
         new JButtonOperator(parameters, "Select all").push();
@@ -119,7 +133,7 @@ public class BatchExportTest {
             md.loadFromPDF(f);
             md.loadPDFFileInfo(f);
 
-            FilesTestHelper.assertEquals(md, csvMd, false, "CSV Exported metadata");
+            FilesTestHelper.assertEqualsAllExceptFileProps(md, csvMd, "CSV Exported metadata");
         }
     }
 
@@ -133,7 +147,7 @@ public class BatchExportTest {
         ContainerOperator outPanel = UiTestHelpers.getPanelByTitle(parameters, "Output");
         new JRadioButtonOperator(outPanel, "Single output file").push();
         new JTextFieldOperator(outPanel).setText(outputFile);
-        new JCheckBoxOperator(outPanel, "Use relative paths in output").setSelected(false);
+        new JCheckBoxOperator(outPanel, "Use relative paths in output").changeSelection(false);
 
 
         new JButtonOperator(parameters, "Select all").push();
@@ -155,7 +169,7 @@ public class BatchExportTest {
             md.loadFromPDF(f);
             md.loadPDFFileInfo(f);
 
-            FilesTestHelper.assertEquals(md, jsonMd, false, "JSON Exported metadata");
+            FilesTestHelper.assertEqualsAll(md, jsonMd, "JSON Exported metadata");
         }
     }
 
@@ -167,7 +181,7 @@ public class BatchExportTest {
 
         ContainerOperator outPanel = UiTestHelpers.getPanelByTitle(parameters, "Output");
         new JRadioButtonOperator(outPanel, "Separate file for each input file").push();
-        new JCheckBoxOperator(outPanel, "Use relative paths in output").setSelected(true);
+        new JCheckBoxOperator(outPanel, "Use relative paths in output").changeSelection(true);
 
 
         new JButtonOperator(parameters, "Select all").push();
@@ -192,7 +206,7 @@ public class BatchExportTest {
             md.loadFromPDF(f);
             md.loadPDFFileInfo(f);
 
-            FilesTestHelper.assertEquals(md, jsonMd, false, "JSON Exported metadata");
+            FilesTestHelper.assertEqualsAllExceptFileProps(md, jsonMd, "JSON Exported metadata");
         }
     }
 
@@ -206,7 +220,7 @@ public class BatchExportTest {
         ContainerOperator outPanel = UiTestHelpers.getPanelByTitle(parameters, "Output");
         new JRadioButtonOperator(outPanel, "Single output file").push();
         new JTextFieldOperator(outPanel).setText(outputFile);
-        new JCheckBoxOperator(outPanel, "Use relative paths in output").setSelected(false);
+        new JCheckBoxOperator(outPanel, "Use relative paths in output").changeSelection(false);
 
 
         new JButtonOperator(parameters, "Select all").push();
@@ -228,7 +242,7 @@ public class BatchExportTest {
             md.loadFromPDF(f);
             md.loadPDFFileInfo(f);
 
-            FilesTestHelper.assertEquals(md, yamlMd, false, "YAML Exported metadata");
+            FilesTestHelper.assertEqualsAll(md, yamlMd, "YAML Exported metadata");
         }
     }
 
@@ -240,7 +254,7 @@ public class BatchExportTest {
 
         ContainerOperator outPanel = UiTestHelpers.getPanelByTitle(parameters, "Output");
         new JRadioButtonOperator(outPanel, "Separate file for each input file").push();
-        new JCheckBoxOperator(outPanel, "Use relative paths in output").setSelected(true);
+        new JCheckBoxOperator(outPanel, "Use relative paths in output").changeSelection(true);
 
 
         new JButtonOperator(parameters, "Select all").push();
@@ -265,7 +279,7 @@ public class BatchExportTest {
             md.loadFromPDF(f);
             md.loadPDFFileInfo(f);
 
-            FilesTestHelper.assertEquals(md, yamlMd, false, "YAML Exported metadata");
+            FilesTestHelper.assertEqualsAllExceptFileProps(md, yamlMd, "YAML Exported metadata");
         }
     }
 

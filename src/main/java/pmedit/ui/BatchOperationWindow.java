@@ -76,7 +76,7 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
     public BatchOperationWindow(CommandDescription command) {
         setTitle("Batch PDF Metadata Process");
         setBounds(100, 100, 640, 480);
-        setMinimumSize(new Dimension(640, 480));
+        setMinimumSize(new Dimension(640, 600));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setContentPane(contentPane);
         tableModel = new FileOpResultTableModel();
@@ -348,6 +348,7 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
         @Override
         public void actionPerformed(ActionEvent e) {
             batchFileList.clear();
+            outputDirField.setText("");
             Document doc = fileList.getDocument();
             try {
                 doc.remove(0, doc.getLength());

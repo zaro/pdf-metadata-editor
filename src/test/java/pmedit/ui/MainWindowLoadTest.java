@@ -1,8 +1,6 @@
 package pmedit.ui;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junitpioneer.jupiter.SetSystemProperty;
 import org.netbeans.jemmy.ClassReference;
@@ -11,22 +9,37 @@ import pmedit.*;
 import pmedit.prefs.Preferences;
 import pmedit.ui.preferences.DefaultsPreferences;
 
+import java.awt.*;
+import java.awt.event.WindowEvent;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static pmedit.ui.UiTestHelpers.*;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
 @SetSystemProperty(key = "junitTest", value = "true")
-public class MainWindowLoadTest {
+public class MainWindowLoadTest  extends  BaseJemmyTest  {
     final int NUM_FILES = 1;
+    static  JFrameOperator topFrame;
 
     @BeforeAll
     static void setUp() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException {
         ClassReference cr = new ClassReference("pmedit.ui.MainWindow");
         cr.startApplication();
+        topFrame = new JFrameOperator("Pdf Metadata Editor");
+    }
+
+    @AfterAll
+    static void tearDown() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException {
+        topFrame.getOutput().printLine("Disposing window!");
+        topFrame.setVisible(false);
+        topFrame.dispose();
+    }
+
+    @BeforeEach
+    void loadFile(TestInfo testInfo) throws Exception {
+
     }
 
     @AfterEach
@@ -36,19 +49,19 @@ public class MainWindowLoadTest {
 
     @Test
     public void testLoadFile() throws FileNotFoundException, IOException, Exception {
-        JFrameOperator frame = new JFrameOperator("Pdf Metadata Editor");
-        for(FilesTestHelper.PMTuple testData : FilesTestHelper.randomFiles(NUM_FILES)) {
-            new JButtonOperator(frame, "Open PDF").push();
+        for(FilesTestHelper.PMTuple testData : FilesTestHelper.randomFiles(NUM_FILES, e-> {
+            e.prop.compression = true;
+        })) {
+            new JButtonOperator(topFrame, "Open PDF").push();
             openFileChooser("Open", testData.file);
-            checkMetadataPaneValues(frame, testData.md);
+            checkMetadataPaneValues(topFrame, testData.md);
         }
     }
 
     @Test
     public void testPopulateDefaultMetadata() throws FileNotFoundException, IOException, Exception {
-        JFrameOperator frame = new JFrameOperator("Pdf Metadata Editor");
 
-        new JButtonOperator(frame, "", 1).push();
+        new JButtonOperator(topFrame, "", 1).push();
         JDialogOperator preferences = new JDialogOperator("Preferences");
         JTabbedPaneOperator tabs = new JTabbedPaneOperator(preferences);
         ensureTab(tabs, "Default");
@@ -62,12 +75,11 @@ public class MainWindowLoadTest {
         preferences.close();
         preferences.waitClosed();
         MetadataInfo defaultMetadata = DefaultsPreferences.loadDefaultMetadata(Preferences.getInstance());
-        FilesTestHelper.assertEquals(defaultMetadata, md, false, "Default metadata saved differs");
+        FilesTestHelper.assertEqualsAll(defaultMetadata, md, "Default metadata saved differs");
     }
 
     @Test
     public void testLoadFileWithDefaults() throws FileNotFoundException, IOException, Exception {
-        JFrameOperator frame = new JFrameOperator("Pdf Metadata Editor");
 
         MetadataInfo defaultMetadata = new MetadataInfo();
         defaultMetadata.setEnabled(false);
@@ -83,9 +95,9 @@ public class MainWindowLoadTest {
 
         // Check that it doesn't override already defined fields
         for (FilesTestHelper.PMTuple testData : FilesTestHelper.randomFiles(1)) {
-            new JButtonOperator(frame, "Open PDF").push();
+            new JButtonOperator(topFrame, "Open PDF").push();
             openFileChooser("Open", testData.file);
-            checkMetadataPaneValues(frame, testData.md);
+            checkMetadataPaneValues(topFrame, testData.md);
         }
 
         // Check that it is present in unset fields
@@ -94,12 +106,12 @@ public class MainWindowLoadTest {
             md.setEnabled("basic.baseURL", false);
             md.setEnabled("pdf.keywords", false);
         })) {
-            new JButtonOperator(frame, "Open PDF").push();
+            new JButtonOperator(topFrame, "Open PDF").push();
             openFileChooser("Open", testData.file);
             MetadataInfo check = testData.md.clone();
             check.copyOnlyEnabled(defaultMetadata);
             check.pdf.keywords = check.doc.title;
-            checkMetadataPaneValues(frame, check);
+            checkMetadataPaneValues(topFrame, check);
         }
 
     }

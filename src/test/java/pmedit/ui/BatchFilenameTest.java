@@ -10,7 +10,9 @@ import pmedit.FilesTestHelper;
 import pmedit.MetadataInfo;
 import pmedit.TemplateString;
 
+import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,14 +22,25 @@ import static pmedit.ui.UiTestHelpers.openFileChooser;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
 @SetSystemProperty(key = "junitTest", value = "true")
-public class BatchFilenameTest {
+public class BatchFilenameTest  extends  BaseJemmyTest {
     java.util.List<FilesTestHelper.PMTuple> initialFiles;
-    JFrameOperator topFrame;
+    static JFrameOperator topFrame;
 
     @BeforeAll
     static void setUp() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException {
         ClassReference cr = new ClassReference("pmedit.ui.BatchOperationWindow");
         cr.startApplication();
+        topFrame = new JFrameOperator("Batch PDF Metadata Process");
+
+    }
+
+    @AfterAll
+    static void tearDown() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException {
+        topFrame.getOutput().printLine("Disposing window!");
+        topFrame.setVisible(false);
+        topFrame.dispose();
+        topFrame.waitClosed();
+
     }
 
     @BeforeEach
@@ -53,6 +66,7 @@ public class BatchFilenameTest {
 
         new JButtonOperator(topFrame, "Add Folder").push();
         openFileChooser("Select Folder to Add", FilesTestHelper.getTempDir().getAbsoluteFile());
+        assertEquals(FilesTestHelper.getTempDir().getAbsolutePath(), new JTextPaneOperator(topFrame, 0).getText().stripTrailing());
     }
 
 

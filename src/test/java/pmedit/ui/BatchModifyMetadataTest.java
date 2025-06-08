@@ -14,18 +14,29 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static pmedit.ui.UiTestHelpers.*;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
 @SetSystemProperty(key = "junitTest", value = "true")
-public class BatchModifyMetadataTest {
+public class BatchModifyMetadataTest  extends  BaseJemmyTest {
     java.util.List<FilesTestHelper.PMTuple> initialFiles;
-    JFrameOperator topFrame;
+    static JFrameOperator topFrame;
 
     @BeforeAll
     static void setUp() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException {
         ClassReference cr = new ClassReference("pmedit.ui.BatchOperationWindow");
         cr.startApplication();
+        topFrame = new JFrameOperator("Batch PDF Metadata Process");
+    }
+
+    @AfterAll
+    static void tearDown() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException {
+        topFrame.getOutput().printLine("Disposing window!");
+        topFrame.setVisible(false);
+        topFrame.dispose();
+        topFrame.waitClosed();
+
     }
 
     @BeforeEach
@@ -50,6 +61,7 @@ public class BatchModifyMetadataTest {
 
         new JButtonOperator(topFrame, "Add Folder").push();
         openFileChooser("Select Folder to Add", FilesTestHelper.getTempDir().getAbsoluteFile());
+        assertEquals(FilesTestHelper.getTempDir().getAbsolutePath(), new JTextPaneOperator(topFrame, 0).getText().stripTrailing());
     }
 
     @Test
@@ -123,6 +135,9 @@ public class BatchModifyMetadataTest {
         new JTextPaneOperator(topFrame, "Finished successfully!");
 
         for(FilesTestHelper.PMTuple tf: initialFiles){
+            // these two are always present in the file
+            md.propEnabled.version = false;
+            md.propEnabled.compression = false;
             FilesTestHelper.checkFileHasChangedMetadata(tf, null, md);
         }
     }
@@ -162,7 +177,7 @@ public class BatchModifyMetadataTest {
             saved.loadFromPDF(tf.file);
             saved.copyEnabled(md);
 
-            FilesTestHelper.assertEquals(md, saved, true, "Xmp Fields copied from Doc differ");
+            FilesTestHelper.assertEqualsOnlyEnabledExceptFile(md, saved, "Xmp Fields copied from Doc differ");
         }
     }
 
@@ -205,7 +220,7 @@ public class BatchModifyMetadataTest {
             saved.loadFromPDF(tf.file);
             saved.copyEnabled(md);
 
-            FilesTestHelper.assertEquals(md, saved, true, "Doc Fields copied from Xmp differ");
+            FilesTestHelper.assertEqualsOnlyEnabledExceptFile(md, saved, "Doc Fields copied from Xmp differ");
         }
     }
 

@@ -51,7 +51,7 @@ class MetadataInfoTest {
     void testEmptyLoad() throws Exception, IOException, Exception{
 		MetadataInfo md = new MetadataInfo();
 		md.loadFromPDF(FilesTestHelper.emptyPdf());
-		Assertions.assertTrue(md.isEquivalent(new MetadataInfo()));
+		FilesTestHelper.assertEqualsAllExceptFileProps(md,new MetadataInfo(),  "Empty MD Test");
 	}
 	
 	@Test

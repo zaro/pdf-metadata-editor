@@ -12,27 +12,37 @@ import pmedit.MetadataInfo;
 import pmedit.serdes.CsvMetadata;
 import pmedit.serdes.SerDeslUtils;
 
+import java.awt.*;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static pmedit.ui.UiTestHelpers.delay;
 import static pmedit.ui.UiTestHelpers.openFileChooser;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
 @SetSystemProperty(key = "junitTest", value = "true")
-public class BatchImportTest {
+public class BatchImportTest  extends  BaseJemmyTest {
     List<FilesTestHelper.PMTuple> initialFiles;
-    JFrameOperator topFrame;
+    static JFrameOperator topFrame;
 
     @BeforeAll
     static void setUp() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException {
         ClassReference cr = new ClassReference("pmedit.ui.BatchOperationWindow");
         cr.startApplication();
+        topFrame = new JFrameOperator("Batch PDF Metadata Process");
+    }
+
+    @AfterAll
+    static void tearDown() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException {
+        topFrame.getOutput().printLine("Disposing window!");
+        topFrame.setVisible(false);
+        topFrame.dispose();
+        topFrame.waitClosed();
+
     }
 
     @BeforeEach
@@ -76,11 +86,13 @@ public class BatchImportTest {
             new JButtonOperator(topFrame, "Add Folder").push();
 
             openFileChooser("Select Folder to Add", file);
+
         }else{
             new JButtonOperator(topFrame, "Add File").push();
 
             openFileChooser("Select File to Add", file);
         }
+        assertEquals(file.getAbsolutePath(), new JTextPaneOperator(topFrame, 0).getText().stripTrailing());
 
         new JButtonOperator(topFrame, "Begin").push();
 
@@ -93,7 +105,7 @@ public class BatchImportTest {
             md.loadFromPDF(f);
             md.loadPDFFileInfo(f);
 
-            FilesTestHelper.assertEquals(md, ed, false, "Imported metadata");
+            FilesTestHelper.assertEqualsAllExceptFileProps(md, ed, "Imported metadata");
         }
     }
 

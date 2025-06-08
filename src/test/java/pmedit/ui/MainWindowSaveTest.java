@@ -25,22 +25,29 @@ import static pmedit.ui.UiTestHelpers.*;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
 @SetSystemProperty(key = "junitTest", value = "true")
-public class MainWindowSaveTest {
+public class MainWindowSaveTest  extends  BaseJemmyTest  {
     FilesTestHelper.PMTuple initialFile;
-    JFrameOperator topFrame;
+    static JFrameOperator topFrame;
     Timeouts timeouts = JemmyProperties.getCurrentTimeouts();
 
     @BeforeAll
     static void setUp() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException {
         ClassReference cr = new ClassReference("pmedit.ui.MainWindow");
         cr.startApplication();
+        topFrame = new JFrameOperator("Pdf Metadata Editor");
+    }
+
+    @AfterAll
+    static void tearDown() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException {
+        topFrame.getOutput().printLine("Disposing window!");
+        topFrame.setVisible(false);
+        topFrame.dispose();
+        topFrame.waitClosed();
+
     }
 
     @BeforeEach
     void loadFile(TestInfo testInfo) throws Exception {
-        if(topFrame == null) {
-            topFrame = new JFrameOperator("Pdf Metadata Editor");
-        }
         FilesTestHelper.pushTempDir(testInfo.getDisplayName().replaceFirst("\\(.*", ""));
         initialFile = FilesTestHelper.randomFiles(1).get(0);
 
@@ -73,11 +80,11 @@ public class MainWindowSaveTest {
         saved.loadFromPDF(initialFile.file);
         saved.docEnabled.author = false;
         saved.basicEnabled.baseURL = false;
-        assertTrue(saved.isEquivalent(initialFile.md, true), "Non edited metadata differs");
+        FilesTestHelper.assertEqualsOnlyEnabledExceptFile(initialFile.md, saved, "Non edited metadata differs");
         saved.setEnabled(false);
         saved.docEnabled.author = true;
         saved.basicEnabled.baseURL = true;
-        FilesTestHelper.assertEquals(md, saved,  true, "Edited metadata differs");
+        FilesTestHelper.assertEqualsOnlyEnabledExceptFile(md, saved,  "Edited metadata differs");
     }
 
 
