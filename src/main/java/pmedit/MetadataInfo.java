@@ -83,6 +83,9 @@ public class MetadataInfo {
     @MdStruct
     public ViewerOptions viewer;
 
+    @MdStruct
+    public PdfProperties prop;
+
     @MdStruct(name = "file", type = MdStruct.StructType.MdStruct, access = MdStruct.Access.ReadOnly)
     public FileInfo file;
 
@@ -101,12 +104,14 @@ public class MetadataInfo {
     @MdStruct(name = "viewer", type = MdStruct.StructType.MdEnableStruct)
     public ViewerOptionsEnabled viewerEnabled;
 
+    @MdStruct(name = "prop", type = MdStruct.StructType.MdEnableStruct)
+    public PdfPropertiesEnabled propEnabled;
+
     @MdStruct(name = "file", type = MdStruct.StructType.MdEnableStruct, access = MdStruct.Access.ReadOnly)
     public FileInfoEnabled fileEnabled;
 
     public boolean removeDocumentInfo;
     public boolean removeXmp;
-    public EncryptionOptions encryptionOptions;
 
 
     public MetadataInfo() {
@@ -231,6 +236,7 @@ public class MetadataInfo {
         this.rights = new XmpRights();
         this.viewer = new ViewerOptions();
         this.file = new FileInfo();
+        this.prop = new PdfProperties();
 
         this.docEnabled = new BasicEnabled();
         this.basicEnabled = new XmpBasicEnabled();
@@ -239,9 +245,11 @@ public class MetadataInfo {
         this.rightsEnabled = new XmpRightsEnabled();
         this.viewerEnabled = new ViewerOptionsEnabled();
         this.fileEnabled = new FileInfoEnabled();
+        this.propEnabled = new PdfPropertiesEnabled();
     }
 
     protected static Set<COSName> OBJ_STM_COMPRESSION_FILTERS = Set.of(COSName.FLATE_DECODE, COSName.FLATE_DECODE_ABBREVIATION, COSName.LZW_DECODE, COSName.LZW_DECODE_ABBREVIATION);
+
     protected boolean hasCompressedObjects(PDDocument document) {
         COSDocument cosDoc = document.getDocument();
 
@@ -249,7 +257,7 @@ public class MetadataInfo {
         for (COSBase obj : cosDoc.getObjectsByType(COSName.OBJ_STM)) {
             if (obj instanceof COSObject objStm) {
                 // Get the filter(s) used
-                if(objStm.getObject() instanceof COSDictionary objStmDict ) {
+                if (objStm.getObject() instanceof COSDictionary objStmDict) {
                     COSBase filterObj = objStmDict.getDictionaryObject(COSName.FILTER);
 
                     if (filterObj instanceof COSName filter) {
@@ -284,63 +292,61 @@ public class MetadataInfo {
         doc.creationDate = info.getCreationDate();
         doc.modificationDate = info.getModificationDate();
         doc.trapped = info.getTrapped();
-        file.pdfVersion = document.getVersion();
-        file.pdfCompression = hasCompressedObjects(document);
 
         // Load Document catalog
         PDDocumentCatalog catalog = document.getDocumentCatalog();
         COSDictionary cd = catalog.getCOSObject();
-        if(cd.containsKey(COSName.PAGE_MODE)){
+        if (cd.containsKey(COSName.PAGE_MODE)) {
             viewer.pageMode = catalog.getPageMode().stringValue();
         }
-        if(cd.containsKey(COSName.PAGE_LAYOUT)){
+        if (cd.containsKey(COSName.PAGE_LAYOUT)) {
             viewer.pageLayout = catalog.getPageLayout().stringValue();
         }
         // For initial page and zoom
         // catalog.getOpenAction()
         PDViewerPreferences preferences = catalog.getViewerPreferences();
-        if(preferences != null ){
+        if (preferences != null) {
             COSDictionary pd = preferences.getCOSObject();
-            if(pd.containsKey(COSName.HIDE_TOOLBAR)) {
+            if (pd.containsKey(COSName.HIDE_TOOLBAR)) {
                 viewer.hideToolbar = preferences.hideToolbar();
             }
-            if(pd.containsKey(COSName.HIDE_MENUBAR)) {
+            if (pd.containsKey(COSName.HIDE_MENUBAR)) {
                 viewer.hideMenuBar = preferences.hideMenubar();
             }
-            if(pd.containsKey(COSName.HIDE_WINDOWUI)) {
+            if (pd.containsKey(COSName.HIDE_WINDOWUI)) {
                 viewer.hideWindowUI = preferences.hideWindowUI();
             }
-            if(pd.containsKey(COSName.FIT_WINDOW)) {
+            if (pd.containsKey(COSName.FIT_WINDOW)) {
                 viewer.fitWindow = preferences.fitWindow();
             }
-            if(pd.containsKey(COSName.CENTER_WINDOW)) {
+            if (pd.containsKey(COSName.CENTER_WINDOW)) {
                 viewer.centerWindow = preferences.centerWindow();
             }
-            if(pd.containsKey(COSName.DISPLAY_DOC_TITLE)) {
+            if (pd.containsKey(COSName.DISPLAY_DOC_TITLE)) {
                 viewer.displayDocTitle = preferences.displayDocTitle();
             }
-            if(pd.containsKey(COSName.NON_FULL_SCREEN_PAGE_MODE)) {
+            if (pd.containsKey(COSName.NON_FULL_SCREEN_PAGE_MODE)) {
                 viewer.nonFullScreenPageMode = preferences.getNonFullScreenPageMode();
             }
-            if(pd.containsKey(COSName.DIRECTION)) {
+            if (pd.containsKey(COSName.DIRECTION)) {
                 viewer.readingDirection = preferences.getReadingDirection();
             }
-            if(pd.containsKey(COSName.VIEW_AREA)) {
+            if (pd.containsKey(COSName.VIEW_AREA)) {
                 viewer.viewArea = preferences.getViewArea();
             }
-            if(pd.containsKey(COSName.VIEW_CLIP)) {
+            if (pd.containsKey(COSName.VIEW_CLIP)) {
                 viewer.viewClip = preferences.getViewClip();
             }
-            if(pd.containsKey(COSName.PRINT_AREA)) {
+            if (pd.containsKey(COSName.PRINT_AREA)) {
                 viewer.printArea = preferences.getPrintArea();
             }
-            if(pd.containsKey(COSName.PRINT_CLIP)) {
+            if (pd.containsKey(COSName.PRINT_CLIP)) {
                 viewer.printClip = preferences.getPrintClip();
             }
-            if(pd.containsKey(COSName.DUPLEX)) {
+            if (pd.containsKey(COSName.DUPLEX)) {
                 viewer.duplex = preferences.getDuplex();
             }
-            if(pd.containsKey(COSName.PRINT_SCALING)) {
+            if (pd.containsKey(COSName.PRINT_SCALING)) {
                 viewer.printScaling = preferences.getPrintScaling();
             }
 
@@ -438,20 +444,40 @@ public class MetadataInfo {
         // Load encryption options
         PDEncryption enc = document.getEncryption();
         boolean hasEncryption = enc != null;
-        AccessPermission permission =  hasEncryption ? new AccessPermission(enc.getPermissions()) : new AccessPermission();
-        encryptionOptions = new EncryptionOptions(hasEncryption, permission, null, null);
-        //System.err.println("Loaded:");
-        //System.err.println(toYAML());
+        prop.version = document.getVersion();
+        prop.compression = hasCompressedObjects(document);
+        if (hasEncryption) {
+            prop.encryption = hasEncryption;
+
+            AccessPermission permission = hasEncryption ? new AccessPermission(enc.getPermissions()) : new AccessPermission();
+            prop.canPrint = permission.canPrint();
+            prop.canModify = permission.canModify();
+            prop.canExtractContent = permission.canExtractContent();
+            prop.canModifyAnnotations = permission.canModifyAnnotations();
+            prop.canFillFormFields = permission.canFillInForm();
+            prop.canExtractForAccessibility = permission.canExtractForAccessibility();
+            prop.canAssembleDocument = permission.canAssembleDocument();
+            prop.canPrintFaithful = permission.canPrintFaithful();
+            prop.keyLength = enc.getSecurityHandler().getKeyLength();
+        }
 
     }
 
     public void loadFromPDF(File pdfFile) throws
             IOException, XmpParsingException {
+        loadFromPDF(pdfFile, null);
+    }
+
+    public void loadFromPDF(File pdfFile, String ownerPassword) throws
+            IOException, XmpParsingException {
 
         loadPDFFileInfo(pdfFile);
 
-        PDDocument document = Loader.loadPDF(pdfFile);
+        PDDocument document = Loader.loadPDF(pdfFile, ownerPassword != null ? ownerPassword : "");
         loadFromPDF(document);
+        if(ownerPassword != null){
+            prop.ownerPassword = ownerPassword;
+        }
 
         document.close();
     }
@@ -1155,7 +1181,7 @@ public class MetadataInfo {
             document.getDocumentCatalog().setMetadata(null);
         }
 
-        float saveAsVersion = file.pdfVersion != null ? file.pdfVersion : 0;
+        float saveAsVersion = prop.version != null ? prop.version : 0;
         if(saveAsVersion>0){
             if (saveAsVersion >= 1.4F) {
                 document.getDocumentCatalog().setVersion(Float.toString(saveAsVersion));
@@ -1166,30 +1192,24 @@ public class MetadataInfo {
             }
         }
 
-        if(encryptionOptions !=null) {
-            if (encryptionOptions.hasEncryption) {
-                // Define the length of the encryption key.
-                // Possible values are 40, 128 or 256.
-                int keyLength = 40;
+        if(prop.encryption != null && prop.encryption) {
 
-                AccessPermission ap = encryptionOptions.permission;
-                String ownerPass = encryptionOptions.ownerPassword != null ? encryptionOptions.ownerPassword : "";
-                String userPass = encryptionOptions.userPassword != null ? encryptionOptions.userPassword : "";
+                AccessPermission permission = getAccessPermissions();
 
-                StandardProtectionPolicy spp = new StandardProtectionPolicy(ownerPass, userPass, ap);
-                spp.setEncryptionKeyLength(keyLength);
+                StandardProtectionPolicy spp = new StandardProtectionPolicy(prop.ownerPassword, prop.userPassword, permission);
+                spp.setEncryptionKeyLength(prop.keyLength);
 
                 document.protect(spp);
-            } else {
-                document.setAllSecurityToBeRemoved(true);
-            }
+        } else {
+            document.setAllSecurityToBeRemoved(true);
         }
+
 
         PdfWriter writer = PmeExtension.get().createPdfWriter(document);
         int pdfCompression = 0 ;
         if(saveAsVersion >= writer.getCompressionMinimumSupportedVersion()) {
-            if (fileEnabled.pdfCompression ) {
-                pdfCompression = file.pdfCompression ? FileOptimizer.getPdfBoxCompression() : 0;
+            if (propEnabled.compression ) {
+                pdfCompression = (prop.compression != null && prop.compression) ? FileOptimizer.getPdfBoxCompression() : 0;
             } else {
                 pdfCompression = document.getDocument().isXRefStream() ? FileOptimizer.getPdfBoxCompression() : 0;
             }
@@ -1204,7 +1224,7 @@ public class MetadataInfo {
 
     public File saveAsPDF(File pdfFile, File newFile) throws Exception {
         PDDocument document = null;
-        String password = encryptionOptions != null ? encryptionOptions.userPassword : "";
+        String password = prop.ownerPassword;
         document = Loader.loadPDF(pdfFile, password);
         File writeFile = File.createTempFile(pdfFile.getName() + "-", null, pdfFile.getParentFile());
 
@@ -1231,13 +1251,26 @@ public class MetadataInfo {
         return target;
     }
 
+    public AccessPermission getAccessPermissions(){
+        AccessPermission permission = new AccessPermission();
+        permission.setCanPrint(prop.canPrint != null ? prop.canPrint : false);
+        permission.setCanModify(prop.canModify != null ? prop.canModify : false);
+        permission.setCanExtractContent(prop.canExtractContent != null ? prop.canExtractContent : false);
+        permission.setCanModifyAnnotations(prop.canModifyAnnotations != null ? prop.canModifyAnnotations : false);
+        permission.setCanFillInForm(prop.canFillFormFields != null ? prop.canFillFormFields : false );
+        permission.setCanExtractForAccessibility(prop.canExtractForAccessibility != null ? prop.canExtractForAccessibility : false );
+        permission.setCanAssembleDocument(prop.canAssembleDocument != null ? prop.canAssembleDocument : false);
+        permission.setCanPrintFaithful(prop.canPrintFaithful != null ? prop.canPrintFaithful : false);
+        return permission;
+    }
+
     public void copyDocToXMP() {
         pdf.keywords = doc.keywords;
         pdf.producer = doc.producer;
-        pdf.pdfVersion = String.format("%.1f", file.pdfVersion);
+        pdf.pdfVersion = String.format("%.1f", prop.version);
         pdfEnabled.keywords = docEnabled.keywords;
         pdfEnabled.producer = docEnabled.producer;
-        pdfEnabled.pdfVersion = fileEnabled.pdfVersion;
+        pdfEnabled.pdfVersion = propEnabled.version;
 
         basic.createDate = doc.creationDate;
         basic.modifyDate = doc.modificationDate;
@@ -1316,6 +1349,7 @@ public class MetadataInfo {
         rightsEnabled.setAll(value);
         viewerEnabled.setAll(value);
         fileEnabled.setAll(value);
+        propEnabled.setAll(value);
     }
 
     public void setEnabled(String id, boolean value) {
@@ -1516,11 +1550,22 @@ public class MetadataInfo {
         return true;
     }
 
-    public boolean isEquivalent(MetadataInfo other) {
-        return isEquivalent(other, false);
+    public enum EqualityOptions {
+        ONLY_ENABLED, IGNORE_FILE_PROPERTIES;
+    }
+    static Set<String> extraFileProperties = new HashSet<>();
+    static {
+        extraFileProperties.add("prop.version");
+        extraFileProperties.add("prop.compression");
     }
 
-    public boolean isEquivalent(MetadataInfo other, boolean onlyEnabled) {
+    public boolean isEquivalent(MetadataInfo other) {
+        return isEquivalent(other, EnumSet.of(EqualityOptions.IGNORE_FILE_PROPERTIES));
+    }
+
+    public boolean isEquivalent(MetadataInfo other, EnumSet<EqualityOptions> options) {
+        boolean onlyEnabled = options.contains(EqualityOptions.ONLY_ENABLED);
+        boolean ignoreFileProperties = options.contains(EqualityOptions.IGNORE_FILE_PROPERTIES);
         for (Entry<String, List<FieldDescription>> e : _mdFields.entrySet()) {
             if(onlyEnabled){
                 if(!isEnabled(e.getKey())){
@@ -1528,9 +1573,12 @@ public class MetadataInfo {
                 }
             }
             // Skip file.* fields, as they are read only and come from file metadata
-            if (e.getKey().startsWith("file.")) {
-                continue;
+            if(ignoreFileProperties) {
+                if (e.getKey().startsWith("file.") || extraFileProperties.contains(e.getKey())) {
+                    continue;
+                }
             }
+
             // Skip "dc.dates" for now as loading them from PDF is broken in xmpbox <= 2.0.2
             //if("dc.dates".equals(e.getKey())){
             //	continue;
@@ -1757,8 +1805,6 @@ public class MetadataInfo {
         public String name;
         public Calendar createTime;
         public Calendar modifyTime;
-        public Float pdfVersion;
-        public Boolean pdfCompression;
     }
 
     public static class FileInfoEnabled {
@@ -1769,12 +1815,11 @@ public class MetadataInfo {
         public boolean size = true;
         public boolean createTime = true;
         public boolean modifyTime = true;
-        public boolean pdfVersion = true;
-        public boolean pdfCompression = true;
+
 
 
         public boolean atLeastOne() {
-            return pdfVersion;
+            return createTime || modifyTime || name;
         }
 
         public void setAll(boolean value) {
@@ -1785,8 +1830,76 @@ public class MetadataInfo {
             createTime = false;
             modifyTime = false;
             fullPath = false;
-            pdfVersion = false;
-            pdfCompression = false;
+        }
+    }
+
+    public static class PdfProperties {
+        public Float version;
+        @FieldDataType(value = FieldDataType.FieldType.BoolField, nullValueText = "No")
+        public Boolean compression;
+        @FieldDataType(value = FieldDataType.FieldType.BoolField, nullValueText = "No")
+        public Boolean encryption;
+        public Integer keyLength;
+        public String ownerPassword;
+        public String userPassword;
+        public Boolean canPrint;
+        public Boolean canModify;
+        public Boolean canExtractContent;
+        public Boolean canModifyAnnotations;
+        public Boolean canFillFormFields;
+        public Boolean canExtractForAccessibility;
+        public Boolean canAssembleDocument;
+        public Boolean canPrintFaithful;
+    }
+
+    public static class PdfPropertiesEnabled {
+        public boolean version = true;
+        public boolean compression = true;
+        public boolean encryption  = true;
+        public boolean keyLength = true;
+        public boolean ownerPassword  = true;
+        public boolean userPassword  = true;
+        public boolean canPrint = true;
+        public boolean canModify = true;
+        public boolean canExtractContent = true;
+        public boolean canModifyAnnotations = true;
+        public boolean canFillFormFields = true;
+        public boolean canExtractForAccessibility = true;
+        public boolean canAssembleDocument = true;
+        public boolean canPrintFaithful = true;
+
+
+        public boolean atLeastOne() {
+            return version ||
+                    compression ||
+                    encryption ||
+                    keyLength ||
+                    ownerPassword ||
+                    userPassword ||
+                    canPrint ||
+                    canModify ||
+                    canExtractContent ||
+                    canModifyAnnotations ||
+                    canFillFormFields ||
+                    canExtractForAccessibility ||
+                    canAssembleDocument ||
+                    canPrintFaithful;
+        }
+
+        public void setAll(boolean value) {
+            version = value;
+            compression = value;
+            encryption  = value;
+            ownerPassword  = value;
+            userPassword  = value;
+            canPrint = value;
+            canModify = value;
+            canExtractContent = value;
+            canModifyAnnotations = value;
+            canFillFormFields = value;
+            canExtractForAccessibility = value;
+            canAssembleDocument = value;
+            canPrintFaithful = value;
         }
     }
 
@@ -2164,7 +2277,7 @@ public class MetadataInfo {
             isReadonly = false;
         }
 
-        String textForNull(){
+        public String textForNull(){
             return  nullValueText != null  && !nullValueText.isEmpty() ? nullValueText : "Unset";
         }
 
@@ -2255,6 +2368,9 @@ public class MetadataInfo {
 
         public Object makeValueFromString(String value) {
             if (value == null) {
+                return null;
+            }
+            if(value.equals(nullValueText)){
                 return null;
             }
             if(isNumeric && value.isEmpty()){

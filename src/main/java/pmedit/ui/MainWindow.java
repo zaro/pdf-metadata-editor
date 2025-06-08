@@ -37,7 +37,7 @@ import java.util.function.Function;
 public class MainWindow extends JFrame implements  ProgramWindow {
     static final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
 
-    protected static final Dimension MIN_SIZE = new Dimension(660, 660);
+    protected static final Dimension MIN_SIZE = new Dimension(860, 660);
     private JPanel contentPane;
     public JButton btnOpenPdf;
     public JTextField filename;
@@ -492,8 +492,7 @@ public class MainWindow extends JFrame implements  ProgramWindow {
 
         actionsAndOptions.setCurrentDocumentVersion(document.getVersion());
 
-        metadataInfo.encryptionOptions.userPassword = password;
-        actionsAndOptions.setDocumentProtection(metadataInfo.encryptionOptions);
+        metadataInfo.prop.userPassword = password;
         actionsAndOptions.setEnabled(true);
     }
 
@@ -530,14 +529,6 @@ public class MainWindow extends JFrame implements  ProgramWindow {
             metadataInfo.removeDocumentInfo = removeDocumentOnSave.isSelected();
             metadataInfo.removeXmp = removeXmpOnSave.isSelected();
 
-            if (actionsAndOptions.pdfVersion.getSelectedItem() instanceof Float s) {
-                metadataInfo.file.pdfVersion = s;
-            } else {
-                metadataInfo.file.pdfVersion = 0f;
-            }
-
-            metadataInfo.encryptionOptions = actionsAndOptions.getDocumentProtection();
-
             extension.beforeDocumentSave(metadataEditor);
 
             metadataEditor.copyToMetadata(metadataInfo);
@@ -560,7 +551,7 @@ public class MainWindow extends JFrame implements  ProgramWindow {
 
             newFile = metadataInfo.saveAsPDF(pdfFile, newFile);
 
-            password = metadataInfo.encryptionOptions.userPassword;
+            password = metadataInfo.prop.userPassword;
 
             return newFile;
 

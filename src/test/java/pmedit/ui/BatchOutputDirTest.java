@@ -13,6 +13,8 @@ import pmedit.prefs.Preferences;
 import pmedit.serdes.CsvMetadata;
 import pmedit.serdes.SerDeslUtils;
 
+import java.awt.*;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -24,27 +26,33 @@ import static pmedit.ui.UiTestHelpers.openFileChooser;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
 @SetSystemProperty(key = "junitTest", value = "true")
-public class BatchOutputDirTest {
+public class BatchOutputDirTest  extends  BaseJemmyTest {
     List<FilesTestHelper.PMTuple> initialFiles;
-    JFrameOperator topFrame;
+    static JFrameOperator topFrame;
 
     @BeforeAll
     static void setUp() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException {
         ClassReference cr = new ClassReference("pmedit.Main");
         cr.startApplication(new String[]{"batch-gui-cmdline"});
+        topFrame = new JFrameOperator("Batch PDF Metadata Process");
+    }
+
+    @AfterAll
+    static void tearDown() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException {
+        topFrame.getOutput().printLine("Disposing window!");
+        topFrame.setVisible(false);
+        topFrame.dispose();
+        topFrame.waitClosed();
+        topFrame.waitClosed();
+
     }
 
     @BeforeEach
     void loadFile(TestInfo testInfo) throws Exception {
-        if(topFrame == null) {
-            topFrame = new JFrameOperator("Batch PDF Metadata Process");
-        }
         FilesTestHelper.pushTempDir(testInfo.getDisplayName().replaceFirst("\\(.*", ""));
         initialFiles = FilesTestHelper.randomFiles(3);
 
         new JButtonOperator(topFrame, "Clear").push();
-
-
     }
 
     @AfterEach
@@ -78,6 +86,7 @@ public class BatchOutputDirTest {
             outDir.mkdirs();
         }
         openFileChooser("Select Output Folder", outDir.getAbsoluteFile());
+        new JCheckBoxOperator(topFrame, "Save to File").changeSelection(false);
 
         new JButtonOperator(topFrame, "Begin").push();
 
@@ -99,7 +108,7 @@ public class BatchOutputDirTest {
             outDir.mkdirs();
         }
         openFileChooser("Select Output Folder", outDir.getAbsoluteFile());
-        new JCheckBoxOperator(topFrame, "Save to File").push();
+        new JCheckBoxOperator(topFrame, "Save to File").changeSelection(true);
 
         new JButtonOperator(topFrame, "Begin").push();
 
@@ -116,7 +125,7 @@ public class BatchOutputDirTest {
     @Test
     public void testExportWithLogNoOutputDir() throws Exception {
         selectCommandAndAddFolder(CommandDescription.CLEAR);
-        new JCheckBoxOperator(topFrame, "Save to File").push();
+        new JCheckBoxOperator(topFrame, "Save to File").changeSelection(true);
 
         new JButtonOperator(topFrame, "Begin").push();
 

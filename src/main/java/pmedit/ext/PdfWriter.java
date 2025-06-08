@@ -11,7 +11,6 @@ import java.io.*;
 
 public class PdfWriter {
     static Logger LOG = LoggerFactory.getLogger(PdfWriter.class);
-    static public final float COMPRESSION_MIN_VERSION = 1.5f;
     protected PDDocument pdDocument;
 
     public float getCompressionMinimumSupportedVersion() {

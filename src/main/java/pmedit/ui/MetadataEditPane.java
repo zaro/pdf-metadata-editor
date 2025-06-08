@@ -17,7 +17,6 @@ import pmedit.preset.PresetValues;
 
 import javax.swing.*;
 import javax.swing.border.Border;
-import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListDataEvent;
@@ -175,10 +174,35 @@ public class MetadataEditPane {
     public DateTimePicker createTime;
     @FieldID("file.modifyTime")
     public DateTimePicker modifyTime;
-    @FieldID("file.pdfVersion")
-    public PdfVersionPicker pdfVersion;
-    @FieldID("file.pdfCompression")
-    public JComboBox pdfCompression;
+    @FieldID("prop.version")
+    public PdfVersionPicker propVersion;
+    @FieldID("prop.compression")
+    public JComboBox propCompression;
+    @FieldID("prop.encryption")
+    public JComboBox propEncryption;
+    @FieldID("prop.keyLength")
+    public JComboBox propKeyLength;
+    @FieldID("prop.ownerPassword")
+    public JTextField propOwnerPassword;
+    @FieldID("prop.userPassword")
+    public JTextField propUserPassword;
+    @FieldID("prop.canPrint")
+    public JComboBox propCanPrint;
+    @FieldID("prop.canModify")
+    public JComboBox propCanModify;
+    @FieldID("prop.canExtractContent")
+    public JComboBox propExtractContent;
+    @FieldID("prop.canModifyAnnotations")
+    public JComboBox propCanModifyAnnotations;
+    @FieldID("prop.canFillFormFields")
+    public JComboBox propCanFillFormFields;
+    @FieldID("prop.canExtractForAccessibility")
+    public JComboBox propCanExtractFormAccessibility;
+    @FieldID("prop.canAssembleDocument")
+    public JComboBox propCanAssembleDocument;
+    @FieldID("prop.canPrintFaithful")
+    public JComboBox propCanPrintFaithful;
+
 
     @FieldEnabled("doc.title")
     public JCheckBox basicTitleEnabled;
@@ -301,10 +325,6 @@ public class MetadataEditPane {
     public JCheckBox fullPathEnabled;
     @FieldEnabled("file.nameWithExt")
     public JCheckBox nameWithExtEnabled;
-    @FieldEnabled("file.pdfCompression")
-    public JCheckBox pdfCompressionEnabled;
-    @FieldEnabled("file.pdfVersion")
-    public JCheckBox pdfVersionEnabled;
     @FieldEnabled("file.modifyTime")
     public JCheckBox modifyTimeEnabled;
     @FieldEnabled("file.createTime")
@@ -313,11 +333,39 @@ public class MetadataEditPane {
     public JCheckBox sizeBytesEnabled;
     @FieldEnabled("file.size")
     public JCheckBox sizeEnabled;
-    @FieldEnabled("file.size")
+    @FieldEnabled("file.name")
     public JCheckBox nameEnabled;
-
+    @FieldEnabled("prop.version")
+    public JCheckBox propVersionEnabled;
+    @FieldEnabled("prop.compression")
+    public JCheckBox propCompressionEnabled;
+    @FieldEnabled("prop.encryption")
+    public JCheckBox propEncryptionEnabled;
+    @FieldEnabled("prop.keyLength")
+    public JCheckBox propKeyLengthEnabled;
+    @FieldEnabled("prop.ownerPassword")
+    public JCheckBox propOwnerPasswordEnabled;
+    @FieldEnabled("prop.userPassword")
+    public JCheckBox propUserPasswordEnabled;
+    @FieldEnabled("prop.canPrint")
+    public JCheckBox propCanPrintEnabled;
+    @FieldEnabled("prop.canModify")
+    public JCheckBox propCanModifyEnabled;
+    @FieldEnabled("prop.canExtractContent")
+    public JCheckBox propExtractContentEnabled;
+    @FieldEnabled("prop.canModifyAnnotations")
+    public JCheckBox propCanModifyAnnotationsEnabled;
+    @FieldEnabled("prop.canFillFormFields")
+    public JCheckBox propCanFillFormFieldsEnabled;
+    @FieldEnabled("prop.canExtractForAccessibility")
+    public JCheckBox propCanExtractFormAccessibilityEnabled;
+    @FieldEnabled("prop.canAssembleDocument")
+    public JCheckBox propCanAssembleDocumentEnabled;
+    @FieldEnabled("prop.canPrintFaithful")
+    public JCheckBox propCanPrintFaithfulEnabled;
 
     public TextPaneWithLinks licenseRequiredText;
+
 
 
     private PmeExtension extension = PmeExtension.get();
@@ -536,17 +584,21 @@ public class MetadataEditPane {
 
     }
 
-    protected String getComboBoxValue(JComboBox field, MetadataInfo.FieldDescription fieldDescription) {
-        String text = (String) ((JComboBox) field).getModel().getSelectedItem();
-        if (text != null && text.length() == 0) {
-            text = null;
-        } else {
-            String nullText = fieldDescription.nullValueText.isEmpty() ? "Unset" : fieldDescription.nullValueText;
-            if (nullText.equals(text)) {
-                text = null;
+    protected Object getComboBoxValue(JComboBox field, MetadataInfo.FieldDescription fieldDescription) {
+        Object value = ((JComboBox) field).getModel().getSelectedItem();
+        if (value instanceof String v){
+            if(v.isEmpty()) {
+                value = null;
+            } else {
+                String nullText = fieldDescription.nullValueText.isEmpty() ? "Unset" : fieldDescription.nullValueText;
+                if (nullText.equals(v)) {
+                    value = null;
+                } else {
+                    value = fieldDescription.makeValueFromString(v);
+                };
             }
         }
-        return text;
+        return value;
     }
 
     public void copyToMetadata(final MetadataInfo metadataInfo) {
@@ -592,16 +644,21 @@ public class MetadataEditPane {
                     }
                     return;
                 } else if (field instanceof JComboBox comboBox) {
-                    String text = getComboBoxValue(comboBox, fd);
+                    Object value = getComboBoxValue(comboBox, fd);
                     switch (fd.type) {
                         case StringField:
-                            metadataInfo.set(anno.value(), text);
+                            metadataInfo.set(anno.value(), value);
                             break;
                         case BoolField:
-                            metadataInfo.setFromString(anno.value(), text);
+                            metadataInfo.set(anno.value(), value);
                             break;
                         case EnumField:
-                            metadataInfo.set(anno.value(), text);
+                            metadataInfo.set(anno.value(), value);
+                            break;
+                        case FloatField:
+                        case IntField:
+                        case LongField:
+                            metadataInfo.set(anno.value(), value);
                             break;
                         default:
                             throw new RuntimeException("Cannot (store (choice text) in :" + fd.type + " for field "+ fd.name);
@@ -782,6 +839,7 @@ public class MetadataEditPane {
     public void initComponents() {
         boolean hasBatch = BatchMan.hasBatch();
         licenseRequiredText.setVisible(!hasBatch);
+        propKeyLength.setModel(new DefaultComboBoxModel<Integer>(new Integer[]{40, 128, 256}));
 
         traverseFields(new MetadataEditPane.FieldSetGet() {
 
@@ -835,18 +893,9 @@ public class MetadataEditPane {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             JComboBox<?> cb = (JComboBox<?>) e.getSource();
-                            String selectedValue = getComboBoxValue(cb, fieldDescription);
+                            Object selectedValue = getComboBoxValue(cb, fieldDescription);
                             Object initial = initialMetadata != null ? initialMetadata.get(fieldDescription.name) : null;
-                            String initialS = null;
-                            if (initial != null) {
-                                if (initial instanceof String s) {
-                                    initialS = s;
-                                }
-                                if (initial instanceof Boolean b) {
-                                    initialS = b ? "Yes" : "No";
-                                }
-                            }
-                            if ((selectedValue != null && selectedValue.equals(initialS)) || (selectedValue == null && initialS == null)) {
+                            if ((selectedValue != null && selectedValue.equals(initial)) || (selectedValue == null && initial == null)) {
                                 combo.setBorder(comboBoxDefault);
                             } else {
                                 combo.setBorder(changedBorder);
@@ -953,7 +1002,8 @@ public class MetadataEditPane {
         panel1 = new JPanel();
         panel1.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         tabbedPane = new JTabbedPane();
-        panel1.add(tabbedPane, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, new Dimension(-1, 300), null, null, 0, false));
+        tabbedPane.setTabPlacement(2);
+        panel1.add(tabbedPane, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, new Dimension(600, 300), null, null, 0, false));
         final JPanel panel2 = new JPanel();
         panel2.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         tabbedPane.addTab("Document", panel2);
@@ -1573,13 +1623,13 @@ public class MetadataEditPane {
         final JScrollPane scrollPane21 = new JScrollPane();
         panel14.add(scrollPane21, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel15 = new JPanel();
-        panel15.setLayout(new GridLayoutManager(12, 3, new Insets(5, 5, 5, 5), -1, -1));
+        panel15.setLayout(new GridLayoutManager(10, 3, new Insets(5, 5, 5, 5), -1, -1));
         scrollPane21.setViewportView(panel15);
         final JLabel label59 = new JLabel();
         label59.setText("Full Path");
         panel15.add(label59, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer7 = new Spacer();
-        panel15.add(spacer7, new GridConstraints(11, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        panel15.add(spacer7, new GridConstraints(9, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         fullPathEnabled = new JCheckBox();
         fullPathEnabled.setText("");
         panel15.add(fullPathEnabled, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -1614,58 +1664,204 @@ public class MetadataEditPane {
         modifyTimeEnabled = new JCheckBox();
         modifyTimeEnabled.setText("");
         panel15.add(modifyTimeEnabled, new GridConstraints(8, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label64 = new JLabel();
-        label64.setText("PDF Version");
-        panel15.add(label64, new GridConstraints(9, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        pdfVersionEnabled = new JCheckBox();
-        pdfVersionEnabled.setText("");
-        panel15.add(pdfVersionEnabled, new GridConstraints(9, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        pdfVersion = new PdfVersionPicker();
-        panel15.add(pdfVersion, new GridConstraints(9, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final JLabel label65 = new JLabel();
-        label65.setText("PDF Compressed");
-        panel15.add(label65, new GridConstraints(10, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        pdfCompressionEnabled = new JCheckBox();
-        pdfCompressionEnabled.setText("");
-        panel15.add(pdfCompressionEnabled, new GridConstraints(10, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         createTime = new DateTimePicker();
         panel15.add(createTime, new GridConstraints(7, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         modifyTime = new DateTimePicker();
         panel15.add(modifyTime, new GridConstraints(8, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        pdfCompression = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel19 = new DefaultComboBoxModel();
-        defaultComboBoxModel19.addElement("Yes");
-        defaultComboBoxModel19.addElement("No");
-        pdfCompression.setModel(defaultComboBoxModel19);
-        panel15.add(pdfCompression, new GridConstraints(10, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
-        final JLabel label66 = new JLabel();
-        Font label66Font = this.$$$getFont$$$(null, Font.BOLD | Font.ITALIC, -1, label66.getFont());
-        if (label66Font != null) label66.setFont(label66Font);
-        label66.setText("Read Only Properties");
-        panel15.add(label66, new GridConstraints(0, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 2, false));
-        final JLabel label67 = new JLabel();
-        Font label67Font = this.$$$getFont$$$(null, Font.BOLD | Font.ITALIC, -1, label67.getFont());
-        if (label67Font != null) label67.setFont(label67Font);
-        label67.setText("Editable Properties");
-        panel15.add(label67, new GridConstraints(5, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 2, false));
+        final JLabel label64 = new JLabel();
+        Font label64Font = this.$$$getFont$$$(null, Font.BOLD | Font.ITALIC, -1, label64.getFont());
+        if (label64Font != null) label64.setFont(label64Font);
+        label64.setText("Read Only Properties");
+        panel15.add(label64, new GridConstraints(0, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 2, false));
+        final JLabel label65 = new JLabel();
+        Font label65Font = this.$$$getFont$$$(null, Font.BOLD | Font.ITALIC, -1, label65.getFont());
+        if (label65Font != null) label65.setFont(label65Font);
+        label65.setText("Editable Properties");
+        panel15.add(label65, new GridConstraints(5, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 2, false));
         licenseRequiredText = new TextPaneWithLinks();
         panel15.add(licenseRequiredText, new GridConstraints(5, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));
-        final JLabel label68 = new JLabel();
-        label68.setText("Name");
-        panel15.add(label68, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label66 = new JLabel();
+        label66.setText("Name");
+        panel15.add(label66, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         nameEnabled = new JCheckBox();
         nameEnabled.setText("");
         panel15.add(nameEnabled, new GridConstraints(6, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         name = new JTextField();
         panel15.add(name, new GridConstraints(6, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final JLabel label69 = new JLabel();
-        label69.setText("File Name");
-        panel15.add(label69, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label67 = new JLabel();
+        label67.setText("File Name");
+        panel15.add(label67, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         nameWithExtEnabled = new JCheckBox();
         nameWithExtEnabled.setText("");
         panel15.add(nameWithExtEnabled, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         nameWithExt = new JTextField();
         panel15.add(nameWithExt, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final JPanel panel16 = new JPanel();
+        panel16.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
+        tabbedPane.addTab("PDF Properties", panel16);
+        final JScrollPane scrollPane22 = new JScrollPane();
+        panel16.add(scrollPane22, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        final JPanel panel17 = new JPanel();
+        panel17.setLayout(new GridLayoutManager(15, 3, new Insets(5, 5, 5, 5), -1, -1));
+        scrollPane22.setViewportView(panel17);
+        final Spacer spacer8 = new Spacer();
+        panel17.add(spacer8, new GridConstraints(14, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        final JLabel label68 = new JLabel();
+        label68.setText("PDF Version");
+        panel17.add(label68, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propVersionEnabled = new JCheckBox();
+        propVersionEnabled.setText("");
+        panel17.add(propVersionEnabled, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propVersion = new PdfVersionPicker();
+        panel17.add(propVersion, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final JLabel label69 = new JLabel();
+        label69.setText("PDF Compressed");
+        panel17.add(label69, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propCompressionEnabled = new JCheckBox();
+        propCompressionEnabled.setText("");
+        panel17.add(propCompressionEnabled, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propCompression = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel19 = new DefaultComboBoxModel();
+        defaultComboBoxModel19.addElement("Yes");
+        defaultComboBoxModel19.addElement("No");
+        propCompression.setModel(defaultComboBoxModel19);
+        panel17.add(propCompression, new GridConstraints(1, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
+        final JLabel label70 = new JLabel();
+        label70.setText("PDF Encrypted");
+        panel17.add(label70, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propEncryptionEnabled = new JCheckBox();
+        propEncryptionEnabled.setText("");
+        panel17.add(propEncryptionEnabled, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propEncryption = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel20 = new DefaultComboBoxModel();
+        defaultComboBoxModel20.addElement("Yes");
+        defaultComboBoxModel20.addElement("No");
+        propEncryption.setModel(defaultComboBoxModel20);
+        panel17.add(propEncryption, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
+        final JLabel label71 = new JLabel();
+        label71.setText("Encryption Key Length");
+        panel17.add(label71, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propKeyLengthEnabled = new JCheckBox();
+        propKeyLengthEnabled.setText("");
+        panel17.add(propKeyLengthEnabled, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propKeyLength = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel21 = new DefaultComboBoxModel();
+        defaultComboBoxModel21.addElement("Yes");
+        defaultComboBoxModel21.addElement("No");
+        propKeyLength.setModel(defaultComboBoxModel21);
+        panel17.add(propKeyLength, new GridConstraints(3, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
+        final JLabel label72 = new JLabel();
+        label72.setText("Can Print");
+        panel17.add(label72, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propCanPrintEnabled = new JCheckBox();
+        propCanPrintEnabled.setText("");
+        panel17.add(propCanPrintEnabled, new GridConstraints(6, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propCanPrint = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel22 = new DefaultComboBoxModel();
+        defaultComboBoxModel22.addElement("Yes");
+        defaultComboBoxModel22.addElement("No");
+        propCanPrint.setModel(defaultComboBoxModel22);
+        panel17.add(propCanPrint, new GridConstraints(6, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
+        final JLabel label73 = new JLabel();
+        label73.setText("Can Modify");
+        panel17.add(label73, new GridConstraints(7, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propCanModifyEnabled = new JCheckBox();
+        propCanModifyEnabled.setText("");
+        panel17.add(propCanModifyEnabled, new GridConstraints(7, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propCanModify = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel23 = new DefaultComboBoxModel();
+        defaultComboBoxModel23.addElement("Yes");
+        defaultComboBoxModel23.addElement("No");
+        propCanModify.setModel(defaultComboBoxModel23);
+        panel17.add(propCanModify, new GridConstraints(7, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
+        final JLabel label74 = new JLabel();
+        label74.setText("Can Extract Content");
+        panel17.add(label74, new GridConstraints(8, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propExtractContentEnabled = new JCheckBox();
+        propExtractContentEnabled.setText("");
+        panel17.add(propExtractContentEnabled, new GridConstraints(8, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propExtractContent = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel24 = new DefaultComboBoxModel();
+        defaultComboBoxModel24.addElement("Yes");
+        defaultComboBoxModel24.addElement("No");
+        propExtractContent.setModel(defaultComboBoxModel24);
+        panel17.add(propExtractContent, new GridConstraints(8, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
+        final JLabel label75 = new JLabel();
+        label75.setText("Can Modify Annotations");
+        panel17.add(label75, new GridConstraints(9, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propCanModifyAnnotationsEnabled = new JCheckBox();
+        propCanModifyAnnotationsEnabled.setText("");
+        panel17.add(propCanModifyAnnotationsEnabled, new GridConstraints(9, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propCanModifyAnnotations = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel25 = new DefaultComboBoxModel();
+        defaultComboBoxModel25.addElement("Yes");
+        defaultComboBoxModel25.addElement("No");
+        propCanModifyAnnotations.setModel(defaultComboBoxModel25);
+        panel17.add(propCanModifyAnnotations, new GridConstraints(9, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
+        final JLabel label76 = new JLabel();
+        label76.setText("Owner Password");
+        panel17.add(label76, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propOwnerPasswordEnabled = new JCheckBox();
+        propOwnerPasswordEnabled.setText("");
+        panel17.add(propOwnerPasswordEnabled, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propOwnerPassword = new JTextField();
+        panel17.add(propOwnerPassword, new GridConstraints(4, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final JLabel label77 = new JLabel();
+        label77.setText("User Password");
+        panel17.add(label77, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propUserPasswordEnabled = new JCheckBox();
+        propUserPasswordEnabled.setText("");
+        panel17.add(propUserPasswordEnabled, new GridConstraints(5, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propUserPassword = new JTextField();
+        panel17.add(propUserPassword, new GridConstraints(5, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        final JLabel label78 = new JLabel();
+        label78.setText("Can Fill Form Fields");
+        panel17.add(label78, new GridConstraints(10, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propCanFillFormFieldsEnabled = new JCheckBox();
+        propCanFillFormFieldsEnabled.setText("");
+        panel17.add(propCanFillFormFieldsEnabled, new GridConstraints(10, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propCanFillFormFields = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel26 = new DefaultComboBoxModel();
+        defaultComboBoxModel26.addElement("Yes");
+        defaultComboBoxModel26.addElement("No");
+        propCanFillFormFields.setModel(defaultComboBoxModel26);
+        panel17.add(propCanFillFormFields, new GridConstraints(10, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
+        final JLabel label79 = new JLabel();
+        label79.setText("Can Extract For Accessibility");
+        panel17.add(label79, new GridConstraints(11, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propCanExtractFormAccessibilityEnabled = new JCheckBox();
+        propCanExtractFormAccessibilityEnabled.setText("");
+        panel17.add(propCanExtractFormAccessibilityEnabled, new GridConstraints(11, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propCanExtractFormAccessibility = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel27 = new DefaultComboBoxModel();
+        defaultComboBoxModel27.addElement("Yes");
+        defaultComboBoxModel27.addElement("No");
+        propCanExtractFormAccessibility.setModel(defaultComboBoxModel27);
+        panel17.add(propCanExtractFormAccessibility, new GridConstraints(11, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
+        final JLabel label80 = new JLabel();
+        label80.setText("Can Assemble Document");
+        panel17.add(label80, new GridConstraints(12, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propCanAssembleDocumentEnabled = new JCheckBox();
+        propCanAssembleDocumentEnabled.setText("");
+        panel17.add(propCanAssembleDocumentEnabled, new GridConstraints(12, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propCanAssembleDocument = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel28 = new DefaultComboBoxModel();
+        defaultComboBoxModel28.addElement("Yes");
+        defaultComboBoxModel28.addElement("No");
+        propCanAssembleDocument.setModel(defaultComboBoxModel28);
+        panel17.add(propCanAssembleDocument, new GridConstraints(12, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
+        final JLabel label81 = new JLabel();
+        label81.setText("Can Print Faithful");
+        panel17.add(label81, new GridConstraints(13, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propCanPrintFaithfulEnabled = new JCheckBox();
+        propCanPrintFaithfulEnabled.setText("");
+        panel17.add(propCanPrintFaithfulEnabled, new GridConstraints(13, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        propCanPrintFaithful = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel29 = new DefaultComboBoxModel();
+        defaultComboBoxModel29.addElement("Yes");
+        defaultComboBoxModel29.addElement("No");
+        propCanPrintFaithful.setModel(defaultComboBoxModel29);
+        panel17.add(propCanPrintFaithful, new GridConstraints(13, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
     }
 
     /**

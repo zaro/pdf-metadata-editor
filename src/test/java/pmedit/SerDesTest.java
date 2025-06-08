@@ -71,6 +71,20 @@ public class SerDesTest {
 			viewer.printScaling: null
 			viewer.pageLayout: null
 			viewer.pageMode: null
+			prop.version: null
+			prop.compression: null
+			prop.encryption: null
+			prop.keyLength: null
+			prop.ownerPassword: null
+			prop.userPassword: null
+			prop.canPrint: null
+			prop.canModify: null
+			prop.canExtractContent: null
+			prop.canModifyAnnotations: null
+			prop.canFillFormFields: null
+			prop.canExtractForAccessibility: null
+			prop.canAssembleDocument: null
+			prop.canPrintFaithful: null
 			file.fullPath: null
 			file.sizeBytes: null
 			file.size: null
@@ -78,8 +92,6 @@ public class SerDesTest {
 			file.name: null
 			file.createTime: null
 			file.modifyTime: null
-			file.pdfVersion: null
-			file.pdfCompression: null
 			""";
 	static final String ALL_NULLS_JSON =
 			"""
@@ -142,15 +154,27 @@ public class SerDesTest {
               "viewer.printScaling" : null,
               "viewer.pageLayout" : null,
               "viewer.pageMode" : null,
+              "prop.version" : null,
+              "prop.compression" : null,
+              "prop.encryption" : null,
+              "prop.keyLength" : null,
+              "prop.ownerPassword" : null,
+              "prop.userPassword" : null,
+              "prop.canPrint" : null,
+              "prop.canModify" : null,
+              "prop.canExtractContent" : null,
+              "prop.canModifyAnnotations" : null,
+              "prop.canFillFormFields" : null,
+              "prop.canExtractForAccessibility" : null,
+              "prop.canAssembleDocument" : null,
+              "prop.canPrintFaithful" : null,
               "file.fullPath" : null,
               "file.sizeBytes" : null,
               "file.size" : null,
               "file.nameWithExt" : null,
               "file.name" : null,
               "file.createTime" : null,
-              "file.modifyTime" : null,
-              "file.pdfVersion" : null,
-              "file.pdfCompression" : null
+              "file.modifyTime" : null
             }
             """;
 
