@@ -8,7 +8,10 @@
 	<name>Pdf Metadata Editor</name>
 	<description>Simple Editor for PDF metadata</description>
 	<url>https://pdf.metadata.care/</url>
-	<packaging>jar</packaging>
+    <modules>
+        <module>modules/extension-api</module>
+    </modules>
+    <packaging>pom</packaging>
 
 	<developers>
 		<developer>

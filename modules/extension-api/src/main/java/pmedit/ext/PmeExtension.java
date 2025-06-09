@@ -1,6 +1,5 @@
 package pmedit.ext;
 
-import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.xmpbox.xml.XmpParsingException;
@@ -10,10 +9,9 @@ import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pmedit.MetadataInfo;
 import pmedit.preset.PresetValues;
-import pmedit.ui.MetadataEditPane;
-import pmedit.ui.PreferencesWindow;
+import pmedit.ui.ext.MetadataEditPaneInterface;
+import pmedit.ui.ext.PreferencesWindowInterface;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,17 +48,17 @@ public abstract class PmeExtension {
 
     // Init
     public abstract void init();
-    public abstract void initTabs(MetadataEditPane metadataEditor);
-    public abstract void initPreferencesTabs(PreferencesWindow preferencesWindow);
+    public abstract void initTabs(MetadataEditPaneInterface metadataEditor);
+    public abstract void initPreferencesTabs(PreferencesWindowInterface preferencesWindow);
 
 
     // Preferences
-    public abstract void onPreferencesRefresh(PreferencesWindow preferencesWindow);
+    public abstract void onPreferencesRefresh(PreferencesWindowInterface preferencesWindow);
 
     // Document load/save
-    public abstract void onDocumentReload(PDDocument document, File file, MetadataEditPane metadataEditor) throws XmpParsingException, IOException;
-    public abstract void beforeDocumentSave(MetadataEditPane metadataEditor);
-    public abstract void onDocumentSave(PDDocument document, File file, MetadataInfo metadataInfo) throws Exception;
+    public abstract void onDocumentReload(PDDocument document, File file, MetadataEditPaneInterface metadataEditor) throws XmpParsingException, IOException;
+    public abstract void beforeDocumentSave(MetadataEditPaneInterface metadataEditor);
+    public abstract void onDocumentSave(PDDocument document, File file, MetadataEditPaneInterface metadataInfo) throws Exception;
 
     // Preset values
     public abstract <T extends PresetValues> void onLoadPreset(T values);

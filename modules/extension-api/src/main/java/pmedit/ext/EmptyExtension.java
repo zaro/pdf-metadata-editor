@@ -1,13 +1,11 @@
 package pmedit.ext;
 
-import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.xmpbox.xml.XmpParsingException;
-import pmedit.MetadataInfo;
 import pmedit.preset.PresetValues;
-import pmedit.ui.MetadataEditPane;
-import pmedit.ui.PreferencesWindow;
+import pmedit.ui.ext.MetadataEditPaneInterface;
+import pmedit.ui.ext.PreferencesWindowInterface;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,28 +17,28 @@ public class EmptyExtension extends PmeExtension{
     }
 
     @Override
-    public void initTabs(MetadataEditPane metadataEditor){
+    public void initTabs(MetadataEditPaneInterface metadataEditor){
 
     }
 
     @Override
-    public void initPreferencesTabs(PreferencesWindow preferencesWindow) {
+    public void initPreferencesTabs(PreferencesWindowInterface preferencesWindow) {
 
     }
 
 
     @Override
-    public void onDocumentReload(PDDocument document, File file, MetadataEditPane metadataEditor) throws XmpParsingException, IOException {
+    public void onDocumentReload(PDDocument document, File file, MetadataEditPaneInterface metadataEditor) throws XmpParsingException, IOException {
 
     }
 
     @Override
-    public void beforeDocumentSave(MetadataEditPane metadataEditor) {
+    public void beforeDocumentSave(MetadataEditPaneInterface metadataEditor) {
 
     }
 
     @Override
-    public void onDocumentSave(PDDocument document, File file, MetadataInfo metadataInfo) {
+    public void onDocumentSave(PDDocument document, File file, MetadataEditPaneInterface metadataInfo) {
 
     }
 
@@ -60,7 +58,7 @@ public class EmptyExtension extends PmeExtension{
     }
 
     @Override
-    public void onPreferencesRefresh(PreferencesWindow preferencesWindow) {
+    public void onPreferencesRefresh(PreferencesWindowInterface preferencesWindow) {
 
     }
 
