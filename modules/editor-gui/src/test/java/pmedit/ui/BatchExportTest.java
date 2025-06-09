@@ -8,6 +8,7 @@ import org.netbeans.jemmy.operators.*;
 import pmedit.CommandDescription;
 import pmedit.FilesTestHelper;
 import pmedit.MetadataInfo;
+import pmedit.ext.PmeExtension;
 import pmedit.serdes.CsvMetadata;
 import pmedit.serdes.SerDeslUtils;
 
@@ -95,8 +96,8 @@ public class BatchExportTest extends  BaseJemmyTest {
         for(MetadataInfo csvMd: mdList){
             MetadataInfo md = new MetadataInfo();
             File f = new File(csvMd.file.fullPath);
-            md.loadFromPDF(f);
-            md.loadPDFFileInfo(f);
+            PmeExtension.get().newPdfReader().loadFromPDF(f, md);
+
 
             FilesTestHelper.assertEqualsAllExceptFileProps(md, csvMd, "CSV Exported metadata");
         }
@@ -128,8 +129,8 @@ public class BatchExportTest extends  BaseJemmyTest {
 
             MetadataInfo md = new MetadataInfo();
             File f = new File(FilesTestHelper.getTempDir(), csvMd.file.fullPath);
-            md.loadFromPDF(f);
-            md.loadPDFFileInfo(f);
+            PmeExtension.get().newPdfReader().loadFromPDF(f, md);
+
 
             FilesTestHelper.assertEqualsAllExceptFileProps(md, csvMd, "CSV Exported metadata");
         }
@@ -164,8 +165,8 @@ public class BatchExportTest extends  BaseJemmyTest {
         for(MetadataInfo jsonMd: mdList){
             MetadataInfo md = new MetadataInfo();
             File f = new File(jsonMd.file.fullPath);
-            md.loadFromPDF(f);
-            md.loadPDFFileInfo(f);
+            PmeExtension.get().newPdfReader().loadFromPDF(f, md);
+
 
             FilesTestHelper.assertEqualsAll(md, jsonMd, "JSON Exported metadata");
         }
@@ -201,8 +202,8 @@ public class BatchExportTest extends  BaseJemmyTest {
 
             MetadataInfo md = new MetadataInfo();
             File f = new File(FilesTestHelper.getTempDir(), jsonMd.file.fullPath);
-            md.loadFromPDF(f);
-            md.loadPDFFileInfo(f);
+            PmeExtension.get().newPdfReader().loadFromPDF(f, md);
+
 
             FilesTestHelper.assertEqualsAllExceptFileProps(md, jsonMd, "JSON Exported metadata");
         }
@@ -237,8 +238,8 @@ public class BatchExportTest extends  BaseJemmyTest {
         for(MetadataInfo yamlMd: mdList){
             MetadataInfo md = new MetadataInfo();
             File f = new File(yamlMd.file.fullPath);
-            md.loadFromPDF(f);
-            md.loadPDFFileInfo(f);
+            PmeExtension.get().newPdfReader().loadFromPDF(f, md);
+
 
             FilesTestHelper.assertEqualsAll(md, yamlMd, "YAML Exported metadata");
         }
@@ -274,8 +275,8 @@ public class BatchExportTest extends  BaseJemmyTest {
 
             MetadataInfo md = new MetadataInfo();
             File f = new File(FilesTestHelper.getTempDir(), yamlMd.file.fullPath);
-            md.loadFromPDF(f);
-            md.loadPDFFileInfo(f);
+            PmeExtension.get().newPdfReader().loadFromPDF(f, md);
+
 
             FilesTestHelper.assertEqualsAllExceptFileProps(md, yamlMd, "YAML Exported metadata");
         }

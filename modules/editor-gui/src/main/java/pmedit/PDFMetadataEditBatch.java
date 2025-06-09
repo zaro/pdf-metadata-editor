@@ -2,6 +2,9 @@ package pmedit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pmedit.ext.PdfReader;
+import pmedit.ext.PdfWriter;
+import pmedit.ext.PmeExtension;
 import pmedit.serdes.CsvMetadata;
 import pmedit.serdes.SerDeslUtils;
 import pmedit.util.FileAction;
@@ -34,6 +37,8 @@ public class PDFMetadataEditBatch {
             status.addError("*", new Exception("No metadata defined"));
             return;
         }
+        PdfWriter writer = PmeExtension.get().newPdfWriter();
+        PdfReader reader = PmeExtension.get().newPdfReader();
         filesWalker.forFiles(new FileAction(outDir, status) {
 
             @Override
@@ -41,9 +46,9 @@ public class PDFMetadataEditBatch {
                 MetadataInfo mdParams = params != null ? params.metadata : new MetadataInfo();
                 try {
                     MetadataInfo mdFile = new MetadataInfo();
-                    mdFile.loadFromPDF(file);
+                    reader.loadFromPDF(file, mdFile);
                     mdFile.copyFromWithExpand(mdParams, mdFile);
-                    mdFile.saveAsPDF(file, getOutputFile(file));
+                    writer.saveAsPDF(mdFile, file);
                     status.addStatus(outputFileRelativeName(file), "Done");
                 } catch (Exception e) {
                     logger.error("edit", e);
@@ -54,6 +59,8 @@ public class PDFMetadataEditBatch {
     }
 
     public void clear(FilesWalker filesWalker, File outDir, final ActionStatus status) {
+        PdfWriter writer = PmeExtension.get().newPdfWriter();
+
         filesWalker.forFiles(new FileAction(outDir,status) {
 
             @Override
@@ -63,7 +70,7 @@ public class PDFMetadataEditBatch {
                     md.copyEnabled(params.metadata);
                 }
                 try {
-                    md.saveAsPDF(file, getOutputFile(file));
+                    writer.saveAsPDF(md, file, getOutputFile(file));
                     status.addStatus(outputFileRelativeName(file), "Cleared");
                 } catch (Exception e) {
                     logger.error("clear", e);
@@ -86,6 +93,7 @@ public class PDFMetadataEditBatch {
             return;
         }
         final TemplateString ts = new TemplateString(template);
+        PdfReader reader = PmeExtension.get().newPdfReader();
 
         filesWalker.forFiles(new FileAction(outDir,status) {
 
@@ -93,7 +101,7 @@ public class PDFMetadataEditBatch {
             public void apply(File file) {
                 try {
                     MetadataInfo md = new MetadataInfo();
-                    md.loadFromPDF(file);
+                    reader.loadFromPDF(file, md);
                     String toName = ts.process(md);
                     File outFile = getOutputFile(file);
                     File to ;
@@ -135,17 +143,19 @@ public class PDFMetadataEditBatch {
             return;
         }
         TemplateString extractor = new TemplateString(params.extractTemplate);
+        PdfWriter writer = PmeExtension.get().newPdfWriter();
+        PdfReader reader = PmeExtension.get().newPdfReader();
+
         filesWalker.forFiles(new FileAction(outDir, status) {
 
             @Override
             public void apply(File file) {
                 try {
                     MetadataInfo mdFile = new MetadataInfo();
-                    mdFile.loadFromPDF(file);
-                    mdFile.loadPDFFileInfo(file);
+                    reader.loadFromPDF(file, mdFile);
                     MetadataInfo mdExtracted = extractor.extract(mdFile.file.name);
                     mdFile.copyOnlyEnabled(mdExtracted);
-                    mdFile.saveAsPDF(file, getOutputFile(file));
+                    writer.saveAsPDF(mdFile, file, getOutputFile(file));
                     status.addStatus(outputFileRelativeName(file), "Done");
                 } catch (Exception e) {
                     logger.error("fromFileName", e);
@@ -182,6 +192,7 @@ public class PDFMetadataEditBatch {
     }
 
     public void tojson(FilesWalker filesWalker, File outDir, final ActionStatus status) {
+        PdfReader reader = PmeExtension.get().newPdfReader();
         filesWalker.forFiles(new ExportFileAction(outDir, params.isSingleFileExport(), status) {
             @Override
             void exportRecords(List<ExportedObject> records) {
@@ -201,7 +212,7 @@ public class PDFMetadataEditBatch {
             public void apply(File file) {
                 try {
                     MetadataInfo md = new MetadataInfo();
-                    md.loadFromPDF(file);
+                    reader.loadFromPDF(file, md);
                     if(params.shouldUseRelativePaths()){
                         md.file.fullPath = inputFileRelativeName(file);
                     }
@@ -237,6 +248,8 @@ public class PDFMetadataEditBatch {
     }
 
     public void toyaml(FilesWalker filesWalker, File outDir, final ActionStatus status) {
+        PdfReader reader = PmeExtension.get().newPdfReader();
+
         filesWalker.forFiles(new ExportFileAction(outDir, params.isSingleFileExport(), status) {
             @Override
             void exportRecords(List<ExportedObject> records) {
@@ -256,7 +269,7 @@ public class PDFMetadataEditBatch {
             public void apply(File file) {
                 try {
                     MetadataInfo md = new MetadataInfo();
-                    md.loadFromPDF(file);
+                    reader.loadFromPDF(file, md);
                     if(params.shouldUseRelativePaths()){
                         md.file.fullPath = inputFileRelativeName(file);
                     }
@@ -288,6 +301,8 @@ public class PDFMetadataEditBatch {
     }
 
     public void tocsv(FilesWalker filesWalker, File outDir, final ActionStatus status) {
+        PdfReader reader = PmeExtension.get().newPdfReader();
+
         filesWalker.forFiles(new ExportFileAction(outDir, params.isSingleFileExport(), status) {
             @Override
             void exportRecords(List<ExportedObject> records) {
@@ -306,7 +321,7 @@ public class PDFMetadataEditBatch {
             public void apply(File file) {
                 try {
                     MetadataInfo md = new MetadataInfo();
-                    md.loadFromPDF(file);
+                    reader.loadFromPDF(file, md);
                     if(params.shouldUseRelativePaths()){
                         md.file.fullPath = inputFileRelativeName(file);
                     }
@@ -325,15 +340,18 @@ public class PDFMetadataEditBatch {
     }
 
     public void fromImportFile(List<ImportFileParsed> importFiles, File outDir, final ActionStatus status, String commandName) {
+        PdfWriter writer = PmeExtension.get().newPdfWriter();
+        PdfReader reader = PmeExtension.get().newPdfReader();
+
         for (ImportFileParsed importFile : importFiles) {
             for (MetadataInfo mdParams : importFile.data) {
                 FilePathProperty fileProperty = new FilePathProperty(mdParams.file.fullPath, outDir, importFile.importFile);
                 File inputFile = fileProperty.getInputFile();
                 try {
                     MetadataInfo mdFile = new MetadataInfo();
-                    mdFile.loadFromPDF(inputFile);
+                    reader.loadFromPDF(inputFile, mdFile);
                     mdFile.copyFromWithExpand(mdParams, mdFile);
-                    mdFile.saveAsPDF(inputFile, fileProperty.getOutputFile(true));
+                    writer.saveAsPDF(mdFile, inputFile, fileProperty.getOutputFile(true));
                     status.addStatus(inputFile.getPath(), "Done");
                 } catch (Exception e) {
                     logger.error(commandName, e);
@@ -345,6 +363,9 @@ public class PDFMetadataEditBatch {
     }
 
     public void xmptodoc(FilesWalker filesWalker, File outDir, final ActionStatus status) {
+        PdfWriter writer = PmeExtension.get().newPdfWriter();
+        PdfReader reader = PmeExtension.get().newPdfReader();
+
         filesWalker.forFiles(new FileAction(outDir, status) {
 
             @Override
@@ -352,9 +373,9 @@ public class PDFMetadataEditBatch {
                 MetadataInfo mdParams = params != null ? params.metadata : new MetadataInfo();
                 try {
                     MetadataInfo mdFile = new MetadataInfo();
-                    mdFile.loadFromPDF(file);
+                    reader.loadFromPDF(file, mdFile);
                     mdFile.copyXMPToDoc();
-                    mdFile.saveAsPDF(file, getOutputFile(file));
+                    writer.saveAsPDF(mdFile, file, getOutputFile(file));
                     status.addStatus(outputFileRelativeName(file), "Done");
                 } catch (Exception e) {
                     logger.error("xmptodoc", e);
@@ -365,6 +386,9 @@ public class PDFMetadataEditBatch {
     }
 
     public void doctoxmp(FilesWalker filesWalker, File outDir, final ActionStatus status) {
+        PdfWriter writer = PmeExtension.get().newPdfWriter();
+        PdfReader reader = PmeExtension.get().newPdfReader();
+
         filesWalker.forFiles(new FileAction(outDir,status) {
 
             @Override
@@ -372,9 +396,9 @@ public class PDFMetadataEditBatch {
                 MetadataInfo mdParams = params != null ? params.metadata : new MetadataInfo();
                 try {
                     MetadataInfo mdFile = new MetadataInfo();
-                    mdFile.loadFromPDF(file);
+                    reader.loadFromPDF(file, mdFile);
                     mdFile.copyDocToXMP();
-                    mdFile.saveAsPDF(file, getOutputFile(file));
+                    writer.saveAsPDF(mdFile, file, getOutputFile(file));
                     status.addStatus(outputFileRelativeName(file), "Done");
                 } catch (Exception e) {
                     logger.error("doctoxmp", e);

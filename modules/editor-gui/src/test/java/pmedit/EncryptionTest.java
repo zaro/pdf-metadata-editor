@@ -4,6 +4,7 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.junit.jupiter.api.Test;
+import pmedit.ext.PmeExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -16,8 +17,8 @@ public class EncryptionTest {
     @Test
     void testAddEncryption() throws Exception, IOException, Exception {
         for (FilesTestHelper.PMTuple t : FilesTestHelper.randomFiles(NUM_FILES)) {
-            MetadataInfo loaded = new MetadataInfo();
-            loaded.loadFromPDF(t.file);
+            MetadataInfo loaded = FilesTestHelper.load(t.file);
+
 
             loaded.prop.encryption = true;
             loaded.prop.keyLength = 40;
@@ -25,7 +26,7 @@ public class EncryptionTest {
             loaded.prop.ownerPassword = "op";
             loaded.prop.userPassword = "up";
 
-            loaded.saveAsPDF(t.file);
+            FilesTestHelper.save(loaded, t.file);
 
             PDDocument doc = Loader.loadPDF(t.file, "op");
             assertNotNull(doc.getEncryption());
@@ -59,13 +60,12 @@ public class EncryptionTest {
             md.prop.ownerPassword = "op";
             md.prop.userPassword = "up";
         })) {
-            MetadataInfo loaded = new MetadataInfo();
-            loaded.loadFromPDF(t.file, "op");
+            MetadataInfo loaded = FilesTestHelper.load(t.file, "op");
             assertTrue(loaded.prop.encryption);
 
 
             loaded.prop.encryption  = false;
-            loaded.saveAsPDF(t.file);
+            FilesTestHelper.save(loaded, t.file);
 
             PDDocument docOut = Loader.loadPDF(t.file);
             assertNull(docOut.getEncryption());

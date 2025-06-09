@@ -9,6 +9,7 @@ import pmedit.CommandDescription;
 import pmedit.FilesTestHelper;
 import pmedit.MetadataInfo;
 import pmedit.TemplateString;
+import pmedit.ext.PmeExtension;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -92,8 +93,8 @@ public class BatchFilenameTest  extends  BaseJemmyTest {
         TemplateString ts = new TemplateString(template);
         for(Path p: Files.list(FilesTestHelper.getTempDir().toPath()).toList()){
             MetadataInfo md = new MetadataInfo();
-            md.loadFromPDF(p.toFile());
-            md.loadPDFFileInfo(p.toFile());
+            PmeExtension.get().newPdfReader().loadFromPDF(p.toFile(), md);
+
 
             assertEquals(new TemplateString(template).process(md), md.file.nameWithExt, "File name incorrect after rename");
         }
@@ -119,8 +120,8 @@ public class BatchFilenameTest  extends  BaseJemmyTest {
 
         for(Path p: Files.list(FilesTestHelper.getTempDir().toPath()).toList()){
             MetadataInfo md = new MetadataInfo();
-            md.loadFromPDF(p.toFile());
-            md.loadPDFFileInfo(p.toFile());
+            PmeExtension.get().newPdfReader().loadFromPDF(p.toFile(), md);
+
 
             String[] parts = md.file.name.split("-");
 
@@ -149,8 +150,8 @@ public class BatchFilenameTest  extends  BaseJemmyTest {
 
         for(Path p: Files.list(FilesTestHelper.getTempDir().toPath()).toList()){
             MetadataInfo md = new MetadataInfo();
-            md.loadFromPDF(p.toFile());
-            md.loadPDFFileInfo(p.toFile());
+            PmeExtension.get().newPdfReader().loadFromPDF(p.toFile(), md);
+
 
             String[] parts = md.file.name.split("-");
 

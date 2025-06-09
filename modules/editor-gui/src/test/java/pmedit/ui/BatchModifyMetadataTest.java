@@ -173,8 +173,8 @@ public class BatchModifyMetadataTest  extends  BaseJemmyTest {
             md.dcEnabled.description = true;
             md.dcEnabled.creators = true;
 
-            MetadataInfo saved = new MetadataInfo();
-            saved.loadFromPDF(tf.file);
+            MetadataInfo saved = FilesTestHelper.load(tf.file);
+
             saved.copyEnabled(md);
 
             FilesTestHelper.assertEqualsOnlyEnabledExceptFile(md, saved, "Xmp Fields copied from Doc differ");
@@ -216,8 +216,7 @@ public class BatchModifyMetadataTest  extends  BaseJemmyTest {
             md.docEnabled.subject = true;
             md.docEnabled.author = true;
 
-            MetadataInfo saved = new MetadataInfo();
-            saved.loadFromPDF(tf.file);
+            MetadataInfo saved = FilesTestHelper.load(tf.file);
             saved.copyEnabled(md);
 
             FilesTestHelper.assertEqualsOnlyEnabledExceptFile(md, saved, "Doc Fields copied from Xmp differ");

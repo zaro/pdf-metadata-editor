@@ -61,7 +61,8 @@ public abstract class PmeExtension {
     public abstract <T extends PresetValues> void onDeletePreset(T values);
 
     // Pdf Writer Creation
-    public abstract PdfWriter createPdfWriter(PDDocument document);
+    public abstract PdfWriter newPdfWriter();
+    public abstract PdfReader newPdfReader();
 
     // SerDes initialization
     public abstract void initSerializer(SimpleModule module);

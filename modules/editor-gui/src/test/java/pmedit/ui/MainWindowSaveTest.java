@@ -76,8 +76,8 @@ public class MainWindowSaveTest  extends  BaseJemmyTest  {
         assertTrue(saveBtn.isEnabled());
         saveBtn.push();
 
-        MetadataInfo saved = new MetadataInfo();
-        saved.loadFromPDF(initialFile.file);
+        MetadataInfo saved = FilesTestHelper.load(initialFile.file);
+
         saved.docEnabled.author = false;
         saved.basicEnabled.baseURL = false;
         FilesTestHelper.assertEqualsOnlyEnabledExceptFile(initialFile.md, saved, "Non edited metadata differs");

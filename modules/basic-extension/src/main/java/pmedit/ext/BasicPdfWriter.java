@@ -1,5 +1,6 @@
 package pmedit.ext;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdfwriter.compress.COSWriterCompressionPool;
@@ -19,33 +20,37 @@ import org.apache.xmpbox.schema.XMPRightsManagementSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pmedit.FileOptimizer;
+import pmedit.MetadataCollection;
 import pmedit.MetadataInfo;
 import pmedit.MetadataInfoUtils;
+import pmedit.util.CrossPlatformFileTimeModifier;
 
 import javax.xml.transform.TransformerException;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Calendar;
 import java.util.List;
 
 public class BasicPdfWriter implements PdfWriter {
     static Logger LOG = LoggerFactory.getLogger(BasicPdfWriter.class);
-    protected PDDocument document;
 
     public float getCompressionMinimumSupportedVersion() {
         return COSWriterCompressionPool.MINIMUM_SUPPORTED_VERSION;
     }
 
 
-    public BasicPdfWriter(PDDocument document){
-        this.document = document;
+    public BasicPdfWriter(){
+
     }
 
-    public void write(File file, int pdfBoxCompression) throws IOException{
-        LOG.debug("write(File) {}", file);
-        document.save(file, new CompressParameters(pdfBoxCompression));
-    }
-
-    protected boolean saveToPDF(MetadataInfo md, File pdfFile) throws Exception {
+    @Override
+    public boolean saveToPDF(MetadataCollection mc, PDDocument document,  File pdfFile) throws Exception {
+        if(!(mc instanceof MetadataInfo md)){
+            IllegalArgumentException e = new IllegalArgumentException("Unsupported Metadata collection type: " +  mc.getClass());
+            LOG.error("saveToPDF:",e);
+            throw e;
+        }
         boolean atLeastOneChange =
                 md.docEnabled.atLeastOne() || md.basicEnabled.atLeastOne() || md.pdfEnabled.atLeastOne() || md.dcEnabled.atLeastOne() || md.rightsEnabled.atLeastOne()
                         || FileOptimizer.isOptimiserEnabled(FileOptimizer.Enum.PDFBOX)
@@ -742,8 +747,49 @@ public class BasicPdfWriter implements PdfWriter {
                 pdfCompression = document.getDocument().isXRefStream() ? FileOptimizer.getPdfBoxCompression() : 0;
             }
         }
-        this.write(pdfFile, pdfCompression);
+        document.save(pdfFile, new CompressParameters(pdfCompression));
         return true;
+    }
+
+    @Override
+    public File saveAsPDF(MetadataCollection mc, File pdfFile, File newFile) throws Exception {
+        if(!(mc instanceof MetadataInfo md)){
+            IllegalArgumentException e = new IllegalArgumentException("Unsupported Metadata collection type: " +  mc.getClass());
+            LOG.error("saveToPDF:",e);
+            throw e;
+        }
+
+        PDDocument document = null;
+        String password = md.prop.ownerPassword;
+        document = Loader.loadPDF(pdfFile, password);
+        File writeFile = File.createTempFile(pdfFile.getName() + "-", null, pdfFile.getParentFile());
+
+        boolean fileSaved = saveToPDF(md, document, writeFile);
+        if(!fileSaved){
+            Files.copy(pdfFile.toPath(), writeFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        document.close();
+
+        File target;
+        if(newFile != null){
+            target = newFile;
+        } else {
+            target = pdfFile;
+            if (md.fileEnabled.name && md.file.name != null) {
+                target = new File(target.getParentFile(), md.file.name + ".pdf");
+            }
+        }
+        Files.move(writeFile.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        if((md.fileEnabled.createTime && md.file.createTime != null) || (md.fileEnabled.modifyTime && md.file.modifyTime != null)) {
+            CrossPlatformFileTimeModifier.setFileTimes(target, md.file.createTime, md.file.modifyTime);
+        }
+        return target;
+    }
+
+    @Override
+    public File saveAsPDF(MetadataCollection mc, File pdfFile) throws Exception {
+        return saveAsPDF(mc, pdfFile, null);
     }
 
 }
