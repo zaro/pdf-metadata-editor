@@ -2,15 +2,11 @@ package pmedit.preset;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pmedit.ext.PmeExtension;
 import pmedit.prefs.LocalDataDir;
-import pmedit.serdes.SerDeslUtils;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 
 
@@ -19,6 +15,7 @@ public class PresetStore {
     static final File presetsDir = new File(LocalDataDir.getAppDataDir(), "presets");
 
     protected static Class<? extends PresetValues> presetValuesClass = PresetValues.class;
+    protected static PresetStoreSerDes serDes = new PresetStoreSerDes();
 
     public static Class<? extends PresetValues> getPresetValuesClass() {
         return presetValuesClass;
@@ -26,6 +23,10 @@ public class PresetStore {
 
     public static void setPresetValuesClass(Class<? extends PresetValues> presetValuesClass) {
         PresetStore.presetValuesClass = presetValuesClass;
+    }
+
+    public static void setPresetSerDes(PresetStoreSerDes serDes) {
+        PresetStore.serDes = serDes;
     }
 
     public static <T extends PresetValues> T getPresetValuesInstance() {
@@ -45,8 +46,8 @@ public class PresetStore {
         if(!presetFile.exists()){
             return null;
         }
-        logger.info("Loading: " + presetFile);
-        return (T) SerDeslUtils.fromYamlFile(presetFile, presetValuesClass);
+        logger.info("Loading: {}", presetFile);
+        return (T) serDes.deserializePreset(presetFile, presetValuesClass);
     }
 
     public static <T extends PresetValues> void savePreset(String name, T values){
@@ -54,8 +55,8 @@ public class PresetStore {
             presetsDir.mkdirs();
         }
         File presetFile = getPresetFile(name);
-        SerDeslUtils.toYamlFile(presetFile, values);
-        logger.info("Saved: " + presetFile);
+        serDes.serializePreset(presetFile, values);
+        logger.info("Saved: {}", presetFile);
     }
 
     public static void deletePreset(String name){

@@ -1,11 +1,10 @@
 package pmedit.ext;
 
 import org.apache.pdfbox.pdfwriter.compress.COSWriterCompressionPool;
+import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pmedit.FileOptimizer;
-import pmedit.pdf.CompressionAndOptimisation;
 
 import java.io.*;
 
@@ -23,15 +22,8 @@ public class PdfWriter {
     }
 
     public void write(File file, int pdfBoxCompression) throws IOException{
-        final CompressionAndOptimisation compressParameters= new CompressionAndOptimisation(pdfBoxCompression);
         LOG.debug("write(File) {}", file);
-        pdDocument.save(file, compressParameters.getCompressParameters());
+        pdDocument.save(file, new CompressParameters(pdfBoxCompression));
 
-    }
-
-    public <T extends CompressionAndOptimisation> void write(OutputStream output) throws IOException {
-        final CompressionAndOptimisation compressParameters= new CompressionAndOptimisation(FileOptimizer.getPdfBoxCompression());
-        LOG.debug("write(OutputStream)");
-        pdDocument.save(output, compressParameters.getCompressParameters());
     }
 }
