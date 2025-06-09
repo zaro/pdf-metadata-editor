@@ -8,6 +8,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="extension-api" />
         <module name="editor-gui" />
+        <module name="basic-extension" />
       </profile>
     </annotationProcessing>
   </component>

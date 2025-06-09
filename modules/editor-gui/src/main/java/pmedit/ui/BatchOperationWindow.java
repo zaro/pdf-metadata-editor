@@ -10,7 +10,6 @@ import pmedit.prefs.Preferences;
 import pmedit.serdes.SerDeslUtils;
 import pmedit.ui.components.TextPaneWithLinks;
 import pmedit.ui.util.PersistentToggleAction;
-import pmedit.ui.util.ToggleAction;
 import pmedit.util.FilesWalker;
 import pmedit.util.OutputLogger;
 

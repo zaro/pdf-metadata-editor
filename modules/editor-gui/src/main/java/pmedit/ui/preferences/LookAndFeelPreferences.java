@@ -8,14 +8,12 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import org.jetbrains.annotations.NotNull;
-import pmedit.BatchMan;
+import pmedit.prefs.GuiPreferences;
 
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.text.StyleContext;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Locale;
 import java.util.prefs.Preferences;
 
@@ -57,7 +55,7 @@ public class LookAndFeelPreferences {
 
 
     public void init(Preferences prefs) {
-        String c = pmedit.prefs.Preferences.getLookAndFeelClass();
+        String c = GuiPreferences.getLookAndFeelClass();
         if (c != null) {
             DefaultComboBoxModel<LaF> m = (DefaultComboBoxModel<LaF>) lookAndFeelSelection.getModel();
             for (int i = 0; i < m.getSize(); i++) {
@@ -77,7 +75,7 @@ public class LookAndFeelPreferences {
         if (current == null) {
             return;
         }
-        pmedit.prefs.Preferences.setLookAndFeelClass(current.className);
+        GuiPreferences.setLookAndFeelClass(current.className);
     }
 
     {

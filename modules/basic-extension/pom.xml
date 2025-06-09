@@ -10,6 +10,18 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>extension-api</artifactId>
+    <artifactId>basic-extension</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>pdf-metadata-edit</groupId>
+            <artifactId>extension-api</artifactId>
+            <version>4.0.0beta1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>5.1</version>
+        </dependency>
+    </dependencies>
 </project>

@@ -4,17 +4,8 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import pmedit.BatchOperationParameters;
-import pmedit.CommandLine;
-import pmedit.MetadataInfo;
-import pmedit.TemplateString;
-import pmedit.prefs.Preferences;
-import pmedit.ui.components.TextPaneWithLinks;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;

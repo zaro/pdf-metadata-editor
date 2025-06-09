@@ -1,10 +1,7 @@
 package pmedit.prefs;
 
-import com.formdev.flatlaf.FlatLightLaf;
 import pmedit.serdes.SerDeslUtils;
 
-import javax.swing.*;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -61,26 +58,6 @@ public class Preferences {
         }
         json  = SerDeslUtils.toJSON(false, values);
         p.put(tag + "History", json);
-    }
-
-    public static String getDefaultLookAndFeelClass(){
-        return  FlatLightLaf.class.getName();
-    }
-
-    public static String getLookAndFeelClass(){
-        return  getInstance().get("LookAndFeel", getDefaultLookAndFeelClass());
-    }
-
-    public static boolean isLookAndFeelDark(){
-        String s = getLookAndFeelClass();
-        if(s.contains("Dark") || s.contains("Darcula")){
-            return true;
-        }
-        return false;
-    }
-
-    public static void setLookAndFeelClass(String name){
-        getInstance().put("LookAndFeel", name);
     }
 
     public record MotoBoto(String moto, long timeMs){

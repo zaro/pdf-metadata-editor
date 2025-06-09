@@ -12,8 +12,6 @@ import pmedit.MetadataInfo;
 import pmedit.serdes.CsvMetadata;
 import pmedit.serdes.SerDeslUtils;
 
-import java.awt.*;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;

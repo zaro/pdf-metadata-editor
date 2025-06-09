@@ -1,7 +1,5 @@
 package pmedit;
 
-import pmedit.CommandLine.ParseError;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -25,12 +23,12 @@ public class DateFormat {
     public static Calendar parseDateOrNull(String value) {
         try {
             return parseDate(value);
-        } catch (ParseError e) {
+        } catch (InvalidValue e) {
             return null;
         }
     }
 
-    public static Calendar parseDate(String value) throws ParseError {
+    public static Calendar parseDate(String value) throws InvalidValue {
         Date d = null;
         try {
             TemporalAccessor ta = DateTimeFormatter.ISO_INSTANT.parse(value);
@@ -52,7 +50,7 @@ public class DateFormat {
             cal.setTime(d);
             return cal;
         }
-        throw new CommandLine.ParseError("Invalid date format: " + value);
+        throw new InvalidValue("Invalid date format: " + value);
     }
 
     public static String formatDate(Calendar cal) {

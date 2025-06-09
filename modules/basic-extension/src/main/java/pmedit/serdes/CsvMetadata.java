@@ -4,7 +4,6 @@ import com.opencsv.*;
 import com.opencsv.exceptions.CsvException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pmedit.CommandLine;
 import pmedit.MetadataInfo;
 import pmedit.OsCheck;
 
@@ -45,7 +44,7 @@ public class CsvMetadata {
                 metadata.setEnabled(false);
                 for (int idx = 0; idx < row.length; ++idx) {
                     String id = header[idx];
-                    if (CommandLine.validMdNames.contains(id)) {
+                    if (MetadataInfo.validMdNames.contains(id)) {
                         String value = row[idx].trim();
                         metadata.setAppendFromString(id, value);
                         metadata.setEnabled(id, true);

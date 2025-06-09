@@ -2,7 +2,6 @@ package pmedit.ui;
 
 import org.netbeans.jemmy.ComponentChooser;
 import org.netbeans.jemmy.JemmyProperties;
-import org.netbeans.jemmy.accessibility.AccessibleDescriptionChooser;
 import org.netbeans.jemmy.operators.*;
 import pmedit.DateFormat;
 import pmedit.MetadataInfo;

@@ -7,14 +7,9 @@ import org.netbeans.jemmy.ClassReference;
 import org.netbeans.jemmy.operators.*;
 import pmedit.CommandDescription;
 import pmedit.FilesTestHelper;
-import pmedit.MetadataInfo;
 import pmedit.PDFMetadataEditBatch;
 import pmedit.prefs.Preferences;
-import pmedit.serdes.CsvMetadata;
-import pmedit.serdes.SerDeslUtils;
 
-import java.awt.*;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;

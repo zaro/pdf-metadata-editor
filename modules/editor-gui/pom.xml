@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>pdf-metadata-edit</groupId>
 		<artifactId>pdf-metadata-editor-parent</artifactId>
-		<version>${revision}</version>
+		<version>4.0.0beta1</version>
 		<relativePath>../../pom.xml</relativePath>
 	</parent>
 
@@ -15,7 +15,6 @@
 	<url>https://pdf.metadata.care/</url>
 
 	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<staging.dir>${project.build.directory}</staging.dir>
 		<vm.location></vm.location>
 		<main.file.name>${project.artifactId}-${project.version}</main.file.name>
@@ -25,7 +24,6 @@
 		<icon.format></icon.format>
 		<archive.format>zip</archive.format>
 		<archive.suffix></archive.suffix>
-		<pdfbox.version>3.0.3</pdfbox.version>
 		<jpackage.goal>exec</jpackage.goal>
 	</properties>
 
@@ -112,6 +110,50 @@
 				<archive.suffix>-macos</archive.suffix>
 				<icon.format>icns</icon.format>
 			</properties>
+		</profile>
+
+
+		<!-- Basic profile (default) -->
+		<profile>
+			<id>basic</id>
+			<activation>
+				<property>
+					<name>!flavour</name>
+				</property>
+			</activation>
+			<properties>
+				<build.flavour>basic</build.flavour>
+			</properties>
+
+			<dependencies>
+				<dependency>
+					<groupId>pdf-metadata-edit</groupId>
+					<artifactId>basic-extension</artifactId>
+					<version>4.0.0beta1</version>
+				</dependency>
+			</dependencies>
+		</profile>
+
+		<!-- Pro profile -->
+		<profile>
+			<id>pro</id>
+			<activation>
+				<property>
+					<name>flavour</name>
+					<value>pro</value>
+				</property>
+			</activation>
+			<!-- Pro profile configuration -->
+			<properties>
+				<build.flavour>pro</build.flavour>
+			</properties>
+			<dependencies>
+				<dependency>
+					<groupId>pdf-metadata-edit</groupId>
+					<artifactId>pro-extension</artifactId>
+					<version>4.0.0beta1</version>
+				</dependency>
+			</dependencies>
 		</profile>
 	</profiles>
 
@@ -535,11 +577,6 @@
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpasyncclient</artifactId>
 			<version>4.1.4</version>
-		</dependency>
-		<dependency>
-			<groupId>com.opencsv</groupId>
-			<artifactId>opencsv</artifactId>
-			<version>5.1</version>
 		</dependency>
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
