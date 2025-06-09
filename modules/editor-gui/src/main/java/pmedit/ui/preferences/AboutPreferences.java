@@ -9,6 +9,7 @@ import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.util.EntityUtils;
 import pmedit.Constants;
+import pmedit.VersionTuple;
 import pmedit.serdes.SerDeslUtils;
 import pmedit.Version;
 import pmedit.ui.components.TextPaneWithLinks;
@@ -24,7 +25,7 @@ public class AboutPreferences {
     public JPanel topPanel;
     public TextPaneWithLinks aboutText;
     public TextPaneWithLinks checkForUpdatesText;
-    Version.VersionTuple latestVersion;
+    VersionTuple latestVersion;
     String checkStatusText;
 
     public AboutPreferences() {
@@ -54,7 +55,7 @@ public class AboutPreferences {
     }
 
     String getVersionHtml() {
-        Version.VersionTuple current = Version.get();
+        VersionTuple current = Version.get();
         String versionMsg;
         if (checkStatusText != null) {
             versionMsg = "<h3 align=center>" + checkStatusText + "</h3>";
@@ -93,7 +94,7 @@ public class AboutPreferences {
                 lastsVersion = (String) (body.get(0)).get("name");
             }
             if (lastsVersion != null) {
-                latestVersion = new Version.VersionTuple(lastsVersion);
+                latestVersion = new VersionTuple(lastsVersion);
             }
         } catch (InterruptedException | ExecutionException | IOException e1) {
             checkStatusText = e1.toString();

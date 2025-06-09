@@ -36,7 +36,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.Map.Entry;
 
-public class MetadataInfo {
+public class MetadataInfo implements MetadataCollection{
 
     final static Map<String, List<FieldDescription>> _mdFields;
     final static Map<String, List<FieldDescription>> _mdEnabledFields;

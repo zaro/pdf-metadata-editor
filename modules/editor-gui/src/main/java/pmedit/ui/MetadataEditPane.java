@@ -14,6 +14,7 @@ import com.toedter.calendar.JDateChooser;
 import pmedit.*;
 import pmedit.ext.PmeExtension;
 import pmedit.preset.PresetValues;
+import pmedit.ui.ext.MetadataEditPaneInterface;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -35,7 +36,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.List;
 
-public class MetadataEditPane {
+public class MetadataEditPane implements MetadataEditPaneInterface {
     static final Logger LOG = LoggerFactory.getLogger(MetadataEditPane.class);
     final static  boolean isTesting = System.getProperty("junitTest", "").equals("true");
     Logger logger = LoggerFactory.getLogger(MetadataEditPane.class);
