@@ -64,8 +64,13 @@ public class BasicExtension extends PmeExtension{
     }
 
     @Override
-    public BasicPdfWriter createPdfWriter(PDDocument document) {
-        return new BasicPdfWriter(document);
+    public BasicPdfWriter newPdfWriter() {
+        return new BasicPdfWriter();
+    }
+
+    @Override
+    public BasicPdfReader newPdfReader() {
+        return new BasicPdfReader();
     }
 
     @Override

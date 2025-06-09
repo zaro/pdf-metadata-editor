@@ -9,6 +9,7 @@ import org.apache.xmpbox.xml.XmpParsingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pmedit.*;
+import pmedit.ext.PdfReader;
 import pmedit.ext.PmeExtension;
 import pmedit.prefs.Preferences;
 import pmedit.preset.PresetStore;
@@ -472,10 +473,12 @@ public class MainWindow extends JFrame implements  ProgramWindow {
     protected void reloadFileFromDocument(PDDocument document, File pdfFile) throws XmpParsingException, IOException {
         filename.setText(pdfFile.getAbsolutePath());
         metadataInfo = new MetadataInfo();
-        metadataInfo.loadFromPDF(document);
+        PdfReader reader = PmeExtension.get().newPdfReader();
+
+        reader.loadFromPDF(document, metadataInfo);
 
         if (pdfFile != null) {
-            metadataInfo.loadPDFFileInfo(pdfFile);
+            reader.loadPDFFileInfo(pdfFile, metadataInfo);
         }
 
         metadataEditor.fillFromMetadata(metadataInfo);
@@ -545,7 +548,7 @@ public class MainWindow extends JFrame implements  ProgramWindow {
                 newFile = new File(toDir, toName);
             }
 
-            newFile = metadataInfo.saveAsPDF(pdfFile, newFile);
+            newFile = PmeExtension.get().newPdfWriter().saveAsPDF(metadataInfo, pdfFile, newFile);
 
             password = metadataInfo.prop.userPassword;
 

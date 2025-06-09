@@ -7,6 +7,7 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.AfterEach;
+import pmedit.ext.PmeExtension;
 
 class MetadataInfoTest {
 	static int NUM_FILES = 5;
@@ -49,16 +50,16 @@ class MetadataInfoTest {
 	
 	@Test
     void testEmptyLoad() throws Exception, IOException, Exception{
-		MetadataInfo md = new MetadataInfo();
-		md.loadFromPDF(FilesTestHelper.emptyPdf());
-		FilesTestHelper.assertEqualsAllExceptFileProps(md,new MetadataInfo(),  "Empty MD Test");
+		MetadataInfo loaded = FilesTestHelper.load(FilesTestHelper.emptyPdf());
+
+		FilesTestHelper.assertEqualsAllExceptFileProps(loaded,new MetadataInfo(),  "Empty MD Test");
 	}
 	
 	@Test
     void testFuzzing() throws Exception {
 		for(FilesTestHelper.PMTuple t: FilesTestHelper.randomFiles(NUM_FILES)){
-			MetadataInfo loaded = new MetadataInfo();
-			loaded.loadFromPDF(t.file);
+			MetadataInfo loaded = FilesTestHelper.load(t.file);
+
 			if( !t.md.isEquivalent(loaded) ){
 				System.out.println(t.file.getAbsolutePath());
 				System.out.println("SAVED:" );
@@ -76,12 +77,12 @@ class MetadataInfoTest {
 	@Test
     void testRemove() throws Exception, IOException, Exception{
 		for(FilesTestHelper.PMTuple t: FilesTestHelper.randomFiles(1)){
-			MetadataInfo loaded = new MetadataInfo();
-			loaded.loadFromPDF(t.file);
+			MetadataInfo loaded = FilesTestHelper.load(t.file);
+
 			loaded.removeDocumentInfo = true;
 			loaded.removeXmp = true;
 
-			loaded.saveAsPDF(t.file);
+			FilesTestHelper.save(loaded, t.file);
 
             try (PDDocument document = Loader.loadPDF(t.file)) {
 				Assertions.assertNull(document.getDocument().getTrailer().getCOSDictionary(COSName.INFO));

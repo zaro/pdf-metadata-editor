@@ -40,8 +40,8 @@ public class BatchCommandTest {
 		});
 		MetadataInfo empty = new MetadataInfo();
 		for(PMTuple t: fileList){
-			MetadataInfo loaded = new MetadataInfo();
-			loaded.loadFromPDF(t.file);
+			MetadataInfo loaded = FilesTestHelper.load(t.file);
+
 			//System.out.println(pdf.getAbsolutePath());
 			FilesTestHelper.assertEqualsAllExceptFileProps(empty, loaded, "File metadata not cleared");
 		}
@@ -71,8 +71,8 @@ public class BatchCommandTest {
 		});
 		MetadataInfo empty = new MetadataInfo();
 		for(PMTuple t: fileList){
-			MetadataInfo loaded = new MetadataInfo();
-			loaded.loadFromPDF(t.file);
+			MetadataInfo loaded = FilesTestHelper.load(t.file);
+
 			//System.out.println(pdf.getAbsolutePath());
 			assertTrue(t.md.isEquivalent(loaded));
 		}
@@ -106,8 +106,8 @@ public class BatchCommandTest {
 		});
 
 		for (PMTuple t : fileList) {
-			MetadataInfo loaded = new MetadataInfo();
-			loaded.loadFromPDF(t.file);
+			MetadataInfo loaded = FilesTestHelper.load(t.file);
+
 			assertEquals("doc.title", loaded.doc.title);
 			assertEquals("basic.creatorTool", loaded.basic.creatorTool );
 			assertEquals(Arrays.asList("en","pl"), loaded.dc.languages );
@@ -150,8 +150,8 @@ public class BatchCommandTest {
 		});
 		MetadataInfo empty = new MetadataInfo();
 		for(PMTuple t: fileList){
-			MetadataInfo loaded = new MetadataInfo();
-			loaded.loadFromPDF(t.file);
+			MetadataInfo loaded = FilesTestHelper.load(t.file);
+
 			//System.out.println(pdf.getAbsolutePath());
 			//assertTrue(t.md.isEquivalent(loaded));
 			assertEquals(loaded.doc.author,"AUTHOR-AUTHOR");

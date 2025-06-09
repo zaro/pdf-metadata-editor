@@ -9,6 +9,7 @@ import org.netbeans.jemmy.operators.*;
 import pmedit.CommandDescription;
 import pmedit.FilesTestHelper;
 import pmedit.MetadataInfo;
+import pmedit.ext.PmeExtension;
 import pmedit.serdes.CsvMetadata;
 import pmedit.serdes.SerDeslUtils;
 
@@ -100,8 +101,8 @@ public class BatchImportTest  extends  BaseJemmyTest {
             MetadataInfo md = new MetadataInfo();
             File f  = new File(ed.file.fullPath);
             f = f.isAbsolute() ? f : new File(FilesTestHelper.getTempDir(), ed.file.fullPath);
-            md.loadFromPDF(f);
-            md.loadPDFFileInfo(f);
+            PmeExtension.get().newPdfReader().loadFromPDF(f, md);
+
 
             FilesTestHelper.assertEqualsAllExceptFileProps(md, ed, "Imported metadata");
         }

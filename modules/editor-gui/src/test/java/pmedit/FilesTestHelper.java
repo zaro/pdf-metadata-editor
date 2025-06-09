@@ -5,6 +5,8 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.xmpbox.xml.XmpParsingException;
 import org.junit.jupiter.api.Assertions;
 import pmedit.ext.BasicPdfWriter;
+import pmedit.ext.PdfReader;
+import pmedit.ext.PmeExtension;
 
 import java.io.File;
 import java.io.IOException;
@@ -168,14 +170,14 @@ public class FilesTestHelper {
             }
 
             //Ensure we are not using compression if not supported by PDF version
-            if(md.prop.version != null && md.prop.version < new BasicPdfWriter(null).getCompressionMinimumSupportedVersion()) {
+            if(md.prop.version != null && md.prop.version < PmeExtension.get().newPdfWriter().getCompressionMinimumSupportedVersion()) {
                 md.prop.compression = false;
             }
 
             md.setEnabledForPrefix("file.", false);
-            md.saveAsPDF(pdf);
+            PmeExtension.get().newPdfWriter().saveAsPDF(md, pdf);
             md.setEnabledForPrefix("file.", true);
-            md.loadPDFFileInfo(pdf);
+            PmeExtension.get().newPdfReader().loadPDFFileInfo(pdf, md);
             rval.add(new PMTuple(pdf, md));
         }
         return rval;
@@ -211,12 +213,12 @@ public class FilesTestHelper {
     public static void checkFileHasChangedMetadata(PMTuple initialFile, File savedAs, MetadataInfo changed) throws XmpParsingException, IOException {
         MetadataInfo saved = new MetadataInfo();
         if(savedAs != null) {
-            saved.loadFromPDF(initialFile.file);
+            PmeExtension.get().newPdfReader().loadFromPDF(initialFile.file, saved);
             assertEqualsAll(initialFile.md, saved , "Original file metadata differs");
         } else {
             savedAs = initialFile.file;
         }
-        saved.loadFromPDF(savedAs);
+        PmeExtension.get().newPdfReader().loadFromPDF(savedAs, saved);
         List<String> expectedChangedKeys = changed.enabledKeys();
         for(String k: expectedChangedKeys){
             saved.setEnabled(k, false);
@@ -228,6 +230,21 @@ public class FilesTestHelper {
         }
         assertEqualsOnlyEnabledExceptFile(changed, saved, "Edited metadata differs");
 
+    }
+
+    public static  MetadataInfo load(File file) throws XmpParsingException, IOException {
+        return load(file, null);
+    }
+
+    public static  MetadataInfo load(File file, String password) throws XmpParsingException, IOException {
+        MetadataInfo metadataInfo = new MetadataInfo();
+        PmeExtension.get().newPdfReader().loadFromPDF(file, password, metadataInfo);
+        return metadataInfo;
+    }
+
+
+    public static  File  save(MetadataInfo md, File file) throws Exception {
+        return PmeExtension.get().newPdfWriter().saveAsPDF(md, file);
     }
 
     public static class PMTuple {
