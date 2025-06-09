@@ -4,7 +4,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.xmpbox.xml.XmpParsingException;
 import org.junit.jupiter.api.Assertions;
-import pmedit.ext.PdfWriter;
+import pmedit.ext.BasicPdfWriter;
 
 import java.io.File;
 import java.io.IOException;
@@ -168,7 +168,7 @@ public class FilesTestHelper {
             }
 
             //Ensure we are not using compression if not supported by PDF version
-            if(md.prop.version != null && md.prop.version < new PdfWriter(null).getCompressionMinimumSupportedVersion()) {
+            if(md.prop.version != null && md.prop.version < new BasicPdfWriter(null).getCompressionMinimumSupportedVersion()) {
                 md.prop.compression = false;
             }
 

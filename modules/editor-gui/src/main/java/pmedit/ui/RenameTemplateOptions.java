@@ -2,7 +2,6 @@ package pmedit.ui;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
-import com.intellij.uiDesigner.core.Spacer;
 import pmedit.CommandLine;
 import pmedit.MetadataInfo;
 import pmedit.TemplateString;
@@ -11,8 +10,6 @@ import pmedit.ui.components.TextPaneWithLinks;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.StyleContext;
@@ -20,7 +17,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Locale;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class RenameTemplateOptions {

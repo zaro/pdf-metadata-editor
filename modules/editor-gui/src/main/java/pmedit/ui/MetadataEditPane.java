@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import pmedit.annotations.FieldDataType;
 import pmedit.annotations.FieldEnabled;
 import pmedit.annotations.FieldID;
+import pmedit.prefs.GuiPreferences;
 import pmedit.prefs.Preferences;
 import pmedit.ui.components.*;
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -369,7 +370,6 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
 
 
 
-    private PmeExtension extension = PmeExtension.get();
     MetadataInfo initialMetadata;
     Border textFieldDefault;
     Border textAreaDefault;
@@ -393,7 +393,7 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
     }
 
     public MetadataEditPane() {
-        extension.initTabs(this);
+        PmeExtension.get().initTabs(this);
         initComponents();
 
         textFieldDefault = basicTitle.getBorder();
@@ -407,7 +407,7 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
                 ? defaults.getColor("Button.focus")
                 : defaults.getColor("Button.highlight")
         );
-        Color changedColor = Preferences.isLookAndFeelDark() ? lighten(focusColor, 1.3) : darken(focusColor, 0.7);
+        Color changedColor = GuiPreferences.isLookAndFeelDark() ? lighten(focusColor, 1.3) : darken(focusColor, 0.7);
         changedBorder = BorderFactory.createLineBorder(changedColor, 2);
         licenseRequiredText.setText("<a href='" + Constants.batchLicenseUrl + "'>(Pro License Required)<a>");
 
@@ -1904,7 +1904,7 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
     }
 
     public <T extends PresetValues> void onLoadPreset(T values) {
-        extension.onLoadPreset(values);
+        PmeExtension.get().onLoadPreset(values);
         MetadataInfo presetMetadata = new MetadataInfo();
 
         if (values.metadata != null && !values.metadata.isEmpty()) {
@@ -1924,11 +1924,11 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
     }
 
     public <T extends PresetValues> void onDeletePreset(T values) {
-        extension.onDeletePreset(values);
+        PmeExtension.get().onDeletePreset(values);
     }
 
     public <T extends PresetValues> void onSavePreset(T values) {
-        extension.onSavePreset(values);
+        PmeExtension.get().onSavePreset(values);
         MetadataInfo initial = initialMetadata != null ? initialMetadata : new MetadataInfo();
         Map<String, Object> initialMap = initial.asFlatMap();
         MetadataInfo current = new MetadataInfo();

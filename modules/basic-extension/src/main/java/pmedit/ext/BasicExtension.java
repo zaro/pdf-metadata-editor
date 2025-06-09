@@ -11,7 +11,7 @@ import pmedit.ui.ext.PreferencesWindowInterface;
 import java.io.File;
 import java.io.IOException;
 
-public class EmptyExtension extends PmeExtension{
+public class BasicExtension extends PmeExtension{
     @Override
     public void init() {
 
@@ -64,8 +64,8 @@ public class EmptyExtension extends PmeExtension{
     }
 
     @Override
-    public PdfWriter createPdfWriter(PDDocument document) {
-        return new PdfWriter(document);
+    public BasicPdfWriter createPdfWriter(PDDocument document) {
+        return new BasicPdfWriter(document);
     }
 
     @Override

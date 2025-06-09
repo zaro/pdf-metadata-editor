@@ -1,20 +1,17 @@
 package pmedit;
 
-import com.formdev.flatlaf.FlatLightLaf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pmedit.CommandLine.ParseError;
+import pmedit.prefs.GuiPreferences;
 import pmedit.prefs.LocalDataDir;
 import pmedit.prefs.Preferences;
 import pmedit.ui.BatchOperationWindow;
 import pmedit.ui.MainWindow;
-import pmedit.ui.PreferencesWindow;
 
 import javax.swing.*;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -144,6 +141,7 @@ public class Main {
                 makeEditorWindow(file);
             } catch (Exception e) {
                 LOG.error("executeCommandSwingWorker", e);
+                maybeExit();
             }
         }
     }
@@ -192,7 +190,7 @@ public class Main {
             System.setProperty( "apple.awt.application.appearance", "system" );
         }
 
-        String lafClass = Preferences.getLookAndFeelClass();
+        String lafClass = GuiPreferences.getLookAndFeelClass();
         try {
             UIManager.setLookAndFeel(lafClass);
         } catch (UnsupportedLookAndFeelException| ClassNotFoundException| InstantiationException | IllegalAccessException e) {

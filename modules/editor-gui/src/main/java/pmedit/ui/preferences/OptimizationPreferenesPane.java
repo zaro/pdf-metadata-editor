@@ -5,8 +5,7 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import pmedit.FileOptimizer;
-import pmedit.MetadataInfo;
-import pmedit.ext.PdfWriter;
+import pmedit.ext.BasicPdfWriter;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -71,7 +70,7 @@ public class OptimizationPreferenesPane {
         } else {
             customCompressionRadioButton.setSelected(true);
         }
-        compressionMinVersion.setText(String.valueOf(new PdfWriter(null).getCompressionMinimumSupportedVersion()));
+        compressionMinVersion.setText(String.valueOf(new BasicPdfWriter(null).getCompressionMinimumSupportedVersion()));
     }
 
     protected void storeCustomCompression() {

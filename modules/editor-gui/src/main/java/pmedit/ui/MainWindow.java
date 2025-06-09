@@ -17,7 +17,6 @@ import pmedit.ui.components.TextPaneWithLinks;
 import pmedit.ui.preferences.DefaultsPreferences;
 import pmedit.ui.util.PersistentRadioAction;
 import pmedit.ui.util.PersistentToggleAction;
-import pmedit.ui.util.ToggleAction;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -51,9 +50,6 @@ public class MainWindow extends JFrame implements  ProgramWindow {
     private MetadataInfo metadataInfo = new MetadataInfo();
 
     private PreferencesWindow preferencesWindow;
-
-    private PmeExtension extension = PmeExtension.get();
-
 
     final ActionListener saveAction = new ActionListener() {
         public void actionPerformed(ActionEvent e) {
@@ -412,7 +408,7 @@ public class MainWindow extends JFrame implements  ProgramWindow {
         setIconImage(icoImg.getImage());
         setVisible(true);
 
-        extension.init();
+        PmeExtension.get().init();
     }
 
     public File getCurrentFile() {
@@ -488,7 +484,7 @@ public class MainWindow extends JFrame implements  ProgramWindow {
         metadataEditor.fillFromMetadata(metadataInfo.defaultsToApply(defaultMetadata), true);
 
 
-        extension.onDocumentReload(document, pdfFile, metadataEditor);
+        PmeExtension.get().onDocumentReload(document, pdfFile, metadataEditor);
 
         actionsAndOptions.setCurrentDocumentVersion(document.getVersion());
 
@@ -529,7 +525,7 @@ public class MainWindow extends JFrame implements  ProgramWindow {
             metadataInfo.removeDocumentInfo = removeDocumentOnSave.isSelected();
             metadataInfo.removeXmp = removeXmpOnSave.isSelected();
 
-            extension.beforeDocumentSave(metadataEditor);
+            PmeExtension.get().beforeDocumentSave(metadataEditor);
 
             metadataEditor.copyToMetadata(metadataInfo);
 

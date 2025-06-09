@@ -9,8 +9,6 @@ import pmedit.*;
 import pmedit.prefs.Preferences;
 import pmedit.ui.preferences.DefaultsPreferences;
 
-import java.awt.*;
-import java.awt.event.WindowEvent;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;

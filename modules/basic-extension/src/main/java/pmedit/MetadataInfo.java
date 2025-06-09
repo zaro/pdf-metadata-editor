@@ -16,10 +16,11 @@ import org.apache.xmpbox.schema.XMPRightsManagementSchema;
 import org.apache.xmpbox.type.BadFieldValueException;
 import org.apache.xmpbox.type.TextType;
 import org.apache.xmpbox.xml.XmpParsingException;
-import pmedit.CommandLine.ParseError;
 import pmedit.annotations.FieldDataType;
+import pmedit.annotations.FieldDataType.FieldType;
 import pmedit.annotations.MdStruct;
 import pmedit.annotations.MdStruct.StructType;
+import pmedit.ext.BasicPdfWriter;
 import pmedit.ext.PdfWriter;
 import pmedit.ext.PmeExtension;
 import pmedit.serdes.SerDeslUtils;
@@ -64,6 +65,8 @@ public class MetadataInfo implements MetadataCollection{
             }
         });
     }
+    public static Set<String> validMdNames = new LinkedHashSet<String>(keys());
+
 
     @MdStruct
     public Basic doc;
@@ -1593,7 +1596,7 @@ public class MetadataInfo implements MetadataCollection{
                     return false;
                 }
             }
-            if (fd.isList && (fd.type == FieldDataType.FieldType.DateField)) {
+            if (fd.isList && (fd.type == FieldType.DateField)) {
                 List<Calendar> tl = (List<Calendar>) t;
                 List<Calendar> ol = (List<Calendar>) o;
                 if (tl.size() != ol.size()) {
@@ -1647,7 +1650,7 @@ public class MetadataInfo implements MetadataCollection{
         return SerDeslUtils.toYAML( map);
     }
 
-    protected Object _getStructObject(String id, Map<String, List<FieldDescription>> mdFields, boolean parent, FieldDataType.FieldType toType, boolean useDefault, Object defaultValue) {
+    protected Object _getStructObject(String id, Map<String, List<FieldDescription>> mdFields, boolean parent, FieldType toType, boolean useDefault, Object defaultValue) {
         List<FieldDescription> fields = mdFields.get(id);
         if (fields == null || fields.size() == 0) {
             if (useDefault) {
@@ -1694,7 +1697,7 @@ public class MetadataInfo implements MetadataCollection{
     }
 
     public String getString(String id) {
-        return (String) _getStructObject(id, _mdFields, false, FieldDataType.FieldType.StringField, false, null);
+        return (String) _getStructObject(id, _mdFields, false, FieldType.StringField, false, null);
     }
 
     public Object get(String id, Object defaultValue) {
@@ -1702,7 +1705,7 @@ public class MetadataInfo implements MetadataCollection{
     }
 
     public String getString(String id, String defaultValue) {
-        return (String) _getStructObject(id, _mdFields, false, FieldDataType.FieldType.StringField, true, defaultValue);
+        return (String) _getStructObject(id, _mdFields, false, FieldType.StringField, true, defaultValue);
     }
 
 
@@ -1794,13 +1797,13 @@ public class MetadataInfo implements MetadataCollection{
     }
 
     public static class FileInfo {
-        @FieldDataType(value = FieldDataType.FieldType.StringField, readOnly = true)
+        @FieldDataType(value = FieldType.StringField, readOnly = true)
         public String fullPath;
-        @FieldDataType(value = FieldDataType.FieldType.LongField, readOnly = true)
+        @FieldDataType(value = FieldType.LongField, readOnly = true)
         public Long sizeBytes;
-        @FieldDataType(value = FieldDataType.FieldType.StringField, readOnly = true)
+        @FieldDataType(value = FieldType.StringField, readOnly = true)
         public String size;
-        @FieldDataType(value = FieldDataType.FieldType.StringField, readOnly = true)
+        @FieldDataType(value = FieldType.StringField, readOnly = true)
         public String nameWithExt;
         public String name;
         public Calendar createTime;
@@ -1835,9 +1838,9 @@ public class MetadataInfo implements MetadataCollection{
 
     public static class PdfProperties {
         public Float version;
-        @FieldDataType(value = FieldDataType.FieldType.BoolField, nullValueText = "No")
+        @FieldDataType(value = FieldType.BoolField, nullValueText = "No")
         public Boolean compression;
-        @FieldDataType(value = FieldDataType.FieldType.BoolField, nullValueText = "No")
+        @FieldDataType(value = FieldType.BoolField, nullValueText = "No")
         public Boolean encryption;
         public Integer keyLength;
         public String ownerPassword;
@@ -1910,9 +1913,9 @@ public class MetadataInfo implements MetadataCollection{
         public String keywords;
         public String creator;
         public String producer;
-        @FieldDataType(FieldDataType.FieldType.DateField)
+        @FieldDataType(FieldType.DateField)
         public Calendar creationDate;
-        @FieldDataType(FieldDataType.FieldType.DateField)
+        @FieldDataType(FieldType.DateField)
         public Calendar modificationDate;
         public String trapped;
     }
@@ -1948,19 +1951,19 @@ public class MetadataInfo implements MetadataCollection{
 
     public static class XmpBasic {
         public String creatorTool;
-        @FieldDataType(FieldDataType.FieldType.DateField)
+        @FieldDataType(FieldType.DateField)
         public Calendar createDate;
-        @FieldDataType(FieldDataType.FieldType.DateField)
+        @FieldDataType(FieldType.DateField)
         public Calendar modifyDate;
         public String baseURL;
         public Integer rating;
         public String label;
         public String nickname;
-        @FieldDataType(FieldDataType.FieldType.TextField)
+        @FieldDataType(FieldType.TextField)
         public List<String> identifiers;
-        @FieldDataType(FieldDataType.FieldType.TextField)
+        @FieldDataType(FieldType.TextField)
         public List<String> advisories;
-        @FieldDataType(FieldDataType.FieldType.DateField)
+        @FieldDataType(FieldType.DateField)
         public Calendar metadataDate;
     }
 
@@ -2020,26 +2023,26 @@ public class MetadataInfo implements MetadataCollection{
     public static class XmpDublinCore {
         public String title;
         public String description;
-        @FieldDataType(FieldDataType.FieldType.TextField)
+        @FieldDataType(FieldType.TextField)
         public List<String> creators;
-        @FieldDataType(FieldDataType.FieldType.TextField)
+        @FieldDataType(FieldType.TextField)
         public List<String> contributors;
         public String coverage;
-        @FieldDataType(FieldDataType.FieldType.DateField)
+        @FieldDataType(FieldType.DateField)
         public List<Calendar> dates;
         public String format;
         public String identifier;
-        @FieldDataType(FieldDataType.FieldType.TextField)
+        @FieldDataType(FieldType.TextField)
         public List<String> languages;
-        @FieldDataType(FieldDataType.FieldType.TextField)
+        @FieldDataType(FieldType.TextField)
         public List<String> publishers;
-        @FieldDataType(FieldDataType.FieldType.TextField)
+        @FieldDataType(FieldType.TextField)
         public List<String> relationships;
         public String rights;
         public String source;
-        @FieldDataType(FieldDataType.FieldType.TextField)
+        @FieldDataType(FieldType.TextField)
         public List<String> subjects;
-        @FieldDataType(FieldDataType.FieldType.TextField)
+        @FieldDataType(FieldType.TextField)
         public List<String> types;
     }
 
@@ -2087,7 +2090,7 @@ public class MetadataInfo implements MetadataCollection{
     public static class XmpRights {
         public String certificate;
         public Boolean marked;
-        @FieldDataType(FieldDataType.FieldType.TextField)
+        @FieldDataType(FieldType.TextField)
         public List<String> owner;
         public String usageTerms;
         public String webStatement;
@@ -2120,26 +2123,26 @@ public class MetadataInfo implements MetadataCollection{
         public Boolean fitWindow;
         public Boolean centerWindow;
         public Boolean displayDocTitle;
-        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PDViewerPreferences.NON_FULL_SCREEN_PAGE_MODE.class)
+        @FieldDataType(value = FieldType.EnumField, enumClass = PDViewerPreferences.NON_FULL_SCREEN_PAGE_MODE.class)
         public String nonFullScreenPageMode;
-        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PDViewerPreferences.READING_DIRECTION.class)
+        @FieldDataType(value = FieldType.EnumField, enumClass = PDViewerPreferences.READING_DIRECTION.class)
         public String readingDirection;
-        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
+        @FieldDataType(value = FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
         public String viewArea;
-        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
+        @FieldDataType(value = FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
         public String viewClip;
-        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
+        @FieldDataType(value = FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
         public String printArea;
-        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
+        @FieldDataType(value = FieldType.EnumField, enumClass = PDViewerPreferences.BOUNDARY.class)
         public String printClip;
-        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PDViewerPreferences.DUPLEX.class)
+        @FieldDataType(value = FieldType.EnumField, enumClass = PDViewerPreferences.DUPLEX.class)
         public String duplex;
-        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PDViewerPreferences.PRINT_SCALING.class)
+        @FieldDataType(value = FieldType.EnumField, enumClass = PDViewerPreferences.PRINT_SCALING.class)
         public String printScaling;
         //
-        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PageLayout.class)
+        @FieldDataType(value = FieldType.EnumField, enumClass = PageLayout.class)
         public String pageLayout;
-        @FieldDataType(value = FieldDataType.FieldType.EnumField, enumClass = PageMode.class)
+        @FieldDataType(value = FieldType.EnumField, enumClass = PageMode.class)
         public String pageMode;
     }
 
@@ -2228,7 +2231,7 @@ public class MetadataInfo implements MetadataCollection{
     //////////////////////////////
     public static class FieldDescription {
         public final String name;
-        public final FieldDataType.FieldType type;
+        public final FieldType type;
         public final String nullValueText;
         public final Class<? extends Enum> enumClass;
         public final boolean isList;
@@ -2246,24 +2249,24 @@ public class MetadataInfo implements MetadataCollection{
             this.enumClass = type.enumClass() != FieldDataType.NoEnumConfigured.class ? type.enumClass() : null;
             this.isWritable = isWritable;
             isList = List.class.isAssignableFrom(field.getType());
-            isNumeric = this.type == FieldDataType.FieldType.LongField || this.type == FieldDataType.FieldType.IntField || this.type == FieldDataType.FieldType.FloatField;
+            isNumeric = this.type == FieldType.LongField || this.type == FieldType.IntField || this.type == FieldType.FloatField;
             isReadonly =  type.readOnly();
         }
 
         public FieldDescription(String name, Field field, boolean isWritable) {
             Class<?> klass = field.getType();
             if (Boolean.class.isAssignableFrom(klass)) {
-                this.type = FieldDataType.FieldType.BoolField;
+                this.type = FieldType.BoolField;
             } else if (Calendar.class.isAssignableFrom(klass)) {
-                this.type = FieldDataType.FieldType.DateField;
+                this.type = FieldType.DateField;
             } else if (Integer.class.isAssignableFrom(klass)) {
-                this.type = FieldDataType.FieldType.IntField;
+                this.type = FieldType.IntField;
             } else if (Long.class.isAssignableFrom(klass)) {
-                this.type = FieldDataType.FieldType.LongField;
+                this.type = FieldType.LongField;
             } else if (Float.class.isAssignableFrom(klass)) {
-                this.type = FieldDataType.FieldType.FloatField;
+                this.type = FieldType.FloatField;
             } else if (String.class.isAssignableFrom(klass)){
-                this.type = FieldDataType.FieldType.StringField;
+                this.type = FieldType.StringField;
             } else {
                 this.type = null;
             }
@@ -2273,7 +2276,7 @@ public class MetadataInfo implements MetadataCollection{
             this.enumClass = null;
             this.isWritable = isWritable;
             isList = List.class.isAssignableFrom(klass);
-            isNumeric = this.type == FieldDataType.FieldType.LongField || this.type == FieldDataType.FieldType.IntField || this.type == FieldDataType.FieldType.FloatField;
+            isNumeric = this.type == FieldType.LongField || this.type == FieldType.IntField || this.type == FieldType.FloatField;
             isReadonly = false;
         }
 
@@ -2316,7 +2319,7 @@ public class MetadataInfo implements MetadataCollection{
                 return null;
             }
             if (isList) {
-                if (type == FieldDataType.FieldType.DateField  ) {
+                if (type == FieldType.DateField  ) {
                     List values = value instanceof List<?> ? (List)value : List.of(value);
                     List<Calendar> rval = new ArrayList<Calendar>();
                     for(Object singleValue: values) {
@@ -2326,7 +2329,7 @@ public class MetadataInfo implements MetadataCollection{
                             for (String line : stringValue.split("\n")) {
                                 try {
                                     rval.add(DateFormat.parseDate(line.trim()));
-                                } catch (ParseError e) {
+                                } catch (InvalidValue e) {
                                     throw new RuntimeException("postProcessDeserializedValue() Invalid date format:" + line);
                                 }
                             }
@@ -2341,12 +2344,12 @@ public class MetadataInfo implements MetadataCollection{
                     return rval;
                 }
             } else {
-               if (type == FieldDataType.FieldType.DateField) {
+               if (type == FieldType.DateField) {
                    if(value instanceof String stringValue) {
 
                        try {
                            return DateFormat.parseDate(stringValue);
-                       } catch (ParseError e) {
+                       } catch (InvalidValue e) {
                            throw new RuntimeException("postProcessDeserializedValue() Invalid date format:" + stringValue);
                        }
                    }
@@ -2356,7 +2359,7 @@ public class MetadataInfo implements MetadataCollection{
                        return cal;
                    }
                }
-               if(type == FieldDataType.FieldType.FloatField){
+               if(type == FieldType.FloatField){
                    if(value instanceof Number n){
                        return n.floatValue();
                    }
@@ -2377,59 +2380,59 @@ public class MetadataInfo implements MetadataCollection{
                 return null;
             }
             if (isList) {
-                if (type == FieldDataType.FieldType.StringField) {
+                if (type == FieldType.StringField) {
                     return List.of(value);
-                } else if (type == FieldDataType.FieldType.TextField) {
+                } else if (type == FieldType.TextField) {
                     return Arrays.asList(value.split("\n"));
-                } else if (type == FieldDataType.FieldType.IntField) {
+                } else if (type == FieldType.IntField) {
                     // TODO: possible allow comma separated interger list
                     return List.of(Integer.parseInt(value));
-                } else if (type == FieldDataType.FieldType.LongField) {
+                } else if (type == FieldType.LongField) {
                     // TODO: possible allow comma separated interger list
                     return List.of(Long.parseLong(value));
-                } else if (type == FieldDataType.FieldType.FloatField) {
+                } else if (type == FieldType.FloatField) {
                     // TODO: possible allow comma separated interger list
                     return List.of(Float.parseFloat(value));
-                } else if (type == FieldDataType.FieldType.BoolField) {
+                } else if (type == FieldType.BoolField) {
                     // TODO: possible allow comma separated boolean list
                     String v = value.toLowerCase().trim();
                     Boolean b = null;
                     if (v.equals("true") || v.equals("yes")) b = true;
                     if (v.equals("false") || v.equals("no")) b = false;
                     return Collections.singletonList(b);
-                } else if (type == FieldDataType.FieldType.DateField) {
+                } else if (type == FieldType.DateField) {
                     List<Calendar> rval = new ArrayList<Calendar>();
                     for (String line : value.split("\n")) {
                         try {
                             rval.add(DateFormat.parseDate(line.trim()));
-                        } catch (ParseError e) {
+                        } catch (InvalidValue e) {
                             throw new RuntimeException("makeValueFromString() Invalid date format:" + line);
                         }
                     }
                     return rval;
                 }
             } else {
-                if (type == FieldDataType.FieldType.StringField) {
+                if (type == FieldType.StringField) {
                     return value;
-                } else if (type == FieldDataType.FieldType.TextField) {
+                } else if (type == FieldType.TextField) {
                     return value;
-                } else if (type == FieldDataType.FieldType.IntField) {
+                } else if (type == FieldType.IntField) {
                     return Integer.parseInt(value);
-                } else if (type == FieldDataType.FieldType.LongField) {
+                } else if (type == FieldType.LongField) {
                     return Long.parseLong(value);
-                } else if (type == FieldDataType.FieldType.FloatField) {
+                } else if (type == FieldType.FloatField) {
                     return Float.parseFloat(value);
-                } else if (type == FieldDataType.FieldType.BoolField) {
+                } else if (type == FieldType.BoolField) {
                     String v = value.toLowerCase().trim();
                     if (v.equals("true") || v.equals("yes")) return true;
                     if (v.equals("false") || v.equals("no")) return false;
                     return null;
-                }else if(type == FieldDataType.FieldType.EnumField) {
+                }else if(type == FieldType.EnumField) {
                     return value.isEmpty() ? null : value;
-                } else if (type == FieldDataType.FieldType.DateField) {
+                } else if (type == FieldType.DateField) {
                     try {
                         return DateFormat.parseDate(value);
-                    } catch (ParseError e) {
+                    } catch (InvalidValue e) {
                         throw new RuntimeException("makeValueFromString() Invalid date format:" + value);
                     }
                 }
@@ -2470,7 +2473,7 @@ public class MetadataInfo implements MetadataCollection{
         }
 
         public String[] getEnumValuesAsStrings(){
-            if(type != FieldDataType.FieldType.EnumField || enumClass == null) {
+            if(type != FieldType.EnumField || enumClass == null) {
                 return null;
             }
 
@@ -2486,7 +2489,7 @@ public class MetadataInfo implements MetadataCollection{
     }
     //////////////////////////////
 
-    protected class XmpSchemaOnDemand {
+    public static class XmpSchemaOnDemand {
         protected XMPMetadata xmpNew;
         protected XMPBasicSchema _basic;
         protected AdobePDFSchema _pdf;
@@ -2512,7 +2515,7 @@ public class MetadataInfo implements MetadataCollection{
         }
 
         public DublinCoreSchema dc() {
-            if (this._dc == null) {
+        if (this._dc == null) {
                 this._dc = this.xmpNew.createAndAddDublinCoreSchema();
             }
             return this._dc;

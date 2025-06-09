@@ -4,11 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>pdf-metadata-edit</groupId>
 	<artifactId>pdf-metadata-editor-parent</artifactId>
-	<version>${revision}</version>
+	<version>4.0.0beta1</version>
 	<modules>
         <module>modules/extension-api</module>
+		<module>modules/basic-extension</module>
 		<module>modules/editor-gui</module>
-    </modules>
+	</modules>
     <packaging>pom</packaging>
 
 	<developers>
@@ -24,19 +25,8 @@
 	</developers>
 
 	<properties>
-		<revision>4.0.0beta1</revision>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<staging.dir>${project.build.directory}</staging.dir>
-		<vm.location></vm.location>
-		<main.file.name>${project.artifactId}-${project.version}</main.file.name>
-		<main.jar.name>${main.file.name}.jar</main.jar.name>
-		<windows.uuid>c71564cd-5068-4d6d-874b-6a189abd40d3</windows.uuid>
-		<packages.list></packages.list>
-		<icon.format></icon.format>
-		<archive.format>zip</archive.format>
-		<archive.suffix></archive.suffix>
 		<pdfbox.version>3.0.3</pdfbox.version>
-		<jpackage.goal>exec</jpackage.goal>
 	</properties>
 
 	<build>
