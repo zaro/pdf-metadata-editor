@@ -4,6 +4,7 @@
 bin/
 dist
 /target/
+/modules/*/target/
 jre_to_bundle/
 .envrc
 test-files/

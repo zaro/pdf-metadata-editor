@@ -9,6 +9,7 @@ import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pmedit.MetadataCollection;
 import pmedit.preset.PresetValues;
 import pmedit.ui.ext.MetadataEditPaneInterface;
 import pmedit.ui.ext.PreferencesWindowInterface;
@@ -58,7 +59,7 @@ public abstract class PmeExtension {
     // Document load/save
     public abstract void onDocumentReload(PDDocument document, File file, MetadataEditPaneInterface metadataEditor) throws XmpParsingException, IOException;
     public abstract void beforeDocumentSave(MetadataEditPaneInterface metadataEditor);
-    public abstract void onDocumentSave(PDDocument document, File file, MetadataEditPaneInterface metadataInfo) throws Exception;
+    public abstract void onDocumentSave(PDDocument document, File file, MetadataCollection metadataInfo) throws Exception;
 
     // Preset values
     public abstract <T extends PresetValues> void onLoadPreset(T values);

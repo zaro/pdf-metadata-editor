@@ -3,6 +3,7 @@ package pmedit.ext;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.xmpbox.xml.XmpParsingException;
+import pmedit.MetadataCollection;
 import pmedit.preset.PresetValues;
 import pmedit.ui.ext.MetadataEditPaneInterface;
 import pmedit.ui.ext.PreferencesWindowInterface;
@@ -38,7 +39,7 @@ public class EmptyExtension extends PmeExtension{
     }
 
     @Override
-    public void onDocumentSave(PDDocument document, File file, MetadataEditPaneInterface metadataInfo) {
+    public void onDocumentSave(PDDocument document, File file, MetadataCollection metadataInfo) {
 
     }
 

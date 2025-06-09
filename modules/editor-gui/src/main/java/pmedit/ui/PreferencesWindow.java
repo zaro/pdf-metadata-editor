@@ -4,6 +4,7 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import pmedit.ext.PmeExtension;
+import pmedit.ui.ext.PreferencesWindowInterface;
 import pmedit.ui.preferences.*;
 
 import javax.swing.*;
@@ -14,7 +15,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.prefs.Preferences;
 
-public class PreferencesWindow extends JDialog {
+public class PreferencesWindow extends JDialog implements PreferencesWindowInterface {
     public JPanel contentPane;
     public JTabbedPane tabbedPane;
     public JButton closeButton;

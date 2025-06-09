@@ -3,13 +3,11 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>pdf-metadata-edit</groupId>
-	<artifactId>pdf-metadata-editor</artifactId>
-	<version>4.0.0beta1</version>
-	<name>Pdf Metadata Editor</name>
-	<description>Simple Editor for PDF metadata</description>
-	<url>https://pdf.metadata.care/</url>
-    <modules>
+	<artifactId>pdf-metadata-editor-parent</artifactId>
+	<version>${revision}</version>
+	<modules>
         <module>modules/extension-api</module>
+		<module>modules/editor-gui</module>
     </modules>
     <packaging>pom</packaging>
 
@@ -26,6 +24,7 @@
 	</developers>
 
 	<properties>
+		<revision>4.0.0beta1</revision>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<staging.dir>${project.build.directory}</staging.dir>
 		<vm.location></vm.location>
@@ -40,437 +39,20 @@
 		<jpackage.goal>exec</jpackage.goal>
 	</properties>
 
-
-	<profiles>
-		<profile>
-			<id>os_linux</id>
-			<activation>
-				<os>
-					<family>unix</family>
-				</os>
-			</activation>
-			<properties>
-				<packages.list>app-image,deb,rpm</packages.list>
-				<archive.format>tar.gz</archive.format>
-				<archive.suffix>-linux</archive.suffix>
-				<icon.format>png</icon.format>
-			</properties>
-		</profile>
-		<profile>
-			<id>os_win</id>
-			<activation>
-				<os>
-					<family>Windows</family>
-				</os>
-			</activation>
-			<properties>
-				<packages.list>app-image,msi,exe</packages.list>
-				<archive.suffix>-windows</archive.suffix>
-				<icon.format>ico</icon.format>
-			</properties>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-dependency-plugin</artifactId>
-						<executions>
-							<execution>
-								<goals>
-									<goal>properties</goal>
-								</goals>
-							</execution>
-							<execution>
-								<id>unpack</id>
-								<phase>prepare-package</phase>
-								<goals>
-									<goal>unpack</goal>
-								</goals>
-								<configuration>
-									<artifactItems>
-										<artifactItem>
-											<groupId>com.pretty-tools</groupId>
-											<artifactId>jdde-bundle</artifactId>
-											<version>2.0.3</version>
-											<type>jar</type>
-											<includes>com/pretty_tools/dde/*.dll</includes>
-											<outputDirectory>${project.build.directory}/win</outputDirectory>
-										</artifactItem>
-									</artifactItems>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-			<dependencies>
-				<dependency>
-					<groupId>com.pretty-tools</groupId>
-					<artifactId>jdde-bundle</artifactId>
-					<version>2.0.3</version>
-				</dependency>
-			</dependencies>
-	</profile>
-		<profile>
-			<id>os_mac</id>
-			<activation>
-				<os>
-					<family>mac</family>
-				</os>
-			</activation>
-			<properties>
-				<packages.list>app-image,dmg</packages.list>
-				<archive.format>zip</archive.format>
-				<archive.suffix>-macos</archive.suffix>
-				<icon.format>icns</icon.format>
-			</properties>
-		</profile>
-	</profiles>
-
-
 	<build>
-		<resources>
-			<resource>
-				<directory>src/main/resources/</directory>
-				<filtering>true</filtering>
-			</resource>
-		</resources>
 		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>versions-maven-plugin</artifactId>
-				<version>2.16.1</version>
-				<configuration>
-					<generateBackupPoms>false</generateBackupPoms>
-				</configuration>
-			</plugin>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.11.0</version>
+				<version>3.13.0</version>
 				<configuration>
 					<source>17</source>
 					<target>17</target>
 					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.3.0</version>
-				<configuration>
-					<outputDirectory>${project.build.directory}/jar</outputDirectory>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.6.0</version>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${project.build.directory}/jar</outputDirectory>
-							<createDependencyReducedPom>false</createDependencyReducedPom>
-							<minimizeJar>true</minimizeJar> <!--  this is not supported in JDK11 -->
-							<transformers>
-								<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer">
-								</transformer>
-								<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
-									<addHeader>false</addHeader>
-								</transformer>
-								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-									<resource>META-INF/services/javax.imageio.spi.ImageReaderSpi</resource>
-								</transformer>
-								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-									<resource>META-INF/services/javax.imageio.spi.ImageWriterSpi</resource>
-								</transformer>
-								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-									<resource>META-INF/services/javax.imageio.spi.ImageInputStreamSpi</resource>
-								</transformer>
-								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-									<resource>META-INF/services/javax.imageio.spi.ImageOutputStreamSpi</resource>
-								</transformer>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<manifestEntries>
-										<Main-Class>pmedit.Main</Main-Class>
-									</manifestEntries>
-								</transformer>
-							</transformers>
-							<artifactSet>
-								<excludes>
-									<exclude>org.junit.jupiter:*</exclude>
-								</excludes>
-							</artifactSet>
-							<filters>
-								<filter>
-									<artifact>com.pretty-tools:jdde-jna</artifact>
-									<includes>
-										<include>com/pretty_tools/dde/**</include>
-									</includes>
-								</filter>
-								<filter>
-									<artifact>commons-logging:commons-logging</artifact>
-									<includes>
-										<include>org/apache/commons/logging/**</include>
-									</includes>
-								</filter>
-								<filter>
-									<artifact>org.apache.pdfbox:pdfbox</artifact>
-									<includes>
-										<include>**</include>
-										<include>org/apache/pdfbox/encoding/**</include>
-									</includes>
-									<excludes>
-										<exclude>org/apache/pdfbox/pdfviewer</exclude>
-									</excludes>
-								</filter>
-								<filter>
-									<artifact>org.apache.pdfbox:jbig2-imageio</artifact>
-									<includes>
-										<include>**</include>
-									</includes>
-								</filter>
-								<filter>
-									<artifact>com.github.jai-imageio:*</artifact>
-									<includes>
-										<include>**</include>
-									</includes>
-								</filter>
-								<filter>
-									<artifact>io.jsonwebtoken:*</artifact>
-									<includes>
-										<include>**</include>
-									</includes>
-								</filter>
-								<filter>
-									<artifact>com.formdev:*</artifact>
-									<includes>
-										<include>**</include>
-									</includes>
-								</filter>
-								<filter>
-									<artifact>*:*</artifact>
-									<excludes>
-										<exclude>META-INF/LICENSE*</exclude>
-										<exclude>META-INF/DEPENDENCIES*</exclude>
-										<exclude>META-INF/MANIFEST*</exclude>
-										<exclude>META-INF/AL2*</exclude>
-										<exclude>META-INF/LGPL*</exclude>
-										<exclude>META-INF/*.SF</exclude>
-										<exclude>META-INF/*.DSA</exclude>
-										<exclude>META-INF/*.RSA</exclude>
-									</excludes>
-								</filter>
-							</filters>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<artifactId>maven-resources-plugin</artifactId>
-				<version>3.3.1</version>
-				<executions>
-					<execution>
-						<id>copy-resources-1</id>
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${staging.dir}/jpackage/</outputDirectory>
-							<nonFilteredFileExtensions>
-								<nonFilteredFileExtension>jar</nonFilteredFileExtension>
-								<nonFilteredFileExtension>icns</nonFilteredFileExtension>
-								<nonFilteredFileExtension>pfx</nonFilteredFileExtension>
-							</nonFilteredFileExtensions>
-							<resources>
-								<resource>
-									<directory>${staging.dir}/jar/</directory>
-									<excludes>
-										<exclude>original-*</exclude>
-									</excludes>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-
-					<execution>
-						<id>copy-jpackage-scripts</id>
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${staging.dir}/jpackage-scripts/</outputDirectory>
-							<nonFilteredFileExtensions>
-								<nonFilteredFileExtension>icns</nonFilteredFileExtension>
-								<nonFilteredFileExtension>ico</nonFilteredFileExtension>
-								<nonFilteredFileExtension>png</nonFilteredFileExtension>
-								<nonFilteredFileExtension>pfx</nonFilteredFileExtension>
-							</nonFilteredFileExtensions>
-							<resources>
-								<resource>
-									<directory>jpackage/</directory>
-									<filtering>true</filtering>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.1.2</version>
-			</plugin>
-
-			<plugin>
-				<groupId>com.igormaznitsa</groupId>
-				<artifactId>mvn-jlink-wrapper</artifactId>
-				<version>1.2.4</version>
-				<executions>
-					<execution>
-						<id>call-jdeps</id>
-						<goals>
-							<goal>jdeps</goal>
-						</goals>
-						<configuration>
-							<output>${project.build.directory}${file.separator}jdeps.out</output>
-							<options>
-								<option>${project.build.directory}${file.separator}/jar/${main.jar.name}</option>
-							</options>
-						</configuration>
-					</execution>
-					<execution>
-						<id>call-jlink</id>
-						<goals>
-							<goal>jlink</goal>
-						</goals>
-						<configuration>
-							<jdepsReportPath>${project.build.directory}${file.separator}jdeps.out</jdepsReportPath>
-							<output>${project.build.directory}${file.separator}preparedJDK</output>
-							<addModules>jdk.zipfs</addModules>
-							<options>
-								<option>--compress=2</option>
-								<option>--no-header-files</option>
-								<option>--no-man-pages</option>
-								<option>--strip-debug</option>
-								<option>--strip-native-commands</option>
-							</options>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<version>3.1.0</version>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>${jpackage.goal}</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<executable>bash</executable>
-					<arguments>
-						<argument>${staging.dir}/jpackage-scripts/build_jpackages.sh</argument>
-						<argument>${packages.list}</argument>
-					</arguments>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>3.6.0</version>
-				<configuration>
-					<descriptors>
-						<descriptor>jpackage/assembly-zip.xml</descriptor>
-					</descriptors>
-					<finalName>packages/${main.file.name}${archive.suffix}</finalName>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
 		</plugins>
 
-
-		<pluginManagement>
-			<plugins>
-				<!--This
-				plugin's configuration is used to store Eclipse m2e settings only. It has no influence on
-				the Maven build itself.-->
-				<plugin>
-					<groupId>org.eclipse.m2e</groupId>
-					<artifactId>lifecycle-mapping</artifactId>
-					<version>1.0.0</version>
-					<configuration>
-						<lifecycleMappingMetadata>
-							<pluginExecutions>
-								<pluginExecution>
-									<pluginExecutionFilter>
-										<groupId>org.moditect</groupId>
-										<artifactId>
-											moditect-maven-plugin
-										</artifactId>
-										<versionRange>
-											[1.0.0.Beta1,)
-										</versionRange>
-										<goals>
-											<goal>
-												generate-module-info
-											</goal>
-										</goals>
-									</pluginExecutionFilter>
-									<action>
-										<execute></execute>
-									</action>
-								</pluginExecution>
-								<pluginExecution>
-									<pluginExecutionFilter>
-										<groupId>
-											org.apache.maven.plugins
-										</groupId>
-										<artifactId>
-											maven-dependency-plugin
-										</artifactId>
-										<versionRange>
-											[2.8,)
-										</versionRange>
-										<goals>
-											<goal>properties</goal>
-										</goals>
-									</pluginExecutionFilter>
-									<action>
-										<execute></execute>
-									</action>
-								</pluginExecution>
-							</pluginExecutions>
-						</lifecycleMappingMetadata>
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
 	</build>
 	<dependencies>
 		<dependency>
@@ -489,41 +71,6 @@
 			<version>${pdfbox.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.pdfbox</groupId>
-			<artifactId>jbig2-imageio</artifactId>
-			<version>3.0.3</version>
-		</dependency>
-		<dependency>
-			<groupId>com.github.jai-imageio</groupId>
-			<artifactId>jai-imageio-core</artifactId>
-			<version>1.4.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.github.jai-imageio</groupId>
-			<artifactId>jai-imageio-jpeg2000</artifactId>
-			<version>1.4.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.intellij</groupId>
-			<artifactId>forms_rt</artifactId>
-			<version>7.0.3</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jetbrains</groupId>
-			<artifactId>annotations</artifactId>
-			<version>26.0.1</version>
-		</dependency>
-		<dependency>
-			<groupId>com.formdev</groupId>
-			<artifactId>flatlaf</artifactId>
-			<version>3.6</version>
-		</dependency>
-		<dependency>
-			<groupId>com.toedter</groupId>
-			<artifactId>jcalendar</artifactId>
-			<version>1.4</version>
-		</dependency>
-		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<version>2.18.0</version>
@@ -534,70 +81,9 @@
 			<version>2.18.0</version>
 		</dependency>
 		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-engine</artifactId>
-			<version>5.11.0</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-params</artifactId>
-			<version>5.11.0</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.junit-pioneer</groupId>
-			<artifactId>junit-pioneer</artifactId>
-			<version>2.3.0</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.netbeans</groupId>
-			<artifactId>jemmy</artifactId>
-			<version>2.2.7.5</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>net.java.dev.jna</groupId>
 			<artifactId>jna-platform</artifactId>
 			<version>5.5.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>4.5.13</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpasyncclient</artifactId>
-			<version>4.1.4</version>
-		</dependency>
-		<dependency>
-			<groupId>com.opencsv</groupId>
-			<artifactId>opencsv</artifactId>
-			<version>5.1</version>
-		</dependency>
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-api</artifactId>
-			<version>0.12.6</version>
-		</dependency>
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-impl</artifactId>
-			<version>0.12.6</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-jackson</artifactId> <!-- or jjwt-gson if Gson is preferred -->
-			<version>0.12.6</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-		    <groupId>com.pretty-tools</groupId>
-		    <artifactId>jdde-bundle</artifactId>
-		    <version>2.0.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.reflections</groupId>
@@ -628,10 +114,4 @@
 		</dependency>
 	</dependencies>
 
-	<repositories>
-		<repository>
-			<id>github-jdde</id>
-			<url>https://maven.pkg.github.com/zaro/jdde-bundle</url>
-		</repository>
-	</repositories>
 </project>
