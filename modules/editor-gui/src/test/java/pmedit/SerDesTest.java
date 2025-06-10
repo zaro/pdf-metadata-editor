@@ -201,7 +201,7 @@ public class SerDesTest {
 				.replace("doc.creationDate: null", "doc.creationDate: \"2020-03-02T01:01:01.000+00:00\"");
 		MetadataInfo parsed = new MetadataInfo();
 		parsed.fromYAML(yaml);;
-		assertTrue(md.isEquivalent(parsed));
+		FilesTestHelper.assertEqualsAll(md, parsed, "From yaml differs");
 	}
 
 
@@ -230,7 +230,7 @@ public class SerDesTest {
 				.replace("\"doc.creationDate\" : null", "\"doc.creationDate\" : \"2020-03-02T01:01:01.000+00:00\"");
 		MetadataInfo parsed = new MetadataInfo();
 		parsed.fromJson(json);;
-		assertTrue(md.isEquivalent(parsed));
+		FilesTestHelper.assertEqualsAll(md, parsed, "From json differs");
 	}
 
 	@Test
