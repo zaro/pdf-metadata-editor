@@ -13,6 +13,11 @@ import java.io.IOException;
 
 public class BasicExtension extends PmeExtension{
     @Override
+    public int priority(){
+        return  0;
+    }
+
+    @Override
     public void init() {
 
     }
