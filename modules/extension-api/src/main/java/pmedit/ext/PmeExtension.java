@@ -30,9 +30,11 @@ public abstract class PmeExtension {
         if (extensionInstance == null) {
             ServiceLoader<PmeExtension> loader = ServiceLoader.load(PmeExtension.class);
             Iterator<PmeExtension> it = loader.iterator();
-            if (it.hasNext()) {
+            while (it.hasNext()) {
                 extensionInstance = it.next();
-            } else {
+                break;
+            }
+            if(extensionInstance == null){
                 RuntimeException e = new RuntimeException("Failed to find any configured extensions! Program is in non functional state!");
                 LOG.error("PmeExtension.get()", e);
                 throw e;

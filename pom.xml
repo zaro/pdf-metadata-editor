@@ -9,6 +9,7 @@
         <module>modules/extension-api</module>
 		<module>modules/basic-extension</module>
 		<module>modules/editor-gui</module>
+		<module>modules/pro-extension</module>
 	</modules>
     <packaging>pom</packaging>
 

@@ -74,7 +74,8 @@ public class BatchCommandTest {
 			MetadataInfo loaded = FilesTestHelper.load(t.file);
 
 			//System.out.println(pdf.getAbsolutePath());
-			assertTrue(t.md.isEquivalent(loaded));
+			FilesTestHelper.assertEqualsAllExceptFileProps(t.md, loaded, "Metadata not supported to be cleared is cleared");
+
 		}
 	}
 
@@ -116,7 +117,7 @@ public class BatchCommandTest {
 			check.basic.creatorTool = "basic.creatorTool";
 			check.dc.languages=Arrays.asList("en","pl");
 			// System.out.println(pdf.getAbsolutePath());
-			assertTrue(check.isEquivalent(loaded));
+			FilesTestHelper.assertEqualsAllExceptFileProps(check, loaded, "Edited metadata differs");
 		}
 	}
 

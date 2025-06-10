@@ -1479,6 +1479,10 @@ public class MetadataInfo implements MetadataCollection{
             this.xmpNew = xmp;
         }
 
+        public XMPMetadata getXmpMetadata(){
+            return xmpNew;
+        }
+
         public XMPBasicSchema basic() {
             if (this._basic == null) {
                 this._basic = this.xmpNew.createAndAddXMPBasicSchema();

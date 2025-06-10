@@ -6,6 +6,7 @@ import org.apache.xmpbox.xml.XmpParsingException;
 import org.junit.jupiter.api.Assertions;
 import pmedit.ext.BasicPdfWriter;
 import pmedit.ext.PdfReader;
+import pmedit.ext.PdfWriter;
 import pmedit.ext.PmeExtension;
 
 import java.io.File;
@@ -17,6 +18,9 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
 public class FilesTestHelper {
@@ -94,6 +98,8 @@ public class FilesTestHelper {
             );
         }).toList();
 
+        PdfWriter writer = PmeExtension.get().newPdfWriter();
+        PdfReader reader = PmeExtension.get().newPdfReader();
 
         Random rand = new Random();
         for (int i = 0; i < numFiles; ++i) {
@@ -167,17 +173,18 @@ public class FilesTestHelper {
             // Ensure there keyLength
             if(md.prop.encryption != null && md.prop.encryption && md.prop.keyLength == null) {
                 md.prop.keyLength  = Arrays.asList(40, 128, 256).get(rand.nextInt(3));
+                assertTrue(writer.allFieldsSupported(md), "Trying to create encrypted PDF, but the current PdfWriter doesn't support it");
             }
 
             //Ensure we are not using compression if not supported by PDF version
-            if(md.prop.version != null && md.prop.version < PmeExtension.get().newPdfWriter().getCompressionMinimumSupportedVersion()) {
+            if(md.prop.version != null && md.prop.version < writer.getCompressionMinimumSupportedVersion()) {
                 md.prop.compression = false;
             }
 
             md.setEnabledForPrefix("file.", false);
-            PmeExtension.get().newPdfWriter().saveAsPDF(md, pdf);
+            writer.saveAsPDF(md, pdf);
             md.setEnabledForPrefix("file.", true);
-            PmeExtension.get().newPdfReader().loadPDFFileInfo(pdf, md);
+            reader.loadPDFFileInfo(pdf, md);
             rval.add(new PMTuple(pdf, md));
         }
         return rval;

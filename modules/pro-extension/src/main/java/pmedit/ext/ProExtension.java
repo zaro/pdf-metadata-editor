@@ -1,0 +1,72 @@
+package pmedit.ext;
+
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.xmpbox.xml.XmpParsingException;
+import pmedit.MetadataCollection;
+import pmedit.preset.PresetValues;
+import pmedit.ui.ext.MetadataEditPaneInterface;
+import pmedit.ui.ext.PreferencesWindowInterface;
+
+import java.io.File;
+import java.io.IOException;
+
+public class ProExtension extends BasicExtension{
+    @Override
+    public void init() {
+
+    }
+
+    @Override
+    public void initTabs(MetadataEditPaneInterface metadataEditor){
+
+    }
+
+    @Override
+    public void initPreferencesTabs(PreferencesWindowInterface preferencesWindow) {
+
+    }
+
+
+    @Override
+    public void onDocumentReload(PDDocument document, File file, MetadataEditPaneInterface metadataEditor) throws XmpParsingException, IOException {
+
+    }
+
+    @Override
+    public void beforeDocumentSave(MetadataEditPaneInterface metadataEditor) {
+
+    }
+
+    @Override
+    public void onDocumentSave(PDDocument document, File file, MetadataCollection metadataInfo) {
+
+    }
+
+    @Override
+    public <T extends PresetValues> void onLoadPreset(T values) {
+
+    }
+
+    @Override
+    public <T extends PresetValues> void onSavePreset(T values) {
+
+    }
+
+    @Override
+    public <T extends PresetValues> void onDeletePreset(T values) {
+
+    }
+
+    @Override
+    public void onPreferencesRefresh(PreferencesWindowInterface preferencesWindow) {
+
+    }
+
+    @Override
+    public ProPdfWriter newPdfWriter() {
+        return new ProPdfWriter();
+    }
+
+
+}
