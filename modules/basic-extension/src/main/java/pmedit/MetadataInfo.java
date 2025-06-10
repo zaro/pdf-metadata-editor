@@ -872,6 +872,7 @@ public class MetadataInfo implements MetadataCollection{
             version = value;
             compression = value;
             encryption  = value;
+            keyLength = value;
             ownerPassword  = value;
             userPassword  = value;
             canPrint = value;
