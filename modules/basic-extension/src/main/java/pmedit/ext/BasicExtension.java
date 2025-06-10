@@ -18,6 +18,21 @@ public class BasicExtension extends PmeExtension{
     }
 
     @Override
+    public boolean hasBatch(){
+        return false;
+    }
+
+    @Override
+    public boolean giveBatch(String moto){
+        return false;
+    }
+
+    @Override
+    public String getBatch(){
+        return "n/a";
+    }
+
+    @Override
     public void init() {
 
     }
@@ -65,6 +80,11 @@ public class BasicExtension extends PmeExtension{
 
     @Override
     public void onPreferencesRefresh(PreferencesWindowInterface preferencesWindow) {
+
+    }
+
+    @Override
+    public void onPreferencesSave(PreferencesWindowInterface preferencesWindow) {
 
     }
 
