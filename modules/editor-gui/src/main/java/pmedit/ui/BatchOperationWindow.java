@@ -6,6 +6,7 @@ import com.intellij.uiDesigner.core.Spacer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pmedit.*;
+import pmedit.ext.PmeExtension;
 import pmedit.prefs.Preferences;
 import pmedit.serdes.SerDeslUtils;
 import pmedit.ui.components.TextPaneWithLinks;
@@ -410,7 +411,7 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
     }
 
     protected void refreshLicense() {
-        if (!BatchMan.hasBatch()) {
+        if (!PmeExtension.get().hasBatch()) {
             btnAction.setEnabled(false);
             statusSummary.setVisible(true);
             statusSummary.setText("<p align=center>No batch license. In order to use batch operations please get a license from <a href='" + Constants.batchLicenseUrl + "'>" + Constants.batchLicenseUrl + "<a></p>");

@@ -51,6 +51,9 @@ public abstract class PmeExtension {
 
     // Configuration methods
     public abstract int priority();
+    public abstract boolean hasBatch();
+    public abstract boolean giveBatch(String moto);
+    public abstract String getBatch();
 
     // Init
     public abstract void init();
@@ -60,6 +63,7 @@ public abstract class PmeExtension {
 
     // Preferences
     public abstract void onPreferencesRefresh(PreferencesWindowInterface preferencesWindow);
+    public abstract void onPreferencesSave(PreferencesWindowInterface preferencesWindow);
 
     // Document load/save
     public abstract void onDocumentReload(PDDocument document, File file, MetadataEditPaneInterface metadataEditor) throws XmpParsingException, IOException;

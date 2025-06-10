@@ -603,7 +603,7 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
     }
 
     public void copyToMetadata(final MetadataInfo metadataInfo) {
-        boolean hasBatch = BatchMan.hasBatch();
+        boolean hasBatch = PmeExtension.get().hasBatch();
 
         traverseFields(new MetadataEditPane.FieldSetGet() {
             @Override
@@ -838,7 +838,7 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
     }
 
     public void initComponents() {
-        boolean hasBatch = BatchMan.hasBatch();
+        boolean hasBatch = PmeExtension.get().hasBatch();
         licenseRequiredText.setVisible(!hasBatch);
         propKeyLength.setModel(new DefaultComboBoxModel<Integer>(new Integer[]{40, 128, 256}));
 

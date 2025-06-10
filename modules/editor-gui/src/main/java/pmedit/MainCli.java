@@ -1,6 +1,7 @@
 package pmedit;
 
 import pmedit.CommandLine.ParseError;
+import pmedit.ext.PmeExtension;
 
 import java.io.File;
 
@@ -91,8 +92,9 @@ public class MainCli {
 
     public static void main(CommandLine cmdLine) {
         if (cmdLine.licenseKey != null) {
-            if (BatchMan.giveBatch(cmdLine.licenseKey)) {
-                System.out.println("Installed license for : " + BatchMan.getBatch());
+            PmeExtension ext = PmeExtension.get();
+            if (ext.giveBatch(cmdLine.licenseKey)) {
+                System.out.println("Installed license for : " + ext.getBatch());
             } else {
                 System.out.println("Invalid license!");
             }
