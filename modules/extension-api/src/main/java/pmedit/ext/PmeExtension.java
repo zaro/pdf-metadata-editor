@@ -39,6 +39,7 @@ public abstract class PmeExtension {
                 LOG.error("PmeExtension.get()", e);
                 throw e;
             }
+            LOG.info("Loaded extension: {}", extensionInstance.getClass());
         }
         return extensionInstance;
     }
