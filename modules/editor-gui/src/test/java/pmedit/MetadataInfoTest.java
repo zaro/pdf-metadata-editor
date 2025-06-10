@@ -7,6 +7,7 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import pmedit.ext.PmeExtension;
 
 class MetadataInfoTest {
@@ -56,7 +57,8 @@ class MetadataInfoTest {
 	}
 	
 	@Test
-    void testFuzzing() throws Exception {
+	@EnabledIfSystemProperty(named = "flavour" , matches ="pro")
+	void testFuzzing() throws Exception {
 		for(FilesTestHelper.PMTuple t: FilesTestHelper.randomFiles(NUM_FILES)){
 			MetadataInfo loaded = FilesTestHelper.load(t.file);
 
@@ -75,6 +77,7 @@ class MetadataInfoTest {
 	}
 
 	@Test
+	@EnabledIfSystemProperty(named = "flavour" , matches ="pro")
     void testRemove() throws Exception, IOException, Exception{
 		for(FilesTestHelper.PMTuple t: FilesTestHelper.randomFiles(1)){
 			MetadataInfo loaded = FilesTestHelper.load(t.file);

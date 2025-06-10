@@ -4,6 +4,7 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import pmedit.ext.PmeExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -11,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
 import java.security.Permission;
 
+@EnabledIfSystemProperty(named = "flavour" , matches ="pro")
 public class EncryptionTest {
     public static int NUM_FILES=1;
 
