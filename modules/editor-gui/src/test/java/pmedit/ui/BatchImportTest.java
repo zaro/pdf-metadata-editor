@@ -98,10 +98,9 @@ public class BatchImportTest  extends  BaseJemmyTest {
         new JTextPaneOperator(topFrame, "Finished successfully!");
 
         for(MetadataInfo ed: expected){
-            MetadataInfo md = new MetadataInfo();
             File f  = new File(ed.file.fullPath);
             f = f.isAbsolute() ? f : new File(FilesTestHelper.getTempDir(), ed.file.fullPath);
-            PmeExtension.get().newPdfReader().loadFromPDF(f, md);
+            MetadataInfo md = FilesTestHelper.load(f);
 
 
             FilesTestHelper.assertEqualsAllExceptFileProps(md, ed, "Imported metadata");
