@@ -13,6 +13,11 @@ import java.io.IOException;
 
 public class ProExtension extends BasicExtension{
     @Override
+    public int priority(){
+        return  1000000;
+    }
+
+    @Override
     public void init() {
 
     }

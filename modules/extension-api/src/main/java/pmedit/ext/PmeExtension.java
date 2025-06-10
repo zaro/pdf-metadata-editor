@@ -28,21 +28,29 @@ public abstract class PmeExtension {
 
     public static PmeExtension get() {
         if (extensionInstance == null) {
+            LOG.debug("Looking for extension in classpath {}" , System.getProperty("java.class.path"));
+            long start = System.currentTimeMillis();
             ServiceLoader<PmeExtension> loader = ServiceLoader.load(PmeExtension.class);
-            Iterator<PmeExtension> it = loader.iterator();
-            while (it.hasNext()) {
-                extensionInstance = it.next();
-                break;
+            for (PmeExtension ext : loader) {
+                if (extensionInstance == null || ext.priority() > extensionInstance.priority()) {
+                    extensionInstance = ext;
+                }
             }
             if(extensionInstance == null){
                 RuntimeException e = new RuntimeException("Failed to find any configured extensions! Program is in non functional state!");
                 LOG.error("PmeExtension.get()", e);
                 throw e;
             }
-            LOG.info("Loaded extension: {}", extensionInstance.getClass());
+            LOG.info("Loaded extension '{}' in {} ms",
+                    extensionInstance.getClass().getName(),
+                    System.currentTimeMillis() - start
+            );
         }
         return extensionInstance;
     }
+
+    // Configuration methods
+    public abstract int priority();
 
     // Init
     public abstract void init();

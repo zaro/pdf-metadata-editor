@@ -7,8 +7,11 @@ if [ -z "$TYPE" ]; then
   echo MUST specify type
   exit 1
 fi
+
 echo Building "$TYPE" package
 echo System is $(uname -a)
+echo Current PWD="${PWD}"
+
 unameOut="$(uname -s)"
 case "${unameOut}" in
     Linux*)     machine=linux;;
@@ -24,13 +27,13 @@ echo Machine type detected ${machine}
 # Make sure /usr/bin/ is first in the path, bcause of stupid cicrle CI setup
 export PATH=/usr/bin:$PATH
 
-# Workaround stupid circle ci java docker setup
-JAVA_LINK=$(readlink /usr/bin/java || true)
-if [ "$JAVA_LINK" ]; then
-  JDK_BIN=`dirname $JAVA_LINK`
-  echo Prepending $JDK_BIN to PATH
-  export PATH=$JDK_BIN:$PATH
-fi
+## Workaround stupid circle ci java docker setup
+#JAVA_LINK=$(readlink /usr/bin/java || true)
+#if [ "$JAVA_LINK" ]; then
+#  JDK_BIN=`dirname $JAVA_LINK`
+#  echo Prepending $JDK_BIN to PATH
+#  export PATH=$JDK_BIN:$PATH
+#fi
 
 export MSYS_NO_PATHCONV=1
 
