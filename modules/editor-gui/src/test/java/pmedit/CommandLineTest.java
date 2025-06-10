@@ -1,10 +1,7 @@
 package pmedit;
 
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.List;
+import java.util.*;
 
 
 import org.junit.jupiter.api.Test;
@@ -147,7 +144,7 @@ public class CommandLineTest {
 			if(field.endsWith("Date")){
 				assertEquals(DateFormat.formatDateTimeFull(cal), DateFormat.formatDateTimeFull(((Calendar) c.params.metadata.get(field))), "Incorrectly parsed:" + field);
 			} else  if(field.endsWith(".dates")){
-				assertEquals(Arrays.asList(cal, cal), c.params.metadata.get(field), "Incorrectly parsed:" + field);
+				assertEquals(DateFormat.formatDateTimeFull(Arrays.asList(cal, cal)), DateFormat.formatDateTimeFull((List<Calendar>)c.params.metadata.get(field)), "Incorrectly parsed:" + field);
 			} else if(field.endsWith(".rating")){
 				assertEquals(17, c.params.metadata.get(field), "Incorrectly parsed:" + field);
 			} else if(md.getFieldDescription(field).isList){
