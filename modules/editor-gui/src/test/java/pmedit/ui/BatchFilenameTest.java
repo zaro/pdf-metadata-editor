@@ -92,9 +92,7 @@ public class BatchFilenameTest  extends  BaseJemmyTest {
 
         TemplateString ts = new TemplateString(template);
         for(Path p: Files.list(FilesTestHelper.getTempDir().toPath()).toList()){
-            MetadataInfo md = new MetadataInfo();
-            PmeExtension.get().newPdfReader().loadFromPDF(p.toFile(), md);
-
+            MetadataInfo md = FilesTestHelper.load(p.toFile());
 
             assertEquals(new TemplateString(template).process(md), md.file.nameWithExt, "File name incorrect after rename");
         }
@@ -119,8 +117,7 @@ public class BatchFilenameTest  extends  BaseJemmyTest {
         new JTextPaneOperator(topFrame, "Finished successfully!");
 
         for(Path p: Files.list(FilesTestHelper.getTempDir().toPath()).toList()){
-            MetadataInfo md = new MetadataInfo();
-            PmeExtension.get().newPdfReader().loadFromPDF(p.toFile(), md);
+            MetadataInfo md = FilesTestHelper.load(p.toFile());
 
 
             String[] parts = md.file.name.split("-");
@@ -149,8 +146,7 @@ public class BatchFilenameTest  extends  BaseJemmyTest {
         new JTextPaneOperator(topFrame, "Finished successfully!");
 
         for(Path p: Files.list(FilesTestHelper.getTempDir().toPath()).toList()){
-            MetadataInfo md = new MetadataInfo();
-            PmeExtension.get().newPdfReader().loadFromPDF(p.toFile(), md);
+            MetadataInfo md = FilesTestHelper.load(p.toFile());
 
 
             String[] parts = md.file.name.split("-");
