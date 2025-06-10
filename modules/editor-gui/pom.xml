@@ -348,7 +348,7 @@
 							</nonFilteredFileExtensions>
 							<resources>
 								<resource>
-									<directory>${project.parent.basedir}/jpackage/</directory>
+									<directory>${project.basedir}/jpackage/</directory>
 									<filtering>true</filtering>
 								</resource>
 							</resources>

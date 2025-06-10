@@ -42,5 +42,10 @@
             <version>0.12.6</version>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>com.intellij</groupId>
+            <artifactId>forms_rt</artifactId>
+            <version>7.0.3</version>
+        </dependency>
     </dependencies>
 </project>

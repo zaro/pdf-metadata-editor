@@ -9,7 +9,6 @@
         <module>modules/extension-api</module>
 		<module>modules/basic-extension</module>
 		<module>modules/editor-gui</module>
-		<module>modules/pro-extension</module>
 	</modules>
     <packaging>pom</packaging>
 
@@ -29,6 +28,21 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<pdfbox.version>3.0.3</pdfbox.version>
 	</properties>
+
+	<profiles>
+		<profile>
+			<id>pro</id>
+			<activation>
+				<property>
+					<name>flavour</name>
+					<value>pro</value>
+				</property>
+			</activation>
+			<modules>
+				<module>modules/pro-extension</module>
+			</modules>
+		</profile>
+	</profiles>
 
 	<build>
 		<plugins>
