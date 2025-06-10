@@ -11,6 +11,8 @@ import java.io.IOException;
 public interface PdfWriter {
     float getCompressionMinimumSupportedVersion();
 
+    boolean allFieldsSupported(MetadataCollection mc);
+
     boolean saveToPDF(MetadataCollection mc, PDDocument document,  File pdfFile) throws Exception;
     File saveAsPDF(MetadataCollection mc, File pdfFile, File newFile) throws Exception ;
     File saveAsPDF(MetadataCollection mc, File pdfFile) throws Exception;
