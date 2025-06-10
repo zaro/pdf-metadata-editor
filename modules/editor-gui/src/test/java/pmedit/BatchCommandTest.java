@@ -9,10 +9,12 @@ import java.util.List;
 
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import pmedit.FilesTestHelper.PMTuple;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@EnabledIfSystemProperty(named = "flavour" , matches ="pro")
 public class BatchCommandTest {
 
 	static int NUM_FILES = 5;

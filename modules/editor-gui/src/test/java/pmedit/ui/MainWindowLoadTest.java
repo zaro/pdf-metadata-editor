@@ -106,10 +106,10 @@ public class MainWindowLoadTest  extends  BaseJemmyTest  {
         })) {
             new JButtonOperator(topFrame, "Open PDF").push();
             openFileChooser("Open", testData.file);
-            MetadataInfo check = testData.md.clone();
-            check.copyOnlyEnabled(defaultMetadata);
-            check.pdf.keywords = check.doc.title;
-            checkMetadataPaneValues(topFrame, check);
+            MetadataInfo expected = testData.md.clone();
+            expected.copyOnlyEnabled(defaultMetadata);
+            expected.pdf.keywords = expected.doc.title;
+            checkMetadataPaneValues(topFrame, expected);
         }
 
     }

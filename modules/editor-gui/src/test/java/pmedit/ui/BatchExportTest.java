@@ -2,6 +2,8 @@ package pmedit.ui;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junitpioneer.jupiter.SetSystemProperty;
 import org.netbeans.jemmy.ClassReference;
 import org.netbeans.jemmy.operators.*;
@@ -20,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static pmedit.ui.UiTestHelpers.openFileChooser;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
+@EnabledIfSystemProperty(named = "flavour" , matches ="pro")
 @SetSystemProperty(key = "junitTest", value = "true")
 public class BatchExportTest extends  BaseJemmyTest {
     java.util.List<FilesTestHelper.PMTuple> initialFiles;

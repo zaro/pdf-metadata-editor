@@ -4,10 +4,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.netbeans.jemmy.JemmyProperties;
 
 public class BaseJemmyTest {
-        @BeforeAll
-        static void setupJemmyTimeouts() {
-            setFastTimeouts();
-        }
+    @BeforeAll
+    static void setupJemmyTimeouts() {
+        setFastTimeouts();
+    }
 
     private static void setFastTimeouts() {
         String[] timeoutNames = {

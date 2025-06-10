@@ -145,15 +145,15 @@ public class CommandLineTest {
 		for(String field: mdFieldList){
 			assertTrue(c.params.metadata.isEnabled(field));
 			if(field.endsWith("Date")){
-				assertEquals(cal, ((Calendar) c.params.metadata.get(field)));
+				assertEquals(DateFormat.formatDateTimeFull(cal), DateFormat.formatDateTimeFull(((Calendar) c.params.metadata.get(field))), "Incorrectly parsed:" + field);
 			} else  if(field.endsWith(".dates")){
-				assertEquals(Arrays.asList(cal, cal), c.params.metadata.get(field));
+				assertEquals(Arrays.asList(cal, cal), c.params.metadata.get(field), "Incorrectly parsed:" + field);
 			} else if(field.endsWith(".rating")){
-				assertEquals(17, c.params.metadata.get(field));
+				assertEquals(17, c.params.metadata.get(field), "Incorrectly parsed:" + field);
 			} else if(md.getFieldDescription(field).isList){
-				assertEquals(Arrays.asList(field, field), c.params.metadata.get(field));
+				assertEquals(Arrays.asList(field, field), c.params.metadata.get(field), "Incorrectly parsed:" + field);
 			} else {
-				assertEquals(field, c.params.metadata.get(field));
+				assertEquals(field, c.params.metadata.get(field), "Incorrectly parsed:" + field);
 			}
 		}
 		assertTrue(c.fileList.isEmpty());

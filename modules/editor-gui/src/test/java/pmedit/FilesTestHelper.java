@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class FilesTestHelper {
 //    protected static  File tempDir;
     protected static Stack<File> tempDirs = new Stack<>();
+    protected static float DEFAULT_PDF_VERSION = 1.6f;
 
     public static void pushTempDir(String name){
         File tempDir = new File(getTempDir(), name);
@@ -53,6 +54,7 @@ public class FilesTestHelper {
     public static File emptyPdf() throws Exception {
         File temp = File.createTempFile("test-file-", ".pdf", getTempDir());
         PDDocument doc = new PDDocument();
+        doc.setVersion(DEFAULT_PDF_VERSION);
         try {
             // a valid PDF document requires at least one page
             PDPage blankPage = new PDPage();
@@ -87,19 +89,22 @@ public class FilesTestHelper {
         List<String> fields = MetadataInfo.keys();
         List<PMTuple> rval = new ArrayList<FilesTestHelper.PMTuple>();
 
+        PmeExtension extension = PmeExtension.get();
+        PdfWriter writer = extension.newPdfWriter();
+        PdfReader reader = extension.newPdfReader();
+
+
         // Filter out fields, that should not be random
         fields = fields.stream().filter(f -> {
             return !(
-                    f.startsWith("file.") || (
-                            f.startsWith("prop.")
-                            && !f.equals("prop.version")
-                            && !f.equals("prop.compression")
-                    )
+                    f.startsWith("file.") ||
+                            ( !extension.hasBatch() && (
+                                    f.startsWith("rights.") || f.startsWith("prop.") || f.startsWith("viewer.")
+                            ))
+
             );
         }).toList();
 
-        PdfWriter writer = PmeExtension.get().newPdfWriter();
-        PdfReader reader = PmeExtension.get().newPdfReader();
 
         Random rand = new Random();
         for (int i = 0; i < numFiles; ++i) {
@@ -142,7 +147,7 @@ public class FilesTestHelper {
                         md.setAppend(field, rand.nextInt(1000));
                         break;
                     case BoolField:
-                        md.setAppend(field, ((rand.nextInt(1000) & 1) == 1) ? true : false);
+                        md.setAppend(field, (rand.nextInt(1000) & 1) == 1);
                         break;
                     case DateField:
                         Calendar cal = Calendar.getInstance();
@@ -166,6 +171,20 @@ public class FilesTestHelper {
 
             File pdf = emptyPdf();
 
+            // Ensure version & compression are always set for tests, as they always have value when read
+            if(md.prop.version == null){
+                md.prop.version = DEFAULT_PDF_VERSION;
+            }
+            if(md.prop.compression == null){
+                if(extension.hasBatch()) {
+                    md.prop.compression = (rand.nextInt(1000) & 1) == 1;
+                } else {
+                    md.prop.compression = FileOptimizer.getPdfBoxCompression() != 0;
+                }
+            }
+
+
+
             if(beforeSave != null ){
                 beforeSave.accept(md);
             }
@@ -173,7 +192,7 @@ public class FilesTestHelper {
             // Ensure there keyLength
             if(md.prop.encryption != null && md.prop.encryption && md.prop.keyLength == null) {
                 md.prop.keyLength  = Arrays.asList(40, 128, 256).get(rand.nextInt(3));
-                assertTrue(writer.allFieldsSupported(md), "Trying to create encrypted PDF, but the current PdfWriter doesn't support it");
+                assertTrue(extension.hasBatch(), "Trying to create encrypted PDF, but the current PdfWriter doesn't support it");
             }
 
             //Ensure we are not using compression if not supported by PDF version
@@ -183,6 +202,7 @@ public class FilesTestHelper {
 
             md.setEnabledForPrefix("file.", false);
             writer.saveAsPDF(md, pdf);
+
             md.setEnabledForPrefix("file.", true);
             reader.loadPDFFileInfo(pdf, md);
             rval.add(new PMTuple(pdf, md));
