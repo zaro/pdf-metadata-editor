@@ -6,7 +6,7 @@ MC_CONFIG_DIR = "{{ [config_root, '.mc'] | join_path }}"
 [tools]
 # specify single or multiple versions
 java = "temurin-17.0.8"
-maven= "3.9.6"
+maven= "3.9.10"
 mc= "2024-10-29T15-34-59Z"
 
 [tasks.update-version]
