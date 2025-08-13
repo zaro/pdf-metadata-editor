@@ -13,9 +13,9 @@ on:
     tags:
       - 'v*'
     branches:
-      - master
+      - "v4-dev"
   pull_request:
-    branches: [ "master" ]
+    branches: [ "v4-dev" ]
   workflow_dispatch:
 jobs:
   build:
