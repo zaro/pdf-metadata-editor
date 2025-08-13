@@ -129,7 +129,7 @@
 				<dependency>
 					<groupId>pdf-metadata-edit</groupId>
 					<artifactId>basic-extension</artifactId>
-					<version>4.0.0beta1</version>
+					<version>${parent.version}</version>
 				</dependency>
 			</dependencies>
 		</profile>
@@ -151,7 +151,7 @@
 				<dependency>
 					<groupId>pdf-metadata-edit</groupId>
 					<artifactId>pro-extension</artifactId>
-					<version>4.0.0beta1</version>
+					<version>${parent.version}</version>
 				</dependency>
 			</dependencies>
 		</profile>
@@ -507,7 +507,7 @@
 		<dependency>
 			<groupId>pdf-metadata-edit</groupId>
 			<artifactId>extension-api</artifactId>
-			<version>4.0.0beta1</version>
+			<version>${parent.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
