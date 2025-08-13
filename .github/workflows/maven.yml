@@ -69,17 +69,17 @@ jobs:
 
       - name: Remove packaging garbage
         if: ${{ startsWith( matrix.os, 'macos' ) }}
-        run: rm -f target/packages/default._*.dmg
+        run: rm -f modules/editor-gui/target/default._*.dmg
 
       - name: Make sure we release JAR file from only one OS
         if: ${{ !startsWith( matrix.os, 'ubuntu' ) }}
-        run: rm -f target/packages/*.jar
+        run: rm -f modules/editor-gui/target/*.jar
         shell: bash
 
       - uses: actions/upload-artifact@v4
         with:
           name: release-files-${{ matrix.os }}
-          path: target/packages/* # or path/to/artifact
+          path: modules/editor-gui/target/* # or path/to/artifact
           retention-days: 1
 
   release:
