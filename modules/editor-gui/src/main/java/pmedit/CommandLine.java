@@ -11,6 +11,7 @@ public class CommandLine {
     public boolean batchGui = false;
     public boolean showHelp = false;
     public String licenseKey;
+    public boolean releaseLicense;
     public String outputDir;
     public CommandLine() {
     }
@@ -92,6 +93,8 @@ public class CommandLine {
                 OptionArgument oa = getOptionArgument(arg, i, args);
                 cmdLine.licenseKey = oa.arg.trim();
                 i+=oa.advance;
+            } else if (arg.startsWith("releaseLicense")) {
+                cmdLine.releaseLicense=true;
             } else if (arg.equalsIgnoreCase("h") || arg.equalsIgnoreCase("help")) {
                 cmdLine.showHelp = true;
             } else if (arg.equalsIgnoreCase("o") || arg.equalsIgnoreCase("outputDir")) {

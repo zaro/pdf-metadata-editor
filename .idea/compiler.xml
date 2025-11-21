@@ -8,11 +8,10 @@
         <outputRelativeToContentRoot value="true" />
         <module name="extension-api" />
         <module name="editor-gui" />
+        <module name="pro-extension" />
         <module name="basic-extension" />
+        <module name="pdf-metadata-editor" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="pro-extension" target="17" />
-    </bytecodeTargetLevel>
   </component>
 </project>

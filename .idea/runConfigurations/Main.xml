@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Main" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="pmedit.Main" />
-    <module name="editor-gui" />
+    <module name="pdf-metadata-editor" />
     <option name="VM_PARAMETERS" value="-DdevLog=true" />
     <method v="2">
       <option name="Make" enabled="true" />

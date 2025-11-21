@@ -7,6 +7,7 @@ import pmedit.MetadataCollection;
 import pmedit.preset.PresetValues;
 import pmedit.ui.ext.MetadataEditPaneInterface;
 import pmedit.ui.ext.PreferencesWindowInterface;
+import pmedit.util.HttpResponseCallback;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,9 +24,12 @@ public class BasicExtension extends PmeExtension{
     }
 
     @Override
-    public boolean giveBatch(String moto){
+    public boolean giveBatch(String moto, HttpResponseCallback responseCallback){
         return false;
     }
+
+    @Override
+    public boolean removeBatch(HttpResponseCallback responseCallback){ return  false; }
 
     @Override
     public String getBatch(){

@@ -1,6 +1,8 @@
 package pmedit;
 
 import io.jsonwebtoken.Claims;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pmedit.prefs.Preferences;
 
 import java.security.KeyFactory;
@@ -14,10 +16,14 @@ import java.util.Date;
 import io.jsonwebtoken.Jwts;
 
 public class BatchMan {
-    static String subject;
-    static Date expires;
+    static Logger LOG = LoggerFactory.getLogger(BatchMan.class);
 
-    public static String maybeHasBatch(Preferences.MotoBoto mb) {
+    public record LicenseValidity(String licensedTo, Date expiresAt) {
+    }
+
+    static LicenseValidity validity;
+
+    public static LicenseValidity maybeHasBatch(Preferences.MotoBoto mb) {
         if (mb.moto() != null) {
             try {
                 // Decode Base64
@@ -40,42 +46,45 @@ public class BatchMan {
                 Date exp = payload.getExpiration();
                 Date now = new Date();
                 if(now.after(iat) && now.before(exp) && mb.timeMs() <= now.getTime()){
-                    expires = exp;
-                    return payload.getSubject();
+                    String deviceId = payload.get("deviceId", String.class);
+                    if(deviceId != null && deviceId.equals(OsCheck.getComputerName())) {
+                        return new LicenseValidity(payload.getSubject(), exp);
+                    }
                 }
-            } catch (NoSuchAlgorithmException | InvalidKeySpecException | RuntimeException ignored) {
+            } catch (NoSuchAlgorithmException | InvalidKeySpecException | RuntimeException e) {
+                LOG.error("Failed validating license", e);
             }
         }
         return null;
     }
 
-    public static String getBatch() {
-        if(subject == null || subject.isEmpty()) {
+    public static LicenseValidity getBatch() {
+        if(validity == null) {
             Preferences.MotoBoto mb = Preferences.getMotoBoto();
             if (mb.moto() == null || mb.moto().isEmpty()) {
                 String ek = System.getenv("PME_LICENSE");
                 mb = new Preferences.MotoBoto(ek, new Date().getTime());
             }
-            subject = maybeHasBatch(mb);
+            validity = maybeHasBatch(mb);
         }
-        return subject;
+        return validity;
     }
 
     public static Date getExpiration() {
-        return expires;
+        return validity.expiresAt();
     }
 
     public static boolean hasBatch() {
         getBatch();
-        return subject != null && !subject.isEmpty();
+        return validity != null && !validity.licensedTo.isEmpty();
     }
 
     public static boolean giveBatch(String moto) {
         if(moto == null ) {
             Preferences.removeMotoBoto();
-            subject = null;
-            expires = null;
-        } if (null != maybeHasBatch(new Preferences.MotoBoto(moto, new Date().getTime()))) {
+        }
+        validity = maybeHasBatch(new Preferences.MotoBoto(moto, new Date().getTime()));
+        if (null != validity) {
             Preferences.setMotoBoto(moto);
             return true;
         }

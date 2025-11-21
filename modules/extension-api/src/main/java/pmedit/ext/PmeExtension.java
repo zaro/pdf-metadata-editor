@@ -9,6 +9,7 @@ import pmedit.MetadataCollection;
 import pmedit.preset.PresetValues;
 import pmedit.ui.ext.MetadataEditPaneInterface;
 import pmedit.ui.ext.PreferencesWindowInterface;
+import pmedit.util.HttpResponseCallback;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,7 +53,8 @@ public abstract class PmeExtension {
     // Configuration methods
     public abstract int priority();
     public abstract boolean hasBatch();
-    public abstract boolean giveBatch(String moto);
+    public abstract boolean giveBatch(String moto, HttpResponseCallback responseCallback);
+    public abstract boolean removeBatch(HttpResponseCallback responseCallback);
     public abstract String getBatch();
 
     // Init

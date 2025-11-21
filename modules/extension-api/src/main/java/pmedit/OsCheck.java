@@ -10,11 +10,14 @@ package pmedit;
  * http://www.docjar.com/html/api/org/apache/commons/lang/SystemUtils.java.html
  */
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Locale;
 
 public final class OsCheck {
     // cached result of OS detection
     private static OSType detectedOS;
+    private static String computerName;
 
     /**
      * detect the operating system from the os.name System property and cache
@@ -45,6 +48,26 @@ public final class OsCheck {
         return getOperatingSystemType() == OSType.Linux;
     }
     public static boolean isMacOs() {return  getOperatingSystemType() == OSType.MacOS; }
+
+    public static String getComputerName() {
+        if(computerName == null) {
+            // Method 1: Try OS-specific environment variables first
+            computerName = System.getenv("COMPUTERNAME"); // Windows
+            if (computerName == null || computerName.isEmpty()) {
+                computerName = System.getenv("HOSTNAME"); // Linux/Mac
+            }
+
+            if (computerName == null || computerName.isEmpty()) {
+                try {
+                    // Method 2: Use InetAddress as fallback
+                    computerName = InetAddress.getLocalHost().getHostName();
+                } catch (UnknownHostException e) {
+                    computerName = "Unknown";
+                }
+            }
+        }
+        return computerName;
+    }
 
     /**
      * types of Operating Systems

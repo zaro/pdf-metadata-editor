@@ -2,6 +2,7 @@ package pmedit;
 
 import pmedit.CommandLine.ParseError;
 import pmedit.ext.PmeExtension;
+import pmedit.util.HttpResponseCallback;
 
 import java.io.File;
 
@@ -16,9 +17,10 @@ public class MainCli {
                     "  -rt, --renameTemplate=STRING    set a rename template for 'rename' command\n" +
                     "                                  any metadata field enclosed in {} will be substituted\n" +
                     "                                  with the actual field value\n" +
-                    "       --license=email,key        install batch license and quit\n" +
-                    "                                  pass email and key separated with comma (no spaces) to \n" +
-                    "                                  install batch license from the command line.\n" +
+                    "       --license=email,key        install Pro license and quit\n" +
+                    "                                  pass email and license ID separated with comma (no spaces) to \n" +
+                    "                                  install Pro license from the command line.\n" +
+                    "       --releaseLicense           release current Pro license and quit\n" +
                     "\n" +
                     "COMMANDS\n" +
                     "\n" +
@@ -93,10 +95,41 @@ public class MainCli {
     public static void main(CommandLine cmdLine) {
         if (cmdLine.licenseKey != null) {
             PmeExtension ext = PmeExtension.get();
-            if (ext.giveBatch(cmdLine.licenseKey)) {
-                System.out.println("Installed license for : " + ext.getBatch());
+            if (ext.giveBatch(cmdLine.licenseKey, new HttpResponseCallback() {
+                @Override
+                public void onSuccess(int statusCode, String responseBody) {
+                    System.out.println("Installed license for : " + ext.getBatch());
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    System.out.println("Invalid license!");
+
+                }
+            })) {
+                System.out.println("Getting license ... ");
             } else {
-                System.out.println("Invalid license!");
+                System.out.println("Invalid license specification!");
+            }
+            return;
+        }
+        if(cmdLine.releaseLicense){
+            PmeExtension ext = PmeExtension.get();
+            String sub  = ext.getBatch();
+            if (ext.removeBatch(new HttpResponseCallback() {
+                @Override
+                public void onSuccess(int statusCode, String responseBody) {
+                    System.out.println("Released license for : " + sub);
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    System.out.println("Failed to release license: " + errorMessage);
+                }
+            })) {
+                System.out.println("Releasing license ... ");
+            } else {
+                System.out.println("Failed to initiate release license operation!");
             }
             return;
         }

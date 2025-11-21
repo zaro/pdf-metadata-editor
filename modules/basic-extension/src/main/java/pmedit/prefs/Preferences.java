@@ -61,6 +61,9 @@ public class Preferences {
     }
 
     public record MotoBoto(String moto, long timeMs){
+        public boolean isEmpty(){
+            return moto == null || moto.isEmpty() || timeMs <=0;
+        }
     }
 
     public static MotoBoto getMotoBoto(){
