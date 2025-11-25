@@ -12,6 +12,7 @@ public class Version {
     protected static String version;
     protected static String appName;
     protected static String pubKey;
+    protected static String uuid;
 
     public static VersionTuple get() {
         if (version == null) {
@@ -53,6 +54,20 @@ public class Version {
             }
         }
         return pubKey;
+    }
+
+    public static String getUUID() {
+        if (uuid == null) {
+            Properties prop = new Properties();
+            try {
+                prop.load(VersionTuple.class.getClassLoader().getResourceAsStream("pmedit/version.properties"));
+                uuid = prop.getProperty("app.uuid", null);
+            } catch (IOException e) {
+                LOG.error("getUUID", e);
+                uuid = null;
+            }
+        }
+        return uuid;
     }
 
 

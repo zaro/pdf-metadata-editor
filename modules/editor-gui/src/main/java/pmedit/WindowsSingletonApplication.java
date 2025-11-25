@@ -6,13 +6,31 @@ import com.sun.jna.platform.win32.Psapi;
 import com.sun.jna.platform.win32.Tlhelp32;
 import com.sun.jna.platform.win32.Win32Exception;
 import com.sun.jna.platform.win32.WinNT.HANDLE;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import pmedit.ui.preferences.OptimizationPreferenesPane;
 
 import static com.sun.jna.platform.win32.Tlhelp32.TH32CS_SNAPALL;
 
 
 public class WindowsSingletonApplication {
-
     public static boolean isAlreadyRunning() {
+        final String MUTEX_NAME = "Global\\{" + Version.getUUID() + "}";
+
+        HANDLE mutex = Kernel32.INSTANCE.CreateMutex(null, true, MUTEX_NAME);
+        if (Kernel32.INSTANCE.GetLastError() == 183) { // ERROR_ALREADY_EXISTS
+            return true;
+        }
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            Kernel32.INSTANCE.ReleaseMutex(mutex);
+            Kernel32.INSTANCE.CloseHandle(mutex);
+        }));
+
+        return false;
+    }
+
+    public static boolean isAlreadyRunningByProcessName() {
         int thisProcessId = Kernel32.INSTANCE.GetCurrentProcessId();
 
         final byte[] filePathUnicode = new byte[1025];
