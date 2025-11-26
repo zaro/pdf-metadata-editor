@@ -59,41 +59,4 @@ public class Preferences {
         json  = SerDeslUtils.toJSON(false, values);
         p.put(tag + "History", json);
     }
-
-    public record MotoBoto(String moto, long timeMs){
-        public boolean isEmpty(){
-            return moto == null || moto.isEmpty() || timeMs <=0;
-        }
-    }
-
-    public static MotoBoto getMotoBoto(){
-        Path f = FileSystems.getDefault().getPath(LocalDataDir.getAppDataDir(), "lic");
-        String moto = "";
-        long timeMs = 0;
-        try {
-            timeMs = Files.readAttributes(f, BasicFileAttributes.class).creationTime().toMillis();
-            moto = Files.readString(f);
-        } catch (IOException e) {
-        }
-        return new MotoBoto(moto, timeMs);
-    }
-
-    public static void setMotoBoto(String moto){
-        Path f = FileSystems.getDefault().getPath(LocalDataDir.getAppDataDir(), "lic");
-        MotoBoto exist = getMotoBoto();
-        try {
-            if(exist.moto.isEmpty() || !exist.moto.equals(moto)) {
-                Files.writeString(f, moto);
-            }
-        } catch (IOException e) {
-        }
-    }
-
-    public static void removeMotoBoto(){
-        Path f = FileSystems.getDefault().getPath(LocalDataDir.getAppDataDir(), "lic");
-        try {
-            Files.delete(f);
-        } catch (IOException e) {
-        }
-    }
 }
