@@ -20,11 +20,11 @@ import java.util.concurrent.*;
 
 
 public class Main {
-    static void setupLogging(boolean secondary) {
+    static void setupLogging(boolean secondary, boolean isCli) {
         java.util.logging.Logger.getLogger("org.apache").setLevel(java.util.logging.Level.FINE);
         System.setProperty("org.apache.commons.logging.simplelog.defaultlog", "debug");
         System.setProperty("logLevel","debug");
-        boolean isCli = isCli();
+        isCli = isCli || isCli();
         if (System.getProperty("devLog") == null) {
             System.setProperty("devLog", isCli ? "" : devLogValue());
         }
@@ -174,7 +174,7 @@ public class Main {
 
         if (OsCheck.isWindows()) {
             boolean alreadyRunning = WindowsSingletonApplication.isAlreadyRunning();
-            setupLogging(alreadyRunning);
+            setupLogging(alreadyRunning, false);
 
             if (alreadyRunning) {
                 LOG().info("WindowsSingletonApplication.isAlreadyRunning() = true");
@@ -195,7 +195,7 @@ public class Main {
                 });
             }
         } else {
-            setupLogging(false);
+            setupLogging(false, false);
         }
 
         CommandLine cmdLine = null;

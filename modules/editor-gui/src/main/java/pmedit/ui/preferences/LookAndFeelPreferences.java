@@ -10,6 +10,7 @@ import com.intellij.uiDesigner.core.Spacer;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pmedit.OsCheck;
 import pmedit.WindowsRegisterContextMenu;
 import pmedit.prefs.GuiPreferences;
 
@@ -58,41 +59,46 @@ public class LookAndFeelPreferences {
 
     public LookAndFeelPreferences() {
         lookAndFeelSelection.setModel(new DefaultComboBoxModel(lafList()));
+        if (OsCheck.isWindows()) {
+            registerContextMenu.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        WindowsRegisterContextMenu.register();
+                    } catch (Exception ex) {
+                        Logger LOG = LoggerFactory.getLogger(LookAndFeelPreferences.class);
+                        LOG.error("Failed to register context menu!", ex);
+                        JOptionPane.showMessageDialog(
+                                SwingUtilities.getWindowAncestor(topPanel),
+                                "Failed to register context menu:\n" + ex,
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE
+                        );
+                    }
+                }
+            });
+            unregisterContextMenu.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        WindowsRegisterContextMenu.unregister();
+                    } catch (Exception ex) {
+                        Logger LOG = LoggerFactory.getLogger(LookAndFeelPreferences.class);
+                        LOG.error("Failed to register context menu!", ex);
+                        JOptionPane.showMessageDialog(
+                                SwingUtilities.getWindowAncestor(topPanel),
+                                "Failed to register context menu:\n" + ex,
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE
+                        );
+                    }
+                }
+            });
+        } else {
+            registerContextMenu.setEnabled(false);
+            unregisterContextMenu.setEnabled(false);
+        }
 
-        registerContextMenu.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    WindowsRegisterContextMenu.register();
-                } catch (Exception ex) {
-                    Logger LOG = LoggerFactory.getLogger(LookAndFeelPreferences.class);
-                    LOG.error("Failed to register context menu!", ex);
-                    JOptionPane.showMessageDialog(
-                            SwingUtilities.getWindowAncestor(topPanel),
-                            "Failed to register context menu:\n" + e,
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE
-                    );
-                }
-            }
-        });
-        unregisterContextMenu.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    WindowsRegisterContextMenu.unregister();
-                } catch (Exception ex) {
-                    Logger LOG = LoggerFactory.getLogger(LookAndFeelPreferences.class);
-                    LOG.error("Failed to register context menu!", ex);
-                    JOptionPane.showMessageDialog(
-                            SwingUtilities.getWindowAncestor(topPanel),
-                            "Failed to register context menu:\n" + e,
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE
-                    );
-                }
-            }
-        });
     }
 
 
@@ -153,6 +159,7 @@ public class LookAndFeelPreferences {
         topPanel.add(label2, new GridConstraints(2, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel1 = new JPanel();
         panel1.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
+        panel1.setEnabled(false);
         topPanel.add(panel1, new GridConstraints(4, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         panel1.setBorder(BorderFactory.createTitledBorder(null, "Context Menu Integration", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
         registerContextMenu = new JButton();

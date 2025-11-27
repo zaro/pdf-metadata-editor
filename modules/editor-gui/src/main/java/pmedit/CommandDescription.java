@@ -72,7 +72,7 @@ public class CommandDescription {
 
     protected CommandDescription(String command, String name, CommandDescription group, String[] inputFileExtensions, int menuMnemonic) {
         this.name = command;
-        this.regKey = "pme." + (regKeyCount++) + command;
+        this.regKey = "pme." + (String.format("%02d", regKeyCount++)) + "." + command;
         this.description = name;
         this.inGroup = group.groupName;
         this.inputFileExtensions = inputFileExtensions;

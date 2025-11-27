@@ -1,5 +1,6 @@
 package pmedit;
 
+import org.slf4j.LoggerFactory;
 import pmedit.CommandLine.ParseError;
 import pmedit.ext.PmeExtension;
 import pmedit.util.HttpResponseCallback;
@@ -137,10 +138,21 @@ public class MainCli {
     }
 
     public static void main(final String[] args) {
+        Main.setupLogging(false, true);
         try {
-            main(CommandLine.parse(args));
-        } catch (ParseError e) {
-            System.err.println(e);
+            CommandLine cmdLine = null;
+            try {
+                cmdLine = CommandLine.parse(args);
+            } catch (ParseError e) {
+                LoggerFactory.getLogger(MainCli.class).error("CommandLine.ParseError", e);
+                System.err.println(e.toString());
+                System.exit(1);
+            }
+            main(cmdLine);
+        } catch (Throwable e) {
+            LoggerFactory.getLogger(MainCli.class).error("Failed cli execution", e);
+            System.err.println(e.toString());
+            System.exit(1);
         }
     }
 

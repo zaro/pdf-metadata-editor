@@ -149,15 +149,10 @@ public class WindowsRegisterContextMenu {
 
             String batchShellKey = batchCmdShellKey(pdfFileType) + "\\" + desc.regKey;
             String batchShellCommandKey = batchShellKey + "\\command";
-//            String batchShellDdeExecKey = batchShellKey + "\\ddeexec";
-//            String batchShellDdeExecApplicationKey = batchShellKey + "\\application";
+
             createRegistryKey(batchShellCommandKey);
-//            createRegistryKey(batchShellDdeExecKey);
-//            createRegistryKey(batchShellDdeExecApplicationKey);
             setRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellKey, "MUIVerb", desc.description);
             setRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellCommandKey, "", batchCommand);
-//            setRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecKey, "", desc.name + " \"%1\"");
-//            setRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecApplicationKey, "", Version.getAppName());
         }
     }
 
@@ -166,11 +161,6 @@ public class WindowsRegisterContextMenu {
         if (pdfFileType != null) {
             String shellKey = editCmdShellKey(pdfFileType);
             String shellCommandKey = shellKey + "\\command";
-//            String shellDdeExecKey = shellKey + "\\ddeexec";
-//            String shellDdeExecApplicationKey = shellDdeExecKey + "\\application";
-
-//            deleteRegistryKey(WinReg.HKEY_CURRENT_USER, shellDdeExecApplicationKey);
-//            deleteRegistryKey(WinReg.HKEY_CURRENT_USER, shellDdeExecKey);
             deleteRegistryKey(WinReg.HKEY_CURRENT_USER, shellCommandKey);
             deleteRegistryKey(WinReg.HKEY_CURRENT_USER, shellKey);
 
@@ -178,15 +168,11 @@ public class WindowsRegisterContextMenu {
             for (CommandDescription desc : CommandDescription.batchCommands) {
                 String batchShellKey = batchCmdShellKey(pdfFileType) + "\\" + desc.regKey;
                 String batchShellCommandKey = batchShellKey + "\\command";
-//                String batchShellDdeExecKey = batchShellKey + "\\ddeexec";
-//                String batchShellDdeExecApplicationKey = batchShellKey + "\\application";
-
-//                deleteRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecApplicationKey);
-//                deleteRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecKey);
                 deleteRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellCommandKey);
                 deleteRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellKey);
             }
             deleteRegistryKey(WinReg.HKEY_CURRENT_USER, batchMenuShellKey(pdfFileType));
+            deleteRegistryKey(WinReg.HKEY_CURRENT_USER, batchCmdShellKey(pdfFileType));
             deleteRegistryKey(WinReg.HKEY_CURRENT_USER, batchMenuKey(pdfFileType));
         }
     }
