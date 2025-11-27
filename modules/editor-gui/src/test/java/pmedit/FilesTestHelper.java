@@ -27,6 +27,7 @@ public class FilesTestHelper {
 //    protected static  File tempDir;
     protected static Stack<File> tempDirs = new Stack<>();
     protected static float DEFAULT_PDF_VERSION = 1.6f;
+    protected static List<Integer> ALLOWED_KEY_LENGTHS = Arrays.asList(40, 128, 256);
 
     public static void pushTempDir(String name){
         File tempDir = new File(getTempDir(), name);
@@ -137,6 +138,11 @@ public class FilesTestHelper {
                     continue;
                 }
 
+                // Encryption can be only explicitly enabled
+                if (field.equals("prop.encryption")) {
+                    continue;
+                }
+
 
                 MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(field);
                 switch (fd.type) {
@@ -189,10 +195,20 @@ public class FilesTestHelper {
                 beforeSave.accept(md);
             }
 
-            // Ensure there keyLength
-            if(md.prop.encryption != null && md.prop.encryption && md.prop.keyLength == null) {
-                md.prop.keyLength  = Arrays.asList(40, 128, 256).get(rand.nextInt(3));
+            // Ensure there is keyLength
+            if(md.prop.encryption != null && md.prop.encryption && !ALLOWED_KEY_LENGTHS.contains(md.prop.keyLength)) {
+                md.prop.keyLength  = ALLOWED_KEY_LENGTHS.get(rand.nextInt(3));
                 assertTrue(extension.hasBatch(), "Trying to create encrypted PDF, but the current PdfWriter doesn't support it");
+            }
+            if(md.prop.encryption == null || !md.prop.encryption){
+                for(String f: MetadataInfo.keys()){
+                    if(f.startsWith("prop.can")){
+                        md.set(f, null);
+                    }
+                }
+                md.prop.keyLength = null;
+                md.prop.ownerPassword = null;
+                md.prop.userPassword = null;
             }
 
             //Ensure we are not using compression if not supported by PDF version
