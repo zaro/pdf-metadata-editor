@@ -7,8 +7,7 @@
     	<fx:resources id="pmeditDeploy" >
     	    <fx:fileset dir="${dist.dir}/" includes="${app.main.jar} "/>
     	    <fx:fileset os="windows" dir="${dist.dir}/win/app/" includes="*" />
-    	    <fx:fileset os="windows" dir="${dist.dir}/win/com/pretty_tools/dde" includes="*.dll" />
-    	</fx:resources> 
+    	</fx:resources>
 	    	
 
     	<!--
