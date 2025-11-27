@@ -232,10 +232,7 @@ public class Main {
         }
 
         executeCommand(cmdLine);
-        if (OsCheck.isWindows()) {
-            DDE.init();
-            LOG().info("DDE: DONE");
-        }
+
         CommandsExecutor commandsExecutor = new CommandsExecutor();
         commandsExecutor.execute();
 
