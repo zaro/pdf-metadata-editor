@@ -15,8 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DDE {
-    static final Logger LOG = LoggerFactory.getLogger(Main.class);
-
     private static final String serviceName = Version.getAppName();
     private static final String topicName = "System";
     public static boolean launcherDDE = System.getProperty("launcherDDE") != null;
@@ -24,6 +22,8 @@ public class DDE {
     private static StandaloneDdeClient server = null;
 
     public static void init() {
+        final Logger LOG = LoggerFactory.getLogger(Main.class);
+
         LOG.info("DDE::init start");
 
         server = new StandaloneDdeClient() {
@@ -82,6 +82,8 @@ public class DDE {
     }
 
     public static void execute(String command) {
+        final Logger LOG = LoggerFactory.getLogger(Main.class);
+
         LOG.info("DDE execute: {}", command);
         if (handler != null) {
             handler.ddeExecute(DDE.splitCommand(command));
@@ -95,6 +97,8 @@ public class DDE {
     }
 
     public static void activate(String command) {
+        final Logger LOG = LoggerFactory.getLogger(Main.class);
+
         LOG.info("DDE activate: {}", command);
         if (handler != null) {
             handler.ddeActivate(DDE.splitCommand(command));

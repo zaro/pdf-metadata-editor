@@ -48,7 +48,7 @@ import java.io.*;
  * @version 1.0.1
  */
 public class FileDrop {
-    static final Logger LOG = LoggerFactory.getLogger(Main.class);
+    final Logger LOG = LoggerFactory.getLogger(Main.class);
 
     /**
      * Discover if the running JVM is modern enough to have drag and drop.
@@ -270,12 +270,14 @@ public class FileDrop {
                     java.io.File file = new java.io.File(new java.net.URI(line));
                     list.add(file);
                 } catch (Exception ex) {
+                    final Logger LOG = LoggerFactory.getLogger(Main.class);
                     LOG.error("Error with {} : {}", line ,  ex.getMessage(), ex);
                 }
             }
 
             return (java.io.File[]) list.toArray(new File[list.size()]);
         } catch (IOException ex) {
+            final Logger LOG = LoggerFactory.getLogger(Main.class);
             LOG.error("FileDrop: IOException", ex);
         }
         return new File[0];
@@ -308,6 +310,8 @@ public class FileDrop {
      * @since 1.0
      */
     public static boolean remove(java.io.PrintStream out, java.awt.Component c, boolean recursive) {   // Make sure we support dnd.
+        final Logger LOG = LoggerFactory.getLogger(Main.class);
+
         if (supportsDnD()) {
             LOG.debug("FileDrop: Removing drag-and-drop hooks.");
             c.setDropTarget(null);

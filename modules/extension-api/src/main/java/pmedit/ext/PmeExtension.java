@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.util.*;
 
 public abstract class PmeExtension {
-    final static  Logger LOG = LoggerFactory.getLogger(PmeExtension.class);
     protected static PmeExtension extensionInstance;
 
     //All providers
@@ -28,6 +27,8 @@ public abstract class PmeExtension {
     }
 
     public static PmeExtension get() {
+        final Logger LOG = LoggerFactory.getLogger(PmeExtension.class);
+
         if (extensionInstance == null) {
             LOG.debug("Looking for extension in classpath {}" , System.getProperty("java.class.path"));
             long start = System.currentTimeMillis();

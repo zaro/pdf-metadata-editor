@@ -20,7 +20,7 @@ import java.util.concurrent.*;
 
 
 public class Main {
-    static {
+    static void setupLogging(boolean secondary) {
         java.util.logging.Logger.getLogger("org.apache").setLevel(java.util.logging.Level.FINE);
         System.setProperty("org.apache.commons.logging.simplelog.defaultlog", "debug");
         System.setProperty("logLevel","debug");
@@ -28,12 +28,13 @@ public class Main {
         if (System.getProperty("devLog") == null) {
             System.setProperty("devLog", isCli ? "" : devLogValue());
         }
-        System.setProperty("logFileName", LocalDataDir.getAppDataDir() + "log.txt");
+        String logFilename = secondary ? "log.singleInstance.txt" :"log.txt"; //"log." + ProcessHandle.current().pid() + ".txt";
+        System.setProperty("logFileName", LocalDataDir.getAppDataDir() +logFilename);
         if (!isCli) {
-            System.out.println("Logfile location:" + LocalDataDir.getAppDataDir() + "log.txt");
+            System.out.println("Logfile location:" + LocalDataDir.getAppDataDir() + logFilename);
         }
     }
-    static final Logger LOG = LoggerFactory.getLogger(Main.class);
+    static final Logger LOG() { return LoggerFactory.getLogger(Main.class); }
 
     protected static int batchGuiCounter = 0;
     static BlockingQueue<CommandLine> cmdQueue = new LinkedBlockingDeque<CommandLine>();
@@ -55,7 +56,7 @@ public class Main {
 
     // this must be swing worker
     public static void makeBatchWindow(final String commandName, final CommandDescription command, final List<String> fileList) {
-        LOG.info("makeBatchWindow: {}", commandName);
+        LOG().info("makeBatchWindow: {}", commandName);
         BatchOperationWindow bs = new BatchOperationWindow(command);
         if(fileList!= null) {
             bs.appendFiles(FileList.fileList(fileList));
@@ -71,11 +72,11 @@ public class Main {
     }
 
     public static void makeEditorWindow(String file) {
-        LOG.info("open editor: {}", file);
+        LOG().info("open editor: {}", file);
         final MainWindow window = new MainWindow(file);
         window.addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(WindowEvent winEvt) {
-                LOG.info("Received windowClosing for {}", window);
+                LOG().info("Received windowClosing for {}", window);
                 editorInstances.remove(window);
                 maybeExit();
             }
@@ -84,7 +85,7 @@ public class Main {
     }
 
     protected static void executeCommandSwingWorker(final CommandLine cmdLine) {
-        LOG.info("executeCommandSwingWorker: {}", cmdLine.toString());
+        LOG().info("executeCommandSwingWorker: {}", cmdLine.toString());
 
         if (cmdLine.hasCommand()) {
             try {
@@ -95,7 +96,7 @@ public class Main {
                     makeBatchWindow(cmdLine.command.name, cmdLine.command, cmdLine.fileList);
                 }
             } catch (Exception e) {
-                LOG.error("executeCommandSwingWorker", e);
+                LOG().error("executeCommandSwingWorker", e);
             }
             return;
         }
@@ -113,7 +114,7 @@ public class Main {
 
                 // If we have file, and a single open empty window, load the file in it
                 if (fileAbsPath != null && editorInstances.size() == 1 && editorInstances.get(0).getCurrentFile() == null) {
-                    LOG.info("executeCommand Found empty editor, using it to load : {}", fileAbsPath);
+                    LOG().info("executeCommand Found empty editor, using it to load : {}", fileAbsPath);
                     editorInstances.get(0).loadFile(fileAbsPath);
                     // If it is only one file to load, there is nothing more to do
                     if(files.size() == 1) {
@@ -123,11 +124,11 @@ public class Main {
                     }
                 }
 
-                LOG.info("executeCommand fileName: {}", fileAbsPath);
+                LOG().info("executeCommand fileName: {}", fileAbsPath);
                 for (MainWindow window : editorInstances) {
                     File wFile = window.getCurrentFile();
                     boolean matched = (fileAbsPath == null && wFile == null) || (wFile != null && wFile.getAbsolutePath().equals(fileAbsPath));
-                    LOG.info("check {} -> matched={}", wFile != null ? wFile.getAbsolutePath() : null, matched);
+                    LOG().info("check {} -> matched={}", wFile != null ? wFile.getAbsolutePath() : null, matched);
                     if (matched) {
                         if (window.getState() == JFrame.ICONIFIED) {
                             window.setState(JFrame.NORMAL);
@@ -140,26 +141,26 @@ public class Main {
                 }
                 makeEditorWindow(file);
             } catch (Exception e) {
-                LOG.error("executeCommandSwingWorker", e);
+                LOG().error("executeCommandSwingWorker", e);
                 maybeExit();
             }
         }
     }
 
     public static void executeCommand(final CommandLine cmdLine) {
-        LOG.debug("executeCommand: {}", cmdLine.toString());
+        LOG().debug("executeCommand: {}", cmdLine.toString());
 
         try {
             cmdQueue.put(cmdLine);
         } catch (InterruptedException e) {
-            LOG.error("executeCommand",e);
+            LOG().error("executeCommand",e);
         }
     }
 
     public static void maybeExit() {
-        LOG.info("maybeExit() batchInstances={}, editorInstances={}, cmdQueue={}", batchInstances.size(), editorInstances.size(), cmdQueue.size());
+        LOG().info("maybeExit() batchInstances={}, editorInstances={}, cmdQueue={}", batchInstances.size(), editorInstances.size(), cmdQueue.size());
         if (batchInstances.isEmpty() && editorInstances.isEmpty() && cmdQueue.isEmpty()) {
-            LOG.info("No instances left, exiting...");
+            LOG().info("No instances left, exiting...");
             System.exit(0);
         }
     }
@@ -170,18 +171,45 @@ public class Main {
 
 
     public static void main(final String[] args) {
+
+        if (OsCheck.isWindows()) {
+            boolean alreadyRunning = WindowsSingletonApplication.isAlreadyRunning();
+            setupLogging(alreadyRunning);
+
+            if (alreadyRunning) {
+                LOG().info("WindowsSingletonApplication.isAlreadyRunning() = true");
+                boolean result = new NamedPipeCommunicator().sendArgumentsToServer(args);
+                if (!result) {
+                    System.exit(1);
+                }
+                return;
+            } else {
+                new NamedPipeCommunicator().startServer(receivedArgs -> {
+                    try {
+                        CommandLine cmdLine = CommandLine.parse(receivedArgs);
+                        executeCommand(cmdLine);
+                    } catch (ParseError e) {
+                        LOG().error("Failed parsing received arguments: {}", (Object) args, e);
+                    }
+
+                });
+            }
+        } else {
+            setupLogging(false);
+        }
+
         CommandLine cmdLine = null;
         try {
             cmdLine = CommandLine.parse(args);
         } catch (ParseError e) {
-            LOG.error("CommandLine.ParseError", e);
+            LOG().error("CommandLine.ParseError", e);
             System.err.println(e.toString());
-            return;
+            System.exit(1);
         }
-        LOG.info("Parsed command line: {}", cmdLine);
+        LOG().info("Parsed command line: {}", cmdLine);
         if (cmdLine.noGui) {
             MainCli.main(cmdLine);
-            return;
+            System.exit(1);
         }
 
         if(OsCheck.isMacOs()){
@@ -194,7 +222,7 @@ public class Main {
         try {
             UIManager.setLookAndFeel(lafClass);
         } catch (UnsupportedLookAndFeelException| ClassNotFoundException| InstantiationException | IllegalAccessException e) {
-            LOG.error("UIManager.setLookAndFeel", e);
+            LOG().error("UIManager.setLookAndFeel", e);
         }
 
         if( OsCheck.isLinux()  && lafClass.startsWith("com.formdev.flatlaf")) {
@@ -203,14 +231,10 @@ public class Main {
             JDialog.setDefaultLookAndFeelDecorated( true );
         }
 
-        if (OsCheck.isWindows() && WindowsSingletonApplication.isAlreadyRunning()) {
-            LOG.info("WindowsSingletonApplication.isAlreadyRunning() = true");
-        }
-
         executeCommand(cmdLine);
         if (OsCheck.isWindows()) {
             DDE.init();
-            LOG.info("DDE: DONE");
+            LOG().info("DDE: DONE");
         }
         CommandsExecutor commandsExecutor = new CommandsExecutor();
         commandsExecutor.execute();
@@ -225,7 +249,8 @@ public class Main {
                 }
             }
         } catch (InterruptedException| ExecutionException e) {
-            LOG.error("main", e);
+            LOG().error("main", e);
+            System.exit(1);
         }
     }
 
@@ -241,11 +266,11 @@ public class Main {
                 CommandLine cmdLine;
                 try {
                     cmdLine = cmdQueue.take();
-                    LOG.info("publish: {}", cmdLine.toString());
+                    LOG().info("publish: {}", cmdLine.toString());
 
                     publish(cmdLine);
                 } catch (InterruptedException e) {
-                    LOG.error("doInBackground", e);
+                    LOG().error("doInBackground", e);
                 }
             }
         }

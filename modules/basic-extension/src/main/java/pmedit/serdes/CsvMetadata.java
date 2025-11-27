@@ -15,9 +15,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class CsvMetadata {
-    static Logger LOG = LoggerFactory.getLogger(CsvMetadata.class);
 
     public static List<MetadataInfo> readFile(File filename) throws IOException, CsvException {
+        Logger LOG = LoggerFactory.getLogger(CsvMetadata.class);
+
         ArrayList<MetadataInfo> parsed = new ArrayList<MetadataInfo>();
         final CSVParser parser =
                 new CSVParserBuilder()

@@ -14,7 +14,7 @@ import pmedit.util.HttpResponseCallback;
 import javax.swing.*;
 
 public class LicenseHttpClientHelper {
-    static Logger LOG = LoggerFactory.getLogger(LicenseHttpClientHelper.class);
+    Logger LOG = LoggerFactory.getLogger(LicenseHttpClientHelper.class);
 
 
     public void makeAsyncPostRequest(String url, String requestBody,

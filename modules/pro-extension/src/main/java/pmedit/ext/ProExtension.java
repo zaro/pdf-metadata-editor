@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.prefs.Preferences;
 
 public class ProExtension extends BasicExtension{
-    static Logger LOG = LoggerFactory.getLogger(ProExtension.class);
+    Logger LOG = LoggerFactory.getLogger(ProExtension.class);
 
     public LicensePreferences licenseForm;
     final Preferences prefs = pmedit.prefs.Preferences.getInstance();

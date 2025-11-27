@@ -32,7 +32,7 @@ import java.util.Calendar;
 import java.util.List;
 
 public class ProPdfWriter extends BasicPdfWriter {
-    static Logger LOG = LoggerFactory.getLogger(ProPdfWriter.class);
+    Logger LOG = LoggerFactory.getLogger(ProPdfWriter.class);
 
     public ProPdfWriter(){
 

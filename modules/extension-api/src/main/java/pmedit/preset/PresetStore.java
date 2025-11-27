@@ -11,7 +11,7 @@ import java.util.Objects;
 
 
 public class PresetStore {
-    final static Logger logger = LoggerFactory.getLogger(PresetStore.class);
+    static Logger logger() {return  LoggerFactory.getLogger(PresetStore.class);}
     static final File presetsDir = new File(LocalDataDir.getAppDataDir(), "presets");
 
     protected static Class<? extends PresetValues> presetValuesClass = PresetValues.class;
@@ -46,7 +46,7 @@ public class PresetStore {
         if(!presetFile.exists()){
             return null;
         }
-        logger.info("Loading: {}", presetFile);
+        logger().info("Loading: {}", presetFile);
         return (T) serDes.deserializePreset(presetFile, presetValuesClass);
     }
 
@@ -56,7 +56,7 @@ public class PresetStore {
         }
         File presetFile = getPresetFile(name);
         serDes.serializePreset(presetFile, values);
-        logger.info("Saved: {}", presetFile);
+        logger().info("Saved: {}", presetFile);
     }
 
     public static void deletePreset(String name){
@@ -64,7 +64,7 @@ public class PresetStore {
         final File presetFile = getPresetFile(name);
         if(presetExists(name)) {
             presetFile.delete();
-            logger.info("Deleted: " + presetFile);
+            logger().info("Deleted: " + presetFile);
         }
     }
 

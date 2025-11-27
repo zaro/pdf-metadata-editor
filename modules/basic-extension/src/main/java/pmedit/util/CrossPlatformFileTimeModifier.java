@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.Calendar;
 
 public class CrossPlatformFileTimeModifier {
-    static Logger LOG = LoggerFactory.getLogger(CrossPlatformFileTimeModifier.class);
 
     public static void setFileTimes(File file, Calendar creationTime,  Calendar modifiedTime) throws IOException {
         FileTime ftCreationTime = creationTime != null ? FileTime.from(creationTime.toInstant()) : null;
@@ -19,6 +18,7 @@ public class CrossPlatformFileTimeModifier {
     }
     public static void setFileTimes(Path filePath, FileTime creationTime, FileTime modifiedTime)
             throws IOException {
+        Logger LOG = LoggerFactory.getLogger(CrossPlatformFileTimeModifier.class);
 
         LOG.trace("setCreateFileTime({}, {}) ", filePath, creationTime);
 

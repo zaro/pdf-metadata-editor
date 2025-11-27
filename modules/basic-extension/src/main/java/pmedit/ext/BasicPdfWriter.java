@@ -27,7 +27,7 @@ import java.util.Calendar;
 import java.util.List;
 
 public class BasicPdfWriter implements PdfWriter {
-    static Logger LOG = LoggerFactory.getLogger(BasicPdfWriter.class);
+    Logger LOG = LoggerFactory.getLogger(BasicPdfWriter.class);
 
     public float getCompressionMinimumSupportedVersion() {
         return COSWriterCompressionPool.MINIMUM_SUPPORTED_VERSION;

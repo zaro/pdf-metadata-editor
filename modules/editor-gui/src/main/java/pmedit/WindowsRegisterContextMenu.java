@@ -9,7 +9,7 @@ import java.io.File;
 import java.net.URISyntaxException;
 
 public class WindowsRegisterContextMenu {
-    static final Logger LOG = LoggerFactory.getLogger(WindowsRegisterContextMenu.class);
+    static Logger LOG() { return LoggerFactory.getLogger(WindowsRegisterContextMenu.class); };
 
     public static String exePath() throws Exception {
         String thisJarDir;
@@ -102,20 +102,20 @@ public class WindowsRegisterContextMenu {
     }
 
     public static void setRegistryKey(com.sun.jna.platform.win32.WinReg.HKEY root, String keyPath, String name, String value) {
-        LOG.info("Registry Create: {} ({})={}" , keyPath ,  name ,  value);
+        LOG().info("Registry Create: {} ({})={}" , keyPath ,  name ,  value);
         try {
             Advapi32Util.registrySetStringValue(root, keyPath, name, value);
         } catch (com.sun.jna.platform.win32.Win32Exception e) {
-            LOG.error("setRegistryKey", e);
+            LOG().error("setRegistryKey", e);
         }
     }
 
     public static void deleteRegistryKey(com.sun.jna.platform.win32.WinReg.HKEY root, String key) {
-        LOG.info("Registry Delete: {}",  key);
+        LOG().info("Registry Delete: {}",  key);
         try {
             Advapi32Util.registryDeleteKey(WinReg.HKEY_CURRENT_USER, key);
         } catch (com.sun.jna.platform.win32.Win32Exception e) {
-            LOG.error("deleteRegistryKey", e);
+            LOG().error("deleteRegistryKey", e);
         }
     }
 
@@ -124,19 +124,19 @@ public class WindowsRegisterContextMenu {
         String pdfFileType = pdfFileType(true);
 
 
-        String exePath = "\"" + exePath() + "\"";
+        String command = "\"" + exePath() + "\" \"%1\"";
         String shellKey = editCmdShellKey(pdfFileType);
         String shellCommandKey = shellKey + "\\command";
-        String shellDdeExecKey = shellKey + "\\ddeexec";
-        String shellDdeExecApplicationKey = shellDdeExecKey + "\\application";
+//        String shellDdeExecKey = shellKey + "\\ddeexec";
+//        String shellDdeExecApplicationKey = shellDdeExecKey + "\\application";
 
         createRegistryKey(shellCommandKey);
-        createRegistryKey(shellDdeExecKey);
-        createRegistryKey(shellDdeExecApplicationKey);
+//        createRegistryKey(shellDdeExecKey);
+//        createRegistryKey(shellDdeExecApplicationKey);
         setRegistryKey(WinReg.HKEY_CURRENT_USER, shellKey, "", Version.getAppName());
-        setRegistryKey(WinReg.HKEY_CURRENT_USER, shellCommandKey, "", exePath);
-        setRegistryKey(WinReg.HKEY_CURRENT_USER, shellDdeExecKey, "", "\"%1\"");
-        setRegistryKey(WinReg.HKEY_CURRENT_USER, shellDdeExecApplicationKey, "", Version.getAppName());
+        setRegistryKey(WinReg.HKEY_CURRENT_USER, shellCommandKey, "", command);
+//        setRegistryKey(WinReg.HKEY_CURRENT_USER, shellDdeExecKey, "", "\"%1\"");
+//        setRegistryKey(WinReg.HKEY_CURRENT_USER, shellDdeExecApplicationKey, "", Version.getAppName());
 
         // Add batch commands
         String batchMenuShellKey = batchMenuShellKey(pdfFileType);
@@ -145,17 +145,19 @@ public class WindowsRegisterContextMenu {
         setRegistryKey(WinReg.HKEY_CURRENT_USER, batchMenuShellKey, "ExtendedSubCommandsKey", pdfFileType + "\\Batch.Menu");
 
         for (CommandDescription desc : CommandDescription.batchCommands) {
+            String batchCommand = "\"" + exePath() + "\" "+ desc.name+" \"%1\"";
+
             String batchShellKey = batchCmdShellKey(pdfFileType) + "\\" + desc.regKey;
             String batchShellCommandKey = batchShellKey + "\\command";
-            String batchShellDdeExecKey = batchShellKey + "\\ddeexec";
-            String batchShellDdeExecApplicationKey = batchShellKey + "\\application";
+//            String batchShellDdeExecKey = batchShellKey + "\\ddeexec";
+//            String batchShellDdeExecApplicationKey = batchShellKey + "\\application";
             createRegistryKey(batchShellCommandKey);
-            createRegistryKey(batchShellDdeExecKey);
-            createRegistryKey(batchShellDdeExecApplicationKey);
+//            createRegistryKey(batchShellDdeExecKey);
+//            createRegistryKey(batchShellDdeExecApplicationKey);
             setRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellKey, "MUIVerb", desc.description);
-            setRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellCommandKey, "", exePath + " " + desc.name);
-            setRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecKey, "", desc.name + " \"%1\"");
-            setRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecApplicationKey, "", Version.getAppName());
+            setRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellCommandKey, "", batchCommand);
+//            setRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecKey, "", desc.name + " \"%1\"");
+//            setRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecApplicationKey, "", Version.getAppName());
         }
     }
 
@@ -164,11 +166,11 @@ public class WindowsRegisterContextMenu {
         if (pdfFileType != null) {
             String shellKey = editCmdShellKey(pdfFileType);
             String shellCommandKey = shellKey + "\\command";
-            String shellDdeExecKey = shellKey + "\\ddeexec";
-            String shellDdeExecApplicationKey = shellDdeExecKey + "\\application";
+//            String shellDdeExecKey = shellKey + "\\ddeexec";
+//            String shellDdeExecApplicationKey = shellDdeExecKey + "\\application";
 
-            deleteRegistryKey(WinReg.HKEY_CURRENT_USER, shellDdeExecApplicationKey);
-            deleteRegistryKey(WinReg.HKEY_CURRENT_USER, shellDdeExecKey);
+//            deleteRegistryKey(WinReg.HKEY_CURRENT_USER, shellDdeExecApplicationKey);
+//            deleteRegistryKey(WinReg.HKEY_CURRENT_USER, shellDdeExecKey);
             deleteRegistryKey(WinReg.HKEY_CURRENT_USER, shellCommandKey);
             deleteRegistryKey(WinReg.HKEY_CURRENT_USER, shellKey);
 
@@ -176,11 +178,11 @@ public class WindowsRegisterContextMenu {
             for (CommandDescription desc : CommandDescription.batchCommands) {
                 String batchShellKey = batchCmdShellKey(pdfFileType) + "\\" + desc.regKey;
                 String batchShellCommandKey = batchShellKey + "\\command";
-                String batchShellDdeExecKey = batchShellKey + "\\ddeexec";
-                String batchShellDdeExecApplicationKey = batchShellKey + "\\application";
+//                String batchShellDdeExecKey = batchShellKey + "\\ddeexec";
+//                String batchShellDdeExecApplicationKey = batchShellKey + "\\application";
 
-                deleteRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecApplicationKey);
-                deleteRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecKey);
+//                deleteRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecApplicationKey);
+//                deleteRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellDdeExecKey);
                 deleteRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellCommandKey);
                 deleteRegistryKey(WinReg.HKEY_CURRENT_USER, batchShellKey);
             }
@@ -198,14 +200,14 @@ public class WindowsRegisterContextMenu {
             try {
                 register();
             } catch (Exception e) {
-                LOG.error("main", e);
+                LOG().error("main", e);
             }
         }
         if (args[0].equalsIgnoreCase("unregister")) {
             try {
                 unregister();
             } catch (Exception e) {
-                LOG.error("main", e);
+                LOG().error("main", e);
             }
         }
     }

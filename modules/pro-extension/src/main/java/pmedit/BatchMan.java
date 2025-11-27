@@ -23,7 +23,7 @@ import java.util.Date;
 import io.jsonwebtoken.Jwts;
 
 public class BatchMan {
-    static Logger LOG = LoggerFactory.getLogger(BatchMan.class);
+    static Logger LOG() {return  LoggerFactory.getLogger(BatchMan.class); }
 
     public record LicenseValidity(String licensedTo, Date expiresAt) {
     }
@@ -59,7 +59,7 @@ public class BatchMan {
                     }
                 }
             } catch (NoSuchAlgorithmException | InvalidKeySpecException | RuntimeException e) {
-                LOG.error("Failed validating license", e);
+                LOG().error("Failed validating license", e);
             }
         }
         return null;
@@ -115,7 +115,7 @@ public class BatchMan {
                 timeMs = Files.readAttributes(f, BasicFileAttributes.class).creationTime().toMillis();
                 moto = new SecureFileHandler(OsCheck.getComputerName()).readDecryptedFile(f.toString());
             } catch (Exception e) {
-                LOG.error("Failed to read license from disk!", e);
+                LOG().error("Failed to read license from disk!", e);
             }
         }
         return new MotoBoto(moto, timeMs);
@@ -129,7 +129,7 @@ public class BatchMan {
                 new SecureFileHandler(OsCheck.getComputerName()).writeEncryptedFile(f.toString(), moto);
             }
         } catch (Exception e) {
-            LOG.error("Failed to write license on disk!", e);
+            LOG().error("Failed to write license on disk!", e);
         }
     }
 

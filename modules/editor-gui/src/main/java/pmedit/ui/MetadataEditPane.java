@@ -38,7 +38,7 @@ import java.util.*;
 import java.util.List;
 
 public class MetadataEditPane implements MetadataEditPaneInterface {
-    static final Logger LOG = LoggerFactory.getLogger(MetadataEditPane.class);
+    final Logger LOG = LoggerFactory.getLogger(MetadataEditPane.class);
     final static  boolean isTesting = System.getProperty("junitTest", "").equals("true");
     Logger logger = LoggerFactory.getLogger(MetadataEditPane.class);
 

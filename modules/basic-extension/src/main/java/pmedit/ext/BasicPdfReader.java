@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Set;
 
 public class BasicPdfReader implements PdfReader{
-    static Logger LOG = LoggerFactory.getLogger(BasicPdfWriter.class);
+    Logger LOG = LoggerFactory.getLogger(BasicPdfWriter.class);
 
     protected static String[] hrSizes = new String[]{"B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
 

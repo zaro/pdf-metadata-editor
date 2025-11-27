@@ -10,7 +10,6 @@ import java.io.InputStreamReader;
 import java.util.*;
 
 public class RunCmd {
-    static final Logger LOG = LoggerFactory.getLogger(RunCmd.class);
 
     public record Result(int status, String out, String err, Exception e, List<String> outLines, List<String> errLines){
         public boolean ok(){
@@ -41,6 +40,8 @@ public class RunCmd {
     }
 
     public static Result execCmd(String[] cmd){
+        final Logger LOG = LoggerFactory.getLogger(RunCmd.class);
+
         String[] cmdWithArgs =cmd;
         if(OsCheck.isWindows()){
             String[] fullCmd = new String[3];

@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.function.Function;
 
 public class MainWindow extends JFrame implements  ProgramWindow {
-    static final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
+    final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
 
     protected static final Dimension MIN_SIZE = new Dimension(860, 660);
     private JPanel contentPane;
@@ -697,6 +697,7 @@ public class MainWindow extends JFrame implements  ProgramWindow {
         int quitKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
         quit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, quitKeyMask));
         quit.addActionListener(e -> {
+            final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
             LOG.info("Exit all instances!");
             System.exit(0);
         });

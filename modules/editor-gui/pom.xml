@@ -340,7 +340,8 @@
 						</goals>
 						<configuration>
 							<outputDirectory>${staging.dir}/jpackage-scripts/</outputDirectory>
-							<nonFilteredFileExtensions>
+                            <includeEmptyDirs>true</includeEmptyDirs>
+                            <nonFilteredFileExtensions>
 								<nonFilteredFileExtension>icns</nonFilteredFileExtension>
 								<nonFilteredFileExtension>ico</nonFilteredFileExtension>
 								<nonFilteredFileExtension>png</nonFilteredFileExtension>
@@ -367,7 +368,7 @@
 			<plugin>
 				<groupId>com.igormaznitsa</groupId>
 				<artifactId>mvn-jlink-wrapper</artifactId>
-				<version>1.2.4</version>
+				<version>1.2.5</version>
 				<executions>
 					<execution>
 						<id>call-jdeps</id>
@@ -390,6 +391,7 @@
 							<jdepsReportPath>${project.build.directory}${file.separator}jdeps.out</jdepsReportPath>
 							<output>${project.build.directory}${file.separator}preparedJDK</output>
 							<addModules>jdk.zipfs</addModules>
+                            <modulePaths>${staging.dir}/jpackage-scripts/cert/</modulePaths>
 							<options>
 								<option>--compress=2</option>
 								<option>--no-header-files</option>
