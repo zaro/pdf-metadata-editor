@@ -100,7 +100,7 @@ JP_OPTS="$JP_OPTS --description '$DESCRIPTION'"
 if [ "$TYPE" = "app-image" -o "$machine" = "mac" ]; then
   JP_OPTS="$JP_OPTS --input '${STAGING_DIR}/jpackage'"
   JP_OPTS="$JP_OPTS --main-class '$MAIN_CLASS'"
-  JP_OPTS="$JP_OPTS --java-options '--add-opens java.base/java.nio=ALL-UNNAMED --add-opens=java.base/jdk.internal.ref=ALL-UNNAMED'"
+  JP_OPTS="$JP_OPTS --java-options '--add-opens=ava.base/java.nio=ALL-UNNAMED --add-opens=java.base/jdk.internal.ref=ALL-UNNAMED'"
   JP_OPTS="$JP_OPTS --main-jar '$MAIN_JAR'"
   JP_OPTS="$JP_OPTS --add-launcher 'Batch ${APP_NAME}=${STAGING_DIR}/jpackage-scripts/batch-launcher.properties'"
   JP_OPTS="$JP_OPTS --add-launcher 'pmedit-cli=${STAGING_DIR}/jpackage-scripts/cli.properties'"

@@ -65,7 +65,7 @@ public class DDE {
 
         server.nameService(serviceName, Ddeml.DNS_REGISTER);
         LOG.info("DDE Registered service name '{}'\n", serviceName);
-
+        LOG.info("DDE: init done.");
     }
 
     private static void close() {

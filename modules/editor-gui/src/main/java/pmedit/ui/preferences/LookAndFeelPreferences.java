@@ -8,6 +8,9 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import pmedit.WindowsRegisterContextMenu;
 import pmedit.prefs.GuiPreferences;
 
 import javax.swing.*;
@@ -59,13 +62,35 @@ public class LookAndFeelPreferences {
         registerContextMenu.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                try {
+                    WindowsRegisterContextMenu.register();
+                } catch (Exception ex) {
+                    Logger LOG = LoggerFactory.getLogger(LookAndFeelPreferences.class);
+                    LOG.error("Failed to register context menu!", ex);
+                    JOptionPane.showMessageDialog(
+                            SwingUtilities.getWindowAncestor(topPanel),
+                            "Failed to register context menu:\n" + e,
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                }
             }
         });
         unregisterContextMenu.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                try {
+                    WindowsRegisterContextMenu.unregister();
+                } catch (Exception ex) {
+                    Logger LOG = LoggerFactory.getLogger(LookAndFeelPreferences.class);
+                    LOG.error("Failed to register context menu!", ex);
+                    JOptionPane.showMessageDialog(
+                            SwingUtilities.getWindowAncestor(topPanel),
+                            "Failed to register context menu:\n" + e,
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                }
             }
         });
     }
