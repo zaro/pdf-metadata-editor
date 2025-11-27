@@ -33,13 +33,15 @@
 		<profile>
 			<id>pro</id>
 			<activation>
-				<property>
-					<name>flavour</name>
-					<value>pro</value>
-				</property>
+                <file>
+                    <exists>modules/extensions/pro-extension/pom.xml</exists>
+                </file>
 			</activation>
+            <properties>
+                <flavour>pro</flavour>
+            </properties>
 			<modules>
-				<module>modules/pro-extension</module>
+				<module>modules/extensions/pro-extension</module>
 			</modules>
 		</profile>
 	</profiles>
