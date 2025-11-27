@@ -49,7 +49,7 @@
         <properties>
           <enabled value="false"/>
         </properties>
-        <border type="none" title="Context Menu Integration"/>
+        <border type="none" title="Windows Explorer Context Menu Integration"/>
         <children>
           <component id="c60ff" class="javax.swing.JButton" binding="registerContextMenu">
             <constraints>
