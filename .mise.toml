@@ -1,6 +1,7 @@
 [env]
 _.file = '.env'
 MC_CONFIG_DIR = "{{ [config_root, '.mc'] | join_path }}"
+MAVEN_OPTS="--sun-misc-unsafe-memory-access=allow"
 
 
 [tools]

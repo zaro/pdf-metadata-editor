@@ -37,9 +37,6 @@
                     <exists>modules/extensions/pro-extension/pom.xml</exists>
                 </file>
 			</activation>
-            <properties>
-                <flavour>pro</flavour>
-            </properties>
 			<modules>
 				<module>modules/extensions/pro-extension</module>
 			</modules>

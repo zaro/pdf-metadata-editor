@@ -112,10 +112,9 @@
 		<profile>
 			<id>pro</id>
 			<activation>
-				<property>
-					<name>flavour</name>
-					<value>pro</value>
-				</property>
+                <file>
+                    <exists>../extensions/pro-extension/pom.xml</exists>
+                </file>
 			</activation>
 			<!-- Pro profile configuration -->
 			<properties>
@@ -547,11 +546,6 @@
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpasyncclient</artifactId>
 			<version>4.1.4</version>
-		</dependency>
-		<dependency>
-		    <groupId>com.pretty-tools</groupId>
-		    <artifactId>jdde-bundle</artifactId>
-		    <version>2.0.3</version>
 		</dependency>
 	</dependencies>
 
