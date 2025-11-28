@@ -14,6 +14,8 @@ import pmedit.annotations.MdStruct;
 import pmedit.annotations.MdStruct.StructType;
 import pmedit.serdes.SerDeslUtils;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -48,6 +50,7 @@ public class MetadataInfo implements MetadataCollection{
         });
     }
     public static Set<String> validMdNames = new LinkedHashSet<String>(keys());
+    private PropertyChangeSupport propertyChangeSupport;
 
 
     @MdStruct
@@ -102,6 +105,13 @@ public class MetadataInfo implements MetadataCollection{
     public MetadataInfo() {
         super();
         clear();
+    }
+
+    public PropertyChangeSupport getPropertyChangeSupport(){
+        if(propertyChangeSupport == null){
+            propertyChangeSupport = new PropertyChangeSupport(this);
+        }
+        return propertyChangeSupport;
     }
 
     public static List<String> keys() {
@@ -404,8 +414,17 @@ public class MetadataInfo implements MetadataCollection{
 
 
     public MetadataInfo clone() {
+        return clone(false);
+    }
+
+    public MetadataInfo clone(boolean withListeners) {
         MetadataInfo md = new MetadataInfo();
         md.copyFrom(this);
+        if(withListeners){
+            for(PropertyChangeListener l: propertyChangeSupport.getPropertyChangeListeners()){
+                md.getPropertyChangeSupport().addPropertyChangeListener(l);
+            }
+        }
         return md;
     }
 
@@ -1468,6 +1487,16 @@ public class MetadataInfo implements MetadataCollection{
         }
     }
     //////////////////////////////
+
+    public record LazyPropertyValue(MetadataInfo md, String propertyName) {
+        public Object get(){
+            return md.get(propertyName);
+        }
+
+        public String getText(){
+            return md.getString(propertyName);
+        }
+    }
 
     public static class XmpSchemaOnDemand {
         protected XMPMetadata xmpNew;

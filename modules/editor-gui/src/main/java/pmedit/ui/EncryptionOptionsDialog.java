@@ -3,27 +3,22 @@ package pmedit.ui;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
-import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
-import pmedit.EncryptionOptions;
+import pmedit.MetadataInfo;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
 
 public class EncryptionOptionsDialog extends JDialog {
     private JPanel contentPane;
     private JButton buttonOK;
-    public JCheckBox canPrintCheckBox;
-    public JCheckBox canModifyCheckBox;
-    public JCheckBox canExtractContentCheckBox;
-    public JCheckBox canModifyAnnotationsCheckBox;
-    public JCheckBox canFillFormFieldsCheckBox;
-    public JCheckBox canExtractForAccessibilityCheckBox;
-    public JCheckBox canAssembleDocumentCheckBox;
-    public JCheckBox canPrintFaithfullCheckBox;
-    public JTextField ownerPasswordTextField;
-    public JTextField usePasswordTextField;
-    public EncryptionOptions options;
+    public JPasswordField ownerPasswordTextField;
+    public JPasswordField usePasswordTextField;
+    public JButton showOwnerPassword;
+    public JButton showUserPassword;
+    char echoChar;
+    MetadataInfo metadataInfo;
 
     public EncryptionOptionsDialog(Frame owner) {
         super(owner, "Encryption Options", ModalityType.MODELESS);
@@ -54,36 +49,36 @@ public class EncryptionOptionsDialog extends JDialog {
             }
         }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
-        ActionListener listener = new ActionListener() {
+        pack();
+        echoChar = ownerPasswordTextField.getEchoChar();
+        showOwnerPassword.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (options != null && options.permission != null) {
-                    AccessPermission permissions = options.permission;
-                    permissions.setCanPrint(canPrintCheckBox.isSelected());
-                    permissions.setCanModify(canModifyCheckBox.isSelected());
-                    permissions.setCanExtractContent(canExtractContentCheckBox.isSelected());
-                    permissions.setCanExtractContent(canModifyAnnotationsCheckBox.isSelected());
-                    permissions.setCanFillInForm(canFillFormFieldsCheckBox.isSelected());
-                    permissions.setCanExtractForAccessibility(canExtractForAccessibilityCheckBox.isSelected());
-                    permissions.setCanAssembleDocument(canAssembleDocumentCheckBox.isSelected());
-                    permissions.setCanPrintFaithful(canPrintFaithfullCheckBox.isSelected());
-                }
-
+                ownerPasswordTextField.setEchoChar(
+                        ownerPasswordTextField.getEchoChar() == 0 ? echoChar : (char) 0
+                );
             }
-        };
-        canPrintCheckBox.addActionListener(listener);
-        canModifyCheckBox.addActionListener(listener);
-        canExtractContentCheckBox.addActionListener(listener);
-        canModifyAnnotationsCheckBox.addActionListener(listener);
-        canFillFormFieldsCheckBox.addActionListener(listener);
-        canExtractForAccessibilityCheckBox.addActionListener(listener);
-        canAssembleDocumentCheckBox.addActionListener(listener);
-        canPrintFaithfullCheckBox.addActionListener(listener);
-        pack();
+        });
+        showUserPassword.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                usePasswordTextField.setEchoChar(
+                        usePasswordTextField.getEchoChar() == 0 ? echoChar : (char) 0
+                );
+            }
+        });
     }
 
-    public void display(EncryptionOptions fileOptions) {
-        options = fileOptions;
+    public void display(MetadataInfo md) {
+        metadataInfo = md;
+        metadataInfo.getPropertyChangeSupport().addPropertyChangeListener(evt -> {
+            if (evt.getSource() == this) {
+                return;
+            }
+            if (evt.getPropertyName().equals("prop.ownerPassword") || evt.getPropertyName().equals("prop.userPassword")) {
+                fill();
+            }
+        });
 
         fill();
         setVisible(true);
@@ -91,39 +86,47 @@ public class EncryptionOptionsDialog extends JDialog {
 
     protected void fill() {
 
-        if (options != null) {
-            AccessPermission permissions = options.permission;
-
-            canPrintCheckBox.setSelected(permissions.canPrint());
-            canModifyCheckBox.setSelected(permissions.canModify());
-            canExtractContentCheckBox.setSelected(permissions.canExtractContent());
-            canModifyAnnotationsCheckBox.setSelected(permissions.canExtractContent());
-            canFillFormFieldsCheckBox.setSelected(permissions.canFillInForm());
-            canExtractForAccessibilityCheckBox.setSelected(permissions.canExtractForAccessibility());
-            canAssembleDocumentCheckBox.setSelected(permissions.canAssembleDocument());
-            canPrintFaithfullCheckBox.setSelected(permissions.canPrintFaithful());
-            if (options.ownerPassword != null) {
-                ownerPasswordTextField.setText(options.ownerPassword);
+        if (metadataInfo != null) {
+            if (metadataInfo.prop.ownerPassword != null) {
+                ownerPasswordTextField.setText(metadataInfo.prop.ownerPassword);
             } else {
                 ownerPasswordTextField.setText("");
             }
-            if (options.userPassword != null) {
-                usePasswordTextField.setText(options.userPassword);
+            if (metadataInfo.prop.userPassword != null) {
+                usePasswordTextField.setText(metadataInfo.prop.userPassword);
             } else {
                 usePasswordTextField.setText("");
             }
         }
     }
 
-    public EncryptionOptions getCurrentOptions() {
-        options.ownerPassword = ownerPasswordTextField.getText();
-        options.userPassword = usePasswordTextField.getText();
-        return options;
+    public void notifyPropertyChanges() {
+        if (metadataInfo != null) {
+            String newOwnerPass = ownerPasswordTextField.getText();
+            if (!newOwnerPass.equals(metadataInfo.prop.ownerPassword)) {
+                String old = metadataInfo.prop.ownerPassword;
+                metadataInfo.prop.ownerPassword = newOwnerPass;
+                firePropertyChange("prop.ownerPassword", old, newOwnerPass);
+            }
+            String newUserPass = usePasswordTextField.getText();
+            if (!newUserPass.equals(metadataInfo.prop.userPassword)) {
+                String old = metadataInfo.prop.userPassword;
+                metadataInfo.prop.userPassword = usePasswordTextField.getText();
+                firePropertyChange("prop.userPassword", old, newUserPass);
+            }
+        }
+    }
+
+    protected void firePropertyChange(String propertyName, Object old, Object newV) {
+        if (metadataInfo != null) {
+            PropertyChangeEvent e = new PropertyChangeEvent(this, propertyName, old, newV);
+            metadataInfo.getPropertyChangeSupport().firePropertyChange(e);
+        }
     }
 
 
     private void onOK() {
-        getCurrentOptions();
+        notifyPropertyChanges();
         dispose();
     }
 
@@ -156,42 +159,30 @@ public class EncryptionOptionsDialog extends JDialog {
         buttonOK.setText("OK");
         panel2.add(buttonOK, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel3 = new JPanel();
-        panel3.setLayout(new GridLayoutManager(6, 2, new Insets(0, 0, 0, 0), -1, -1));
+        panel3.setLayout(new GridLayoutManager(2, 3, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(panel3, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        canPrintCheckBox = new JCheckBox();
-        canPrintCheckBox.setText("Can Print");
-        panel3.add(canPrintCheckBox, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        canModifyCheckBox = new JCheckBox();
-        canModifyCheckBox.setText("Can Modify");
-        panel3.add(canModifyCheckBox, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        canExtractContentCheckBox = new JCheckBox();
-        canExtractContentCheckBox.setText("Can Extract Content");
-        panel3.add(canExtractContentCheckBox, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        canModifyAnnotationsCheckBox = new JCheckBox();
-        canModifyAnnotationsCheckBox.setText("Can Modify Annotations");
-        panel3.add(canModifyAnnotationsCheckBox, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        canFillFormFieldsCheckBox = new JCheckBox();
-        canFillFormFieldsCheckBox.setText("Can Fill Form Fields");
-        panel3.add(canFillFormFieldsCheckBox, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        canExtractForAccessibilityCheckBox = new JCheckBox();
-        canExtractForAccessibilityCheckBox.setText("Can Extract for Accessibility");
-        panel3.add(canExtractForAccessibilityCheckBox, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        canAssembleDocumentCheckBox = new JCheckBox();
-        canAssembleDocumentCheckBox.setText("Can Assemble Document");
-        panel3.add(canAssembleDocumentCheckBox, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        canPrintFaithfullCheckBox = new JCheckBox();
-        canPrintFaithfullCheckBox.setText("Can Print Faithful");
-        panel3.add(canPrintFaithfullCheckBox, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label1 = new JLabel();
         label1.setText("Owner Password");
-        panel3.add(label1, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        ownerPasswordTextField = new JTextField();
-        panel3.add(ownerPasswordTextField, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        panel3.add(label1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        ownerPasswordTextField = new JPasswordField();
+        panel3.add(ownerPasswordTextField, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
         final JLabel label2 = new JLabel();
         label2.setText("User Password");
-        panel3.add(label2, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        usePasswordTextField = new JTextField();
-        panel3.add(usePasswordTextField, new GridConstraints(5, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        panel3.add(label2, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        usePasswordTextField = new JPasswordField();
+        panel3.add(usePasswordTextField, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        showOwnerPassword = new JButton();
+        showOwnerPassword.setBorderPainted(false);
+        showOwnerPassword.setContentAreaFilled(false);
+        showOwnerPassword.setFocusPainted(false);
+        showOwnerPassword.setText("\uD83D\uDC41");
+        panel3.add(showOwnerPassword, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        showUserPassword = new JButton();
+        showUserPassword.setBorderPainted(false);
+        showUserPassword.setContentAreaFilled(false);
+        showUserPassword.setFocusPainted(false);
+        showUserPassword.setText("\uD83D\uDC41");
+        panel3.add(showUserPassword, new GridConstraints(1, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 
     /**

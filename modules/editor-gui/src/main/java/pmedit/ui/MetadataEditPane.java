@@ -29,8 +29,10 @@ import javax.swing.text.StyleContext;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.IndexedPropertyChangeEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -372,12 +374,12 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
 
 
     MetadataInfo initialMetadata;
+    MetadataInfo currentMetadata;
     Border textFieldDefault;
     Border textAreaDefault;
     Border comboBoxDefault;
     Border datePickerDefault;
     Border changedBorder;
-    boolean presetLoadEnableOnlyNonNull = false;
 
     public static Color darken(Color color, double factor) {
         int red = (int) (color.getRed() * factor);
@@ -418,35 +420,77 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
 
     }
 
+    protected record MetadataField(Field field, FieldID anno, Field fieldEnabled, FieldEnabled annoEnabled){}
+    protected static LinkedHashMap<String, MetadataField> getMetadataFields(){
+        try {
+            LinkedHashMap<String, MetadataField> result = new LinkedHashMap<>();
+            for (Field field : MetadataEditPane.class.getFields()) {
+                FieldID anno = field.getAnnotation(FieldID.class);
+                FieldEnabled annoEnabled = field.getAnnotation(FieldEnabled.class);
+
+                if ((anno != null && anno.value() != null && !anno.value().isEmpty()) ){
+                    MetadataField e = result.get(anno.value());
+                    if(e == null) {
+                        result.put(anno.value(), new MetadataField(field, anno, null, null));
+                    } else {
+                        result.put(anno.value(), new MetadataField(field, anno, e.fieldEnabled, e.annoEnabled));
+                    }
+                }
+                if (annoEnabled != null) {
+                    MetadataField e = result.get(annoEnabled.value());
+                    if(e == null) {
+                        result.put(annoEnabled.value(), new MetadataField(null, null, field, annoEnabled));
+                    } else {
+                        result.put(annoEnabled.value(), new MetadataField(e.field, e.anno, field, annoEnabled));
+                    }                }
+            }
+            return result;
+        } catch (Exception e){
+            LoggerFactory.getLogger(MetadataEditPane.class).error("getMetadataFields", e);
+            throw e;
+        }
+    }
+    static protected LinkedHashMap<String, MetadataField> _fieldsCache;
+    static protected LinkedHashMap<String, MetadataField> getFieldsCache(){
+        if(_fieldsCache == null) {
+            _fieldsCache = getMetadataFields();
+        }
+        return _fieldsCache;
+    }
+
+    private void visitField(String fieldName, MetadataEditPane.FieldSetGet setGet, MetadataEditPane.FieldEnabledCheckBox fieldEnabled) {
+        visitField(getFieldsCache().get(fieldName), setGet, fieldEnabled) ;
+    }
+
+    private void visitField(MetadataField metadataField, MetadataEditPane.FieldSetGet setGet, MetadataEditPane.FieldEnabledCheckBox fieldEnabled) {
+        if(metadataField == null){
+            logger.warn("visitField with null field");
+            return;
+        }
+        if (setGet != null && metadataField.anno != null) {
+            Object f = null;
+            try {
+                f = metadataField.field.get(this);
+            } catch (IllegalArgumentException | IllegalAccessException e) {
+                logger.error("visitField on ({})", metadataField.anno.value(), e);
+                return;
+            }
+            setGet.apply(f, metadataField.anno);
+        }
+        if (fieldEnabled != null && metadataField.annoEnabled != null) {
+            try {
+                JCheckBox f = (JCheckBox) metadataField.fieldEnabled.get(this);
+                fieldEnabled.apply(f, metadataField.annoEnabled);
+            } catch (IllegalArgumentException | IllegalAccessException e) {
+                logger.error("visitField on ({})", metadataField.annoEnabled.value(), e);
+            }
+        }
+    }
+
     private void traverseFields(MetadataEditPane.FieldSetGet setGet, MetadataEditPane.FieldEnabledCheckBox fieldEnabled) {
         try {
-            for (Field field : this.getClass().getFields()) {
-                if (setGet != null) {
-                    FieldID annos = field.getAnnotation(FieldID.class);
-                    if (annos != null) {
-                        if (annos.value() != null && annos.value().length() > 0) {
-                            Object f = null;
-                            try {
-                                f = field.get(this);
-                            } catch (IllegalArgumentException | IllegalAccessException e) {
-                                logger.error("traverseFields on ({})", annos.value(), e);
-                                continue;
-                            }
-                            setGet.apply(f, annos);
-                        }
-                    }
-                }
-                if (fieldEnabled != null) {
-                    FieldEnabled annosEnabled = field.getAnnotation(FieldEnabled.class);
-                    if (annosEnabled != null) {
-                        try {
-                            JCheckBox f = (JCheckBox) field.get(this);
-                            fieldEnabled.apply(f, annosEnabled);
-                        } catch (IllegalArgumentException | IllegalAccessException e) {
-                            logger.error("traverseFields on ({})", annosEnabled.value(), e);
-                        }
-                    }
-                }
+            for (MetadataField metadataField : getFieldsCache().values()) {
+                visitField(metadataField, setGet, fieldEnabled);
             }
         } catch (Exception e){
             LOG.error("traverseFields", e);
@@ -515,6 +559,7 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         });
 
         initialMetadata = null;
+        currentMetadata = null;
     }
 
     public void fillFromMetadata(final MetadataInfo metadataInfo) {
@@ -529,44 +574,17 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
     public void fillFromMetadata(final MetadataInfo metadataInfo, boolean loadPreset, boolean ignoreNulls) {
         if (!loadPreset) {
             initialMetadata = metadataInfo.clone();
+            currentMetadata = metadataInfo;
         }
         LOG.debug("fillFromMetadata(loadPreset={}, ignoreNulls={})", loadPreset, ignoreNulls);
         traverseFields(new MetadataEditPane.FieldSetGet() {
             @Override
             public void apply(Object field, FieldID anno) {
 
-                if (ignoreNulls) {
-                    Object o = metadataInfo.get(anno.value());
-                    if (o == null) {
-                        return;
-                    }
-                }
+                setFieldValue(anno.value(), field, new MetadataInfo.LazyPropertyValue(metadataInfo, anno.value()), ignoreNulls);
 
-                if (field instanceof JTextField) {
-                    ((JTextField) field).setText(metadataInfo.getString(anno.value()));
-                }
-                if (field instanceof JTextArea) {
-                    ((JTextArea) field).setText(metadataInfo.getString(anno.value()));
-                }
-
-                Object value = metadataInfo.get(anno.value());
-                if (field instanceof PdfVersionPicker vp) {
-                    objectToField(vp, value);
-                } else if (field instanceof JComboBox) {
-                    MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(anno.value());
-                    objectToField((JComboBox) field, value, fd.type == FieldDataType.FieldType.BoolField, fd.nullValueText);
-                }
-                if (field instanceof JDateChooser) {
-                    objectToField((JDateChooser) field, value);
-                }
-                if (field instanceof JSpinner) {
-                    objectToField((JSpinner) field, value);
-                }
-                if (field instanceof DateTimePicker) {
-                    objectToField((DateTimePicker) field, value);
-                }
-                if (field instanceof DateTimeList dtl) {
-                    objectToField(dtl, value);
+                if(loadPreset){
+                    currentMetadata.set(anno.value(), metadataInfo.get(anno.value()));
                 }
             }
         }, new MetadataEditPane.FieldEnabledCheckBox() {
@@ -577,6 +595,58 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
             }
         });
 
+        currentMetadata.getPropertyChangeSupport().addPropertyChangeListener(evt -> {
+            LOG.debug("Got property change for {} old={} new={}", evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
+            if(evt.getSource() == this){
+                // Ignore event if coming from this component
+                return;
+            }
+            visitField(evt.getPropertyName(), new MetadataEditPane.FieldSetGet() {
+                @Override
+                public void apply(Object field, FieldID anno) {
+                    setFieldValue(anno.value(), field, new MetadataInfo.LazyPropertyValue(currentMetadata, anno.value()), false);
+                }
+            }, null);
+        });
+    }
+
+    protected void setFieldValue(String propertyName, Object field, MetadataInfo.LazyPropertyValue lazyValue, boolean ignoreNulls){
+        Object value = lazyValue.get();
+        if (ignoreNulls) {
+            if (value == null) {
+                return;
+            }
+        }
+
+        if (field instanceof JTextField) {
+            ((JTextField) field).setText(lazyValue.getText());
+        }
+        if (field instanceof JTextArea) {
+            ((JTextArea) field).setText(lazyValue.getText());
+        }
+
+        if (field instanceof PdfVersionPicker vp) {
+            objectToField(vp, value);
+        } else if (field instanceof JComboBox) {
+            MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(propertyName);
+            objectToField((JComboBox) field, value, fd.type == FieldDataType.FieldType.BoolField, fd.nullValueText);
+        }
+        if (field instanceof JDateChooser) {
+            objectToField((JDateChooser) field, value);
+        }
+        if (field instanceof JSpinner) {
+            objectToField((JSpinner) field, value);
+        }
+        if (field instanceof DateTimePicker) {
+            objectToField((DateTimePicker) field, value);
+        }
+        if (field instanceof DateTimeList dtl) {
+            objectToField(dtl, value);
+        }
+    }
+
+    public MetadataInfo getDisplayMetadataInfo() {
+        return currentMetadata;
     }
 
     public void fillEnabledFromMetadata(final MetadataInfo metadataInfo) {
@@ -784,13 +854,36 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         }
     }
 
+    void fireMetadataPropertyChange(String propertyName, Object old, Object newV){
+        if(currentMetadata == null){
+            return;
+        }
+        PropertyChangeEvent evt = new PropertyChangeEvent(this, propertyName, old, newV);
+        currentMetadata.getPropertyChangeSupport().firePropertyChange(evt);
+    }
+    void applyMetadataPropertyChange(MetadataInfo.FieldDescription fd, Object newV) {
+        if(!fd.isReadonly) {
+            applyMetadataPropertyChange(fd.name, newV);
+        }
+    }
+    void applyMetadataPropertyChange(String propertyName, Object newV){
+        if(currentMetadata == null){
+            return;
+        }
+        Object old = currentMetadata.get(propertyName);
+        currentMetadata.set(propertyName, newV);
+        fireMetadataPropertyChange(propertyName, old, newV);
+    }
+
     protected class ChangeBackgroundDocumentListener implements DocumentListener {
         JTextComponent textComponent;
         String metadataKey;
+        MetadataInfo.FieldDescription fieldDescription;
 
-        ChangeBackgroundDocumentListener(JTextComponent textComponent, String metadataKey) {
+        ChangeBackgroundDocumentListener(JTextComponent textComponent, MetadataInfo.FieldDescription fieldDescription) {
             this.textComponent = textComponent;
-            this.metadataKey = metadataKey;
+            this.metadataKey = fieldDescription.name;
+            this.fieldDescription = fieldDescription;
         }
 
         protected String currentText(DocumentEvent e) {
@@ -811,6 +904,8 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
                 textComponent.setBorder(changedBorder);
 
             }
+
+            applyMetadataPropertyChange(fieldDescription, current);
         }
 
         public void changedUpdate(DocumentEvent e) {
@@ -862,7 +957,7 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
                     }
                 }
                 final MetadataInfo.FieldDescription fieldDescription = MetadataInfo.getFieldDescription(anno.value());
-                boolean isReadonly = fieldDescription.isReadonly || (!hasBatch && anno.value().startsWith("file."));
+                boolean isReadonly = fieldDescription.isReadonly;
 
                 if(isReadonly ){
                     if(field instanceof JTextComponent c) {
@@ -873,7 +968,9 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
                 }
 
                 if (field instanceof JTextComponent textComponent) {
-                    textComponent.getDocument().addDocumentListener(new ChangeBackgroundDocumentListener(textComponent, anno.value()));
+                    if(!isReadonly) {
+                        textComponent.getDocument().addDocumentListener(new ChangeBackgroundDocumentListener(textComponent, fieldDescription));
+                    }
                     new TextFieldContextMenu(textComponent, (component, ignored) -> {
                         resetFieldValue(component, anno.value());
                     }).createContextMenu().addTemplatePlaceholders(!isReadonly);
@@ -891,8 +988,8 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
                                 vp.setBorder(comboBoxDefault);
                             } else {
                                 vp.setBorder(changedBorder);
-
                             }
+                            applyMetadataPropertyChange(fieldDescription, selectedValue);
                         }
                     });
                 } else if (field instanceof JComboBox combo) {
@@ -908,6 +1005,9 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
                                 combo.setBorder(changedBorder);
 
                             }
+
+                            applyMetadataPropertyChange(fieldDescription, selectedValue);
+
                         }
                     });
                     if (fieldDescription.type == FieldDataType.FieldType.EnumField) {
@@ -926,6 +1026,9 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
                             } else {
                                 dtPicker.setBorder(changedBorder);
                             }
+
+                            applyMetadataPropertyChange(fieldDescription, selectedValueC);
+
                         }
                     });
                     new TextFieldContextMenu(dtPicker, (component, textComponent) -> {
@@ -971,6 +1074,9 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
                             } else {
                                 dtList.topPanel.setBorder(changedBorder);
                             }
+
+                            applyMetadataPropertyChange(fieldDescription, selectedValue);
+
                         }
                     });
                     new TextFieldContextMenu(dtList, (component, textComponent) -> {

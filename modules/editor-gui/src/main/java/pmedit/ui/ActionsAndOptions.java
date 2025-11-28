@@ -3,6 +3,7 @@ package pmedit.ui;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import pmedit.EncryptionOptions;
+import pmedit.MetadataInfo;
 import pmedit.ext.PmeExtension;
 import pmedit.preset.PresetStore;
 
@@ -12,6 +13,8 @@ import javax.swing.plaf.metal.MetalComboBoxIcon;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeSupport;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Vector;
@@ -37,7 +40,7 @@ public class ActionsAndOptions {
     public JRadioButton copyDocToXmpRadioButton;
     public JRadioButton copyXmpToDocRadioButton;
     public EncryptionOptionsDialog encryptionOptionsDialog;
-    public EncryptionOptions encryptionOptions;
+    public MetadataInfo metadataInfo;
 
     void createUIComponents() {
         btnSaveMenu = new JButton(new MetalComboBoxIcon());
@@ -70,17 +73,25 @@ public class ActionsAndOptions {
         encryptionButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                encryptionOptionsDialog.display(encryptionOptions);
+                encryptionOptionsDialog.display(metadataInfo);
             }
         });
-        encryptionButton.setEnabled(encryptionOptions != null);
+        encryptionButton.setEnabled(metadataInfo != null && metadataInfo.prop.encryption);
         enableEncryption.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                encryptionOptions.hasEncryption = enableEncryption.isSelected();
-                encryptionButton.setEnabled(encryptionOptions.hasEncryption);
+                Boolean old = metadataInfo.prop.encryption;
+                Boolean newV = enableEncryption.isSelected();
+                metadataInfo.prop.encryption = newV;
+                encryptionButton.setEnabled(metadataInfo.prop.encryption);
+                firePropertyChange("prop.encryption", old, newV);
             }
         });
+    }
+
+    protected void firePropertyChange(String propertyName, Object old, Object newV) {
+        PropertyChangeEvent e = new PropertyChangeEvent(this, propertyName, old, newV);
+        metadataInfo.getPropertyChangeSupport().firePropertyChange(e);
     }
 
     static double[] versions = new double[]{1.3f, 1.4f, 1.5f, 1.6f, 1.7f};
@@ -89,16 +100,26 @@ public class ActionsAndOptions {
         pdfVersion.setModel(model);
     }
 
-    public void setDocumentProtection(EncryptionOptions options) {
-        encryptionOptions = options;
-        encryptionOptionsDialog.options = encryptionOptions;
-        encryptionButton.setEnabled(encryptionOptions.hasEncryption);
-        enableEncryption.setSelected(encryptionOptions.hasEncryption);
+    public void attachMetadataInfo(MetadataInfo md) {
+        metadataInfo = md;
+        metadataInfo.getPropertyChangeSupport().addPropertyChangeListener(evt -> {
+            if (evt.getSource() == this) {
+                return;
+            }
+            if (evt.getPropertyName().equals("prop.encryption")) {
+                fill();
+            }
+        });
     }
 
-    public EncryptionOptions getDocumentProtection() {
-        return encryptionOptionsDialog.getCurrentOptions();
+    protected void fill() {
+        if (metadataInfo != null) {
+            boolean v = metadataInfo.prop.encryption != null && metadataInfo.prop.encryption;
+            encryptionButton.setEnabled(v);
+            enableEncryption.setSelected(v);
+        }
     }
+
 
     public String getCurrentPresetName() {
         return (String) selectedPreset.getModel().getSelectedItem();
