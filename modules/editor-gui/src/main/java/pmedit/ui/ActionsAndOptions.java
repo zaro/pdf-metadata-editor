@@ -3,6 +3,7 @@ package pmedit.ui;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import pmedit.EncryptionOptions;
+import pmedit.ext.PmeExtension;
 import pmedit.preset.PresetStore;
 
 import javax.swing.*;
@@ -130,11 +131,15 @@ public class ActionsAndOptions {
         xmpClearButton.setEnabled(b);
         copyDocumentToXMPButton.setEnabled(b);
         copyXMPToDocumentButton.setEnabled(b);
+        btnSave.setEnabled(b);
+        btnSaveMenu.setEnabled(b);
+        // Actions below allowed only in pro mode
+        b = b && PmeExtension.get().hasBatch();
         encryptionButton.setEnabled(b);
         enableEncryption.setEnabled(b);
         pdfVersion.setEnabled(b);
-        btnSave.setEnabled(b);
-        btnSaveMenu.setEnabled(b);
+
+
     }
 
     /**

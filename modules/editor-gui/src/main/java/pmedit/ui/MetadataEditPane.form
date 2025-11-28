@@ -1098,7 +1098,7 @@
                 <properties/>
                 <border type="none"/>
                 <children>
-                  <grid id="b2587" layout-manager="GridLayoutManager" row-count="6" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                  <grid id="b2587" layout-manager="GridLayoutManager" row-count="7" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                     <margin top="5" left="5" bottom="5" right="5"/>
                     <constraints/>
                     <properties/>
@@ -1106,7 +1106,7 @@
                     <children>
                       <component id="264df" class="javax.swing.JLabel">
                         <constraints>
-                          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="Certificate"/>
@@ -1114,34 +1114,10 @@
                       </component>
                       <vspacer id="abcd2">
                         <constraints>
-                          <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+                          <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
                         </constraints>
                       </vspacer>
                       <component id="28b38" class="javax.swing.JCheckBox" binding="xmpRightsCertificateEnabled">
-                        <constraints>
-                          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <text value=""/>
-                        </properties>
-                      </component>
-                      <component id="204ba" class="javax.swing.JTextField" binding="xmpRightsCertificate">
-                        <constraints>
-                          <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-                            <preferred-size width="150" height="-1"/>
-                          </grid>
-                        </constraints>
-                        <properties/>
-                      </component>
-                      <component id="de3a7" class="javax.swing.JLabel">
-                        <constraints>
-                          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <text value="Marked"/>
-                        </properties>
-                      </component>
-                      <component id="1b4c" class="javax.swing.JCheckBox" binding="xmpRightsMarkedEnabled">
                         <constraints>
                           <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -1149,9 +1125,33 @@
                           <text value=""/>
                         </properties>
                       </component>
+                      <component id="204ba" class="javax.swing.JTextField" binding="xmpRightsCertificate">
+                        <constraints>
+                          <grid row="1" column="2" row-span="1" col-span="2" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                            <preferred-size width="150" height="-1"/>
+                          </grid>
+                        </constraints>
+                        <properties/>
+                      </component>
+                      <component id="de3a7" class="javax.swing.JLabel">
+                        <constraints>
+                          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value="Marked"/>
+                        </properties>
+                      </component>
+                      <component id="1b4c" class="javax.swing.JCheckBox" binding="xmpRightsMarkedEnabled">
+                        <constraints>
+                          <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value=""/>
+                        </properties>
+                      </component>
                       <component id="763d7" class="javax.swing.JComboBox" binding="xmpRightsMarked">
                         <constraints>
-                          <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="2" column="2" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <model>
@@ -1163,7 +1163,7 @@
                       </component>
                       <component id="ee87" class="javax.swing.JLabel">
                         <constraints>
-                          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="Owners"/>
@@ -1171,7 +1171,7 @@
                       </component>
                       <component id="3d6cd" class="javax.swing.JCheckBox" binding="xmpRightsOwnerEnabled">
                         <constraints>
-                          <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value=""/>
@@ -1179,7 +1179,7 @@
                       </component>
                       <scrollpane id="e7bfb">
                         <constraints>
-                          <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                          <grid row="3" column="2" row-span="1" col-span="2" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties/>
                         <border type="none"/>
@@ -1192,7 +1192,7 @@
                       </scrollpane>
                       <component id="abffd" class="javax.swing.JLabel">
                         <constraints>
-                          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="Usage Terms"/>
@@ -1200,7 +1200,7 @@
                       </component>
                       <component id="b7386" class="javax.swing.JCheckBox" binding="xmpRightsUsageTermsEnabled">
                         <constraints>
-                          <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value=""/>
@@ -1208,7 +1208,7 @@
                       </component>
                       <scrollpane id="933b9">
                         <constraints>
-                          <grid row="3" column="2" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                          <grid row="4" column="2" row-span="1" col-span="2" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties/>
                         <border type="none"/>
@@ -1221,7 +1221,7 @@
                       </scrollpane>
                       <component id="2f5f6" class="javax.swing.JLabel">
                         <constraints>
-                          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="Web Statement"/>
@@ -1229,7 +1229,7 @@
                       </component>
                       <component id="1deef" class="javax.swing.JCheckBox" binding="xmpRightsWebStatementEnabled">
                         <constraints>
-                          <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value=""/>
@@ -1237,9 +1237,15 @@
                       </component>
                       <component id="8fed8" class="javax.swing.JTextField" binding="xmpRightsWebStatement">
                         <constraints>
-                          <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                          <grid row="5" column="2" row-span="1" col-span="2" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
                             <preferred-size width="150" height="-1"/>
                           </grid>
+                        </constraints>
+                        <properties/>
+                      </component>
+                      <component id="ea654" class="pmedit.ui.components.TextPaneWithLinks" binding="proRequiredRights">
+                        <constraints>
+                          <grid row="0" column="0" row-span="1" col-span="3" vsize-policy="1" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties/>
                       </component>
@@ -1264,7 +1270,7 @@
                 <properties/>
                 <border type="none"/>
                 <children>
-                  <grid id="87ee6" layout-manager="GridLayoutManager" row-count="17" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                  <grid id="87ee6" layout-manager="GridLayoutManager" row-count="18" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                     <margin top="5" left="5" bottom="5" right="5"/>
                     <constraints/>
                     <properties/>
@@ -1272,7 +1278,7 @@
                     <children>
                       <component id="74e2c" class="javax.swing.JLabel">
                         <constraints>
-                          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="Hide tool bars"/>
@@ -1280,110 +1286,10 @@
                       </component>
                       <vspacer id="926f3">
                         <constraints>
-                          <grid row="16" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+                          <grid row="17" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
                         </constraints>
                       </vspacer>
                       <component id="f1c66" class="javax.swing.JComboBox" binding="hideToolbar">
-                        <constraints>
-                          <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <model>
-                            <item value="Unset"/>
-                            <item value="Yes"/>
-                            <item value="No"/>
-                          </model>
-                        </properties>
-                      </component>
-                      <component id="105c3" class="javax.swing.JCheckBox" binding="hideToolbarEnabled">
-                        <constraints>
-                          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <text value=""/>
-                        </properties>
-                      </component>
-                      <component id="5a26b" class="javax.swing.JLabel">
-                        <constraints>
-                          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <text value="Hide menu bar"/>
-                        </properties>
-                      </component>
-                      <component id="5b135" class="javax.swing.JLabel">
-                        <constraints>
-                          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <text value="Hide window controls"/>
-                        </properties>
-                      </component>
-                      <component id="92c56" class="javax.swing.JLabel">
-                        <constraints>
-                          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <text value="Resize window to inital page"/>
-                        </properties>
-                      </component>
-                      <component id="9aa51" class="javax.swing.JLabel">
-                        <constraints>
-                          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <text value="Center window on screen"/>
-                        </properties>
-                      </component>
-                      <component id="76a41" class="javax.swing.JLabel">
-                        <constraints>
-                          <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <text value="Display Title in window caption"/>
-                        </properties>
-                      </component>
-                      <component id="d8796" class="javax.swing.JCheckBox" binding="hideMenuBarEnabled">
-                        <constraints>
-                          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <text value=""/>
-                        </properties>
-                      </component>
-                      <component id="a9f81" class="javax.swing.JCheckBox" binding="hideWindowUIEnabled">
-                        <constraints>
-                          <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <text value=""/>
-                        </properties>
-                      </component>
-                      <component id="d62bd" class="javax.swing.JCheckBox" binding="fitWindowEnabled">
-                        <constraints>
-                          <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <text value=""/>
-                        </properties>
-                      </component>
-                      <component id="3e9ec" class="javax.swing.JCheckBox" binding="centerWindowEnabled">
-                        <constraints>
-                          <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <text value=""/>
-                        </properties>
-                      </component>
-                      <component id="7367" class="javax.swing.JCheckBox" binding="displayDocTitleEnabled">
-                        <constraints>
-                          <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <text value=""/>
-                        </properties>
-                      </component>
-                      <component id="3ec3e" class="javax.swing.JComboBox" binding="hideMenuBar">
                         <constraints>
                           <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -1395,7 +1301,95 @@
                           </model>
                         </properties>
                       </component>
-                      <component id="1bbe8" class="javax.swing.JComboBox" binding="hideWindowUI">
+                      <component id="105c3" class="javax.swing.JCheckBox" binding="hideToolbarEnabled">
+                        <constraints>
+                          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value=""/>
+                        </properties>
+                      </component>
+                      <component id="5a26b" class="javax.swing.JLabel">
+                        <constraints>
+                          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value="Hide menu bar"/>
+                        </properties>
+                      </component>
+                      <component id="5b135" class="javax.swing.JLabel">
+                        <constraints>
+                          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value="Hide window controls"/>
+                        </properties>
+                      </component>
+                      <component id="92c56" class="javax.swing.JLabel">
+                        <constraints>
+                          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value="Resize window to inital page"/>
+                        </properties>
+                      </component>
+                      <component id="9aa51" class="javax.swing.JLabel">
+                        <constraints>
+                          <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value="Center window on screen"/>
+                        </properties>
+                      </component>
+                      <component id="76a41" class="javax.swing.JLabel">
+                        <constraints>
+                          <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value="Display Title in window caption"/>
+                        </properties>
+                      </component>
+                      <component id="d8796" class="javax.swing.JCheckBox" binding="hideMenuBarEnabled">
+                        <constraints>
+                          <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value=""/>
+                        </properties>
+                      </component>
+                      <component id="a9f81" class="javax.swing.JCheckBox" binding="hideWindowUIEnabled">
+                        <constraints>
+                          <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value=""/>
+                        </properties>
+                      </component>
+                      <component id="d62bd" class="javax.swing.JCheckBox" binding="fitWindowEnabled">
+                        <constraints>
+                          <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value=""/>
+                        </properties>
+                      </component>
+                      <component id="3e9ec" class="javax.swing.JCheckBox" binding="centerWindowEnabled">
+                        <constraints>
+                          <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value=""/>
+                        </properties>
+                      </component>
+                      <component id="7367" class="javax.swing.JCheckBox" binding="displayDocTitleEnabled">
+                        <constraints>
+                          <grid row="6" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value=""/>
+                        </properties>
+                      </component>
+                      <component id="3ec3e" class="javax.swing.JComboBox" binding="hideMenuBar">
                         <constraints>
                           <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -1407,7 +1401,7 @@
                           </model>
                         </properties>
                       </component>
-                      <component id="16b33" class="javax.swing.JComboBox" binding="fitWindow">
+                      <component id="1bbe8" class="javax.swing.JComboBox" binding="hideWindowUI">
                         <constraints>
                           <grid row="3" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -1419,7 +1413,7 @@
                           </model>
                         </properties>
                       </component>
-                      <component id="6853a" class="javax.swing.JComboBox" binding="centerWindow">
+                      <component id="16b33" class="javax.swing.JComboBox" binding="fitWindow">
                         <constraints>
                           <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -1431,7 +1425,7 @@
                           </model>
                         </properties>
                       </component>
-                      <component id="7fd53" class="javax.swing.JComboBox" binding="displayDocTitle">
+                      <component id="6853a" class="javax.swing.JComboBox" binding="centerWindow">
                         <constraints>
                           <grid row="5" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -1443,9 +1437,21 @@
                           </model>
                         </properties>
                       </component>
+                      <component id="7fd53" class="javax.swing.JComboBox" binding="displayDocTitle">
+                        <constraints>
+                          <grid row="6" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <model>
+                            <item value="Unset"/>
+                            <item value="Yes"/>
+                            <item value="No"/>
+                          </model>
+                        </properties>
+                      </component>
                       <component id="d3e05" class="javax.swing.JLabel">
                         <constraints>
-                          <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="7" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="Non full screen page mode"/>
@@ -1453,7 +1459,7 @@
                       </component>
                       <component id="7efbf" class="javax.swing.JLabel">
                         <constraints>
-                          <grid row="7" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="8" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="Reading direction for text"/>
@@ -1461,7 +1467,7 @@
                       </component>
                       <component id="ac81d" class="javax.swing.JCheckBox" binding="nonFullScreenPageModeEnabled">
                         <constraints>
-                          <grid row="6" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="7" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value=""/>
@@ -1469,7 +1475,7 @@
                       </component>
                       <component id="5a674" class="javax.swing.JCheckBox" binding="readingDirectionEnabled">
                         <constraints>
-                          <grid row="7" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="8" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value=""/>
@@ -1477,7 +1483,7 @@
                       </component>
                       <component id="10816" class="javax.swing.JComboBox" binding="nonFullScreenPageMode">
                         <constraints>
-                          <grid row="6" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="7" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <model/>
@@ -1485,7 +1491,7 @@
                       </component>
                       <component id="f2bfa" class="javax.swing.JComboBox" binding="readingDirection">
                         <constraints>
-                          <grid row="7" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="8" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <model/>
@@ -1493,7 +1499,7 @@
                       </component>
                       <component id="83a47" class="javax.swing.JLabel">
                         <constraints>
-                          <grid row="10" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="11" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="View Area"/>
@@ -1501,7 +1507,7 @@
                       </component>
                       <component id="b6a48" class="javax.swing.JLabel">
                         <constraints>
-                          <grid row="11" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="12" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="View Clip"/>
@@ -1509,7 +1515,7 @@
                       </component>
                       <component id="5ae9c" class="javax.swing.JLabel">
                         <constraints>
-                          <grid row="12" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="13" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="Print Area"/>
@@ -1517,7 +1523,7 @@
                       </component>
                       <component id="79bd0" class="javax.swing.JLabel">
                         <constraints>
-                          <grid row="13" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="14" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="Print Clip"/>
@@ -1525,7 +1531,7 @@
                       </component>
                       <component id="3c8b3" class="javax.swing.JLabel">
                         <constraints>
-                          <grid row="14" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="15" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="Duplex"/>
@@ -1533,7 +1539,7 @@
                       </component>
                       <component id="24f67" class="javax.swing.JLabel">
                         <constraints>
-                          <grid row="15" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="16" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="Print Scaling"/>
@@ -1541,7 +1547,7 @@
                       </component>
                       <component id="85b01" class="javax.swing.JCheckBox" binding="viewAreaEnabled">
                         <constraints>
-                          <grid row="10" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="11" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value=""/>
@@ -1549,7 +1555,7 @@
                       </component>
                       <component id="d9e96" class="javax.swing.JCheckBox" binding="viewClipEnabled">
                         <constraints>
-                          <grid row="11" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="12" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value=""/>
@@ -1557,7 +1563,7 @@
                       </component>
                       <component id="9640" class="javax.swing.JCheckBox" binding="printAreaEnabled">
                         <constraints>
-                          <grid row="12" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="13" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value=""/>
@@ -1565,7 +1571,7 @@
                       </component>
                       <component id="ce174" class="javax.swing.JCheckBox" binding="printClipEnabled">
                         <constraints>
-                          <grid row="13" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="14" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value=""/>
@@ -1573,7 +1579,7 @@
                       </component>
                       <component id="3ff5d" class="javax.swing.JCheckBox" binding="duplexEnabled">
                         <constraints>
-                          <grid row="14" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="15" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value=""/>
@@ -1581,7 +1587,7 @@
                       </component>
                       <component id="4fb1a" class="javax.swing.JCheckBox" binding="printScalingEnabled">
                         <constraints>
-                          <grid row="15" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="16" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value=""/>
@@ -1589,7 +1595,7 @@
                       </component>
                       <component id="e4e6e" class="javax.swing.JComboBox" binding="viewArea">
                         <constraints>
-                          <grid row="10" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="11" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <model/>
@@ -1597,7 +1603,7 @@
                       </component>
                       <component id="1d8e" class="javax.swing.JComboBox" binding="viewClip">
                         <constraints>
-                          <grid row="11" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="12" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <model/>
@@ -1605,7 +1611,7 @@
                       </component>
                       <component id="3b55b" class="javax.swing.JComboBox" binding="printArea">
                         <constraints>
-                          <grid row="12" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="13" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <model/>
@@ -1613,7 +1619,7 @@
                       </component>
                       <component id="90270" class="javax.swing.JComboBox" binding="printClip">
                         <constraints>
-                          <grid row="13" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="14" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <model/>
@@ -1621,7 +1627,7 @@
                       </component>
                       <component id="9b0ef" class="javax.swing.JComboBox" binding="duplex">
                         <constraints>
-                          <grid row="14" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="15" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <model/>
@@ -1629,7 +1635,7 @@
                       </component>
                       <component id="ab99a" class="javax.swing.JComboBox" binding="printScaling">
                         <constraints>
-                          <grid row="15" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="16" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <model/>
@@ -1637,7 +1643,7 @@
                       </component>
                       <component id="e9d92" class="javax.swing.JLabel">
                         <constraints>
-                          <grid row="8" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="9" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="Page Layout"/>
@@ -1645,7 +1651,7 @@
                       </component>
                       <component id="e181" class="javax.swing.JCheckBox" binding="pageLayoutEnabled">
                         <constraints>
-                          <grid row="8" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="9" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value=""/>
@@ -1653,7 +1659,7 @@
                       </component>
                       <component id="99951" class="javax.swing.JComboBox" binding="pageLayout">
                         <constraints>
-                          <grid row="8" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="9" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <model/>
@@ -1661,7 +1667,7 @@
                       </component>
                       <component id="892eb" class="javax.swing.JLabel">
                         <constraints>
-                          <grid row="9" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="10" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="Page mode"/>
@@ -1669,7 +1675,7 @@
                       </component>
                       <component id="98e4e" class="javax.swing.JCheckBox" binding="pageModeEnabled">
                         <constraints>
-                          <grid row="9" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="10" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value=""/>
@@ -1677,11 +1683,17 @@
                       </component>
                       <component id="3ca19" class="javax.swing.JComboBox" binding="pageMode">
                         <constraints>
-                          <grid row="9" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="10" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <model/>
                         </properties>
+                      </component>
+                      <component id="9250" class="pmedit.ui.components.TextPaneWithLinks" binding="proRequiredViewer">
+                        <constraints>
+                          <grid row="0" column="0" row-span="1" col-span="3" vsize-policy="1" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties/>
                       </component>
                     </children>
                   </grid>
@@ -1849,7 +1861,7 @@
                           <text value="Editable Properties"/>
                         </properties>
                       </component>
-                      <component id="43a9e" class="pmedit.ui.components.TextPaneWithLinks" binding="licenseRequiredText">
+                      <component id="43a9e" class="pmedit.ui.components.TextPaneWithLinks" binding="proRequiredFile">
                         <constraints>
                           <grid row="5" column="2" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -1924,7 +1936,7 @@
                 <properties/>
                 <border type="none"/>
                 <children>
-                  <grid id="f0b19" layout-manager="GridLayoutManager" row-count="15" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                  <grid id="f0b19" layout-manager="GridLayoutManager" row-count="16" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                     <margin top="5" left="5" bottom="5" right="5"/>
                     <constraints/>
                     <properties/>
@@ -1932,12 +1944,12 @@
                     <children>
                       <vspacer id="255f5">
                         <constraints>
-                          <grid row="14" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+                          <grid row="15" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
                         </constraints>
                       </vspacer>
                       <component id="32d3b" class="javax.swing.JLabel">
                         <constraints>
-                          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="PDF Version"/>
@@ -1945,7 +1957,7 @@
                       </component>
                       <component id="28714" class="javax.swing.JCheckBox" binding="propVersionEnabled">
                         <constraints>
-                          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value=""/>
@@ -1953,7 +1965,7 @@
                       </component>
                       <component id="e6fb8" class="pmedit.ui.components.PdfVersionPicker" binding="propVersion">
                         <constraints>
-                          <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                          <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="0" indent="0" use-parent-layout="false">
                             <preferred-size width="150" height="-1"/>
                           </grid>
                         </constraints>
@@ -1961,7 +1973,7 @@
                       </component>
                       <component id="a6d45" class="javax.swing.JLabel">
                         <constraints>
-                          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value="PDF Compressed"/>
@@ -1969,42 +1981,13 @@
                       </component>
                       <component id="37524" class="javax.swing.JCheckBox" binding="propCompressionEnabled">
                         <constraints>
-                          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <text value=""/>
-                        </properties>
-                      </component>
-                      <component id="10e16" class="javax.swing.JComboBox" binding="propCompression">
-                        <constraints>
-                          <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="0" indent="0" use-parent-layout="false">
-                            <minimum-size width="100" height="-1"/>
-                          </grid>
-                        </constraints>
-                        <properties>
-                          <model>
-                            <item value="Yes"/>
-                            <item value="No"/>
-                          </model>
-                        </properties>
-                      </component>
-                      <component id="fa984" class="javax.swing.JLabel">
-                        <constraints>
-                          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <text value="PDF Encrypted"/>
-                        </properties>
-                      </component>
-                      <component id="6c1c8" class="javax.swing.JCheckBox" binding="propEncryptionEnabled">
-                        <constraints>
                           <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value=""/>
                         </properties>
                       </component>
-                      <component id="a64c7" class="javax.swing.JComboBox" binding="propEncryption">
+                      <component id="10e16" class="javax.swing.JComboBox" binding="propCompression">
                         <constraints>
                           <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="0" indent="0" use-parent-layout="false">
                             <minimum-size width="100" height="-1"/>
@@ -2017,15 +2000,15 @@
                           </model>
                         </properties>
                       </component>
-                      <component id="554c9" class="javax.swing.JLabel">
+                      <component id="fa984" class="javax.swing.JLabel">
                         <constraints>
                           <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
-                          <text value="Encryption Key Length"/>
+                          <text value="PDF Encrypted"/>
                         </properties>
                       </component>
-                      <component id="674d9" class="javax.swing.JCheckBox" binding="propKeyLengthEnabled">
+                      <component id="6c1c8" class="javax.swing.JCheckBox" binding="propEncryptionEnabled">
                         <constraints>
                           <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -2033,7 +2016,7 @@
                           <text value=""/>
                         </properties>
                       </component>
-                      <component id="1ce10" class="javax.swing.JComboBox" binding="propKeyLength">
+                      <component id="a64c7" class="javax.swing.JComboBox" binding="propEncryption">
                         <constraints>
                           <grid row="3" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="0" indent="0" use-parent-layout="false">
                             <minimum-size width="100" height="-1"/>
@@ -2046,25 +2029,25 @@
                           </model>
                         </properties>
                       </component>
-                      <component id="32df2" class="javax.swing.JLabel">
+                      <component id="554c9" class="javax.swing.JLabel">
                         <constraints>
-                          <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
-                          <text value="Can Print"/>
+                          <text value="Encryption Key Length"/>
                         </properties>
                       </component>
-                      <component id="7f3ea" class="javax.swing.JCheckBox" binding="propCanPrintEnabled">
+                      <component id="674d9" class="javax.swing.JCheckBox" binding="propKeyLengthEnabled">
                         <constraints>
-                          <grid row="6" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <text value=""/>
                         </properties>
                       </component>
-                      <component id="669f8" class="javax.swing.JComboBox" binding="propCanPrint">
+                      <component id="1ce10" class="javax.swing.JComboBox" binding="propKeyLength">
                         <constraints>
-                          <grid row="6" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                          <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="0" indent="0" use-parent-layout="false">
                             <minimum-size width="100" height="-1"/>
                           </grid>
                         </constraints>
@@ -2075,15 +2058,15 @@
                           </model>
                         </properties>
                       </component>
-                      <component id="c40db" class="javax.swing.JLabel">
+                      <component id="32df2" class="javax.swing.JLabel">
                         <constraints>
                           <grid row="7" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
-                          <text value="Can Modify"/>
+                          <text value="Can Print"/>
                         </properties>
                       </component>
-                      <component id="ce779" class="javax.swing.JCheckBox" binding="propCanModifyEnabled">
+                      <component id="7f3ea" class="javax.swing.JCheckBox" binding="propCanPrintEnabled">
                         <constraints>
                           <grid row="7" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -2091,7 +2074,7 @@
                           <text value=""/>
                         </properties>
                       </component>
-                      <component id="48483" class="javax.swing.JComboBox" binding="propCanModify">
+                      <component id="669f8" class="javax.swing.JComboBox" binding="propCanPrint">
                         <constraints>
                           <grid row="7" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="0" indent="0" use-parent-layout="false">
                             <minimum-size width="100" height="-1"/>
@@ -2104,15 +2087,15 @@
                           </model>
                         </properties>
                       </component>
-                      <component id="8d6a8" class="javax.swing.JLabel">
+                      <component id="c40db" class="javax.swing.JLabel">
                         <constraints>
                           <grid row="8" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
-                          <text value="Can Extract Content"/>
+                          <text value="Can Modify"/>
                         </properties>
                       </component>
-                      <component id="2d6f8" class="javax.swing.JCheckBox" binding="propExtractContentEnabled">
+                      <component id="ce779" class="javax.swing.JCheckBox" binding="propCanModifyEnabled">
                         <constraints>
                           <grid row="8" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -2120,7 +2103,7 @@
                           <text value=""/>
                         </properties>
                       </component>
-                      <component id="e3adf" class="javax.swing.JComboBox" binding="propExtractContent">
+                      <component id="48483" class="javax.swing.JComboBox" binding="propCanModify">
                         <constraints>
                           <grid row="8" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="0" indent="0" use-parent-layout="false">
                             <minimum-size width="100" height="-1"/>
@@ -2133,15 +2116,15 @@
                           </model>
                         </properties>
                       </component>
-                      <component id="793c8" class="javax.swing.JLabel">
+                      <component id="8d6a8" class="javax.swing.JLabel">
                         <constraints>
                           <grid row="9" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
-                          <text value="Can Modify Annotations"/>
+                          <text value="Can Extract Content"/>
                         </properties>
                       </component>
-                      <component id="77d9c" class="javax.swing.JCheckBox" binding="propCanModifyAnnotationsEnabled">
+                      <component id="2d6f8" class="javax.swing.JCheckBox" binding="propExtractContentEnabled">
                         <constraints>
                           <grid row="9" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -2149,7 +2132,7 @@
                           <text value=""/>
                         </properties>
                       </component>
-                      <component id="3c8d7" class="javax.swing.JComboBox" binding="propCanModifyAnnotations">
+                      <component id="e3adf" class="javax.swing.JComboBox" binding="propExtractContent">
                         <constraints>
                           <grid row="9" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="0" indent="0" use-parent-layout="false">
                             <minimum-size width="100" height="-1"/>
@@ -2162,63 +2145,15 @@
                           </model>
                         </properties>
                       </component>
-                      <component id="1c882" class="javax.swing.JLabel">
-                        <constraints>
-                          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <text value="Owner Password"/>
-                        </properties>
-                      </component>
-                      <component id="289c" class="javax.swing.JCheckBox" binding="propOwnerPasswordEnabled">
-                        <constraints>
-                          <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <text value=""/>
-                        </properties>
-                      </component>
-                      <component id="e5ae0" class="javax.swing.JTextField" binding="propOwnerPassword">
-                        <constraints>
-                          <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-                            <preferred-size width="150" height="-1"/>
-                          </grid>
-                        </constraints>
-                        <properties/>
-                      </component>
-                      <component id="7a2bf" class="javax.swing.JLabel">
-                        <constraints>
-                          <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <text value="User Password"/>
-                        </properties>
-                      </component>
-                      <component id="43851" class="javax.swing.JCheckBox" binding="propUserPasswordEnabled">
-                        <constraints>
-                          <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties>
-                          <text value=""/>
-                        </properties>
-                      </component>
-                      <component id="f0dcd" class="javax.swing.JTextField" binding="propUserPassword">
-                        <constraints>
-                          <grid row="5" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-                            <preferred-size width="150" height="-1"/>
-                          </grid>
-                        </constraints>
-                        <properties/>
-                      </component>
-                      <component id="2a56e" class="javax.swing.JLabel">
+                      <component id="793c8" class="javax.swing.JLabel">
                         <constraints>
                           <grid row="10" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
-                          <text value="Can Fill Form Fields"/>
+                          <text value="Can Modify Annotations"/>
                         </properties>
                       </component>
-                      <component id="3cce2" class="javax.swing.JCheckBox" binding="propCanFillFormFieldsEnabled">
+                      <component id="77d9c" class="javax.swing.JCheckBox" binding="propCanModifyAnnotationsEnabled">
                         <constraints>
                           <grid row="10" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -2226,7 +2161,7 @@
                           <text value=""/>
                         </properties>
                       </component>
-                      <component id="99148" class="javax.swing.JComboBox" binding="propCanFillFormFields">
+                      <component id="3c8d7" class="javax.swing.JComboBox" binding="propCanModifyAnnotations">
                         <constraints>
                           <grid row="10" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="0" indent="0" use-parent-layout="false">
                             <minimum-size width="100" height="-1"/>
@@ -2239,15 +2174,63 @@
                           </model>
                         </properties>
                       </component>
-                      <component id="5583a" class="javax.swing.JLabel">
+                      <component id="1c882" class="javax.swing.JLabel">
+                        <constraints>
+                          <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value="Owner Password"/>
+                        </properties>
+                      </component>
+                      <component id="289c" class="javax.swing.JCheckBox" binding="propOwnerPasswordEnabled">
+                        <constraints>
+                          <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value=""/>
+                        </properties>
+                      </component>
+                      <component id="e5ae0" class="javax.swing.JTextField" binding="propOwnerPassword">
+                        <constraints>
+                          <grid row="5" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                            <preferred-size width="150" height="-1"/>
+                          </grid>
+                        </constraints>
+                        <properties/>
+                      </component>
+                      <component id="7a2bf" class="javax.swing.JLabel">
+                        <constraints>
+                          <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value="User Password"/>
+                        </properties>
+                      </component>
+                      <component id="43851" class="javax.swing.JCheckBox" binding="propUserPasswordEnabled">
+                        <constraints>
+                          <grid row="6" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value=""/>
+                        </properties>
+                      </component>
+                      <component id="f0dcd" class="javax.swing.JTextField" binding="propUserPassword">
+                        <constraints>
+                          <grid row="6" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                            <preferred-size width="150" height="-1"/>
+                          </grid>
+                        </constraints>
+                        <properties/>
+                      </component>
+                      <component id="2a56e" class="javax.swing.JLabel">
                         <constraints>
                           <grid row="11" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
-                          <text value="Can Extract For Accessibility"/>
+                          <text value="Can Fill Form Fields"/>
                         </properties>
                       </component>
-                      <component id="2a11" class="javax.swing.JCheckBox" binding="propCanExtractFormAccessibilityEnabled">
+                      <component id="3cce2" class="javax.swing.JCheckBox" binding="propCanFillFormFieldsEnabled">
                         <constraints>
                           <grid row="11" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -2255,7 +2238,7 @@
                           <text value=""/>
                         </properties>
                       </component>
-                      <component id="48c58" class="javax.swing.JComboBox" binding="propCanExtractFormAccessibility">
+                      <component id="99148" class="javax.swing.JComboBox" binding="propCanFillFormFields">
                         <constraints>
                           <grid row="11" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="0" indent="0" use-parent-layout="false">
                             <minimum-size width="100" height="-1"/>
@@ -2268,15 +2251,15 @@
                           </model>
                         </properties>
                       </component>
-                      <component id="c95c0" class="javax.swing.JLabel">
+                      <component id="5583a" class="javax.swing.JLabel">
                         <constraints>
                           <grid row="12" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
-                          <text value="Can Assemble Document"/>
+                          <text value="Can Extract For Accessibility"/>
                         </properties>
                       </component>
-                      <component id="f63f5" class="javax.swing.JCheckBox" binding="propCanAssembleDocumentEnabled">
+                      <component id="2a11" class="javax.swing.JCheckBox" binding="propCanExtractFormAccessibilityEnabled">
                         <constraints>
                           <grid row="12" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -2284,7 +2267,7 @@
                           <text value=""/>
                         </properties>
                       </component>
-                      <component id="97fa7" class="javax.swing.JComboBox" binding="propCanAssembleDocument">
+                      <component id="48c58" class="javax.swing.JComboBox" binding="propCanExtractFormAccessibility">
                         <constraints>
                           <grid row="12" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="0" indent="0" use-parent-layout="false">
                             <minimum-size width="100" height="-1"/>
@@ -2297,15 +2280,15 @@
                           </model>
                         </properties>
                       </component>
-                      <component id="4a31" class="javax.swing.JLabel">
+                      <component id="c95c0" class="javax.swing.JLabel">
                         <constraints>
                           <grid row="13" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
-                          <text value="Can Print Faithful"/>
+                          <text value="Can Assemble Document"/>
                         </properties>
                       </component>
-                      <component id="886b5" class="javax.swing.JCheckBox" binding="propCanPrintFaithfulEnabled">
+                      <component id="f63f5" class="javax.swing.JCheckBox" binding="propCanAssembleDocumentEnabled">
                         <constraints>
                           <grid row="13" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -2313,7 +2296,7 @@
                           <text value=""/>
                         </properties>
                       </component>
-                      <component id="9c786" class="javax.swing.JComboBox" binding="propCanPrintFaithful">
+                      <component id="97fa7" class="javax.swing.JComboBox" binding="propCanAssembleDocument">
                         <constraints>
                           <grid row="13" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="0" indent="0" use-parent-layout="false">
                             <minimum-size width="100" height="-1"/>
@@ -2325,6 +2308,41 @@
                             <item value="No"/>
                           </model>
                         </properties>
+                      </component>
+                      <component id="4a31" class="javax.swing.JLabel">
+                        <constraints>
+                          <grid row="14" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value="Can Print Faithful"/>
+                        </properties>
+                      </component>
+                      <component id="886b5" class="javax.swing.JCheckBox" binding="propCanPrintFaithfulEnabled">
+                        <constraints>
+                          <grid row="14" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties>
+                          <text value=""/>
+                        </properties>
+                      </component>
+                      <component id="9c786" class="javax.swing.JComboBox" binding="propCanPrintFaithful">
+                        <constraints>
+                          <grid row="14" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                            <minimum-size width="100" height="-1"/>
+                          </grid>
+                        </constraints>
+                        <properties>
+                          <model>
+                            <item value="Yes"/>
+                            <item value="No"/>
+                          </model>
+                        </properties>
+                      </component>
+                      <component id="de74a" class="pmedit.ui.components.TextPaneWithLinks" binding="proRequiredProps">
+                        <constraints>
+                          <grid row="0" column="0" row-span="1" col-span="3" vsize-policy="1" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                        </constraints>
+                        <properties/>
                       </component>
                     </children>
                   </grid>

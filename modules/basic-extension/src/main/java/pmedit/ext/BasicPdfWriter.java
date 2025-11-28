@@ -17,7 +17,6 @@ import pmedit.FileOptimizer;
 import pmedit.MetadataCollection;
 import pmedit.MetadataInfo;
 import pmedit.MetadataInfoUtils;
-import pmedit.util.CrossPlatformFileTimeModifier;
 
 import javax.xml.transform.TransformerException;
 import java.io.*;
