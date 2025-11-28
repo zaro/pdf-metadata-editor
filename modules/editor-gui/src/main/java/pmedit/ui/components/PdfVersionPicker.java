@@ -8,10 +8,9 @@ import java.text.DecimalFormat;
 
 public class PdfVersionPicker extends JComboBox<Float> {
     static List<Float> versions = List.of(1.3f, 1.4f, 1.5f, 1.6f, 1.7f);
-    DefaultComboBoxModel<Float> model;
 
     public PdfVersionPicker(){
-
+        super(new DefaultComboBoxModel<Float>());
         setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
@@ -27,9 +26,7 @@ public class PdfVersionPicker extends JComboBox<Float> {
             }
         });
 
-        model = new DefaultComboBoxModel<Float>() ;
-        model.addAll(versions);
-        setModel(model);
+        ((DefaultComboBoxModel<Float>)getModel()).addAll(versions);
     }
 
     public void setVersion(Float version) {
@@ -37,6 +34,6 @@ public class PdfVersionPicker extends JComboBox<Float> {
     }
 
     public Float getVersion() {
-        return (Float) model.getSelectedItem();
+        return (Float) getModel().getSelectedItem();
     }
 }

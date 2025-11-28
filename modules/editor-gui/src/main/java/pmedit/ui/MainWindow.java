@@ -489,7 +489,7 @@ public class MainWindow extends JFrame implements  ProgramWindow {
 
         PmeExtension.get().onDocumentReload(document, pdfFile, metadataEditor);
 
-        actionsAndOptions.setCurrentDocumentVersion(document.getVersion());
+        actionsAndOptions.setDocumentVersionModel(metadataEditor.getPdfVersionPicker().getModel());
 
         metadataInfo.prop.userPassword = password;
         actionsAndOptions.setEnabled(true);

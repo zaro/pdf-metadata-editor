@@ -84,14 +84,8 @@ public class ActionsAndOptions {
 
     static double[] versions = new double[]{1.3f, 1.4f, 1.5f, 1.6f, 1.7f};
 
-    public void setCurrentDocumentVersion(float version) {
-        var model = new DefaultComboBoxModel<Float>() {
-
-        };
-        model.addAll(Arrays.stream(versions).boxed().map(Double::floatValue).collect(Collectors.toList()));
-//        model.addAll(Arrays.stream(versions).filter(e -> e >= version).boxed().map(Double::floatValue).collect(Collectors.toList()));
+    public void setDocumentVersionModel(ComboBoxModel<Float> model) {
         pdfVersion.setModel(model);
-        model.setSelectedItem(version);
     }
 
     public void setDocumentProtection(EncryptionOptions options) {
