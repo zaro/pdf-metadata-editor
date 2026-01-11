@@ -4,6 +4,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junitpioneer.jupiter.SetSystemProperty;
 import org.netbeans.jemmy.ClassReference;
+import org.netbeans.jemmy.TestOut;
 import org.netbeans.jemmy.operators.*;
 import pmedit.*;
 import pmedit.prefs.Preferences;
@@ -49,9 +50,11 @@ public class MainWindowLoadTest  extends  BaseJemmyTest  {
     public void testLoadFile() throws FileNotFoundException, IOException, Exception {
         for(FilesTestHelper.PMTuple testData : FilesTestHelper.randomFiles(NUM_FILES, e-> {
             e.prop.compression = true;
+            e.basic.rating = 13; // Make sure th
         })) {
             new JButtonOperator(topFrame, "Open PDF").push();
             openFileChooser("Open", testData.file);
+            new TestOut().printLine("Opened: " + testData.file);
             checkMetadataPaneValues(topFrame, testData.md);
         }
     }

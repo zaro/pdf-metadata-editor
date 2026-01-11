@@ -144,7 +144,7 @@ public class PreferencesWindow extends JDialog implements PreferencesWindowInter
         final AboutPreferences nestedForm1 = new AboutPreferences();
         panel5.add(nestedForm1.$$$getRootComponent$$$(), new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel6 = new JPanel();
-        panel6.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 3, 3), -1, -1));
+        panel6.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 5, 5), -1, -1));
         contentPane.add(panel6, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));
         closeButton = new JButton();
         closeButton.setEnabled(true);

@@ -212,10 +212,16 @@ public class Main {
             System.exit(1);
         }
 
-        if(OsCheck.isMacOs()){
+        if (OsCheck.isMacOs()){
             System.setProperty( "apple.laf.useScreenMenuBar", "true" );
             System.setProperty( "apple.awt.application.name", Version.getAppName() );
             System.setProperty( "apple.awt.application.appearance", "system" );
+        }
+        if (System.getProperty("flatlaf.useSystemFileChooser") == null){
+            Boolean useSystemFileChooser = GuiPreferences.getUseSystemFileChooser();
+            if(useSystemFileChooser != null) {
+                System.setProperty("flatlaf.useSystemFileChooser", useSystemFileChooser.toString());
+            }
         }
 
         String lafClass = GuiPreferences.getLookAndFeelClass();

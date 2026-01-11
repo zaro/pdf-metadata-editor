@@ -407,13 +407,24 @@
                           <text value=""/>
                         </properties>
                       </component>
-                      <component id="d2f14" class="javax.swing.JTextField" binding="xmpBasicRating">
+                      <component id="1905" class="javax.swing.JComboBox" binding="xmpBasicRating">
                         <constraints>
                           <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
                             <preferred-size width="150" height="-1"/>
                           </grid>
                         </constraints>
-                        <properties/>
+                        <properties>
+                          <model>
+                            <item value="Unset"/>
+                            <item value="-1"/>
+                            <item value="0"/>
+                            <item value="1"/>
+                            <item value="2"/>
+                            <item value="3"/>
+                            <item value="4"/>
+                            <item value="5"/>
+                          </model>
+                        </properties>
                       </component>
                       <component id="6c30d" class="javax.swing.JLabel">
                         <constraints>

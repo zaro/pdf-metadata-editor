@@ -1,15 +1,16 @@
 package pmedit.ui;
 
+import com.formdev.flatlaf.util.SystemFileChooser;
 import pmedit.prefs.Preferences;
 
-import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 
-public class DirChooser extends JFileChooser {
+public class DirChooser extends SystemFileChooser {
+    public static final int APPROVE_OPTION = SystemFileChooser.APPROVE_OPTION;
     String designation = "";
     DirChooser(){
-        setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        setFileSelectionMode(SystemFileChooser.DIRECTORIES_ONLY);
     }
     DirChooser(String designation){
         this();

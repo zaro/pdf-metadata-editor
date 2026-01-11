@@ -78,7 +78,7 @@ public class MainWindow extends JFrame implements  ProgramWindow {
                 return;
             }
 
-            final JFileChooser fcSaveAs = new JFileChooser();
+            final FileChooser fcSaveAs = new FileChooser();
             fcSaveAs.setDialogTitle("Save As");
 
             String dir = Preferences.getInstance().get("LastDir", null);
@@ -90,7 +90,7 @@ public class MainWindow extends JFrame implements  ProgramWindow {
             }
             int returnVal = fcSaveAs.showSaveDialog(MainWindow.this);
 
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
+            if (returnVal == FileChooser.APPROVE_OPTION) {
                 File selected = fcSaveAs.getSelectedFile();
                 if (!selected.getName().toLowerCase().endsWith(".pdf")) {
                     selected = new File(selected.getAbsolutePath() + ".pdf");
@@ -110,7 +110,7 @@ public class MainWindow extends JFrame implements  ProgramWindow {
 
             int returnVal = fc.showOpenDialog(MainWindow.this);
 
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
+            if (returnVal == FileChooser.APPROVE_OPTION) {
                 // This is where a real application would open the file.
                 loadFile(fc.getSelectedFile());
             }

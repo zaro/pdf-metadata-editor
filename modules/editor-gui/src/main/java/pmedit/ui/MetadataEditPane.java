@@ -18,10 +18,7 @@ import pmedit.ui.ext.MetadataEditPaneInterface;
 
 import javax.swing.*;
 import javax.swing.border.Border;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.event.ListDataEvent;
-import javax.swing.event.ListDataListener;
+import javax.swing.event.*;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.JTextComponent;
@@ -69,7 +66,7 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
     @FieldID("basic.baseURL")
     public JTextField xmpBasicBaseURL;
     @FieldID("basic.rating")
-    public JTextField xmpBasicRating;
+    public JComboBox xmpBasicRating;
     @FieldID("basic.label")
     public JTextField xmpBasicLabel;
     @FieldID("basic.nickname")
@@ -381,6 +378,8 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
     Border datePickerDefault;
     Border changedBorder;
 
+    boolean pauseListeners;
+
     public static Color darken(Color color, double factor) {
         int red = (int) (color.getRed() * factor);
         int green = (int) (color.getGreen() * factor);
@@ -486,8 +485,12 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
             }
         }
     }
-
     private void traverseFields(MetadataEditPane.FieldSetGet setGet, MetadataEditPane.FieldEnabledCheckBox fieldEnabled) {
+        traverseFields(setGet, fieldEnabled, false);
+    }
+    private void traverseFields(MetadataEditPane.FieldSetGet setGet, MetadataEditPane.FieldEnabledCheckBox fieldEnabled, boolean pauseListeners) {
+        boolean currentPauseListeners = this.pauseListeners;
+        this.pauseListeners = pauseListeners;
         try {
             for (MetadataField metadataField : getFieldsCache().values()) {
                 visitField(metadataField, setGet, fieldEnabled);
@@ -495,6 +498,8 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         } catch (Exception e){
             LOG.error("traverseFields", e);
             throw e;
+        } finally {
+            this.pauseListeners = currentPauseListeners;
         }
     }
 
@@ -539,7 +544,7 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
                     vp.setBorder(comboBoxDefault);
                 }else if (field instanceof JComboBox combo) {
                     MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(anno.value());
-                    objectToField(combo, null, fd.type == FieldDataType.FieldType.BoolField, fd.nullValueText);
+                    objectToField(combo, null, fd.type, fd.nullValueText);
                     combo.setBorder(comboBoxDefault);
                 }
                 if (field instanceof JSpinner) {
@@ -584,7 +589,10 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
                 setFieldValue(anno.value(), field, new MetadataInfo.LazyPropertyValue(metadataInfo, anno.value()), ignoreNulls);
 
                 if(loadPreset){
-                    currentMetadata.set(anno.value(), metadataInfo.get(anno.value()));
+                    Object v = metadataInfo.get(anno.value());
+                    if(v != null) {
+                        currentMetadata.set(anno.value(), metadataInfo.get(anno.value()));
+                    }
                 }
             }
         }, new MetadataEditPane.FieldEnabledCheckBox() {
@@ -593,21 +601,35 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
                 field.setSelected(metadataInfo.isEnabled(anno.value()));
 
             }
-        });
+        }, true);
 
-        currentMetadata.getPropertyChangeSupport().addPropertyChangeListener(evt -> {
-            LOG.debug("Got property change for {} old={} new={}", evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
-            if(evt.getSource() == this){
-                // Ignore event if coming from this component
-                return;
+        PropertyChangeListener[] listeners = currentMetadata.getPropertyChangeSupport().getPropertyChangeListeners();
+        boolean alreadyRegistered = false;
+        for (PropertyChangeListener existing : listeners) {
+            if (existing == propertyListener) {
+                alreadyRegistered = true;
+                break;
             }
-            visitField(evt.getPropertyName(), new MetadataEditPane.FieldSetGet() {
-                @Override
-                public void apply(Object field, FieldID anno) {
-                    setFieldValue(anno.value(), field, new MetadataInfo.LazyPropertyValue(currentMetadata, anno.value()), false);
-                }
-            }, null);
-        });
+        }
+
+        if (!alreadyRegistered) {
+            currentMetadata.getPropertyChangeSupport().addPropertyChangeListener(propertyListener);
+        }
+    }
+
+    private final PropertyChangeListener propertyListener = this::onPropertyChanged;
+    protected void onPropertyChanged(PropertyChangeEvent evt){
+        LOG.trace("Got property change @{} for {} old={} new={}", this, evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
+        if(evt.getSource() == this){
+            // Ignore event if coming from this component
+            return;
+        }
+        visitField(evt.getPropertyName(), new MetadataEditPane.FieldSetGet() {
+            @Override
+            public void apply(Object field, FieldID anno) {
+                setFieldValue(anno.value(), field, new MetadataInfo.LazyPropertyValue(currentMetadata, anno.value()), false);
+            }
+        }, null);
     }
 
     protected void setFieldValue(String propertyName, Object field, MetadataInfo.LazyPropertyValue lazyValue, boolean ignoreNulls){
@@ -618,18 +640,18 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
             }
         }
 
-        if (field instanceof JTextField) {
-            ((JTextField) field).setText(lazyValue.getText());
+        if (field instanceof JTextField tf) {
+            tf.setText(lazyValue.getText());
         }
-        if (field instanceof JTextArea) {
-            ((JTextArea) field).setText(lazyValue.getText());
+        if (field instanceof JTextArea ta) {
+            ta.setText(lazyValue.getText());
         }
 
         if (field instanceof PdfVersionPicker vp) {
             objectToField(vp, value);
         } else if (field instanceof JComboBox) {
             MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(propertyName);
-            objectToField((JComboBox) field, value, fd.type == FieldDataType.FieldType.BoolField, fd.nullValueText);
+            objectToField((JComboBox) field, value, fd.type, fd.nullValueText);
         }
         if (field instanceof JDateChooser) {
             objectToField((JDateChooser) field, value);
@@ -771,14 +793,19 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
 
     }
 
-    private void objectToField(JComboBox field, Object o, boolean oIsBool, String nullValueText) {
+    private void objectToField(JComboBox field, Object o, FieldDataType.FieldType fType, String nullValueText) {
         String v = nullValueText == null || nullValueText.isEmpty() ? "Unset" : nullValueText;
 
         if (o instanceof String) {
             field.getModel().setSelectedItem(o);
-        } else if (o instanceof Boolean || oIsBool) {
+        } else if (o instanceof Boolean && fType == FieldDataType.FieldType.BoolField) {
             if (o != null) {
                 v = (Boolean) o ? "Yes" : "No";
+            }
+            field.getModel().setSelectedItem(v);
+        } else if (o instanceof Integer && fType == FieldDataType.FieldType.IntField) {
+            if (o != null) {
+                v = String.valueOf((Integer) o);
             }
             field.getModel().setSelectedItem(v);
         } else if (o == null) {
@@ -846,7 +873,7 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         if (o instanceof Integer) {
             field.setValue(o);
         } else if (o == null) {
-            field.setValue(0);
+            field.setValue(null);
         } else {
             RuntimeException e = new RuntimeException("Cannot store non-Integerr object in JSpinner");
             LOG.error("objectToField(JSpinner)", e);
@@ -862,7 +889,7 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         currentMetadata.getPropertyChangeSupport().firePropertyChange(evt);
     }
     void applyMetadataPropertyChange(MetadataInfo.FieldDescription fd, Object newV) {
-        if(!fd.isReadonly) {
+        if(!fd.isReadonly && !pauseListeners) {
             applyMetadataPropertyChange(fd.name, newV);
         }
     }
@@ -904,8 +931,7 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
                 textComponent.setBorder(changedBorder);
 
             }
-
-            applyMetadataPropertyChange(fieldDescription, current);
+            applyMetadataPropertyChange(fieldDescription, fieldDescription.makeValueFromString(current));
         }
 
         public void changedUpdate(DocumentEvent e) {
@@ -976,7 +1002,19 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
                     }).createContextMenu().addTemplatePlaceholders(!isReadonly);
                 }
                 if (field instanceof JSpinner spinner) {
-                    throw new RuntimeException("JSpinner NOT SUPPORTED!");
+                    spinner.addChangeListener(new ChangeListener() {
+                        @Override
+                        public void stateChanged(ChangeEvent e) {
+                            Integer selectedValue = (Integer) spinner.getModel().getValue();
+                            Object initial = initialMetadata != null ? initialMetadata.get(fieldDescription.name) : null;
+                            if ((selectedValue != null && selectedValue.equals(initial)) || (selectedValue == null && initial == null)) {
+                                spinner.setBorder(comboBoxDefault);
+                            } else {
+                                spinner.setBorder(changedBorder);
+                            }
+                            applyMetadataPropertyChange(fieldDescription, selectedValue);
+                        }
+                    });
                 }
                 if(field instanceof PdfVersionPicker vp) {
                     vp.addActionListener(new ActionListener() {
@@ -1260,7 +1298,17 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         xmpBasicRatingEnable = new JCheckBox();
         xmpBasicRatingEnable.setText("");
         panel5.add(xmpBasicRatingEnable, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        xmpBasicRating = new JTextField();
+        xmpBasicRating = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel2 = new DefaultComboBoxModel();
+        defaultComboBoxModel2.addElement("Unset");
+        defaultComboBoxModel2.addElement("-1");
+        defaultComboBoxModel2.addElement("0");
+        defaultComboBoxModel2.addElement("1");
+        defaultComboBoxModel2.addElement("2");
+        defaultComboBoxModel2.addElement("3");
+        defaultComboBoxModel2.addElement("4");
+        defaultComboBoxModel2.addElement("5");
+        xmpBasicRating.setModel(defaultComboBoxModel2);
         panel5.add(xmpBasicRating, new GridConstraints(4, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
         final JLabel label15 = new JLabel();
         label15.setText("Label");
@@ -1512,11 +1560,11 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         xmpRightsMarkedEnabled.setText("");
         panel11.add(xmpRightsMarkedEnabled, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         xmpRightsMarked = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel2 = new DefaultComboBoxModel();
-        defaultComboBoxModel2.addElement("Unset");
-        defaultComboBoxModel2.addElement("Yes");
-        defaultComboBoxModel2.addElement("No");
-        xmpRightsMarked.setModel(defaultComboBoxModel2);
+        final DefaultComboBoxModel defaultComboBoxModel3 = new DefaultComboBoxModel();
+        defaultComboBoxModel3.addElement("Unset");
+        defaultComboBoxModel3.addElement("Yes");
+        defaultComboBoxModel3.addElement("No");
+        xmpRightsMarked.setModel(defaultComboBoxModel3);
         panel11.add(xmpRightsMarked, new GridConstraints(2, 2, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label40 = new JLabel();
         label40.setText("Owners");
@@ -1562,11 +1610,11 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         final Spacer spacer6 = new Spacer();
         panel13.add(spacer6, new GridConstraints(17, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         hideToolbar = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel3 = new DefaultComboBoxModel();
-        defaultComboBoxModel3.addElement("Unset");
-        defaultComboBoxModel3.addElement("Yes");
-        defaultComboBoxModel3.addElement("No");
-        hideToolbar.setModel(defaultComboBoxModel3);
+        final DefaultComboBoxModel defaultComboBoxModel4 = new DefaultComboBoxModel();
+        defaultComboBoxModel4.addElement("Unset");
+        defaultComboBoxModel4.addElement("Yes");
+        defaultComboBoxModel4.addElement("No");
+        hideToolbar.setModel(defaultComboBoxModel4);
         panel13.add(hideToolbar, new GridConstraints(1, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         hideToolbarEnabled = new JCheckBox();
         hideToolbarEnabled.setText("");
@@ -1602,39 +1650,39 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         displayDocTitleEnabled.setText("");
         panel13.add(displayDocTitleEnabled, new GridConstraints(6, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         hideMenuBar = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel4 = new DefaultComboBoxModel();
-        defaultComboBoxModel4.addElement("Unset");
-        defaultComboBoxModel4.addElement("Yes");
-        defaultComboBoxModel4.addElement("No");
-        hideMenuBar.setModel(defaultComboBoxModel4);
-        panel13.add(hideMenuBar, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        hideWindowUI = new JComboBox();
         final DefaultComboBoxModel defaultComboBoxModel5 = new DefaultComboBoxModel();
         defaultComboBoxModel5.addElement("Unset");
         defaultComboBoxModel5.addElement("Yes");
         defaultComboBoxModel5.addElement("No");
-        hideWindowUI.setModel(defaultComboBoxModel5);
-        panel13.add(hideWindowUI, new GridConstraints(3, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        fitWindow = new JComboBox();
+        hideMenuBar.setModel(defaultComboBoxModel5);
+        panel13.add(hideMenuBar, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        hideWindowUI = new JComboBox();
         final DefaultComboBoxModel defaultComboBoxModel6 = new DefaultComboBoxModel();
         defaultComboBoxModel6.addElement("Unset");
         defaultComboBoxModel6.addElement("Yes");
         defaultComboBoxModel6.addElement("No");
-        fitWindow.setModel(defaultComboBoxModel6);
-        panel13.add(fitWindow, new GridConstraints(4, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        centerWindow = new JComboBox();
+        hideWindowUI.setModel(defaultComboBoxModel6);
+        panel13.add(hideWindowUI, new GridConstraints(3, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        fitWindow = new JComboBox();
         final DefaultComboBoxModel defaultComboBoxModel7 = new DefaultComboBoxModel();
         defaultComboBoxModel7.addElement("Unset");
         defaultComboBoxModel7.addElement("Yes");
         defaultComboBoxModel7.addElement("No");
-        centerWindow.setModel(defaultComboBoxModel7);
-        panel13.add(centerWindow, new GridConstraints(5, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        displayDocTitle = new JComboBox();
+        fitWindow.setModel(defaultComboBoxModel7);
+        panel13.add(fitWindow, new GridConstraints(4, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        centerWindow = new JComboBox();
         final DefaultComboBoxModel defaultComboBoxModel8 = new DefaultComboBoxModel();
         defaultComboBoxModel8.addElement("Unset");
         defaultComboBoxModel8.addElement("Yes");
         defaultComboBoxModel8.addElement("No");
-        displayDocTitle.setModel(defaultComboBoxModel8);
+        centerWindow.setModel(defaultComboBoxModel8);
+        panel13.add(centerWindow, new GridConstraints(5, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        displayDocTitle = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel9 = new DefaultComboBoxModel();
+        defaultComboBoxModel9.addElement("Unset");
+        defaultComboBoxModel9.addElement("Yes");
+        defaultComboBoxModel9.addElement("No");
+        displayDocTitle.setModel(defaultComboBoxModel9);
         panel13.add(displayDocTitle, new GridConstraints(6, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label49 = new JLabel();
         label49.setText("Non full screen page mode");
@@ -1649,12 +1697,12 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         readingDirectionEnabled.setText("");
         panel13.add(readingDirectionEnabled, new GridConstraints(8, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         nonFullScreenPageMode = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel9 = new DefaultComboBoxModel();
-        nonFullScreenPageMode.setModel(defaultComboBoxModel9);
+        final DefaultComboBoxModel defaultComboBoxModel10 = new DefaultComboBoxModel();
+        nonFullScreenPageMode.setModel(defaultComboBoxModel10);
         panel13.add(nonFullScreenPageMode, new GridConstraints(7, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         readingDirection = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel10 = new DefaultComboBoxModel();
-        readingDirection.setModel(defaultComboBoxModel10);
+        final DefaultComboBoxModel defaultComboBoxModel11 = new DefaultComboBoxModel();
+        readingDirection.setModel(defaultComboBoxModel11);
         panel13.add(readingDirection, new GridConstraints(8, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label51 = new JLabel();
         label51.setText("View Area");
@@ -1693,28 +1741,28 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         printScalingEnabled.setText("");
         panel13.add(printScalingEnabled, new GridConstraints(16, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         viewArea = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel11 = new DefaultComboBoxModel();
-        viewArea.setModel(defaultComboBoxModel11);
+        final DefaultComboBoxModel defaultComboBoxModel12 = new DefaultComboBoxModel();
+        viewArea.setModel(defaultComboBoxModel12);
         panel13.add(viewArea, new GridConstraints(11, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         viewClip = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel12 = new DefaultComboBoxModel();
-        viewClip.setModel(defaultComboBoxModel12);
+        final DefaultComboBoxModel defaultComboBoxModel13 = new DefaultComboBoxModel();
+        viewClip.setModel(defaultComboBoxModel13);
         panel13.add(viewClip, new GridConstraints(12, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         printArea = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel13 = new DefaultComboBoxModel();
-        printArea.setModel(defaultComboBoxModel13);
+        final DefaultComboBoxModel defaultComboBoxModel14 = new DefaultComboBoxModel();
+        printArea.setModel(defaultComboBoxModel14);
         panel13.add(printArea, new GridConstraints(13, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         printClip = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel14 = new DefaultComboBoxModel();
-        printClip.setModel(defaultComboBoxModel14);
+        final DefaultComboBoxModel defaultComboBoxModel15 = new DefaultComboBoxModel();
+        printClip.setModel(defaultComboBoxModel15);
         panel13.add(printClip, new GridConstraints(14, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         duplex = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel15 = new DefaultComboBoxModel();
-        duplex.setModel(defaultComboBoxModel15);
+        final DefaultComboBoxModel defaultComboBoxModel16 = new DefaultComboBoxModel();
+        duplex.setModel(defaultComboBoxModel16);
         panel13.add(duplex, new GridConstraints(15, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         printScaling = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel16 = new DefaultComboBoxModel();
-        printScaling.setModel(defaultComboBoxModel16);
+        final DefaultComboBoxModel defaultComboBoxModel17 = new DefaultComboBoxModel();
+        printScaling.setModel(defaultComboBoxModel17);
         panel13.add(printScaling, new GridConstraints(16, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label57 = new JLabel();
         label57.setText("Page Layout");
@@ -1723,8 +1771,8 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         pageLayoutEnabled.setText("");
         panel13.add(pageLayoutEnabled, new GridConstraints(9, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         pageLayout = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel17 = new DefaultComboBoxModel();
-        pageLayout.setModel(defaultComboBoxModel17);
+        final DefaultComboBoxModel defaultComboBoxModel18 = new DefaultComboBoxModel();
+        pageLayout.setModel(defaultComboBoxModel18);
         panel13.add(pageLayout, new GridConstraints(9, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label58 = new JLabel();
         label58.setText("Page mode");
@@ -1733,8 +1781,8 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         pageModeEnabled.setText("");
         panel13.add(pageModeEnabled, new GridConstraints(10, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         pageMode = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel18 = new DefaultComboBoxModel();
-        pageMode.setModel(defaultComboBoxModel18);
+        final DefaultComboBoxModel defaultComboBoxModel19 = new DefaultComboBoxModel();
+        pageMode.setModel(defaultComboBoxModel19);
         panel13.add(pageMode, new GridConstraints(10, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         proRequiredViewer = new TextPaneWithLinks();
         panel13.add(proRequiredViewer, new GridConstraints(0, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));
@@ -1842,10 +1890,10 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         propCompressionEnabled.setText("");
         panel17.add(propCompressionEnabled, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         propCompression = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel19 = new DefaultComboBoxModel();
-        defaultComboBoxModel19.addElement("Yes");
-        defaultComboBoxModel19.addElement("No");
-        propCompression.setModel(defaultComboBoxModel19);
+        final DefaultComboBoxModel defaultComboBoxModel20 = new DefaultComboBoxModel();
+        defaultComboBoxModel20.addElement("Yes");
+        defaultComboBoxModel20.addElement("No");
+        propCompression.setModel(defaultComboBoxModel20);
         panel17.add(propCompression, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
         final JLabel label70 = new JLabel();
         label70.setText("PDF Encrypted");
@@ -1854,10 +1902,10 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         propEncryptionEnabled.setText("");
         panel17.add(propEncryptionEnabled, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         propEncryption = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel20 = new DefaultComboBoxModel();
-        defaultComboBoxModel20.addElement("Yes");
-        defaultComboBoxModel20.addElement("No");
-        propEncryption.setModel(defaultComboBoxModel20);
+        final DefaultComboBoxModel defaultComboBoxModel21 = new DefaultComboBoxModel();
+        defaultComboBoxModel21.addElement("Yes");
+        defaultComboBoxModel21.addElement("No");
+        propEncryption.setModel(defaultComboBoxModel21);
         panel17.add(propEncryption, new GridConstraints(3, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
         final JLabel label71 = new JLabel();
         label71.setText("Encryption Key Length");
@@ -1866,10 +1914,10 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         propKeyLengthEnabled.setText("");
         panel17.add(propKeyLengthEnabled, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         propKeyLength = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel21 = new DefaultComboBoxModel();
-        defaultComboBoxModel21.addElement("Yes");
-        defaultComboBoxModel21.addElement("No");
-        propKeyLength.setModel(defaultComboBoxModel21);
+        final DefaultComboBoxModel defaultComboBoxModel22 = new DefaultComboBoxModel();
+        defaultComboBoxModel22.addElement("Yes");
+        defaultComboBoxModel22.addElement("No");
+        propKeyLength.setModel(defaultComboBoxModel22);
         panel17.add(propKeyLength, new GridConstraints(4, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
         final JLabel label72 = new JLabel();
         label72.setText("Can Print");
@@ -1878,10 +1926,10 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         propCanPrintEnabled.setText("");
         panel17.add(propCanPrintEnabled, new GridConstraints(7, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         propCanPrint = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel22 = new DefaultComboBoxModel();
-        defaultComboBoxModel22.addElement("Yes");
-        defaultComboBoxModel22.addElement("No");
-        propCanPrint.setModel(defaultComboBoxModel22);
+        final DefaultComboBoxModel defaultComboBoxModel23 = new DefaultComboBoxModel();
+        defaultComboBoxModel23.addElement("Yes");
+        defaultComboBoxModel23.addElement("No");
+        propCanPrint.setModel(defaultComboBoxModel23);
         panel17.add(propCanPrint, new GridConstraints(7, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
         final JLabel label73 = new JLabel();
         label73.setText("Can Modify");
@@ -1890,10 +1938,10 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         propCanModifyEnabled.setText("");
         panel17.add(propCanModifyEnabled, new GridConstraints(8, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         propCanModify = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel23 = new DefaultComboBoxModel();
-        defaultComboBoxModel23.addElement("Yes");
-        defaultComboBoxModel23.addElement("No");
-        propCanModify.setModel(defaultComboBoxModel23);
+        final DefaultComboBoxModel defaultComboBoxModel24 = new DefaultComboBoxModel();
+        defaultComboBoxModel24.addElement("Yes");
+        defaultComboBoxModel24.addElement("No");
+        propCanModify.setModel(defaultComboBoxModel24);
         panel17.add(propCanModify, new GridConstraints(8, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
         final JLabel label74 = new JLabel();
         label74.setText("Can Extract Content");
@@ -1902,10 +1950,10 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         propExtractContentEnabled.setText("");
         panel17.add(propExtractContentEnabled, new GridConstraints(9, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         propExtractContent = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel24 = new DefaultComboBoxModel();
-        defaultComboBoxModel24.addElement("Yes");
-        defaultComboBoxModel24.addElement("No");
-        propExtractContent.setModel(defaultComboBoxModel24);
+        final DefaultComboBoxModel defaultComboBoxModel25 = new DefaultComboBoxModel();
+        defaultComboBoxModel25.addElement("Yes");
+        defaultComboBoxModel25.addElement("No");
+        propExtractContent.setModel(defaultComboBoxModel25);
         panel17.add(propExtractContent, new GridConstraints(9, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
         final JLabel label75 = new JLabel();
         label75.setText("Can Modify Annotations");
@@ -1914,10 +1962,10 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         propCanModifyAnnotationsEnabled.setText("");
         panel17.add(propCanModifyAnnotationsEnabled, new GridConstraints(10, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         propCanModifyAnnotations = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel25 = new DefaultComboBoxModel();
-        defaultComboBoxModel25.addElement("Yes");
-        defaultComboBoxModel25.addElement("No");
-        propCanModifyAnnotations.setModel(defaultComboBoxModel25);
+        final DefaultComboBoxModel defaultComboBoxModel26 = new DefaultComboBoxModel();
+        defaultComboBoxModel26.addElement("Yes");
+        defaultComboBoxModel26.addElement("No");
+        propCanModifyAnnotations.setModel(defaultComboBoxModel26);
         panel17.add(propCanModifyAnnotations, new GridConstraints(10, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
         final JLabel label76 = new JLabel();
         label76.setText("Owner Password");
@@ -1942,10 +1990,10 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         propCanFillFormFieldsEnabled.setText("");
         panel17.add(propCanFillFormFieldsEnabled, new GridConstraints(11, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         propCanFillFormFields = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel26 = new DefaultComboBoxModel();
-        defaultComboBoxModel26.addElement("Yes");
-        defaultComboBoxModel26.addElement("No");
-        propCanFillFormFields.setModel(defaultComboBoxModel26);
+        final DefaultComboBoxModel defaultComboBoxModel27 = new DefaultComboBoxModel();
+        defaultComboBoxModel27.addElement("Yes");
+        defaultComboBoxModel27.addElement("No");
+        propCanFillFormFields.setModel(defaultComboBoxModel27);
         panel17.add(propCanFillFormFields, new GridConstraints(11, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
         final JLabel label79 = new JLabel();
         label79.setText("Can Extract For Accessibility");
@@ -1954,10 +2002,10 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         propCanExtractFormAccessibilityEnabled.setText("");
         panel17.add(propCanExtractFormAccessibilityEnabled, new GridConstraints(12, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         propCanExtractFormAccessibility = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel27 = new DefaultComboBoxModel();
-        defaultComboBoxModel27.addElement("Yes");
-        defaultComboBoxModel27.addElement("No");
-        propCanExtractFormAccessibility.setModel(defaultComboBoxModel27);
+        final DefaultComboBoxModel defaultComboBoxModel28 = new DefaultComboBoxModel();
+        defaultComboBoxModel28.addElement("Yes");
+        defaultComboBoxModel28.addElement("No");
+        propCanExtractFormAccessibility.setModel(defaultComboBoxModel28);
         panel17.add(propCanExtractFormAccessibility, new GridConstraints(12, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
         final JLabel label80 = new JLabel();
         label80.setText("Can Assemble Document");
@@ -1966,10 +2014,10 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         propCanAssembleDocumentEnabled.setText("");
         panel17.add(propCanAssembleDocumentEnabled, new GridConstraints(13, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         propCanAssembleDocument = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel28 = new DefaultComboBoxModel();
-        defaultComboBoxModel28.addElement("Yes");
-        defaultComboBoxModel28.addElement("No");
-        propCanAssembleDocument.setModel(defaultComboBoxModel28);
+        final DefaultComboBoxModel defaultComboBoxModel29 = new DefaultComboBoxModel();
+        defaultComboBoxModel29.addElement("Yes");
+        defaultComboBoxModel29.addElement("No");
+        propCanAssembleDocument.setModel(defaultComboBoxModel29);
         panel17.add(propCanAssembleDocument, new GridConstraints(13, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
         final JLabel label81 = new JLabel();
         label81.setText("Can Print Faithful");
@@ -1978,10 +2026,10 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         propCanPrintFaithfulEnabled.setText("");
         panel17.add(propCanPrintFaithfulEnabled, new GridConstraints(14, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         propCanPrintFaithful = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel29 = new DefaultComboBoxModel();
-        defaultComboBoxModel29.addElement("Yes");
-        defaultComboBoxModel29.addElement("No");
-        propCanPrintFaithful.setModel(defaultComboBoxModel29);
+        final DefaultComboBoxModel defaultComboBoxModel30 = new DefaultComboBoxModel();
+        defaultComboBoxModel30.addElement("Yes");
+        defaultComboBoxModel30.addElement("No");
+        propCanPrintFaithful.setModel(defaultComboBoxModel30);
         panel17.add(propCanPrintFaithful, new GridConstraints(14, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
         proRequiredProps = new TextPaneWithLinks();
         panel17.add(proRequiredProps, new GridConstraints(0, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));

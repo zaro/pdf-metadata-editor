@@ -4,6 +4,7 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import pmedit.BatchOperationParameters;
+import pmedit.MetadataInfo;
 import pmedit.preset.PresetValues;
 
 import javax.swing.*;
@@ -26,6 +27,7 @@ public class BatchParametersEdit extends BatchParametersWindow {
 
     public BatchParametersEdit(BatchOperationParameters parameters, final Frame owner) {
         super(parameters, owner);
+        final MetadataInfo currentMetadata = parameters != null ? parameters.metadata.clone() : null;
         setTitle("Batch set parameters");
 
         setContentPane(contentPane);
@@ -34,18 +36,18 @@ public class BatchParametersEdit extends BatchParametersWindow {
 
         btnSelectAll.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                if (parameters != null) {
-                    parameters.metadata.setEnabled(true);
-                    defaultMetadataPane.fillEnabledFromMetadata(parameters.metadata);
+                if (currentMetadata != null) {
+                    currentMetadata.setEnabled(true);
+                    defaultMetadataPane.fillEnabledFromMetadata(currentMetadata);
                 }
             }
         });
 
         selectNoneButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                if (parameters != null) {
-                    parameters.metadata.setEnabled(false);
-                    defaultMetadataPane.fillEnabledFromMetadata(parameters.metadata);
+                if (currentMetadata != null) {
+                    currentMetadata.setEnabled(false);
+                    defaultMetadataPane.fillEnabledFromMetadata(currentMetadata);
                 }
             }
         });
@@ -59,7 +61,7 @@ public class BatchParametersEdit extends BatchParametersWindow {
         });
 
         defaultMetadataPane.showEnabled(true);
-        defaultMetadataPane.fillFromMetadata(parameters.metadata);
+        defaultMetadataPane.fillFromMetadata(currentMetadata);
 
         presetSelector.addActionListener(e -> {
             if (e.getSource() instanceof PresetSelector.PresetActionData actionData) {

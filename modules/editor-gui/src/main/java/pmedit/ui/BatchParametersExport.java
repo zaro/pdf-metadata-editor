@@ -5,6 +5,7 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import pmedit.BatchOperationParameters;
 import pmedit.CommandDescription;
+import pmedit.MetadataInfo;
 import pmedit.preset.PresetValues;
 
 import javax.swing.*;
@@ -44,12 +45,13 @@ public class BatchParametersExport extends BatchParametersWindow {
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
         defaultMetadataPane.disableEdit();
+        final MetadataInfo currentMetadata = parameters != null ? parameters.metadata.clone() : null;
 
         btnSelectAll.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                if (parameters != null) {
-                    parameters.metadata.setEnabled(true);
-                    defaultMetadataPane.fillEnabledFromMetadata(parameters.metadata);
+                if (currentMetadata != null) {
+                    currentMetadata.setEnabled(true);
+                    defaultMetadataPane.fillEnabledFromMetadata(currentMetadata);
                 }
             }
         });
@@ -57,8 +59,8 @@ public class BatchParametersExport extends BatchParametersWindow {
         selectNoneButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (parameters != null) {
-                    parameters.metadata.setEnabled(false);
-                    defaultMetadataPane.fillEnabledFromMetadata(parameters.metadata);
+                    currentMetadata.setEnabled(false);
+                    defaultMetadataPane.fillEnabledFromMetadata(currentMetadata);
                 }
             }
         });
@@ -72,7 +74,7 @@ public class BatchParametersExport extends BatchParametersWindow {
         });
 
         defaultMetadataPane.showEnabled(true);
-        defaultMetadataPane.fillFromMetadata(parameters.metadata);
+        defaultMetadataPane.fillFromMetadata(currentMetadata);
 
         presetSelector.addActionListener(e -> {
             if (e.getSource() instanceof PresetSelector.PresetActionData actionData) {

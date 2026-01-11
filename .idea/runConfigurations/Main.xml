@@ -2,7 +2,8 @@
   <configuration default="false" name="Main" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="pmedit.Main" />
     <module name="pdf-metadata-editor" />
-    <option name="VM_PARAMETERS" value="-DdevLog=true" />
+    <option name="VM_PARAMETERS" value="-DdevLog=true --enable-native-access=ALL-UNNAMED" />
+    <extension name="com.github.l34130.mise.core.run.MiseRunConfigurationSettingsEditor" myConfigEnvironmentStrategy="use_project_settings" myMiseDirEnvCb="false" myMiseConfigEnvironmentTf="" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

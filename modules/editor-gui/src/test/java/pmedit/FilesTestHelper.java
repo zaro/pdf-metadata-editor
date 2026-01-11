@@ -150,7 +150,7 @@ public class FilesTestHelper {
                         md.setAppend(field, (long) rand.nextInt(1000));
                         break;
                     case IntField:
-                        md.setAppend(field, rand.nextInt(1000));
+                        md.setAppend(field, rand.nextInt(5));
                         break;
                     case BoolField:
                         md.setAppend(field, (rand.nextInt(1000) & 1) == 1);
@@ -170,7 +170,13 @@ public class FilesTestHelper {
                         md.set(field, choice != null ? fd.makeStringFromValue(choice): null);
                         break;
                     default:
-                        md.setAppend(field, new BigInteger(130, rand).toString(32));
+                        if(fd.isList){
+                            for(int c  =rand.nextInt(5); c>=0; c--) {
+                                md.setAppendFromString(field, new BigInteger(130, rand).toString(32));
+                            }
+                        } else {
+                            md.setAppend(field, new BigInteger(130, rand).toString(32));
+                        }
                         break;
                 }
             }

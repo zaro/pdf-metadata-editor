@@ -1,5 +1,6 @@
 package pmedit.ui;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
@@ -213,7 +214,7 @@ public class BatchModifyMetadataTest  extends  BaseJemmyTest {
             md.doc.title = tf.md.dc.title;
             md.doc.subject = tf.md.dc.description;
 
-            md.doc.author = tf.md.getString("dc.creators");
+            md.doc.author = tf.md.dc.creators != null ? StringUtils.join(tf.md.dc.creators, ", ") : null;
             md.docEnabled.title = true;
             md.docEnabled.subject = true;
             md.docEnabled.author = true;

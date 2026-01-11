@@ -1,5 +1,6 @@
 package pmedit;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferences;
@@ -297,17 +298,7 @@ public class MetadataInfo implements MetadataCollection{
 
         doc.title = dc.title;
         doc.subject = dc.description;
-        String author = "";
-        if (dc.creators != null) {
-            String delim = "";
-            for (String creator : dc.creators) {
-                author += delim + creator;
-                delim = ", ";
-            }
-        } else {
-            author = null;
-        }
-        doc.author = author;
+        doc.author = dc.creators != null ? StringUtils.join(dc.creators, ", ") : null;
         docEnabled.title = dcEnabled.title;
         docEnabled.subject = dcEnabled.description;
         docEnabled.author = dcEnabled.creators;
@@ -753,7 +744,7 @@ public class MetadataInfo implements MetadataCollection{
                         default -> throw new RuntimeException("_setStructObject('" + id + "') Trying to assign number to non numeric field!");
                     }
                 }else{
-                    throw new RuntimeException("_setStructObject('" + id + "') Trying to assign non number to numeric field!");
+                    throw new RuntimeException("_setStructObject('" + id + "') Trying to assign non number to numeric field! [value='" + String.valueOf(value) + "']");
                 }
             } else {
                 fieldD.field.set(current, value);

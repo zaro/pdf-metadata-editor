@@ -1,21 +1,19 @@
 package pmedit.ui;
 
-import pmedit.ui.util.ExtFilter;
-import pmedit.ui.util.PdfFilter;
+import com.formdev.flatlaf.util.SystemFileChooser;
 import pmedit.prefs.Preferences;
 
-import javax.swing.*;
-import javax.swing.filechooser.FileFilter;
 import java.awt.*;
 import java.io.File;
 
-public class FileChooser extends JFileChooser {
+public class FileChooser extends SystemFileChooser {
+    public static final int APPROVE_OPTION = SystemFileChooser.APPROVE_OPTION;
     FileChooser(){
-        this(new PdfFilter());
+        this(new SystemFileChooser.FileNameExtensionFilter("Pdf File", "pdf"));
     }
 
     FileChooser(String[] extensions){
-        this(new ExtFilter(extensions));
+        this(new SystemFileChooser.FileNameExtensionFilter(extensions[0].toUpperCase() + " File", extensions));
     }
 
     FileChooser(FileFilter filter){

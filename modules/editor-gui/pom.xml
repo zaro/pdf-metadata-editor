@@ -335,7 +335,9 @@
                 <configuration>
                     <systemPropertyVariables>
                         <flavour>${flavour}</flavour>
+						<flatlaf.useSystemFileChooser>false</flatlaf.useSystemFileChooser>
                     </systemPropertyVariables>
+					<argLine>--enable-native-access=ALL-UNNAMED</argLine>
                 </configuration>
 			</plugin>
 
@@ -513,7 +515,7 @@
 		<dependency>
 			<groupId>com.formdev</groupId>
 			<artifactId>flatlaf</artifactId>
-			<version>3.6</version>
+			<version>3.7</version>
 		</dependency>
 		<dependency>
 			<groupId>com.toedter</groupId>

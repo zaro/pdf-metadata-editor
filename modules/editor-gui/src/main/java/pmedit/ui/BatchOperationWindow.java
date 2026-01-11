@@ -280,7 +280,7 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
         DirChooser fc = new DirChooser("Output");
         fc.setDialogTitle("Select Output Folder");
         int returnVal = fc.showOpenDialog(this);
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
+        if (returnVal == DirChooser.APPROVE_OPTION) {
             outputDirField.setText(fc.getSelectedFile().getAbsolutePath());
         }
     }
@@ -301,7 +301,7 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
             FileChooser fc = new FileChooser(command.inputFileExtensions);
             fc.setDialogTitle("Select File to Add");
             int returnVal = fc.showOpenDialog(BatchOperationWindow.this);
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
+            if (returnVal == FileChooser.APPROVE_OPTION) {
                 appendFiles(Collections.singletonList(fc.getSelectedFile()));
             }
         }
@@ -319,7 +319,7 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
             DirChooser fc = new DirChooser();
             fc.setDialogTitle("Select Folder to Add");
             int returnVal = fc.showOpenDialog(BatchOperationWindow.this);
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
+            if (returnVal == DirChooser.APPROVE_OPTION) {
                 appendFiles(Collections.singletonList(fc.getSelectedFile()));
             }
         }

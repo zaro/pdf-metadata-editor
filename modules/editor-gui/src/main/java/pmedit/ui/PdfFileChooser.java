@@ -1,17 +1,12 @@
 package pmedit.ui;
 
-import pmedit.ui.util.PdfFilter;
 import pmedit.prefs.Preferences;
 
-import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 
-public class PdfFileChooser extends JFileChooser {
+public class PdfFileChooser extends FileChooser {
     PdfFileChooser(){
-        PdfFilter pdfFilter = new PdfFilter();
-        addChoosableFileFilter(pdfFilter);
-        setFileFilter(pdfFilter);
     }
 
     @Override

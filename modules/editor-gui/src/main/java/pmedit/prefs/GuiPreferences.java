@@ -22,5 +22,15 @@ public class GuiPreferences extends Preferences {
     public static void setLookAndFeelClass(String name){
         getInstance().put("LookAndFeel", name);
     }
+    public static void setUseSystemFileChooser(boolean value) {
+        getInstance().putBoolean("useSystemFileChooser", value);
+    }
+    public static Boolean getUseSystemFileChooser(){
+        String v = getInstance().get("useSystemFileChooser", null);
+        if(v  == null){
+            return null;
+        }
+        return Boolean.valueOf(v);
+    }
 
 }

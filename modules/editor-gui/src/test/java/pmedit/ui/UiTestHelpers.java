@@ -81,6 +81,8 @@ public class UiTestHelpers {
             assertEquals(expected.getString(name, ""), tf.getText(), message);
         } else if(c instanceof JTextArea ta ) {
             assertEquals(expected.getString(name, ""), ta.getText(), message);
+        } else if(c instanceof JSpinner s) {
+            assertEquals(expected.get(name, ""), s.getValue(), message);
         } else if(c instanceof DateTimePicker dt ) {
             assertEquals(expected.getString(name, null), DateFormat.formatDateTime(dt.getCalendar()), message);
         } else if(c instanceof JComboBox cb ) {
@@ -96,6 +98,8 @@ public class UiTestHelpers {
                 Object item = cb.getSelectedItem();
                 if(fd.textForNull().equals(item)){
                     item = null;
+                } else if(item instanceof  String s) {
+                    item = fd.makeValueFromString(s);
                 }
                 assertEquals(expected.get(name), item , message);
             } else {
