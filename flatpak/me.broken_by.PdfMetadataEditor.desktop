@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Pdf Metadata Editor
-Comment=Simple Editor for PDF metadata
+Comment=Advanced Editor for PDF metadata
 Exec="Pdf Metadata Editor"
 Icon=me.broken_by.PdfMetadataEditor
 Terminal=false

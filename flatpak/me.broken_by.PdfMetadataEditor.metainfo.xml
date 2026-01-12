@@ -13,7 +13,7 @@
   <update_contact>zarrro@gmail.com</update_contact>
   <launchable type="desktop-id">me.broken_by.PdfMetadataEditor.desktop</launchable>
   <description>
-    <p>Simple editor for PDF metadata. Allows editing the basic as well as all the extended (XMP)
+    <p>Advanced editor for PDF metadata. Allows editing the basic as well as all the extended (XMP)
       metadata.</p>
   </description>
   <screenshots>
