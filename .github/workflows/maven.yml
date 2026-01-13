@@ -55,10 +55,7 @@ jobs:
 
       - name: Setup WiX
         if: ${{ startsWith( matrix.os, 'windows' ) }}
-        run: |
-          dotnet tool install --global wix --version 5.0.2
-          wix extension add WixToolset.Util.wixext/5.0.2
-          wix extension list
+        run: powershell.exe -ExecutionPolicy Bypass -File wix-setup.ps1
 
       - name: maven-settings-xml-action
         uses: InstaCode/maven-settings-xml-action@v9

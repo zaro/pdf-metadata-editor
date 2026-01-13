@@ -141,11 +141,12 @@ if [ "$TYPE" = "msi" -o  "$TYPE" = "exe" ]; then
   if type wix; then
     echo ">>> Detected wix toolset 4+"
     wix --version
-    wix extension list || WIX_EXT_FAIL=1
-    if [ "$WIX_EXT_FAIL" ]; then
-      echo ">>> Install wix extensions"
-      wix extension add WixToolset.Util.wixext/5.0.2
-      wix extension list
+    export WIX_EXTENSIONS=$(cygpath -w "$PWD")
+    if ! wix extension list --global; then
+        echo "!!! failed to list wix global extensions"
+    fi
+    if ! wix extension list ; then
+        echo "!!! failed to list wixS extensions"
     fi
   fi
 fi
