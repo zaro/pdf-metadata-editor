@@ -38,8 +38,6 @@ jobs:
           - arm
         exclude:
           - os: macos-15
-            arch: amd64
-          - os: macos-15
             arch: arm
     outputs:
       version: ${{ steps.getVersion.outputs.version }}
