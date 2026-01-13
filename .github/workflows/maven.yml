@@ -57,11 +57,9 @@ jobs:
 
       - name: Setup WiX
         if: ${{ startsWith( matrix.os, 'windows' ) }}
-        run: dotnet tool install --global wix --version 6.0.2
-
-      - name: Add WiX Extensions
-        if: ${{ startsWith( matrix.os, 'windows' ) }}
-        run: wix extension add WiXToolset.Util.wixext
+        run: |
+          dotnet tool install --global wix --version 6.0.2
+          wix extension add WixToolset.Util.wixext
 
       - name: maven-settings-xml-action
         uses: InstaCode/maven-settings-xml-action@v9

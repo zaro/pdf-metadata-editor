@@ -136,6 +136,12 @@ if [ "$TYPE" = "msi" -o  "$TYPE" = "exe" ]; then
   if [ "$TYPE" = "exe" ]; then
     JP_OPTS="$JP_OPTS --win-dir-chooser --win-per-user-install"
   fi
+
+  if type wix; then
+    echo ">>> Detected wix toolset 4+"
+    wix --version
+    wix extension list
+  fi
 fi
 
 
