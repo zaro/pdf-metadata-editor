@@ -11,3 +11,11 @@ Set the password for it:
 Export it:
 
     Export-PfxCertificate -Cert "cert:\CurrentUser\My\$($cert.Thumbprint)" -FilePath "win-cert.pfx" -Password $CertPassword
+
+# Prepare windows build
+
+```
+dotnet tool install --global wix --version 6.0.2
+wix extension add WiXToolset.Util.wixext
+
+```

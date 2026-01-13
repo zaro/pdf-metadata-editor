@@ -137,10 +137,15 @@ if [ "$TYPE" = "msi" -o  "$TYPE" = "exe" ]; then
     JP_OPTS="$JP_OPTS --win-dir-chooser --win-per-user-install"
   fi
 
+  echo ">>> Checking wix toolset"
   if type wix; then
     echo ">>> Detected wix toolset 4+"
     wix --version
-    wix extension list
+    wix extension list || echo "!!! Failed to list wix extensions"
+    if [ $? -ne 0 ]; then\
+      echo ">>> Install wix extensions"
+      wix extension add WiXToolset.Util.wixext
+    fi
   fi
 fi
 
