@@ -26,7 +26,7 @@ jobs:
       matrix:
         os:
           - windows-2022
-          - ubuntu-22.04
+          - ubuntu-latest
           - macos-15
     outputs:
       version: ${{ steps.getVersion.outputs.version }}
@@ -53,14 +53,14 @@ jobs:
           PME_LICENSE: ${{ secrets.PME_LICENSE }}
           NO_GUI_TESTS: ${{ contains( matrix.os, 'macos') }}
         with:
-          run: mvn -B test --file pom.xml
+          run: mvn --no-transfer-progress -B test --file pom.xml
 
       # Build
       - name: Build with Maven
         env:
           PME_LICENSE: ${{ secrets.PME_LICENSE }}
           SIGNTOOL_CERT: ${{ secrets.SIGNTOOL_CERT }}
-        run: mvn -B -DskipTests package --file pom.xml
+        run: mvn --no-transfer-progress -B -DskipTests package --file pom.xml
 
       # Publish
       - name: Get Version
