@@ -49,7 +49,7 @@ ICON_FORMAT="${icon.format}"
 DEST_DIR="${STAGING_DIR}/packages"
 DEST_IMAGE_DIR="${STAGING_DIR}/packages-image"
 APP_IMAGE_DIR="${DEST_IMAGE_DIR}/${APP_NAME}/"
-BUILD_ARCH="${os.arch}"
+BUILD_ARCH="${cpu.arch}"
 
 APP_VERSION="${FULL_APP_VERSION}"
 
