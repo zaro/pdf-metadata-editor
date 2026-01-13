@@ -235,16 +235,17 @@ fi
 # Rename files in case of pre-relase
 if [ "${machine}" = "win" -o "$machine" = "mac" ]; then
 
-  if [ "${APP_VERSION}" != "${FULL_APP_VERSION}" ]; then
+  if [ "${machine}" = "win" ]; then
+    FULL_VERSION_WITH_ARCH="${FULL_APP_VERSION}-${BUILD_ARCH}"
+  else
+    FULL_VERSION_WITH_ARCH="${FULL_APP_VERSION}"
+  fi
+
+  if [ "${APP_VERSION}" != "${FULL_VERSION_WITH_ARCH}" ]; then
     D="${STAGING_DIR}/packages/"
 
     OIFS="$IFS"
     IFS=$'\n'
-    if [ "${machine}" = "win" ]; then
-      FULL_VERSION_WITH_ARCH="${FULL_APP_VERSION}-${BUILD_ARCH}"
-    else
-      FULL_VERSION_WITH_ARCH="${FULL_APP_VERSION}"
-    fi
     for file in  $(find "${D}" -type f); do
       ofile="${file//$APP_VERSION/$FULL_VERSION_WITH_ARCH}"
       mv -v "$file" "$ofile"

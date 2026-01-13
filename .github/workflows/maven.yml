@@ -19,15 +19,28 @@ on:
   workflow_dispatch:
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-
+    runs-on: ${{
+      (startsWith(matrix.os, 'macos') && matrix.os) ||
+      (matrix.arch == 'arm' && format('{0}-arm',
+        matrix.os == 'windows-2022' && 'windows-11' || matrix.os
+      )) ||
+      (matrix.os)
+    }}
     strategy:
       max-parallel: 3
       matrix:
         os:
           - windows-2022
-          - ubuntu-latest
+          - ubuntu-24.04
           - macos-15
+        arch:
+          - amd64
+          - arm
+        exclude:
+          - os: macos-15
+            arch: amd64
+          - os: macos-15
+            arch: arm
     outputs:
       version: ${{ steps.getVersion.outputs.version }}
       preRelease: ${{ contains( steps.getVersion.outputs.version, 'beta' ) || contains( steps.getVersion.outputs.version, 'rc' )  }}
@@ -78,7 +91,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: release-files-${{ matrix.os }}
+          name: release-files-${{ matrix.os }}-${{ matrix.arch }}
           path: modules/editor-gui/target/* # or path/to/artifact
           retention-days: 1
 
