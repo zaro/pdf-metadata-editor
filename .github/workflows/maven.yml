@@ -71,6 +71,7 @@ jobs:
         env:
           PME_LICENSE: ${{ secrets.PME_LICENSE }}
           NO_GUI_TESTS: ${{ contains( matrix.os, 'macos') }}
+          JEMMY_TIMEOUT: 20000
         with:
           run: mvn --no-transfer-progress -B test --file pom.xml
 
