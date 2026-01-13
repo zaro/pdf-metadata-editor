@@ -57,7 +57,7 @@ jobs:
         if: ${{ startsWith( matrix.os, 'windows' ) }}
         run: |
           dotnet tool install --global wix --version 5.0.2
-          wix extension add WixToolset.Util.wixext
+          wix extension add WixToolset.Util.wixext/5.0.2
           wix extension list
 
       - name: maven-settings-xml-action
