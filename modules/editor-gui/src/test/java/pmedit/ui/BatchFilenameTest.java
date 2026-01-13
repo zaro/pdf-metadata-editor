@@ -78,7 +78,7 @@ public class BatchFilenameTest  extends  BaseJemmyTest {
         new JButtonOperator(topFrame, "Parameters").push();
         JDialogOperator parameters = new JDialogOperator("Batch rename parameters");
 
-        String template = "{dc.creators}-{dc.title}-{file.size}.pdf";
+        String template = "{doc.author}-{dc.title}-{file.size}.pdf";
         JComboBoxOperator renameCombo = new JComboBoxOperator(parameters);
         renameCombo.clearText();
         renameCombo.enterText(template);
