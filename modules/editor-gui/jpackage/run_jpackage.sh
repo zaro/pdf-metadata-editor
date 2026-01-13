@@ -145,6 +145,7 @@ if [ "$TYPE" = "msi" -o  "$TYPE" = "exe" ]; then
     if [ "$WIX_EXT_FAIL" ]; then
       echo ">>> Install wix extensions"
       wix extension add WiXToolset.Util.wixext
+      wix extension list
     fi
   fi
 fi
