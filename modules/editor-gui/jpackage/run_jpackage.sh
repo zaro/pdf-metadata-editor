@@ -49,6 +49,7 @@ ICON_FORMAT="${icon.format}"
 DEST_DIR="${STAGING_DIR}/packages"
 DEST_IMAGE_DIR="${STAGING_DIR}/packages-image"
 APP_IMAGE_DIR="${DEST_IMAGE_DIR}/${APP_NAME}/"
+BUILD_ARCH="${os.arch}"
 
 APP_VERSION="${FULL_APP_VERSION}"
 
@@ -239,8 +240,13 @@ if [ "${machine}" = "win" -o "$machine" = "mac" ]; then
 
     OIFS="$IFS"
     IFS=$'\n'
+    if [ "${machine}" = "win" ]; then
+      FULL_VERSION_WITH_ARCH="${FULL_APP_VERSION}-${BUILD_ARCH}"
+    else
+      FULL_VERSION_WITH_ARCH="${FULL_APP_VERSION}"
+    fi
     for file in  $(find "${D}" -type f); do
-      ofile="${file//$APP_VERSION/$FULL_APP_VERSION}"
+      ofile="${file//$APP_VERSION/$FULL_VERSION_WITH_ARCH}"
       mv -v "$file" "$ofile"
     done
     IFS="$OIFS"

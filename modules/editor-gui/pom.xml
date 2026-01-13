@@ -414,7 +414,7 @@
 					<descriptors>
 						<descriptor>jpackage/assembly-zip.xml</descriptor>
 					</descriptors>
-					<finalName>packages/${main.file.name}${archive.suffix}</finalName>
+					<finalName>packages/${main.file.name}-${os.arch}${archive.suffix}</finalName>
 				</configuration>
 				<executions>
 					<execution>
