@@ -20,12 +20,12 @@ on:
 jobs:
   build:
     runs-on: ${{
-      (startsWith(matrix.os, 'macos') && matrix.os) ||
-      (matrix.arch == 'arm' && format('{0}-arm',
-        matrix.os == 'windows-2022' && 'windows-11' || matrix.os
-      )) ||
-      (matrix.os)
-    }}
+        (startsWith(matrix.os, 'macos') && matrix.os) ||
+        (matrix.arch == 'arm' && format('{0}-arm',
+          matrix.os == 'windows-2022' && 'windows-11' || matrix.os
+        )) ||
+        (matrix.os)
+      }}
     strategy:
       max-parallel: 3
       matrix:
