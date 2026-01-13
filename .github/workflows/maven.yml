@@ -15,7 +15,6 @@ on:
     branches:
       - "v4-dev"
   pull_request:
-    branches: [ "v4-dev" ]
   workflow_dispatch:
 jobs:
   build:
@@ -44,6 +43,11 @@ jobs:
       preRelease: ${{ contains( steps.getVersion.outputs.version, 'beta' ) || contains( steps.getVersion.outputs.version, 'rc' )  }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: zaro/pdf-metadata-editor-extensions
+          token: ${{ secrets.EXTENSIONS_REPO_TOKEN }}
+          path: modules/extensions
 
       # Setup
       - name: Set up JDK
