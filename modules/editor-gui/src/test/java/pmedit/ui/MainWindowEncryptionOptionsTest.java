@@ -2,6 +2,7 @@ package pmedit.ui;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junitpioneer.jupiter.SetSystemProperty;
 import org.netbeans.jemmy.ClassReference;
 import org.netbeans.jemmy.JemmyProperties;
@@ -24,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static pmedit.ui.UiTestHelpers.*;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
+@EnabledIfSystemProperty(named = "flavour" , matches ="pro")
 @SetSystemProperty(key = "junitTest", value = "true")
 public class MainWindowEncryptionOptionsTest extends  BaseJemmyTest  {
     FilesTestHelper.PMTuple initialFile;
