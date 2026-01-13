@@ -110,13 +110,13 @@ if [ "$TYPE" = "app-image" -o "$machine" = "mac" ]; then
 fi
 
 if [ "$TYPE" != "app-image" -a "$machine" != "mac" ]; then
-  JP_OPTS="$JP_OPTS --file-associations 'jpackage/file-associations.properties'"
+  JP_OPTS="$JP_OPTS --file-associations '${STAGING_DIR}/jpackage-scripts/file-associations.properties'"
   JP_OPTS="$JP_OPTS --dest '${DEST_DIR}'"
   JP_OPTS="$JP_OPTS --app-image '$APP_IMAGE_DIR' "
 fi
 
 if [ "$TYPE" != "app-image" -a "$machine" = "mac" ]; then
-  JP_OPTS="$JP_OPTS --file-associations 'jpackage/file-associations.properties'"
+  JP_OPTS="$JP_OPTS --file-associations '${STAGING_DIR}/jpackage-scripts/file-associations.properties'"
   JP_OPTS="$JP_OPTS --dest '${DEST_DIR}'"
 fi
 
