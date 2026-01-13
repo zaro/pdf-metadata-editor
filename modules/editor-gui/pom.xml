@@ -349,6 +349,7 @@
                     <systemPropertyVariables>
                         <flavour>${flavour}</flavour>
 						<flatlaf.useSystemFileChooser>false</flatlaf.useSystemFileChooser>
+						<junitTest>true</junitTest>
                     </systemPropertyVariables>
 					<argLine>--enable-native-access=ALL-UNNAMED</argLine>
                 </configuration>

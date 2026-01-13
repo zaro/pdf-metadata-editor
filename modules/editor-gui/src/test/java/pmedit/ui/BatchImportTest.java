@@ -25,7 +25,6 @@ import static pmedit.ui.UiTestHelpers.openFileChooser;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
 @EnabledIfSystemProperty(named = "flavour" , matches ="pro")
-@SetSystemProperty(key = "junitTest", value = "true")
 public class BatchImportTest  extends  BaseJemmyTest {
     List<FilesTestHelper.PMTuple> initialFiles;
     static JFrameOperator topFrame;

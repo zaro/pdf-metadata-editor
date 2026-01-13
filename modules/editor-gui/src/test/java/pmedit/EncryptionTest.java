@@ -5,6 +5,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.junitpioneer.jupiter.SetSystemProperty;
 import pmedit.ext.PmeExtension;
 
 import static org.junit.jupiter.api.Assertions.*;

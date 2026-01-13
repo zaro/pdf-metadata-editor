@@ -17,7 +17,6 @@ import java.lang.reflect.InvocationTargetException;
 import static pmedit.ui.UiTestHelpers.*;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
-@SetSystemProperty(key = "junitTest", value = "true")
 public class MainWindowLoadTest  extends  BaseJemmyTest  {
     final int NUM_FILES = 1;
     static  JFrameOperator topFrame;

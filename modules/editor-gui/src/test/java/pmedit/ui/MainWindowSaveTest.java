@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static pmedit.ui.UiTestHelpers.*;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
-@SetSystemProperty(key = "junitTest", value = "true")
 public class MainWindowSaveTest  extends  BaseJemmyTest  {
     FilesTestHelper.PMTuple initialFile;
     static JFrameOperator topFrame;

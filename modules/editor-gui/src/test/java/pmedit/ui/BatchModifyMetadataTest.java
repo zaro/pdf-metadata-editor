@@ -21,7 +21,6 @@ import static pmedit.ui.UiTestHelpers.*;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
 @EnabledIfSystemProperty(named = "flavour" , matches ="pro")
-@SetSystemProperty(key = "junitTest", value = "true")
 public class BatchModifyMetadataTest  extends  BaseJemmyTest {
     java.util.List<FilesTestHelper.PMTuple> initialFiles;
     static JFrameOperator topFrame;

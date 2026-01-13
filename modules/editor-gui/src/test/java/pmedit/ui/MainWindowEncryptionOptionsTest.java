@@ -26,7 +26,6 @@ import static pmedit.ui.UiTestHelpers.*;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
 @EnabledIfSystemProperty(named = "flavour" , matches ="pro")
-@SetSystemProperty(key = "junitTest", value = "true")
 public class MainWindowEncryptionOptionsTest extends  BaseJemmyTest  {
     FilesTestHelper.PMTuple initialFile;
     static JFrameOperator topFrame;
