@@ -99,7 +99,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: release-files-${{ matrix.os }}-${{ matrix.arch }}
-          path: modules/editor-gui/target/* # or path/to/artifact
+          path: modules/editor-gui/target/packages/* # or path/to/artifact
           retention-days: 1
 
   release:
