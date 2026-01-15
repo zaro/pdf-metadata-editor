@@ -50,16 +50,14 @@ public class BatchFilenameTest  extends  BaseJemmyTest {
         if(topFrame == null) {
             topFrame = new JFrameOperator("Batch PDF Metadata Process");
         }
-        FilesTestHelper.pushTempDir(testInfo.getDisplayName().replaceFirst("\\(.*", ""));
-        initialFiles = FilesTestHelper.randomFiles(3);
+        initialFiles = randomFiles(3);
 
 
     }
 
     @AfterEach
-    void cleanUp() {
+    void cleanUp(TestInfo testInfo) {
         new JButtonOperator(topFrame, "Start Over").push();
-        FilesTestHelper.popTempDir();
     }
 
     void selectCommandAndAddFolder(CommandDescription command){
@@ -67,8 +65,8 @@ public class BatchFilenameTest  extends  BaseJemmyTest {
         commandCombo.selectItem(command.description);
 
         new JButtonOperator(topFrame, "Add Folder").push();
-        openFileChooser("Select Folder to Add", FilesTestHelper.getTempDir().getAbsoluteFile());
-        assertEquals(FilesTestHelper.getTempDir().getAbsolutePath(), new JTextPaneOperator(topFrame, 0).getText().stripTrailing());
+        openFileChooser("Select Folder to Add", getTempDir().getAbsoluteFile());
+        assertEquals(getTempDir().getAbsolutePath(), new JTextPaneOperator(topFrame, 0).getText().stripTrailing());
     }
 
 
@@ -92,7 +90,7 @@ public class BatchFilenameTest  extends  BaseJemmyTest {
         new JTextPaneOperator(topFrame, "Finished successfully!");
 
         TemplateString ts = new TemplateString(template);
-        for(Path p: Files.list(FilesTestHelper.getTempDir().toPath()).toList()){
+        for(Path p: Files.list(getTempDir().toPath()).toList()){
             MetadataInfo md = FilesTestHelper.load(p.toFile());
 
             assertEquals(new TemplateString(template).process(md), md.file.nameWithExt, "File name incorrect after rename");
@@ -117,7 +115,7 @@ public class BatchFilenameTest  extends  BaseJemmyTest {
 
         new JTextPaneOperator(topFrame, "Finished successfully!");
 
-        for(Path p: Files.list(FilesTestHelper.getTempDir().toPath()).toList()){
+        for(Path p: Files.list(getTempDir().toPath()).toList()){
             MetadataInfo md = FilesTestHelper.load(p.toFile());
 
 
@@ -146,7 +144,7 @@ public class BatchFilenameTest  extends  BaseJemmyTest {
 
         new JTextPaneOperator(topFrame, "Finished successfully!");
 
-        for(Path p: Files.list(FilesTestHelper.getTempDir().toPath()).toList()){
+        for(Path p: Files.list(getTempDir().toPath()).toList()){
             MetadataInfo md = FilesTestHelper.load(p.toFile());
 
 

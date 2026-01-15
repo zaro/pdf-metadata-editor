@@ -49,8 +49,7 @@ public class MainWindowEncryptionOptionsTest extends  BaseJemmyTest  {
 
     @BeforeEach
     void loadFile(TestInfo testInfo) throws Exception {
-        FilesTestHelper.pushTempDir(testInfo.getDisplayName().replaceFirst("\\(.*", ""));
-        initialFile = FilesTestHelper.randomFiles(1, md -> {
+        initialFile = randomFiles(1, md -> {
             md.prop.version = 1.7f;
         }).get(0);
 
@@ -61,9 +60,8 @@ public class MainWindowEncryptionOptionsTest extends  BaseJemmyTest  {
     }
 
     @AfterEach
-    void cleanUp() {
+    void cleanUp(TestInfo testInfo) {
         Preferences.clear();
-        FilesTestHelper.popTempDir();
     }
 
     @Test

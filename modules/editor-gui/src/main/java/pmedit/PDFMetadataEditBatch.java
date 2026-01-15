@@ -48,7 +48,7 @@ public class PDFMetadataEditBatch {
                     MetadataInfo mdFile = new MetadataInfo();
                     reader.loadFromPDF(file, mdFile);
                     mdFile.copyFromWithExpand(mdParams, mdFile);
-                    writer.saveAsPDF(mdFile, file);
+                    writer.saveAsPDF(mdFile, file, getOutputFile(file));
                     status.addStatus(outputFileRelativeName(file), "Done");
                 } catch (Exception e) {
                     logger.error("edit", e);

@@ -4,6 +4,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.xmpbox.xml.XmpParsingException;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.TestInfo;
 import pmedit.ext.BasicPdfWriter;
 import pmedit.ext.PdfReader;
 import pmedit.ext.PdfWriter;
@@ -25,35 +26,13 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 public class FilesTestHelper {
 //    protected static  File tempDir;
-    protected static Stack<File> tempDirs = new Stack<>();
     protected static float DEFAULT_PDF_VERSION = 1.6f;
     protected static List<Integer> ALLOWED_KEY_LENGTHS = Arrays.asList(40, 128, 256);
 
-    public static void pushTempDir(String name){
-        File tempDir = new File(getTempDir(), name);
-        if(!tempDir.exists()){
-            tempDir.mkdirs();
-        }
-        tempDirs.push(tempDir);
-    }
 
-    public static void popTempDir(){
-        tempDirs.pop();
-    }
 
-    public static File getTempDir(){
-        if(tempDirs.isEmpty()){
-            File tempDir = new File("target" + File.separator + "test-data" + File.separator + "run-" +DateFormat.formatDateTimeForPath(Calendar.getInstance()));
-            if (!tempDir.exists()) {
-                tempDir.mkdirs();
-            }
-            tempDirs.push(tempDir);
-        }
-        return tempDirs.peek();
-    }
-
-    public static File emptyPdf() throws Exception {
-        File temp = File.createTempFile("test-file-", ".pdf", getTempDir());
+    public static File emptyPdf(File dir) throws Exception {
+        File temp = File.createTempFile("test-file-", ".pdf", dir);
         PDDocument doc = new PDDocument();
         doc.setVersion(DEFAULT_PDF_VERSION);
         try {
@@ -75,18 +54,18 @@ public class FilesTestHelper {
         return temp;
     }
 
-    public static List<PMTuple> randomFiles(int numFiles) throws Exception {
-        return randomFiles(numFiles, true, null);
+    public static List<PMTuple> randomFiles(int numFiles, File dir) throws Exception {
+        return randomFiles(numFiles, true, null, dir);
     }
-    public static List<PMTuple> randomFiles(int numFiles, Consumer<MetadataInfo> beforeSave) throws Exception {
-        return randomFiles(numFiles,  true, beforeSave);
-    }
-
-    public static List<PMTuple> randomFiles(int numFiles, boolean allFields) throws Exception {
-        return randomFiles(numFiles, allFields, null);
+    public static List<PMTuple> randomFiles(int numFiles, Consumer<MetadataInfo> beforeSave, File dir) throws Exception {
+        return randomFiles(numFiles,  true, beforeSave, dir);
     }
 
-    public static List<PMTuple> randomFiles(int numFiles,  boolean allFields, Consumer<MetadataInfo> beforeSave) throws Exception {
+    public static List<PMTuple> randomFiles(int numFiles, boolean allFields, File dir) throws Exception {
+        return randomFiles(numFiles, allFields, null, dir);
+    }
+
+    public static List<PMTuple> randomFiles(int numFiles,  boolean allFields, Consumer<MetadataInfo> beforeSave, File dir) throws Exception {
         List<String> fields = MetadataInfo.keys();
         List<PMTuple> rval = new ArrayList<FilesTestHelper.PMTuple>();
 
@@ -181,7 +160,7 @@ public class FilesTestHelper {
                 }
             }
 
-            File pdf = emptyPdf();
+            File pdf = emptyPdf(dir);
 
             // Ensure version & compression are always set for tests, as they always have value when read
             if(md.prop.version == null){

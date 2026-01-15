@@ -14,12 +14,12 @@ import java.io.IOException;
 import java.security.Permission;
 
 @EnabledIfSystemProperty(named = "flavour" , matches ="pro")
-public class EncryptionTest {
+public class EncryptionTest extends BaseTest{
     public static int NUM_FILES=1;
 
     @Test
     void testAddEncryption() throws Exception, IOException, Exception {
-        for (FilesTestHelper.PMTuple t : FilesTestHelper.randomFiles(NUM_FILES)) {
+        for (FilesTestHelper.PMTuple t : randomFiles(NUM_FILES)) {
             MetadataInfo loaded = FilesTestHelper.load(t.file);
 
 
@@ -57,7 +57,7 @@ public class EncryptionTest {
 
     @Test
     void testRemove() throws Exception, IOException, Exception {
-        for (FilesTestHelper.PMTuple t : FilesTestHelper.randomFiles(1, md -> {
+        for (FilesTestHelper.PMTuple t : randomFiles(1, md -> {
             md.prop.encryption = true;
             md.prop.canModify = false;
             md.prop.ownerPassword = "op";

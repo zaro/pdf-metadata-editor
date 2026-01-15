@@ -47,7 +47,7 @@ public class MainWindowLoadTest  extends  BaseJemmyTest  {
 
     @Test
     public void testLoadFile() throws FileNotFoundException, IOException, Exception {
-        for(FilesTestHelper.PMTuple testData : FilesTestHelper.randomFiles(NUM_FILES, e-> {
+        for(FilesTestHelper.PMTuple testData : randomFiles(NUM_FILES, e-> {
             e.prop.compression = true;
             e.basic.rating = 13; // Make sure th
         })) {
@@ -94,14 +94,14 @@ public class MainWindowLoadTest  extends  BaseJemmyTest  {
         DefaultsPreferences.saveDefaultMetadata(Preferences.getInstance(), defaultMetadata);
 
         // Check that it doesn't override already defined fields
-        for (FilesTestHelper.PMTuple testData : FilesTestHelper.randomFiles(1)) {
+        for (FilesTestHelper.PMTuple testData : randomFiles(1)) {
             new JButtonOperator(topFrame, "Open PDF").push();
             openFileChooser("Open", testData.file);
             checkMetadataPaneValues(topFrame, testData.md);
         }
 
         // Check that it is present in unset fields
-        for (FilesTestHelper.PMTuple testData : FilesTestHelper.randomFiles(1, md -> {
+        for (FilesTestHelper.PMTuple testData : randomFiles(1, md -> {
             md.setEnabled("doc.author", false);
             md.setEnabled("basic.baseURL", false);
             md.setEnabled("pdf.keywords", false);

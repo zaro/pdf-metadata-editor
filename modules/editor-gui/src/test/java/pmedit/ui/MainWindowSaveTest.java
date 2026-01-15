@@ -47,8 +47,7 @@ public class MainWindowSaveTest  extends  BaseJemmyTest  {
 
     @BeforeEach
     void loadFile(TestInfo testInfo) throws Exception {
-        FilesTestHelper.pushTempDir(testInfo.getDisplayName().replaceFirst("\\(.*", ""));
-        initialFile = FilesTestHelper.randomFiles(1).get(0);
+        initialFile = randomFiles(1).get(0);
 
         new JButtonOperator(topFrame, "Open PDF").push();
         openFileChooser("Open", initialFile.file);
@@ -57,9 +56,8 @@ public class MainWindowSaveTest  extends  BaseJemmyTest  {
     }
 
     @AfterEach
-    void cleanUp() {
+    void cleanUp(TestInfo testInfo) {
         Preferences.clear();
-        FilesTestHelper.popTempDir();
     }
 
     @Test

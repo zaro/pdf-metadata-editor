@@ -50,17 +50,15 @@ public class BatchImportTest  extends  BaseJemmyTest {
         if(topFrame == null) {
             topFrame = new JFrameOperator("Batch PDF Metadata Process");
         }
-        FilesTestHelper.pushTempDir(testInfo.getDisplayName().replaceFirst("\\(.*", ""));
-        initialFiles = FilesTestHelper.randomFiles(3);
+        initialFiles = randomFiles(3);
 
         new JButtonOperator(topFrame, "Clear").push();
 
     }
 
     @AfterEach
-    void cleanUp() {
+    void cleanUp(TestInfo testInfo) {
         new JButtonOperator(topFrame, "Start Over").push();
-        FilesTestHelper.popTempDir();
     }
 
     void selectCommand(CommandDescription command){
@@ -100,7 +98,7 @@ public class BatchImportTest  extends  BaseJemmyTest {
 
         for(MetadataInfo ed: expected){
             File f  = new File(ed.file.fullPath);
-            f = f.isAbsolute() ? f : new File(FilesTestHelper.getTempDir(), ed.file.fullPath);
+            f = f.isAbsolute() ? f : new File(getTempDir(), ed.file.fullPath);
             MetadataInfo md = FilesTestHelper.load(f);
 
 
@@ -113,7 +111,7 @@ public class BatchImportTest  extends  BaseJemmyTest {
         selectCommand(CommandDescription.FROM_CSV);
         List<MetadataInfo> expected  = getExpectedMetadata();
 
-        File csvFile = new File(FilesTestHelper.getTempDir(), "import.csv");
+        File csvFile = new File(getTempDir(), "import.csv");
         CsvMetadata.writeFile(csvFile, (List) expected.stream().map(e ->e.asFlatStringMap(false)).toList());
 
         processAndCheck(expected, csvFile);
@@ -125,11 +123,11 @@ public class BatchImportTest  extends  BaseJemmyTest {
         List<MetadataInfo> expected  = getExpectedMetadata();
 
         for(MetadataInfo md: expected) {
-            File csvFile = new File(FilesTestHelper.getTempDir(), md.file.name + ".csv");
+            File csvFile = new File(getTempDir(), md.file.name + ".csv");
             CsvMetadata.writeFile(csvFile, List.of(md.asFlatStringMap(false)));
         }
 
-        processAndCheck(expected, FilesTestHelper.getTempDir());
+        processAndCheck(expected, getTempDir());
 
     }
 
@@ -138,7 +136,7 @@ public class BatchImportTest  extends  BaseJemmyTest {
         selectCommand(CommandDescription.FROM_JSON);
         List<MetadataInfo> expected  = getExpectedMetadata();
 
-        File jsonFile = new File(FilesTestHelper.getTempDir(), "import.json");
+        File jsonFile = new File(getTempDir(), "import.json");
         SerDeslUtils.toJSONFile(jsonFile, expected.stream().map(e ->e.asFlatMap(false)).toList());
 
         processAndCheck(expected, jsonFile);
@@ -151,11 +149,11 @@ public class BatchImportTest  extends  BaseJemmyTest {
         List<MetadataInfo> expected  = getExpectedMetadata();
 
         for(MetadataInfo md: expected) {
-            File jsonFile = new File(FilesTestHelper.getTempDir(), md.file.name + ".json");
+            File jsonFile = new File(getTempDir(), md.file.name + ".json");
             SerDeslUtils.toJSONFile(jsonFile, md.asFlatMap(false));
         }
 
-        processAndCheck(expected, FilesTestHelper.getTempDir());
+        processAndCheck(expected, getTempDir());
     }
 
     @Test
@@ -163,7 +161,7 @@ public class BatchImportTest  extends  BaseJemmyTest {
         selectCommand(CommandDescription.FROM_YAML);
         List<MetadataInfo> expected  = getExpectedMetadata();
 
-        File yamlFile = new File(FilesTestHelper.getTempDir(), "import.yml");
+        File yamlFile = new File(getTempDir(), "import.yml");
         SerDeslUtils.toJSONFile(yamlFile, expected.stream().map(e ->e.asFlatMap(false)).toList());
 
         processAndCheck(expected, yamlFile);
@@ -175,11 +173,11 @@ public class BatchImportTest  extends  BaseJemmyTest {
         List<MetadataInfo> expected  = getExpectedMetadata();
 
         for(MetadataInfo md: expected) {
-            File yamlFile = new File(FilesTestHelper.getTempDir(), md.file.name + ".yaml");
+            File yamlFile = new File(getTempDir(), md.file.name + ".yaml");
             SerDeslUtils.toJSONFile(yamlFile, md.asFlatMap(false));
         }
 
-        processAndCheck(expected, FilesTestHelper.getTempDir());
+        processAndCheck(expected, getTempDir());
     }
 
 }

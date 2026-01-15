@@ -10,7 +10,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import pmedit.ext.PmeExtension;
 
-class MetadataInfoTest {
+class MetadataInfoTest extends BaseTest{
 	static int NUM_FILES = 5;
 
 	@BeforeEach
@@ -51,7 +51,7 @@ class MetadataInfoTest {
 	
 	@Test
     void testEmptyLoad() throws Exception, IOException, Exception{
-		MetadataInfo loaded = FilesTestHelper.load(FilesTestHelper.emptyPdf());
+		MetadataInfo loaded = FilesTestHelper.load(FilesTestHelper.emptyPdf(getTempDir()));
 
 		FilesTestHelper.assertEqualsAllExceptFileProps(loaded,new MetadataInfo(),  "Empty MD Test");
 	}
@@ -59,7 +59,7 @@ class MetadataInfoTest {
 	@Test
 	@EnabledIfSystemProperty(named = "flavour" , matches ="pro")
 	void testFuzzing() throws Exception {
-		for(FilesTestHelper.PMTuple t: FilesTestHelper.randomFiles(NUM_FILES)){
+		for(FilesTestHelper.PMTuple t: randomFiles(NUM_FILES)){
 			MetadataInfo loaded = FilesTestHelper.load(t.file);
 
 			if( !t.md.isEquivalent(loaded) ){
@@ -79,7 +79,7 @@ class MetadataInfoTest {
 	@Test
 	@EnabledIfSystemProperty(named = "flavour" , matches ="pro")
     void testRemove() throws Exception, IOException, Exception{
-		for(FilesTestHelper.PMTuple t: FilesTestHelper.randomFiles(1)){
+		for(FilesTestHelper.PMTuple t: randomFiles(1)){
 			MetadataInfo loaded = FilesTestHelper.load(t.file);
 
 			loaded.removeDocumentInfo = true;

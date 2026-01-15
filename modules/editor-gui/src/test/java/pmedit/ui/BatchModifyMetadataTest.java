@@ -46,15 +46,13 @@ public class BatchModifyMetadataTest  extends  BaseJemmyTest {
         if(topFrame == null) {
             topFrame = new JFrameOperator("Batch PDF Metadata Process");
         }
-        FilesTestHelper.pushTempDir(testInfo.getDisplayName().replaceFirst("\\(.*", ""));
-        initialFiles = FilesTestHelper.randomFiles(3);
+        initialFiles = randomFiles(3);
 
     }
 
     @AfterEach
-    void cleanUp() {
+    void cleanUp(TestInfo testInfo) {
         new JButtonOperator(topFrame, "Start Over").push();
-        FilesTestHelper.popTempDir();
     }
 
     void selectCommandAndAddFolder(CommandDescription command){
@@ -62,8 +60,8 @@ public class BatchModifyMetadataTest  extends  BaseJemmyTest {
         commandCombo.selectItem(command.description);
 
         new JButtonOperator(topFrame, "Add Folder").push();
-        openFileChooser("Select Folder to Add", FilesTestHelper.getTempDir().getAbsoluteFile());
-        assertEquals(FilesTestHelper.getTempDir().getAbsolutePath(), new JTextPaneOperator(topFrame, 0).getText().stripTrailing());
+        openFileChooser("Select Folder to Add", getTempDir().getAbsoluteFile());
+        assertEquals(getTempDir().getAbsolutePath(), new JTextPaneOperator(topFrame, 0).getText().stripTrailing());
     }
 
     @Test

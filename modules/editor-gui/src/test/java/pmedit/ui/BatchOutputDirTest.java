@@ -8,10 +8,12 @@ import org.netbeans.jemmy.ClassReference;
 import org.netbeans.jemmy.operators.*;
 import pmedit.CommandDescription;
 import pmedit.FilesTestHelper;
+import pmedit.MetadataInfo;
 import pmedit.PDFMetadataEditBatch;
 import pmedit.prefs.Preferences;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
@@ -19,6 +21,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static pmedit.ui.UiTestHelpers.openFileChooser;
+import static pmedit.ui.UiTestHelpers.populateMetadataPaneValues;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
 @EnabledIfSystemProperty(named = "flavour" , matches ="pro")
@@ -45,16 +48,16 @@ public class BatchOutputDirTest  extends  BaseJemmyTest {
 
     @BeforeEach
     void loadFile(TestInfo testInfo) throws Exception {
-        FilesTestHelper.pushTempDir(testInfo.getDisplayName().replaceFirst("\\(.*", ""));
-        initialFiles = FilesTestHelper.randomFiles(3);
+        initialFiles = randomFiles(3);
 
         new JButtonOperator(topFrame, "Clear").push();
     }
 
     @AfterEach
-    void cleanUp() {
+    void cleanUp(TestInfo testInfo) {
         new JButtonOperator(topFrame, "Start Over").push();
-        FilesTestHelper.popTempDir();
+//        pushButtonNoDelay(topFrame, "Start Over");
+
         Preferences.clear();
     }
 
@@ -63,26 +66,40 @@ public class BatchOutputDirTest  extends  BaseJemmyTest {
         commandCombo.selectItem(command.description);
         new JButtonOperator(topFrame, "Add Folder").push();
 
-        openFileChooser("Select Folder to Add", FilesTestHelper.getTempDir().getAbsoluteFile());
+        openFileChooser("Select Folder to Add", getTempDir().getAbsoluteFile());
     }
 
 
     void checkIfLogIsSuccess(File logFile) throws IOException {
-        assertTrue(logFile.exists(), "Batch output NOT log found!");
+        assertTrue(logFile.exists(), "Batch output NOT log found: "+ logFile.getAbsolutePath());
         List<String> lines = Files.readAllLines(logFile.toPath());
         assertTrue(lines.get(lines.size() - 1).contains("SUCCESSFULLY"), "Last log line is not SUCCESS");
     }
 
     @Test
-    public void testExportWithOutputDir() throws Exception {
-        selectCommandAndAddFolder(CommandDescription.CLEAR);
+    public void testSetMetadataWithOutputDirAndLog() throws FileNotFoundException, IOException, Exception {
+        selectCommandAndAddFolder(CommandDescription.EDIT);
         new JButtonOperator(topFrame, "Select").push();
-        File outDir = new File(FilesTestHelper.getTempDir(), "output");
+        File outDir = new File(getTempDir(), "output");
         if(!outDir.exists()) {
             outDir.mkdirs();
         }
         openFileChooser("Select Output Folder", outDir.getAbsoluteFile());
-        new JCheckBoxOperator(topFrame, "Save to File").changeSelection(false);
+        new JCheckBoxOperator(topFrame, "Save to File").changeSelection(true);
+
+        new JButtonOperator(topFrame, "Parameters").push();
+        JDialogOperator parameters = new JDialogOperator("Batch set parameters");
+
+        MetadataInfo md = new MetadataInfo();
+        md.setEnabled(false);
+        md.doc.author = "Don't mind me";
+        md.basic.baseURL = "http://example.com";
+        md.docEnabled.author = true;
+        md.basicEnabled.baseURL = true;
+        populateMetadataPaneValues(parameters, md, false);
+
+        parameters.close();
+        parameters.waitClosed();
 
         new JButtonOperator(topFrame, "Begin").push();
 
@@ -91,27 +108,67 @@ public class BatchOutputDirTest  extends  BaseJemmyTest {
         for(FilesTestHelper.PMTuple tf: initialFiles){
             File outFile = new File(outDir, tf.file.getName());
             assertTrue(outFile.exists(), outFile.getName()  + " is missing in " + outDir);
+            FilesTestHelper.checkFileHasChangedMetadata(tf, outFile, md);
         }
-        assertFalse(new File(outDir, PDFMetadataEditBatch.BATCH_OUTPUT_LOG).exists(), "Unexpected batch output log found!");
+        File logFile = new File(outDir, PDFMetadataEditBatch.BATCH_OUTPUT_LOG);
+        checkIfLogIsSuccess(logFile);
     }
 
     @Test
-    public void testExportWithOutputDirAndLog() throws Exception {
-        selectCommandAndAddFolder(CommandDescription.CLEAR);
+    public void testExportWithOutputDir() throws Exception {
+        selectCommandAndAddFolder(CommandDescription.TO_YAML);
         new JButtonOperator(topFrame, "Select").push();
-        File outDir = new File(FilesTestHelper.getTempDir(), "output");
+        File outDir = new File(getTempDir(), "output");
         if(!outDir.exists()) {
             outDir.mkdirs();
         }
         openFileChooser("Select Output Folder", outDir.getAbsoluteFile());
-        new JCheckBoxOperator(topFrame, "Save to File").changeSelection(true);
+        new JCheckBoxOperator(topFrame, "Save to File").changeSelection(false);
+
+        new JButtonOperator(topFrame, "Parameters").push();
+        JDialogOperator parameters = new JDialogOperator("Batch Export parameters");
+        ContainerOperator outPanel = UiTestHelpers.getPanelByTitle(parameters, "Output");
+        new JRadioButtonOperator(outPanel, "Separate file for each input file").push();
+        new JButtonOperator(parameters, "Select all").push();
+        parameters.close();
+        parameters.waitClosed();
 
         new JButtonOperator(topFrame, "Begin").push();
 
         new JTextPaneOperator(topFrame, "Finished successfully!");
 
         for(FilesTestHelper.PMTuple tf: initialFiles){
-            File outFile = new File(outDir, tf.file.getName());
+            File outFile = new File(outDir, tf.file.getName().replaceAll("\\.pdf$", ".yaml"));
+            assertTrue(outFile.exists(), outFile.getName()  + " is missing in " + outDir);
+        }
+        assertFalse(new File(outDir, PDFMetadataEditBatch.BATCH_OUTPUT_LOG).exists(), "Unexpected batch output log found!");
+    }
+
+    @Test
+    public void testExportWithOutputDirAndLog() throws Exception {
+        selectCommandAndAddFolder(CommandDescription.TO_CSV);
+        new JButtonOperator(topFrame, "Select").push();
+        File outDir = new File(getTempDir(), "output");
+        if(!outDir.exists()) {
+            outDir.mkdirs();
+        }
+        openFileChooser("Select Output Folder", outDir.getAbsoluteFile());
+        new JCheckBoxOperator(topFrame, "Save to File").changeSelection(true);
+
+        new JButtonOperator(topFrame, "Parameters").push();
+        JDialogOperator parameters = new JDialogOperator("Batch Export parameters");
+        ContainerOperator outPanel = UiTestHelpers.getPanelByTitle(parameters, "Output");
+        new JRadioButtonOperator(outPanel, "Separate file for each input file").push();
+        new JButtonOperator(parameters, "Select all").push();
+        parameters.close();
+        parameters.waitClosed();
+
+        new JButtonOperator(topFrame, "Begin").push();
+
+        new JTextPaneOperator(topFrame, "Finished successfully!");
+
+        for(FilesTestHelper.PMTuple tf: initialFiles){
+            File outFile = new File(outDir, tf.file.getName().replaceAll("\\.pdf$", ".csv"));
             assertTrue(outFile.exists(), outFile.getName()  + " is missing in " + outDir);
         }
         File logFile = new File(outDir, PDFMetadataEditBatch.BATCH_OUTPUT_LOG);
@@ -127,7 +184,7 @@ public class BatchOutputDirTest  extends  BaseJemmyTest {
 
         new JTextPaneOperator(topFrame, "Finished successfully!");
 
-        File logFile = new File(FilesTestHelper.getTempDir(), PDFMetadataEditBatch.BATCH_OUTPUT_LOG);
+        File logFile = new File(getTempDir(), PDFMetadataEditBatch.BATCH_OUTPUT_LOG);
         checkIfLogIsSuccess(logFile);
     }
 }

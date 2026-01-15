@@ -49,8 +49,7 @@ public class BatchExportTest extends  BaseJemmyTest {
         if(topFrame == null) {
             topFrame = new JFrameOperator("Batch PDF Metadata Process");
         }
-        FilesTestHelper.pushTempDir(testInfo.getDisplayName().replaceFirst("\\(.*", ""));
-        initialFiles = FilesTestHelper.randomFiles(3);
+        initialFiles = randomFiles(3);
 
         new JButtonOperator(topFrame, "Clear").push();
 
@@ -58,9 +57,8 @@ public class BatchExportTest extends  BaseJemmyTest {
     }
 
     @AfterEach
-    void cleanUp() {
+    void cleanUp(TestInfo testInfo) {
         new JButtonOperator(topFrame, "Start Over").push();
-        FilesTestHelper.popTempDir();
     }
 
     void selectCommandAndAddFolder(CommandDescription command){
@@ -68,8 +66,8 @@ public class BatchExportTest extends  BaseJemmyTest {
         commandCombo.selectItem(command.description);
         new JButtonOperator(topFrame, "Add Folder").push();
 
-        openFileChooser("Select Folder to Add", FilesTestHelper.getTempDir().getAbsoluteFile());
-        assertEquals(FilesTestHelper.getTempDir().getAbsolutePath(), new JTextPaneOperator(topFrame, 0).getText().stripTrailing());
+        openFileChooser("Select Folder to Add", getTempDir().getAbsoluteFile());
+        assertEquals(getTempDir().getAbsolutePath(), new JTextPaneOperator(topFrame, 0).getText().stripTrailing());
     }
 
 
@@ -94,7 +92,7 @@ public class BatchExportTest extends  BaseJemmyTest {
 
         new JTextPaneOperator(topFrame, "Finished successfully!");
 
-        List<MetadataInfo> mdList = CsvMetadata.readFile(new File(FilesTestHelper.getTempDir(), outputFile + ".csv"));
+        List<MetadataInfo> mdList = CsvMetadata.readFile(new File(getTempDir(), outputFile + ".csv"));
         for(MetadataInfo csvMd: mdList){
             File f = new File(csvMd.file.fullPath);
             MetadataInfo md = FilesTestHelper.load(f);
@@ -125,11 +123,11 @@ public class BatchExportTest extends  BaseJemmyTest {
         new JTextPaneOperator(topFrame, "Finished successfully!");
 
         for(FilesTestHelper.PMTuple tf: initialFiles){
-            List<MetadataInfo> mdList = CsvMetadata.readFile(new File(FilesTestHelper.getTempDir(), tf.md.file.name + ".csv"));
+            List<MetadataInfo> mdList = CsvMetadata.readFile(new File(getTempDir(), tf.md.file.name + ".csv"));
             assertEquals(1, mdList.size());
             MetadataInfo csvMd = mdList.get(0);
 
-            File f = new File(FilesTestHelper.getTempDir(), csvMd.file.fullPath);
+            File f = new File(getTempDir(), csvMd.file.fullPath);
             MetadataInfo md = FilesTestHelper.load(f);
 
 
@@ -158,7 +156,7 @@ public class BatchExportTest extends  BaseJemmyTest {
 
         new JTextPaneOperator(topFrame, "Finished successfully!");
 
-        List<MetadataInfo> mdList = SerDeslUtils.fromJSONFileAsList(new File(FilesTestHelper.getTempDir(), outputFile + ".json")).stream().map(m -> {
+        List<MetadataInfo> mdList = SerDeslUtils.fromJSONFileAsList(new File(getTempDir(), outputFile + ".json")).stream().map(m -> {
            MetadataInfo md = new MetadataInfo();
            md.fromFlatMap(m);
            return md;
@@ -192,7 +190,7 @@ public class BatchExportTest extends  BaseJemmyTest {
         new JTextPaneOperator(topFrame, "Finished successfully!");
 
         for(FilesTestHelper.PMTuple tf: initialFiles){
-            List<MetadataInfo> mdList = SerDeslUtils.fromJSONFileAsList(new File(FilesTestHelper.getTempDir(), tf.md.file.name + ".json")).stream().map(m -> {
+            List<MetadataInfo> mdList = SerDeslUtils.fromJSONFileAsList(new File(getTempDir(), tf.md.file.name + ".json")).stream().map(m -> {
                 MetadataInfo md = new MetadataInfo();
                 md.fromFlatMap(m);
                 return md;
@@ -200,7 +198,7 @@ public class BatchExportTest extends  BaseJemmyTest {
             assertEquals(1, mdList.size());
             MetadataInfo jsonMd = mdList.get(0);
 
-            File f = new File(FilesTestHelper.getTempDir(), jsonMd.file.fullPath);
+            File f = new File(getTempDir(), jsonMd.file.fullPath);
             MetadataInfo md = FilesTestHelper.load(f);
 
 
@@ -229,7 +227,7 @@ public class BatchExportTest extends  BaseJemmyTest {
 
         new JTextPaneOperator(topFrame, "Finished successfully!");
 
-        List<MetadataInfo> mdList = SerDeslUtils.fromYAMLFileAsList(new File(FilesTestHelper.getTempDir(), outputFile + ".yaml")).stream().map(m -> {
+        List<MetadataInfo> mdList = SerDeslUtils.fromYAMLFileAsList(new File(getTempDir(), outputFile + ".yaml")).stream().map(m -> {
             MetadataInfo md = new MetadataInfo();
             md.fromFlatMap(m);
             return md;
@@ -263,7 +261,7 @@ public class BatchExportTest extends  BaseJemmyTest {
         new JTextPaneOperator(topFrame, "Finished successfully!");
 
         for(FilesTestHelper.PMTuple tf: initialFiles){
-            List<MetadataInfo> mdList = SerDeslUtils.fromYAMLFileAsList(new File(FilesTestHelper.getTempDir(), tf.md.file.name + ".yaml")).stream().map(m -> {
+            List<MetadataInfo> mdList = SerDeslUtils.fromYAMLFileAsList(new File(getTempDir(), tf.md.file.name + ".yaml")).stream().map(m -> {
                 MetadataInfo md = new MetadataInfo();
                 md.fromFlatMap(m);
                 return md;
@@ -271,7 +269,7 @@ public class BatchExportTest extends  BaseJemmyTest {
             assertEquals(1, mdList.size());
             MetadataInfo yamlMd = mdList.get(0);
 
-            File f = new File(FilesTestHelper.getTempDir(), yamlMd.file.fullPath);
+            File f = new File(getTempDir(), yamlMd.file.fullPath);
             MetadataInfo md = FilesTestHelper.load(f);
 
 

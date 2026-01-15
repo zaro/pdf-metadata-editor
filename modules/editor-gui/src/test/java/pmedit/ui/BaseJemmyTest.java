@@ -1,19 +1,40 @@
 package pmedit.ui;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInfo;
+import org.netbeans.jemmy.ComponentChooser;
 import org.netbeans.jemmy.JemmyProperties;
 import org.netbeans.jemmy.TestOut;
+import org.netbeans.jemmy.operators.JButtonOperator;
+import org.netbeans.jemmy.operators.JFrameOperator;
+import pmedit.BaseTest;
+import pmedit.FilesTestHelper;
 import pmedit.prefs.LocalDataDir;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 
-public class BaseJemmyTest {
+public class BaseJemmyTest extends BaseTest {
     @BeforeAll
     static void setupJemmyTimeouts() {
+        System.setProperty("junitTest", "true");
         setFastTimeouts();
+    }
+
+    @BeforeEach
+    void setUp(TestInfo testInfo) throws Exception {
+        pushTempDir(testInfo);
+    }
+
+    @AfterEach
+    void cleanUp(TestInfo testInfo) {
+        popTempDir(testInfo);
     }
 
     private static void setFastTimeouts() {
@@ -44,14 +65,44 @@ public class BaseJemmyTest {
         for (String timeoutName : timeoutNames) {
             JemmyProperties.setCurrentTimeout(timeoutName, jemmyTimeoutMs);
         }
+    }
+
+    public void setJemmyLog(){
         try {
-            File logDir = new File(LocalDataDir.getAppDataDir()).getParentFile();
+            File logDir = getTempDir();
             File jemmyLogFile = new File(logDir, "jemmy.log");
             PrintStream out = new PrintStream(new FileOutputStream(jemmyLogFile));
 
             JemmyProperties.setCurrentOutput(new TestOut(null, out, out));
         } catch (FileNotFoundException e){
           throw  new RuntimeException(e);
+        }
+    }
+
+    public JButton findButtonNoDelay(JFrameOperator frame, String buttonText) {
+        ComponentChooser chooser = new ComponentChooser() {
+            @Override
+            public boolean checkComponent(Component comp) {
+                if (comp instanceof JButton) {
+                    JButton button = (JButton) comp;
+                    return button.getText().equals(buttonText) && button.isVisible();
+                }
+                return false;
+            }
+
+            @Override
+            public String getDescription() {
+                return "JButton with text: " + buttonText;
+            }
+        };
+
+        return (JButton) frame.findSubComponent(chooser);
+    }
+
+    public void pushButtonNoDelay(JFrameOperator frame, String buttonText){
+        JButton btn  = findButtonNoDelay(frame, buttonText);
+        if(btn != null) {
+            new JButtonOperator(btn).push();
         }
     }
 }

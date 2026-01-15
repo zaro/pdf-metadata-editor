@@ -15,12 +15,12 @@ import pmedit.FilesTestHelper.PMTuple;
 import static org.junit.jupiter.api.Assertions.*;
 
 @EnabledIfSystemProperty(named = "flavour" , matches ="pro")
-public class BatchCommandTest {
+public class BatchCommandTest extends BaseTest{
 
 	static int NUM_FILES = 5;
 	@Test
 	public void testClearAll() throws FileNotFoundException, IOException, Exception {
-		List<PMTuple> fileList = FilesTestHelper.randomFiles(NUM_FILES);
+		List<PMTuple> fileList = randomFiles(NUM_FILES);
 		List<String> args = new ArrayList<String>();
 		args.add("clear");
 		args.add("all");
@@ -51,7 +51,7 @@ public class BatchCommandTest {
 
 	@Test
 	public void testClearNone() throws FileNotFoundException, IOException, Exception {
-		List<PMTuple> fileList = FilesTestHelper.randomFiles(NUM_FILES);
+		List<PMTuple> fileList = randomFiles(NUM_FILES);
 		List<String> args = new ArrayList<String>();
 		args.add("clear");
 		args.add("none");
@@ -83,7 +83,7 @@ public class BatchCommandTest {
 
 	@Test
 	public void testEditSome() throws FileNotFoundException, IOException, Exception {
-		List<PMTuple> fileList = FilesTestHelper.randomFiles(NUM_FILES);
+		List<PMTuple> fileList = randomFiles(NUM_FILES);
 		List<String> args = new ArrayList<String>();
 		args.add("edit");
 		args.add("doc.title=doc.title");
@@ -125,7 +125,7 @@ public class BatchCommandTest {
 
 	@Test
 	public void testFromCSV() throws FileNotFoundException, IOException, Exception {
-		List<PMTuple> fileList = FilesTestHelper.randomFiles(NUM_FILES);
+		List<PMTuple> fileList = randomFiles(NUM_FILES);
 		ArrayList<String> csvLines = new ArrayList<String>();
 		csvLines.add("file.fullPath,doc.author,dc.title");
 		for(PMTuple t: fileList){
