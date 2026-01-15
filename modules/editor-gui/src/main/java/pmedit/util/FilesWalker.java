@@ -9,9 +9,11 @@ public class FilesWalker {
     protected FileFilter fileFilter;
     protected String[] allowedExtensions;
     public List<File> files;
+    File outDir;
 
-    public FilesWalker(String[] extensions, List<File> files){
+    public FilesWalker(String[] extensions, List<File> files, File outDir){
         this.files = files;
+        this.outDir = outDir;
         allowedExtensions = new String[extensions.length];
 
         for(int i=0; i < extensions.length; i++){
@@ -45,6 +47,10 @@ public class FilesWalker {
                 action.ignore(file);
             }
         } else if (file.isDirectory()) {
+            // If directory is the output directory, ignore
+            if(file.equals(outDir)){
+                return;
+            }
             File[]  files = file.listFiles(filter);
 
             // Don't push outputDirs for directories from the original input list
@@ -95,7 +101,7 @@ public class FilesWalker {
         return out;
     }
 
-    public File outputDir(File outDir){
+    public File outputDir(){
         if(outDir != null){
             if(!outDir.isDirectory()){
                 outDir =outDir.getParentFile();

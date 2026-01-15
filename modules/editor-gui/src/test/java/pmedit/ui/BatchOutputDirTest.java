@@ -112,6 +112,8 @@ public class BatchOutputDirTest  extends  BaseJemmyTest {
         }
         File logFile = new File(outDir, PDFMetadataEditBatch.BATCH_OUTPUT_LOG);
         checkIfLogIsSuccess(logFile);
+        // check there are no extra files in output dir
+        assertEquals(initialFiles.size() + 1, outDir.listFiles().length, "output dir contains unexpected files");
     }
 
     @Test

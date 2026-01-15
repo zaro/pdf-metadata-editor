@@ -543,7 +543,7 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
         String outputDirS = outputDirField.getText();
         File outputDir = outputDirS != null && !outputDirS.isEmpty() ? new File(outputDirS) : null;
 
-        File logOut = saveOutputToLog.isSelected() ? new FilesWalker(command.inputFileExtensions, batchFileList).outputDir(outputDir) : null;
+        File logOut = saveOutputToLog.isSelected() ? new FilesWalker(command.inputFileExtensions, batchFileList, outputDir).outputDir() : null;
 
         btnCancel.setText("Cancel");
         worker = new BatchOperationWindow.Worker(logOut, command) {
