@@ -17,7 +17,7 @@ public class LocalDataDir {
 
     public static String getAppDataDir(){
         if(isTesting){
-            File tempDir = new File("target/test-data/preferences");
+            File tempDir = new File("target/test-output/preferences");
             if (!tempDir.exists()) {
                 tempDir.mkdirs();
             }

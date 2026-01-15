@@ -66,7 +66,7 @@ public class TylerConfigurator extends TylerConfiguratorBase implements Configur
     @Override
     public Configurator.ExecutionStatus configure(LoggerContext loggerContext) {
         setContext(loggerContext);
-        propertyModelHandlerHelper.handlePropertyModel(this, "LOG_FILE", "target/test-data/log.txt", "", "", "");
+        propertyModelHandlerHelper.handlePropertyModel(this, "LOG_FILE", "target/test-output/log.txt", "", "", "");
         this.appenderFILE = setupAppenderFILE();
         Logger logger_ROOT = setupLogger("ROOT", "debug", null);
         logger_ROOT.addAppender(appenderFILE);

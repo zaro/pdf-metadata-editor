@@ -1,6 +1,7 @@
 package pmedit;
 
 import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 import java.util.Arrays;
@@ -10,49 +11,38 @@ import java.util.Stack;
 import java.util.function.Consumer;
 
 public class BaseTest {
-    private static String currentTempTop;
+    static TempDirStack rootTempDir = new TempDirStack();
 
-    private static String getCurrentTempTop(){
-        if(currentTempTop == null) {
-            currentTempTop=  "target" + File.separator + "test-data" + File.separator + "run-" + DateFormat.formatDateTimeForPath(Calendar.getInstance());
+    public static void pushTempDirRoot(String name){
+        rootTempDir.pushTempDir(name);
+    }
+
+    public static void popTempDirRoot(){
+        rootTempDir.popTempDir();
+    }
+
+    public static File getTempDirRoot(){
+        return rootTempDir.getTempDir();
+    }
+
+    TempDirStack _tempDir;
+    private TempDirStack tempDir(){
+        if(_tempDir == null){
+            _tempDir = rootTempDir.fork();
         }
-        return currentTempTop;
-    }
-
-    protected Stack<File> tempDirs = new Stack<>();
-
-    public void pushTempDir(TestInfo testInfo) {
-        String className=testInfo.getTestClass().get().getSimpleName();
-        pushTempDir(className);
-        pushTempDir(testInfo.getTestMethod().get().getName());
-    }
-
-    public void popTempDir(TestInfo testInfo) {
-        popTempDir();
-        popTempDir();
+        return _tempDir;
     }
 
     public void pushTempDir(String name){
-        File tempDir = new File(getTempDir(), name);
-        if(!tempDir.exists()){
-            tempDir.mkdirs();
-        }
-        tempDirs.push(tempDir);
+        tempDir().pushTempDir(name);
     }
 
     public void popTempDir(){
-        tempDirs.pop();
+        tempDir().popTempDir();
     }
 
     public File getTempDir(){
-        if(tempDirs.isEmpty()){
-            File tempDir = new File(getCurrentTempTop());
-            if (!tempDir.exists()) {
-                tempDir.mkdirs();
-            }
-            tempDirs.push(tempDir);
-        }
-        return tempDirs.peek();
+        return tempDir().getTempDir();
     }
 
     //

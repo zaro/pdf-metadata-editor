@@ -20,8 +20,8 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 public class FilesTestHelper {
@@ -45,6 +45,21 @@ public class FilesTestHelper {
         }
 //        temp.deleteOnExit();
         return temp;
+    }
+    public static List<Path> listFiles(Path dir) throws IOException {
+        return listFiles(dir, ".pdf");
+    }
+    public static List<Path> listFiles(Path dir, String... extensions) throws IOException {
+        List<Path> out = new ArrayList<>();
+        for(Path p: Files.list(dir).toList()){
+            for(String ext: extensions){
+                if(p.getFileName().toString().endsWith(ext)){
+                    out.add(p);
+                    break;
+                }
+            }
+        }
+        return out;
     }
 
     public static File csvFile(List<String> lines) throws Exception {

@@ -89,8 +89,7 @@ public class BatchFilenameTest  extends  BaseJemmyTest {
 
         new JTextPaneOperator(topFrame, "Finished successfully!");
 
-        TemplateString ts = new TemplateString(template);
-        for(Path p: Files.list(getTempDir().toPath()).toList()){
+        for(Path p: FilesTestHelper.listFiles(getTempDir().toPath())){
             MetadataInfo md = FilesTestHelper.load(p.toFile());
 
             assertEquals(new TemplateString(template).process(md), md.file.nameWithExt, "File name incorrect after rename");
@@ -115,7 +114,7 @@ public class BatchFilenameTest  extends  BaseJemmyTest {
 
         new JTextPaneOperator(topFrame, "Finished successfully!");
 
-        for(Path p: Files.list(getTempDir().toPath()).toList()){
+        for(Path p: FilesTestHelper.listFiles(getTempDir().toPath())){
             MetadataInfo md = FilesTestHelper.load(p.toFile());
 
 
@@ -144,7 +143,7 @@ public class BatchFilenameTest  extends  BaseJemmyTest {
 
         new JTextPaneOperator(topFrame, "Finished successfully!");
 
-        for(Path p: Files.list(getTempDir().toPath()).toList()){
+        for(Path p: FilesTestHelper.listFiles(getTempDir().toPath())){
             MetadataInfo md = FilesTestHelper.load(p.toFile());
 
 

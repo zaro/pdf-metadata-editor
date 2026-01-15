@@ -346,6 +346,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.5.4</version>
                 <configuration>
+					<reportsDirectory>${project.build.directory}/test-output/surefire-report/</reportsDirectory>
                     <systemPropertyVariables>
                         <flavour>${flavour}</flavour>
 						<flatlaf.useSystemFileChooser>false</flatlaf.useSystemFileChooser>
@@ -574,5 +575,4 @@
 			<version>4.1.4</version>
 		</dependency>
 	</dependencies>
-
 </project>

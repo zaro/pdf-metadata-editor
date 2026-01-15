@@ -1,6 +1,6 @@
 <configuration>
     <!-- Define properties for configuration -->
-    <property name="LOG_FILE" value="target/test-data/log.txt" />
+    <property name="LOG_FILE" value="target/test-output/log.txt" />
 
 
     <!-- File appender -->

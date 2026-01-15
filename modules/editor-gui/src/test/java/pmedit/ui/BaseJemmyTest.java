@@ -1,9 +1,6 @@
 package pmedit.ui;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.*;
 import org.netbeans.jemmy.ComponentChooser;
 import org.netbeans.jemmy.JemmyProperties;
 import org.netbeans.jemmy.TestOut;
@@ -22,19 +19,28 @@ import java.io.PrintStream;
 
 public class BaseJemmyTest extends BaseTest {
     @BeforeAll
-    static void setupJemmyTimeouts() {
+    static void setupJemmy(TestInfo testInfo) {
         System.setProperty("junitTest", "true");
         setFastTimeouts();
+        String className=testInfo.getTestClass().get().getSimpleName();
+        pushTempDirRoot(className);
+        setJemmyLog(getTempDirRoot());
+    }
+
+    @AfterAll
+    static void setupJemmyTimeouts(TestInfo testInfo) {
+        popTempDirRoot();
     }
 
     @BeforeEach
     void setUp(TestInfo testInfo) throws Exception {
-        pushTempDir(testInfo);
+        pushTempDir(testInfo.getTestMethod().get().getName());
+        setJemmyLog(getTempDir());
     }
 
     @AfterEach
     void cleanUp(TestInfo testInfo) {
-        popTempDir(testInfo);
+        popTempDir();
     }
 
     private static void setFastTimeouts() {
@@ -67,9 +73,8 @@ public class BaseJemmyTest extends BaseTest {
         }
     }
 
-    public void setJemmyLog(){
+    public static void setJemmyLog(File logDir){
         try {
-            File logDir = getTempDir();
             File jemmyLogFile = new File(logDir, "jemmy.log");
             PrintStream out = new PrintStream(new FileOutputStream(jemmyLogFile));
 
