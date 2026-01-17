@@ -268,6 +268,12 @@
 									</includes>
 								</filter>
 								<filter>
+									<artifact>net.java.dev.jna:*</artifact>
+									<includes>
+										<include>**</include>
+									</includes>
+								</filter>
+								<filter>
 									<artifact>*:*</artifact>
 									<excludes>
 										<exclude>META-INF/LICENSE*</exclude>
