@@ -81,7 +81,7 @@ jobs:
 
       - name: Build Extensions
         run: mvn --no-transfer-progress -B -DskipTests package
-        working-directory: extensions
+        working-directory: extensions/extension-dev
 
       - name: Build Editor
         env:
