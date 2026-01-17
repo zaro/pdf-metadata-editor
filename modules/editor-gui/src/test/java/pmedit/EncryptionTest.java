@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
 import java.security.Permission;
 
-@EnabledIfSystemProperty(named = "flavour" , matches ="pro")
+@EnabledIfSystemProperty(named = "flavour" , matches ="ext-dev")
 public class EncryptionTest extends BaseTest{
     public static int NUM_FILES=1;
 

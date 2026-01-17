@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static pmedit.ui.UiTestHelpers.*;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
-@EnabledIfSystemProperty(named = "flavour" , matches ="pro")
+@EnabledIfSystemProperty(named = "flavour" , matches ="ext-dev")
 public class MainWindowEncryptionOptionsTest extends  BaseJemmyTest  {
     FilesTestHelper.PMTuple initialFile;
     static JFrameOperator topFrame;

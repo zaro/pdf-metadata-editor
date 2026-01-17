@@ -47,7 +47,7 @@ jobs:
         with:
           repository: zaro/pdf-metadata-editor-extensions
           token: ${{ secrets.EXTENSIONS_REPO_TOKEN }}
-          path: modules/extensions
+          path: extensions
 
       # Setup
       - name: Set up JDK
@@ -73,14 +73,21 @@ jobs:
           NO_GUI_TESTS: ${{ contains( matrix.os, 'macos') }}
           JEMMY_TIMEOUT: 20000
         with:
-          run: mvn --no-transfer-progress -B test --file pom.xml -Dmaven.test.redirectTestOutputToFile=true
+          run: mvn --no-transfer-progress -B test -Dmaven.test.redirectTestOutputToFile=true
 
       # Build
-      - name: Build with Maven
+      - name: Build Extension API
+        run: mvn --no-transfer-progress -B install -pl modules/extension-api
+
+      - name: Build Extensions
+        run: mvn --no-transfer-progress -B -DskipTests package
+        working-directory: extensions
+
+      - name: Build Editor
         env:
           PME_LICENSE: ${{ secrets.PME_LICENSE }}
           SIGNTOOL_CERT: ${{ secrets.SIGNTOOL_CERT }}
-        run: mvn --no-transfer-progress -B -DskipTests package --file pom.xml
+        run: mvn --no-transfer-progress -B -DskipTests package -P-ext-dev -DpackExtensions
 
       # Publish
       - name: Get Version

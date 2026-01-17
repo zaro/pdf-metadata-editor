@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pmedit.prefs.LocalDataDir;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -14,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.*;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class ExtensionLoader {
@@ -82,6 +84,17 @@ public class ExtensionLoader {
         return urls.toArray(URL[]::new);
     }
 
+    protected static String[] getCurrentClassPath() {
+        String classpath = System.getProperty("java.class.path");
+        if (classpath == null || classpath.isEmpty()) {
+            return new String[0];
+        }
+
+        // Use the path separator appropriate for the current OS
+        String separator = File.pathSeparator;
+        return classpath.split(java.util.regex.Pattern.quote(separator));
+    }
+
     protected static URLClassLoader getExtensionClassLoader(PublicKey pubKey, Logger LOG){
         URL[] urls = getPluginDirectories(pubKey, LOG);
         LOG.debug("Looking for extension in classpath {}" , System.getProperty("java.class.path"));
@@ -100,6 +113,7 @@ public class ExtensionLoader {
         }
     }
 
+    private static final String DEV_CLASS_PATH = File.separator +"modules" + File.separator + "extension-api" + File.separator + "target" + File.separator + "classes" + File.separator;
     public static PmeExtension get() {
         final Logger LOG = LoggerFactory.getLogger(ExtensionLoader.class);
         PmeExtension extensionInstance = null;
@@ -110,6 +124,14 @@ public class ExtensionLoader {
         URLClassLoader classLoader = getExtensionClassLoader(pubKey, LOG);
         Set<URI> extensionJars = new LinkedHashSet<>();
         extensionJars.add(thisClassSourceUrl);
+        if(thisClassSourceUrl.getPath().endsWith(DEV_CLASS_PATH)){
+            final Pattern MATCH_DEV_CLASS_PATH = Pattern.compile("(modules|extensions)/[^/]+/target/classes$", Pattern.MULTILINE);
+            for(String entry: getCurrentClassPath()){
+                if(MATCH_DEV_CLASS_PATH.matcher(entry).find()){
+                    extensionJars.add(new File(entry).toURI());
+                }
+            }
+        }
         extensionJars.addAll(Arrays.stream(classLoader.getURLs()).map(u -> {
             try {
                 return u.toURI();
@@ -126,7 +148,6 @@ public class ExtensionLoader {
         long startExtIteration = System.currentTimeMillis();
         Iterator<PmeExtension> entry = loader.iterator();
         while (true) {
-            long startFind = System.currentTimeMillis();
             if(!entry.hasNext()){
                 break;
             }

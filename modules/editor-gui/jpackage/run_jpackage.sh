@@ -50,6 +50,7 @@ DEST_DIR="${STAGING_DIR}/packages"
 DEST_IMAGE_DIR="${STAGING_DIR}/packages-image"
 APP_IMAGE_DIR="${DEST_IMAGE_DIR}/${APP_NAME}/"
 BUILD_ARCH="${cpu.arch}"
+EXTENSIONS_DIR="${extensionsDir}"
 
 APP_VERSION="${FULL_APP_VERSION}"
 
@@ -93,7 +94,7 @@ mkdir -p ${DEST_DIR} ${DEST_IMAGE_DIR}
 JP_OPTS="--verbose"
 JP_OPTS="$JP_OPTS --type $TYPE"
 JP_OPTS="$JP_OPTS --name '$APP_NAME'"
-JP_OPTS="$JP_OPTS --vendor 'broken-by.me'"
+JP_OPTS="$JP_OPTS --vendor 'pdf.metadata.care'"
 JP_OPTS="$JP_OPTS --icon '${STAGING_DIR}/jpackage-scripts/pdf-metadata-edit.${ICON_FORMAT}'"
 JP_OPTS="$JP_OPTS --app-version '$APP_VERSION'"
 JP_OPTS="$JP_OPTS --description '$DESCRIPTION'"
@@ -107,6 +108,11 @@ if [ "$TYPE" = "app-image" -o "$machine" = "mac" ]; then
   JP_OPTS="$JP_OPTS --add-launcher 'pmedit-cli=${STAGING_DIR}/jpackage-scripts/cli.properties'"
   JP_OPTS="$JP_OPTS --runtime-image '${STAGING_DIR}/preparedJDK'"
   JP_OPTS="$JP_OPTS --dest '${DEST_IMAGE_DIR}'"
+
+  # Add extensions to input dir if needed
+  if [ "${EXTENSIONS_DIR}" ]; then
+    find "${EXTENSIONS_DIR}" -name 'pme-*-plugin*' -exec cp -v {} "${STAGING_DIR}/jpackage" \;
+  fi
 fi
 
 if [ "$TYPE" != "app-image" -a "$machine" != "mac" ]; then

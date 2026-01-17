@@ -57,7 +57,7 @@ class MetadataInfoTest extends BaseTest{
 	}
 	
 	@Test
-	@EnabledIfSystemProperty(named = "flavour" , matches ="pro")
+	@EnabledIfSystemProperty(named = "flavour" , matches ="ext-dev")
 	void testFuzzing() throws Exception {
 		for(FilesTestHelper.PMTuple t: randomFiles(NUM_FILES)){
 			MetadataInfo loaded = FilesTestHelper.load(t.file);
@@ -77,7 +77,7 @@ class MetadataInfoTest extends BaseTest{
 	}
 
 	@Test
-	@EnabledIfSystemProperty(named = "flavour" , matches ="pro")
+	@EnabledIfSystemProperty(named = "flavour" , matches ="ext-dev")
     void testRemove() throws Exception, IOException, Exception{
 		for(FilesTestHelper.PMTuple t: randomFiles(1)){
 			MetadataInfo loaded = FilesTestHelper.load(t.file);

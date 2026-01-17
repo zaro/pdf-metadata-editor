@@ -9,6 +9,7 @@
         <module>modules/extension-api</module>
 		<module>modules/basic-extension</module>
 		<module>modules/editor-gui</module>
+		<module>extensions/extension-dev</module>
 	</modules>
     <packaging>pom</packaging>
 
@@ -17,7 +18,7 @@
 			<id>zaro</id>
 			<name>Svetlozar Argirov</name>
 			<email>zarrro@gmail.com</email>
-			<url>http://broken-by.me/</url>
+			<url>http://pdf.metadata.care/</url>
 			<properties>
 				<picUrl>http://www.gravatar.com/avatar/75fa519466b509cfea3ef6cfbcbd066b</picUrl>
 			</properties>
@@ -27,21 +28,22 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<pdfbox.version>3.0.3</pdfbox.version>
+		<flavour>basic</flavour>
 	</properties>
 
 	<profiles>
 		<profile>
-			<id>pro</id>
+			<id>ext-dev</id>
 			<activation>
                 <file>
-                    <exists>modules/extensions/pro-extension/pom.xml</exists>
+                    <exists>extensions/extension-dev/pom.xml</exists>
                 </file>
 			</activation>
-            <properties>
-                <flavour>pro</flavour>
-            </properties>
+			<properties>
+				<flavour>ext-dev</flavour>
+			</properties>
 			<modules>
-				<module>modules/extensions/pro-extension</module>
+				<module>extensions/extension-dev</module>
 			</modules>
 		</profile>
 	</profiles>

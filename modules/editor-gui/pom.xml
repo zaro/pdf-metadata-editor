@@ -105,12 +105,10 @@
 			<id>basic</id>
 			<activation>
 				<property>
-					<name>!flavour</name>
+					<name>flavour</name>
+					<value>!ext-dev</value>
 				</property>
 			</activation>
-			<properties>
-				<build.flavour>basic</build.flavour>
-			</properties>
 
 			<dependencies>
 				<dependency>
@@ -121,26 +119,35 @@
 			</dependencies>
 		</profile>
 
-		<!-- Pro profile -->
+		<!-- Extension Development profile -->
 		<profile>
-			<id>pro</id>
+			<id>ext-dev</id>
 			<activation>
                 <file>
-                    <exists>../extensions/pro-extension/pom.xml</exists>
+                    <exists>../../extensions/extension-dev/pom.xml</exists>
                 </file>
 			</activation>
-			<!-- Pro profile configuration -->
-			<properties>
-				<build.flavour>pro</build.flavour>
-                <flavour>pro</flavour>
-            </properties>
 			<dependencies>
 				<dependency>
 					<groupId>pdf-metadata-edit</groupId>
-					<artifactId>pro-extension</artifactId>
+					<artifactId>extension-dev</artifactId>
 					<version>${project.parent.version}</version>
+					<type>pom</type>
 				</dependency>
 			</dependencies>
+		</profile>
+
+		<!-- Include Extensions In Packages profile -->
+		<profile>
+			<id>pack-ext</id>
+			<activation>
+				<property>
+					<name>packExtensions</name>
+				</property>
+			</activation>
+			<properties>
+				<extensionsDir>${maven.multiModuleProjectDirectory}/extensions/</extensionsDir>
+			</properties>
 		</profile>
 	</profiles>
 
@@ -511,6 +518,11 @@
 		<dependency>
 			<groupId>pdf-metadata-edit</groupId>
 			<artifactId>extension-api</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>pdf-metadata-edit</groupId>
+			<artifactId>basic-extension</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
 		<dependency>

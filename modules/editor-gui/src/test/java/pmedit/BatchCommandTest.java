@@ -14,7 +14,7 @@ import pmedit.FilesTestHelper.PMTuple;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@EnabledIfSystemProperty(named = "flavour" , matches ="pro")
+@EnabledIfSystemProperty(named = "flavour" , matches ="ext-dev")
 public class BatchCommandTest extends BaseTest{
 
 	static int NUM_FILES = 5;

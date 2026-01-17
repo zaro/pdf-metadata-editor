@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static pmedit.ui.UiTestHelpers.openFileChooser;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
-@EnabledIfSystemProperty(named = "flavour" , matches ="pro")
+@EnabledIfSystemProperty(named = "flavour" , matches ="ext-dev")
 public class BatchFilenameTest  extends  BaseJemmyTest {
     java.util.List<FilesTestHelper.PMTuple> initialFiles;
     static JFrameOperator topFrame;

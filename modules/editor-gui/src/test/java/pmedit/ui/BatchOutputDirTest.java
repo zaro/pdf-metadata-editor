@@ -24,7 +24,7 @@ import static pmedit.ui.UiTestHelpers.openFileChooser;
 import static pmedit.ui.UiTestHelpers.populateMetadataPaneValues;
 
 @DisabledIfEnvironmentVariable(named = "NO_GUI_TESTS", matches = "true")
-@EnabledIfSystemProperty(named = "flavour" , matches ="pro")
+@EnabledIfSystemProperty(named = "flavour" , matches ="ext-dev")
 public class BatchOutputDirTest  extends  BaseJemmyTest {
     List<FilesTestHelper.PMTuple> initialFiles;
     static JFrameOperator topFrame;
