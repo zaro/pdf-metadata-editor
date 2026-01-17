@@ -11,7 +11,6 @@ public class Version {
 
     protected static String version;
     protected static String appName;
-    protected static String pubKey;
     protected static String uuid;
 
     public static VersionTuple get() {
@@ -42,19 +41,7 @@ public class Version {
         return appName;
     }
 
-    public static String getPublicKey() {
-        if (pubKey == null) {
-            Properties prop = new Properties();
-            try {
-                prop.load(VersionTuple.class.getClassLoader().getResourceAsStream("pmedit/version.properties"));
-                pubKey = prop.getProperty("app.publicKey", null);
-            } catch (IOException e) {
-                LOG().error("getPublicKey", e);
-                pubKey = null;
-            }
-        }
-        return pubKey;
-    }
+
 
     public static String getUUID() {
         if (uuid == null) {

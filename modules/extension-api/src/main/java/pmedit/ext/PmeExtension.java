@@ -3,8 +3,6 @@ package pmedit.ext;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.xmpbox.xml.XmpParsingException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import pmedit.MetadataCollection;
 import pmedit.preset.PresetValues;
 import pmedit.ui.ext.MetadataEditPaneInterface;
@@ -13,40 +11,13 @@ import pmedit.util.HttpResponseCallback;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
 
 public abstract class PmeExtension {
     protected static PmeExtension extensionInstance;
 
-    //All providers
-    public static List<PmeExtension> providers() {
-        List<PmeExtension> services = new ArrayList<>();
-        ServiceLoader<PmeExtension> loader = ServiceLoader.load(PmeExtension.class);
-        loader.forEach(services::add);
-        return services;
-    }
-
     public static PmeExtension get() {
-        final Logger LOG = LoggerFactory.getLogger(PmeExtension.class);
-
         if (extensionInstance == null) {
-            LOG.debug("Looking for extension in classpath {}" , System.getProperty("java.class.path"));
-            long start = System.currentTimeMillis();
-            ServiceLoader<PmeExtension> loader = ServiceLoader.load(PmeExtension.class);
-            for (PmeExtension ext : loader) {
-                if (extensionInstance == null || ext.priority() > extensionInstance.priority()) {
-                    extensionInstance = ext;
-                }
-            }
-            if(extensionInstance == null){
-                RuntimeException e = new RuntimeException("Failed to find any configured extensions! Program is in non functional state!");
-                LOG.error("PmeExtension.get()", e);
-                throw e;
-            }
-            LOG.info("Loaded extension '{}' in {} ms",
-                    extensionInstance.getClass().getName(),
-                    System.currentTimeMillis() - start
-            );
+            extensionInstance = ExtensionLoader.get();
         }
         return extensionInstance;
     }
