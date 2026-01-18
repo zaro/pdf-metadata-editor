@@ -140,6 +140,7 @@ public class ExtensionLoader {
             }
             return null;
         }).toList());
+        LOG.debug("Enabled extensions locations {}" , extensionJars);
 
         ServiceLoader<PmeExtension> loader = ServiceLoader.load(PmeExtension.class, classLoader);
         LOG.info("Loaded extensions in {} ms",

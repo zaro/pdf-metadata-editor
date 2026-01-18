@@ -3,7 +3,7 @@ package pmedit.preset;
 import java.io.File;
 
 public class PresetStoreSerDes {
-    protected <T extends PresetValues> T deserializePreset(File file, Class<? extends PresetValues> klass) {
+    protected <T extends PresetValues> T deserializePreset(File file, Class<T> klass) {
         throw new RuntimeException("PresetStore not initialized! Calling non implemented deserializePreset()");
     }
 

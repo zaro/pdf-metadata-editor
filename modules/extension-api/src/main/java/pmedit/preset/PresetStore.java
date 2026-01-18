@@ -37,11 +37,15 @@ public class PresetStore {
         }
     }
 
-    protected static File getPresetFile(String name ){
+    public static File getPresetFile(String name){
         return new File(presetsDir, name + ".yaml");
     }
 
     public static <T extends PresetValues> T loadPreset(String name){
+        if(name == null || name.isEmpty()){
+            logger().error("Cannot load preset with empty name!");
+            throw new RuntimeException("Cannot load preset with empty name!");
+        }
         final File presetFile = getPresetFile(name);
         if(!presetFile.exists()){
             return null;
@@ -54,13 +58,20 @@ public class PresetStore {
         if(!presetsDir.exists()){
             presetsDir.mkdirs();
         }
+        if(name == null || name.isEmpty()){
+            logger().error("Cannot save preset with empty name!");
+            throw new RuntimeException("Cannot save preset with empty name!");
+        }
         File presetFile = getPresetFile(name);
         serDes.serializePreset(presetFile, values);
         logger().info("Saved: {}", presetFile);
     }
 
     public static void deletePreset(String name){
-
+        if(name == null || name.isEmpty()){
+            logger().error("Cannot delete preset with empty name!");
+            throw new RuntimeException("Cannot delete preset with empty name!");
+        }
         final File presetFile = getPresetFile(name);
         if(presetExists(name)) {
             presetFile.delete();

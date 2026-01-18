@@ -127,6 +127,9 @@
                     <exists>../../extensions/extension-dev/pom.xml</exists>
                 </file>
 			</activation>
+			<properties>
+				<flavour>ext-dev</flavour>
+			</properties>
 			<dependencies>
 				<dependency>
 					<groupId>pdf-metadata-edit</groupId>

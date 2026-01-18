@@ -62,15 +62,20 @@ public class UiTestHelpers {
             default ->  parts[0].substring(0, 1).toUpperCase() + parts[0].substring(1);
         };
     }
-    static void checkMetadataPaneValues(ContainerOperator frame,MetadataInfo expected){
+    static void checkMetadataPaneValues(ContainerOperator frame,MetadataInfo expected, boolean enabledOnly){
         var tab = new JTabbedPaneOperator(frame);
 
         for(String k: MetadataInfo.keys()) {
+            if(enabledOnly && !expected.isEnabled(k)){
+                continue;
+            }
             ensureTab(tab, tabNameForField(k));
             checkMetadataFieldValue(frame, k, expected);
         }
     }
-
+    static void checkMetadataPaneValues(ContainerOperator frame,MetadataInfo expected) {
+        checkMetadataPaneValues(frame, expected, false);
+    }
     static void checkMetadataFieldValue(ContainerOperator frame, String name, MetadataInfo expected){
         Component c = ComponentOperator.findComponent((Container) frame.getSource(), new CustomPropertyComponentChooser("MetadataFieldId", name));
         if(c == null){

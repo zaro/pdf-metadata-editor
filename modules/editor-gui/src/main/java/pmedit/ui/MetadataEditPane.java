@@ -2107,10 +2107,51 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         Map<String, Boolean> enabledMap = new HashMap<>();
 
         for (String k : initialMap.keySet()) {
+            MetadataInfo.FieldDescription fd = MetadataInfo.getFieldDescription(k);
             Object oi = initialMap.get(k);
             Object ci = currentMap.get(k);
+            boolean isEqual;
+            switch (fd.type){
+                    case BoolField -> {
+                        boolean notIo = oi == null || oi.equals(false);
+                        boolean notCi = ci == null || ci.equals(false);
+                        isEqual = notIo == notCi;
+                    }
+                    case DateField ->{
+                        if(fd.isList){
+                            isEqual = (oi == null && ci == null);
+                            if(!isEqual){
+                                isEqual = oi != null && ci != null;
+                                if(isEqual){
+                                    List<Calendar> oil = (List)oi;
+                                    List<Calendar> cil = (List)ci;
+                                    isEqual = oil.size() == cil.size();
+                                    if(isEqual) {
+                                        for (int i = 0; i < oil.size(); i++) {
+                                            Calendar oic = oil.get(i);
+                                            Calendar cic = oil.get(i);
+                                            isEqual = (oic == null && cic == null) || (oic != null && cic != null &&  oic.toInstant().equals(cic.toInstant()));
+                                            if(!isEqual){
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            isEqual = (oi == null && ci == null) || (oi != null && ci != null && ((Calendar) oi).toInstant().equals(((Calendar) ci).toInstant()));
+                        }
+                    }
+                    default -> {
+                        isEqual = (oi == null && ci == null) || (oi != null && oi.equals(ci));
+                    }
+            }
+            if(fd.isReadonly){
+                isEqual = true;
+            }
 
-            if ((oi == null && ci == null) || (oi != null && oi.equals(ci))) {
+
+            if (isEqual) {
                 currentMap.remove(k);
             } else {
                 if (initial.isEnabled(k)) {

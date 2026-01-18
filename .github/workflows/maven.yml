@@ -77,7 +77,7 @@ jobs:
 
       # Build
       - name: Build Extension API
-        run: mvn --no-transfer-progress -B install -pl modules/extension-api
+        run: mvn --no-transfer-progress -B install -pl modules/basic-extension --also-make
 
       - name: Build Extensions
         run: mvn --no-transfer-progress -B -DskipTests package

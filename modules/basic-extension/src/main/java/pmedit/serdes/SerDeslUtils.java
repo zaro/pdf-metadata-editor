@@ -15,6 +15,7 @@ import pmedit.ext.PmeExtension;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -136,7 +137,7 @@ public class SerDeslUtils {
         }
     }
 
-    public static Object fromYamlFile(File file, Class<?> clazz){
+    public static <T> T fromYamlFile(File file, Class<T> clazz){
         try {
             return yamlMapper().readValue(file, clazz);
         } catch (IOException e) {
@@ -145,7 +146,12 @@ public class SerDeslUtils {
         }
     }
 
-    public static List<Map<String, Object>> fromYAMLFileAsList(File file) {
+    public static LinkedHashMap fromYamlFile(File file) {
+        return fromYamlFile(file, LinkedHashMap.class);
+    }
+
+
+        public static List<Map<String, Object>> fromYAMLFileAsList(File file) {
         try {
             var mapper = yamlMapper();
             JsonNode rootNode = mapper.readTree(file);

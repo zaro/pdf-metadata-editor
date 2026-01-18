@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.xmpbox.xml.XmpParsingException;
 import pmedit.MetadataCollection;
+import pmedit.preset.BasicPresetStoreSerDes;
+import pmedit.preset.PresetStore;
 import pmedit.preset.PresetValues;
 import pmedit.ui.ext.MetadataEditPaneInterface;
 import pmedit.ui.ext.PreferencesWindowInterface;
@@ -38,7 +40,8 @@ public class BasicExtension extends PmeExtension{
 
     @Override
     public void init() {
-
+        PresetStore.setPresetValuesClass(PresetValues.class);
+        PresetStore.setPresetSerDes(new BasicPresetStoreSerDes());
     }
 
     @Override
