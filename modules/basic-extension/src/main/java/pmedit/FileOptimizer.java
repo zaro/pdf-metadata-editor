@@ -5,6 +5,8 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import pmedit.prefs.Preferences;
 
 public class FileOptimizer {
+    public static Integer[] ALLOWED_KEY_LENGTHS = {256, 128, 40};
+
     public enum Enum {
         NONE,
         PDFBOX,
@@ -16,6 +18,22 @@ public class FileOptimizer {
 
     public static  int getPdfBoxCompression(){
         return Preferences.getInstance().getInt("PdfBoxCompression", CompressParameters.DEFAULT_OBJECT_STREAM_SIZE);
+    }
+
+    public static  void setEncryptionKeyLength(int c){
+        Preferences.getInstance().putInt("EncryptionKeyLength", c);
+    }
+
+    public static  int getEncryptionKeyLength(){
+        return Preferences.getInstance().getInt("EncryptionKeyLength", ALLOWED_KEY_LENGTHS[0]);
+    }
+
+    public static  void setPreferAes(boolean preferAes){
+        Preferences.getInstance().putBoolean("EncryptionPreferAes", preferAes);
+    }
+
+    public static  boolean getPreferAes(){
+        return Preferences.getInstance().getBoolean("EncryptionPreferAes", true);
     }
 
 

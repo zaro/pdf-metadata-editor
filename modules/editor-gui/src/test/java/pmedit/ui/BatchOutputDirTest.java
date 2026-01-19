@@ -31,8 +31,8 @@ public class BatchOutputDirTest  extends  BaseJemmyTest {
 
     @BeforeAll
     static void setUp() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException {
-        ClassReference cr = new ClassReference("pmedit.Main");
-        cr.startApplication(new String[]{"batch-gui-cmdline"});
+        ClassReference cr = new ClassReference("pmedit.ui.BatchOperationWindow");
+        cr.startApplication();
         topFrame = new JFrameOperator("Batch PDF Metadata Process");
     }
 

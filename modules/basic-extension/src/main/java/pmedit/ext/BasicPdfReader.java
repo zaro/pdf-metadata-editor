@@ -253,7 +253,11 @@ public class BasicPdfReader implements PdfReader{
             md.prop.canExtractForAccessibility = permission.canExtractForAccessibility();
             md.prop.canAssembleDocument = permission.canAssembleDocument();
             md.prop.canPrintFaithful = permission.canPrintFaithful();
-            md.prop.keyLength = enc.getSecurityHandler().getKeyLength();
+            if(enc.getCOSObject().containsKey(COSName.LENGTH)){
+                md.prop.keyLength = enc.getCOSObject().getInt(COSName.LENGTH);
+            } else {
+                md.prop.keyLength = enc.getSecurityHandler().getKeyLength();
+            }
         } else {
             md.prop.encryption = null;
             md.prop.ownerPassword = null;

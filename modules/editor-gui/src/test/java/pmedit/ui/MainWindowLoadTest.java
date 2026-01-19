@@ -116,4 +116,25 @@ public class MainWindowLoadTest  extends  BaseJemmyTest  {
 
     }
 
+    @Test
+    public void testLoadFileWithPassword() throws FileNotFoundException, IOException, Exception {
+
+        // Check that it is present in unset fields
+        for (FilesTestHelper.PMTuple testData : randomFiles(1, md -> {
+            md.prop.ownerPassword = "123456";
+            md.prop.userPassword = "123456";
+            md.prop.encryption = true;
+        })) {
+            new JButtonOperator(topFrame, "Open PDF").push();
+            openFileChooser("Open", testData.file);
+            JDialogOperator parameters = new JDialogOperator("Encrypted File");
+            new JTextFieldOperator(parameters, 0).setText("123456");
+            new JButtonOperator(parameters, "OK").push();
+
+
+            checkMetadataPaneValues(topFrame, testData.md);
+        }
+
+    }
+
 }

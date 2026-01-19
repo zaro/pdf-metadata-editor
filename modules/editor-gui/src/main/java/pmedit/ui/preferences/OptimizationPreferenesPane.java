@@ -18,12 +18,15 @@ import java.awt.event.ItemListener;
 import java.util.prefs.Preferences;
 
 public class OptimizationPreferenesPane {
+
     public JPanel topPanel;
     public JRadioButton noCompresstionRadioButton;
     public JRadioButton defaultCompressionRadioButton;
     public JRadioButton customCompressionRadioButton;
     public JSpinner compressionLevel;
     public JLabel compressionMinVersion;
+    public JComboBox<Integer> defaultEncryptionKeyLength;
+    public JCheckBox preferAes;
 
     public OptimizationPreferenesPane() {
         noCompresstionRadioButton.addItemListener(new ItemListener() {
@@ -71,6 +74,11 @@ public class OptimizationPreferenesPane {
             customCompressionRadioButton.setSelected(true);
         }
         compressionMinVersion.setText(String.valueOf(new BasicPdfWriter().getCompressionMinimumSupportedVersion()));
+        defaultEncryptionKeyLength.setModel(new DefaultComboBoxModel<Integer>(FileOptimizer.ALLOWED_KEY_LENGTHS));
+        defaultEncryptionKeyLength.addItemListener(e -> FileOptimizer.setEncryptionKeyLength((Integer) e.getItem()));
+
+        preferAes.setSelected(FileOptimizer.getPreferAes());
+        preferAes.addChangeListener(e -> FileOptimizer.setPreferAes(preferAes.isSelected()));
     }
 
     protected void storeCustomCompression() {
@@ -116,7 +124,7 @@ public class OptimizationPreferenesPane {
      */
     private void $$$setupUI$$$() {
         topPanel = new JPanel();
-        topPanel.setLayout(new GridLayoutManager(3, 2, new Insets(10, 10, 10, 10), -1, -1));
+        topPanel.setLayout(new GridLayoutManager(5, 2, new Insets(10, 10, 10, 10), -1, -1));
         final JPanel panel1 = new JPanel();
         panel1.setLayout(new GridLayoutManager(3, 2, new Insets(0, 0, 0, 0), -1, -1));
         topPanel.add(panel1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
@@ -134,7 +142,7 @@ public class OptimizationPreferenesPane {
         compressionLevel.setToolTipText("0 - no compression, higher number has a chance of better compression but may slow down document display");
         panel1.add(compressionLevel, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer1 = new Spacer();
-        topPanel.add(spacer1, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        topPanel.add(spacer1, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final Spacer spacer2 = new Spacer();
         topPanel.add(spacer2, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final JLabel label1 = new JLabel();
@@ -143,6 +151,17 @@ public class OptimizationPreferenesPane {
         compressionMinVersion = new JLabel();
         compressionMinVersion.setText("n/a");
         topPanel.add(compressionMinVersion, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label2 = new JLabel();
+        label2.setText("Default Encryption Key Length");
+        topPanel.add(label2, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        defaultEncryptionKeyLength = new JComboBox();
+        topPanel.add(defaultEncryptionKeyLength, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label3 = new JLabel();
+        label3.setText("Preffer AES (when 128 bit key)");
+        topPanel.add(label3, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        preferAes = new JCheckBox();
+        preferAes.setText("CheckBox");
+        topPanel.add(preferAes, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         ButtonGroup buttonGroup;
         buttonGroup = new ButtonGroup();
         buttonGroup.add(noCompresstionRadioButton);

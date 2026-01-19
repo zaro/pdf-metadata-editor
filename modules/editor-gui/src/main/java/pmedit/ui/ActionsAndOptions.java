@@ -69,11 +69,10 @@ public class ActionsAndOptions {
             }
         });
 
-        encryptionOptionsDialog = new EncryptionOptionsDialog((JFrame) SwingUtilities.windowForComponent(topPanel));
         encryptionButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                encryptionOptionsDialog.display(metadataInfo);
+                getEncryptionOptionsDialog().display(metadataInfo);
             }
         });
         encryptionButton.setEnabled(metadataInfo != null && metadataInfo.prop.encryption);
@@ -87,6 +86,13 @@ public class ActionsAndOptions {
                 firePropertyChange("prop.encryption", old, newV);
             }
         });
+    }
+
+    protected EncryptionOptionsDialog getEncryptionOptionsDialog() {
+        if (encryptionOptionsDialog == null) {
+            encryptionOptionsDialog = new EncryptionOptionsDialog((JFrame) SwingUtilities.windowForComponent(topPanel));
+        }
+        return encryptionOptionsDialog;
     }
 
     protected void firePropertyChange(String propertyName, Object old, Object newV) {
@@ -158,6 +164,8 @@ public class ActionsAndOptions {
         b = b && PmeExtension.get().hasBatch();
         encryptionButton.setEnabled(b);
         enableEncryption.setEnabled(b);
+        // update encryption controls from metadata if needed
+        fill();
         pdfVersion.setEnabled(b);
 
 

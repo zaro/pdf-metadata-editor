@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class FilesTestHelper {
 //    protected static  File tempDir;
     protected static float DEFAULT_PDF_VERSION = 1.6f;
-    protected static List<Integer> ALLOWED_KEY_LENGTHS = Arrays.asList(40, 128, 256);
+    protected static List<Integer> ALLOWED_KEY_LENGTHS = Arrays.asList(FileOptimizer.ALLOWED_KEY_LENGTHS);
 
 
 

@@ -21,8 +21,9 @@ public class EncryptionOptionsDialog extends JDialog {
     MetadataInfo metadataInfo;
 
     public EncryptionOptionsDialog(Frame owner) {
-        super(owner, "Encryption Options", ModalityType.MODELESS);
-        super.setLocationRelativeTo(owner);
+        super(owner, true);
+        setLocationRelativeTo(owner);
+        setTitle("Encryption Options");
 
         setContentPane(contentPane);
         setModal(true);
@@ -175,13 +176,15 @@ public class EncryptionOptionsDialog extends JDialog {
         showOwnerPassword.setBorderPainted(false);
         showOwnerPassword.setContentAreaFilled(false);
         showOwnerPassword.setFocusPainted(false);
-        showOwnerPassword.setText("\uD83D\uDC41");
+        showOwnerPassword.setIcon(new ImageIcon(getClass().getResource("/pmedit/ui/square-asterisk.png")));
+        showOwnerPassword.setText("");
         panel3.add(showOwnerPassword, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         showUserPassword = new JButton();
         showUserPassword.setBorderPainted(false);
         showUserPassword.setContentAreaFilled(false);
         showUserPassword.setFocusPainted(false);
-        showUserPassword.setText("\uD83D\uDC41");
+        showUserPassword.setIcon(new ImageIcon(getClass().getResource("/pmedit/ui/square-asterisk.png")));
+        showUserPassword.setText("");
         panel3.add(showUserPassword, new GridConstraints(1, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 

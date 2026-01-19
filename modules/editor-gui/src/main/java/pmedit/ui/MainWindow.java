@@ -449,7 +449,7 @@ public class MainWindow extends JFrame implements  ProgramWindow {
                 LOG.info("loadFile({}) success", file.getAbsolutePath());
                 break;
             } catch (InvalidPasswordException e) {
-                LOG.error("loadFile({})", file.getAbsolutePath(), e);
+                LOG.warn("loadFile({}) - {}", file.getAbsolutePath(), e.getMessage());
                 password = (String) JOptionPane.showInputDialog(
                         this,
                         "File is encrypted, provide user password:\n",
@@ -480,6 +480,8 @@ public class MainWindow extends JFrame implements  ProgramWindow {
         if (pdfFile != null) {
             reader.loadPDFFileInfo(pdfFile, metadataInfo);
         }
+        metadataInfo.prop.ownerPassword = password;
+        metadataInfo.prop.userPassword = password;
 
         metadataEditor.fillFromMetadata(metadataInfo);
         MetadataInfo defaultMetadata = new MetadataInfo();
@@ -492,7 +494,6 @@ public class MainWindow extends JFrame implements  ProgramWindow {
         actionsAndOptions.setDocumentVersionModel(metadataEditor.getPdfVersionPicker().getModel());
         actionsAndOptions.attachMetadataInfo(metadataEditor.getDisplayMetadataInfo());
 
-        metadataInfo.prop.userPassword = password;
         actionsAndOptions.setEnabled(true);
     }
 
