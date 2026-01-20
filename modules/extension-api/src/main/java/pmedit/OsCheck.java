@@ -51,10 +51,18 @@ public final class OsCheck {
 
     public static String getComputerName() {
         if(computerName == null) {
-            // Method 1: Try OS-specific environment variables first
-            computerName = System.getenv("COMPUTERNAME"); // Windows
-            if (computerName == null || computerName.isEmpty()) {
-                computerName = System.getenv("HOSTNAME"); // Linux/Mac
+            // On MacOs try to use scutil
+            if(isMacOs()) {
+                var result = RunCmd.execCmd(new String[]{"scutil", "--get", "ComputerName"});
+                if(result.ok()) {
+                    computerName = result.out().trim();
+                }
+            } else {
+                // Try OS-specific environment variables first
+                computerName = System.getenv("COMPUTERNAME"); // Windows
+                if (computerName == null || computerName.isEmpty()) {
+                    computerName = System.getenv("HOSTNAME"); // Linux/Mac
+                }
             }
 
             if (computerName == null || computerName.isEmpty()) {
