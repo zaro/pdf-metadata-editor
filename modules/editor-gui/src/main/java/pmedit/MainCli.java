@@ -3,7 +3,6 @@ package pmedit;
 import org.slf4j.LoggerFactory;
 import pmedit.CommandLine.ParseError;
 import pmedit.ext.PmeExtension;
-import pmedit.util.HttpResponseCallback;
 
 import java.io.File;
 
@@ -22,6 +21,8 @@ public class MainCli {
                     "                                  pass email and license ID separated with comma (no spaces) to \n" +
                     "                                  install Pro license from the command line.\n" +
                     "       --releaseLicense           release current Pro license and quit\n" +
+                    "       --showLicense              show current Pro license and quit\n" +
+                    "       --offline                  set/release Pro license in offline mode\n" +
                     "\n" +
                     "COMMANDS\n" +
                     "\n" +
@@ -94,46 +95,9 @@ public class MainCli {
     }
 
     public static void main(CommandLine cmdLine) {
-        if (cmdLine.licenseKey != null) {
-            PmeExtension ext = PmeExtension.get();
-            if (ext.giveBatch(cmdLine.licenseKey, new HttpResponseCallback() {
-                @Override
-                public void onSuccess(int statusCode, String responseBody) {
-                    System.out.println("Installed license for : " + ext.getBatch());
-                }
-
-                @Override
-                public void onError(String errorMessage) {
-                    System.out.println("Invalid license!");
-
-                }
-            })) {
-                System.out.println("Getting license ... ");
-            } else {
-                System.out.println("Invalid license specification!");
-            }
+        if(PmeExtension.get().handleCommandLine(cmdLine)){
             return;
-        }
-        if(cmdLine.releaseLicense){
-            PmeExtension ext = PmeExtension.get();
-            String sub  = ext.getBatch();
-            if (ext.removeBatch(new HttpResponseCallback() {
-                @Override
-                public void onSuccess(int statusCode, String responseBody) {
-                    System.out.println("Released license for : " + sub);
-                }
-
-                @Override
-                public void onError(String errorMessage) {
-                    System.out.println("Failed to release license: " + errorMessage);
-                }
-            })) {
-                System.out.println("Releasing license ... ");
-            } else {
-                System.out.println("Failed to initiate release license operation!");
-            }
-            return;
-        }
+        };
         executeCommand(cmdLine);
     }
 

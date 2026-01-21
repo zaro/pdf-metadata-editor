@@ -22,11 +22,13 @@ import java.util.concurrent.*;
 public class Main {
     static void setupLogging(boolean secondary, boolean isCli) {
         java.util.logging.Logger.getLogger("org.apache").setLevel(java.util.logging.Level.FINE);
-        System.setProperty("org.apache.commons.logging.simplelog.defaultlog", "debug");
-        System.setProperty("logLevel","debug");
         isCli = isCli || isCli();
-        if (System.getProperty("devLog") == null) {
-            System.setProperty("devLog", isCli ? "" : devLogValue());
+        if (System.getProperty("devLog") != null && isCli) {
+            System.setProperty("devLog", "");
+        }
+        if(System.getProperty("devLog", "").equals("true")) {
+            System.setProperty("org.apache.commons.logging.simplelog.defaultlog", "debug");
+            System.setProperty("logLevel", "debug");
         }
         String logFilename = secondary ? "log.singleInstance.txt" :"log.txt"; //"log." + ProcessHandle.current().pid() + ".txt";
         System.setProperty("logFileName", LocalDataDir.getAppDataDir() +logFilename);
@@ -45,10 +47,6 @@ public class Main {
         return System.getProperty("noGui") != null;
     }
 
-
-    private static String  devLogValue() {
-        return System.getProperty("devLog", "");
-    }
 
     public static String getBatchGuiCommand() {
         return "batch-gui-" + batchGuiCounter++;

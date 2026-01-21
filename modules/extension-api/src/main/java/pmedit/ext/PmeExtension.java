@@ -3,11 +3,11 @@ package pmedit.ext;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.xmpbox.xml.XmpParsingException;
+import pmedit.CommandLineOptions;
 import pmedit.MetadataCollection;
 import pmedit.preset.PresetValues;
 import pmedit.ui.ext.MetadataEditPaneInterface;
 import pmedit.ui.ext.PreferencesWindowInterface;
-import pmedit.util.HttpResponseCallback;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,9 +25,13 @@ public abstract class PmeExtension {
     // Configuration methods
     public abstract int priority();
     public abstract boolean hasBatch();
-    public abstract boolean giveBatch(String moto, HttpResponseCallback responseCallback);
-    public abstract boolean removeBatch(HttpResponseCallback responseCallback);
-    public abstract String getBatch();
+    public abstract boolean handleCommandLine(CommandLineOptions options);
+//    public abstract boolean giveBatch(String moto, HttpResponseCallback responseCallback);
+//    public abstract boolean removeBatch(HttpResponseCallback responseCallback);
+//    public abstract String offlineBatchRequest(String moto);
+//    public abstract boolean offlineGiveBatch(String moto);
+//    public abstract String offlineBatchRelease();
+//    public abstract BatchInfo getBatch();
 
     // Init
     public abstract void init();

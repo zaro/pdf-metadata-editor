@@ -2,7 +2,7 @@ package pmedit;
 
 import java.util.*;
 
-public class CommandLine {
+public class CommandLine extends  CommandLineOptions {
     public static Set<String> validMdNames = MetadataInfo.validMdNames;
     public List<String> fileList = new ArrayList<String>();
     public boolean noGui = Main.isCli();
@@ -12,6 +12,8 @@ public class CommandLine {
     public boolean showHelp = false;
     public String licenseKey;
     public boolean releaseLicense;
+    public boolean offline;
+    public boolean showLicense;
     public String outputDir;
     public CommandLine() {
     }
@@ -65,6 +67,28 @@ public class CommandLine {
         return sb.toString();
     }
 
+    @Override
+    public boolean getBoolean(String option) {
+        if("releaseLicense".equals(option)){
+            return releaseLicense;
+        }
+        if("showLicense".equals(option)){
+            return showLicense;
+        }
+        if("offline".equals(option)){
+            return offline;
+        }
+        return false;
+    }
+
+    @Override
+    public String getString(String option) {
+        if("licenseKey".equals(option)){
+            return licenseKey;
+        }
+        return "";
+    }
+
     protected record OptionArgument(String arg, int advance){
     }
 
@@ -89,12 +113,16 @@ public class CommandLine {
                 OptionArgument oa = getOptionArgument(arg, i, args);
                 cmdLine.params.renameTemplate = oa.arg.trim();
                 i+=oa.advance;
+            } else if (arg.equalsIgnoreCase("offline")){
+                cmdLine.offline =true;
             } else if (arg.startsWith("license")) {
                 OptionArgument oa = getOptionArgument(arg, i, args);
                 cmdLine.licenseKey = oa.arg.trim();
                 i+=oa.advance;
             } else if (arg.startsWith("releaseLicense")) {
                 cmdLine.releaseLicense=true;
+            } else if (arg.equalsIgnoreCase("showLicense")) {
+                cmdLine.showLicense=true;
             } else if (arg.equalsIgnoreCase("h") || arg.equalsIgnoreCase("help")) {
                 cmdLine.showHelp = true;
             } else if (arg.equalsIgnoreCase("o") || arg.equalsIgnoreCase("outputDir")) {

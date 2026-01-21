@@ -13,8 +13,16 @@ maven= "3.9.12"
 description = "Update version in child modules, from parent"
 run = "mvn -N versions:update-child-modules"
 
+[tasks.build-jar]
+description = "Build Jar"
+run = "mvn package -Dpackages.skip=true -DskipTests"
+
+[tasks.run-jar]
+description = "Run Jar"
+run = "java -DnoGui -DdevLog=true -jar modules/editor-gui/target/jar/pdf-metadata-editor-*.jar"
+
 [tasks.build]
-description = "Build"
+description = "Build App Image"
 run = "mvn clean package -DskipTests -Dpackages.list=app-image "
 
 [tasks.release-build]
