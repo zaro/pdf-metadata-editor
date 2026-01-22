@@ -411,7 +411,7 @@ public class PDFMetadataEditBatch {
     public void runCommand(CommandDescription command, List<File> batchFileList, File outDir, ActionStatus actionStatus) {
         FilesWalker filesWalker = new FilesWalker(command.inputFileExtensions, batchFileList, outDir);
         if (!PmeExtension.get().hasBatch()) {
-            actionStatus.addError("*", new Exception("Invalid license, you can get a license at " + Constants.batchLicenseUrl));
+            actionStatus.addError("*", new Exception("Invalid license, you can get a license at " + WebsiteConstants.batchLicenseUrl));
         } else if (command.is("rename")) {
             rename(filesWalker, outDir,  actionStatus);
         } else if (command.is("fromfilename")) {

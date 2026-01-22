@@ -414,7 +414,7 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
         if (!PmeExtension.get().hasBatch()) {
             btnAction.setEnabled(false);
             statusSummary.setVisible(true);
-            statusSummary.setText("<p align=center>No batch license. In order to use batch operations please get a license from <a href='" + Constants.batchLicenseHref + "'>" + Constants.batchLicenseUrl + "<a></p>");
+            statusSummary.setText("<p align=center>No batch license. In order to use batch operations please get a license from " + WebsiteConstants.getLink(WebsiteConstants.batchLicenseUrl) + "</p>");
         } else {
             btnAction.setEnabled(true);
             statusSummary.setVisible(false);

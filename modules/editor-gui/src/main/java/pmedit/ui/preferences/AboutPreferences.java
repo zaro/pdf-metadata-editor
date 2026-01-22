@@ -8,7 +8,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.util.EntityUtils;
-import pmedit.Constants;
+import pmedit.WebsiteConstants;
 import pmedit.VersionTuple;
 import pmedit.serdes.SerDeslUtils;
 import pmedit.Version;
@@ -31,8 +31,8 @@ public class AboutPreferences {
     public AboutPreferences() {
         aboutText.setText(
                 "<h1 align=center>" + Version.getAppName() + "</h1>\n\n" +
-                        "<p align=center><a href=\"" + Constants.websiteUrl + "\">" + Constants.websiteUrl + "</a></p>\n<br>\n" +
-                        "<p align=center>If you have suggestions, found bugs or just want to share some idea about it you can write me at : <a href=\"" + Constants.contactFormUrl + "\">" + Constants.contactFormUrl + "</a></p>\n<br>"
+                        "<p align=center>" + WebsiteConstants.getLink(WebsiteConstants.websiteUrl) + "</p>\n<br>\n" +
+                        "<p align=center>If you have suggestions, found bugs or just want to share some idea about it you can write at : " + WebsiteConstants.getLink(WebsiteConstants.contactFormUrl) + "</p>\n<br>"
         );
 
         checkForUpdatesText.addActionHandler("update-check://", (action) -> {
@@ -62,8 +62,8 @@ public class AboutPreferences {
         }
         if (latestVersion != null) {
             if (current.cmp(latestVersion) < 0) {
-                versionMsg = "<h3 align=center>New version available: <a href='" + Constants.downloadUrl + "'>"
-                        + latestVersion.getAsString() + "</a> , current: " + current.getAsString() + "</h3>";
+                versionMsg = "<h3 align=center>New version available: " + WebsiteConstants.getLink(WebsiteConstants.downloadUrl,
+                         latestVersion.getAsString()) + " , current: " + current.getAsString() + "</h3>";
             } else {
                 versionMsg = "<h3 align=center>Version " + current.getAsString() + " is the latest version</h3>";
             }
