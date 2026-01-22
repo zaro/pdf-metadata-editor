@@ -411,7 +411,7 @@ public class MetadataEditPane implements MetadataEditPaneInterface {
         );
         Color changedColor = GuiPreferences.isLookAndFeelDark() ? lighten(focusColor, 1.3) : darken(focusColor, 0.7);
         changedBorder = BorderFactory.createLineBorder(changedColor, 2);
-        String msg = "<a href='" + Constants.batchLicenseUrl + "'>Pro Required<a>";
+        String msg = "<a href='" + Constants.batchLicenseHref + "'>Pro Required<a>";
         proRequiredFile.setText(msg);
         proRequiredRights.setText(msg);
         proRequiredViewer.setText(msg);
