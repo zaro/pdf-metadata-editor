@@ -815,13 +815,13 @@ public class MetadataInfo implements MetadataCollection{
         }
 
         public void setAll(boolean value) {
-            name = false;
-            nameWithExt = false;
-            sizeBytes = false;
-            size = false;
-            createTime = false;
-            modifyTime = false;
-            fullPath = false;
+            name = value;
+            nameWithExt = value;
+            sizeBytes = value;
+            size = value;
+            createTime = value;
+            modifyTime = value;
+            fullPath = value;
         }
     }
 
