@@ -6,6 +6,9 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
+## Testing locally with act
+# act -j build -s EXTENSIONS_REPO_TOKEN=${PME_EXTENSIONS_ACT_LOCAL} -s PME_LICENSE=${PME_LICENSE}
+
 name: Java CI with Maven
 
 on:
@@ -23,8 +26,7 @@ jobs:
         (matrix.arch == 'arm' && format('{0}-arm',
           matrix.os == 'windows-2022' && 'windows-11' || matrix.os
         )) ||
-        (matrix.os)
-      }}
+        (matrix.os)}}
     strategy:
       max-parallel: 3
       matrix:
@@ -66,6 +68,17 @@ jobs:
         with:
           servers: '[{ "id": "github-jdde", "username": "zaro", "password": "${{ secrets.JDDE_PACKAGES_TOKEN }}" }]'
 
+      # Build
+      - name: Build Extension API
+        run: ./mvnw --no-transfer-progress -B install -pl modules/basic-extension --also-make 
+
+      - name: Build Extensions
+        run: ../mvnw --no-transfer-progress -B -DskipTests package 
+        working-directory: extensions/extension-dev
+
+      # These two steps are only needed if running locally with act
+      # - run: sudo add-apt-repository -y main restricted universe multiverse
+      # - run: sudo apt-get install -y libxtst6 libxrender1 libxi6 fakeroot rpm build-essential
       - name: Run Tests
         uses: coactions/setup-xvfb@v1
         env:
@@ -73,21 +86,13 @@ jobs:
           NO_GUI_TESTS: ${{ contains( matrix.os, 'macos') }}
           JEMMY_TIMEOUT: 20000
         with:
-          run: mvn --no-transfer-progress -B test -Dmaven.test.redirectTestOutputToFile=true
-
-      # Build
-      - name: Build Extension API
-        run: mvn --no-transfer-progress -B install -pl modules/basic-extension --also-make
-
-      - name: Build Extensions
-        run: mvn --no-transfer-progress -B -DskipTests package
-        working-directory: extensions/extension-dev
+          run: ./mvnw --no-transfer-progress -B test -Dmaven.test.redirectTestOutputToFile=true
 
       - name: Build Editor
         env:
           PME_LICENSE: ${{ secrets.PME_LICENSE }}
           SIGNTOOL_CERT: ${{ secrets.SIGNTOOL_CERT }}
-        run: mvn --no-transfer-progress -B -DskipTests package -P-ext-dev -DpackExtensions
+        run: ./mvnw --no-transfer-progress -B -DskipTests package -P-ext-dev -DpackExtensions
 
       # Publish
       - name: Get Version

@@ -8,6 +8,7 @@ MAVEN_OPTS=""
 # specify single or multiple versions
 java = "liberica-25"
 maven= "3.9.12"
+act = '0.2.84'
 
 [tasks.update-version]
 description = "Update version in child modules, from parent"
