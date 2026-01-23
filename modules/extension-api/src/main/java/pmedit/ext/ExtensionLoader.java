@@ -125,7 +125,7 @@ public class ExtensionLoader {
         Set<URI> extensionJars = new LinkedHashSet<>();
         extensionJars.add(thisClassSourceUrl);
         if(thisClassSourceUrl.getPath().endsWith(DEV_CLASS_PATH)){
-            final Pattern MATCH_DEV_CLASS_PATH = Pattern.compile("(modules|extensions)/[^/]+/target/classes$", Pattern.MULTILINE);
+            final Pattern MATCH_DEV_CLASS_PATH = Pattern.compile("(modules|extensions)[/\\\\][^\\\\]+[/\\\\]target[/\\\\]classes$", Pattern.MULTILINE);
             for(String entry: getCurrentClassPath()){
                 if(MATCH_DEV_CLASS_PATH.matcher(entry).find()){
                     extensionJars.add(new File(entry).toURI());
