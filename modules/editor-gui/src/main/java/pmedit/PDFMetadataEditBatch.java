@@ -213,10 +213,12 @@ public class PDFMetadataEditBatch {
                 try {
                     MetadataInfo md = new MetadataInfo();
                     reader.loadFromPDF(file, md);
+                    md.copyEnabled(params.metadata);
+                    md.fileEnabled.fullPath = true;
                     if(params.shouldUseRelativePaths()){
                         md.file.fullPath = inputFileRelativeName(file);
                     }
-                    addRecordForExport(new ExportedObject(file, md.asFlatMap()));
+                    addRecordForExport(new ExportedObject(file, md.asFlatMap(true)));
                 } catch (Exception e) {
                     logger.error("tojson", e);
                     status.addError(inputFileRelativeName(file), e);
@@ -270,10 +272,12 @@ public class PDFMetadataEditBatch {
                 try {
                     MetadataInfo md = new MetadataInfo();
                     reader.loadFromPDF(file, md);
+                    md.copyEnabled(params.metadata);
+                    md.fileEnabled.fullPath = true;
                     if(params.shouldUseRelativePaths()){
                         md.file.fullPath = inputFileRelativeName(file);
                     }
-                    addRecordForExport(new ExportedObject(file, md.asFlatMap()));
+                    addRecordForExport(new ExportedObject(file, md.asFlatMap(true)));
                 } catch (Exception e) {
                     logger.error("toyaml", e);
                     status.addError(inputFileRelativeName(file), e);
@@ -322,10 +326,12 @@ public class PDFMetadataEditBatch {
                 try {
                     MetadataInfo md = new MetadataInfo();
                     reader.loadFromPDF(file, md);
+                    md.copyEnabled(params.metadata);
+                    md.fileEnabled.fullPath = true;
                     if(params.shouldUseRelativePaths()){
                         md.file.fullPath = inputFileRelativeName(file);
                     }
-                    addRecordForExport(new ExportedObject(file, (Map<String, Object>) (Object) md.asFlatStringMap()));
+                    addRecordForExport(new ExportedObject(file, (Map<String, Object>) (Object) md.asFlatStringMap(true)));
                 } catch (Exception e) {
                     logger.error("tocsv", e);
                     status.addError(inputFileRelativeName(file), e);
@@ -455,8 +461,8 @@ public class PDFMetadataEditBatch {
         }
 
         File getInputFile(){
-            if(!propertyInputFile.isAbsolute()){
-                new File(propertyInputFile.getParentFile(), file.getPath());
+            if(!file.isAbsolute()){
+                return new File(propertyInputFile.getParentFile(), file.getPath());
             }
             return file;
         }
