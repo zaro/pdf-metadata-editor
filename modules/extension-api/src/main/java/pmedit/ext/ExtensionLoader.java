@@ -113,7 +113,7 @@ public class ExtensionLoader {
         }
     }
 
-    private static final String DEV_CLASS_PATH = File.separator +"modules" + File.separator + "extension-api" + File.separator + "target" + File.separator + "classes" + File.separator;
+    private static final String DEV_CLASS_PATH = "modules/extension-api/target/classes/";
     public static PmeExtension get() {
         final Logger LOG = LoggerFactory.getLogger(ExtensionLoader.class);
         PmeExtension extensionInstance = null;
