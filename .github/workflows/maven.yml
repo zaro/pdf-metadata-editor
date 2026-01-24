@@ -99,7 +99,7 @@ jobs:
         if: ${{ startsWith( matrix.os, 'windows' ) }}
         with:
           name: binaries-to-sign-${{ matrix.os }}-${{ matrix.arch }}
-          path: modules/**/target/packages-image/*/*.exe
+          path: modules/editor-gui/target/packages-image/*/*.exe
           retention-days: 1
 
       - name: Submit to SignPath (Windows)
@@ -113,7 +113,14 @@ jobs:
           artifact-configuration-slug: 'gha-app-binaries'
           github-artifact-id: '${{ steps.upload-unsigned-artifact.outputs.artifact-id }}'
           wait-for-completion: true
-          output-artifact-directory: 'modules/'
+          output-artifact-directory: 'signed/'
+
+      - name: Copy over signed binaries
+        if: ${{ startsWith(github.ref, 'refs/tags/')  && startsWith(matrix.os, 'windows')}}
+        shell: bash
+        run: |
+          find signed/
+          cp -v signed/modules/editor-gui/target/packages-image/*/*.exe modules/editor-gui/target/packages-image/*/
 
       - name: Build Editor Installers
         env:
