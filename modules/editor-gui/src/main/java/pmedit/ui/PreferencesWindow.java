@@ -44,27 +44,9 @@ public class PreferencesWindow extends JDialog implements PreferencesWindowInter
 
         addWindowListener(new WindowAdapter() {
             @Override
-            public void windowOpened(WindowEvent e) {
-                LOG.debug("PreferencesWindow OPENED");
-            }
-            @Override
             public void windowClosing(WindowEvent arg0) {
                 LOG.debug("PreferencesWindow CLOSING");
                 save();
-            }
-            @Override
-            public void windowClosed(WindowEvent e) {
-                LOG.debug("PreferencesWindow CLOSED");
-            }
-
-            @Override
-            public void windowActivated(WindowEvent e) {
-                LOG.debug("PreferencesWindow ACTIVATED");
-            }
-
-            @Override
-            public void windowDeactivated(WindowEvent e) {
-                LOG.debug("PreferencesWindow DEACTIVATED");
             }
         });
         addComponentListener(new ComponentAdapter() {
