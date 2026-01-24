@@ -110,6 +110,7 @@ jobs:
           organization-id: '0ad9fcb4-6389-4e2b-a6a3-6974d3595766'
           project-slug: 'pdf-metadata-editor'
           signing-policy-slug: 'test-signing'
+          artifact-configuration-slug: 'gha-app-binaries'
           github-artifact-id: '${{ steps.upload-unsigned-artifact.outputs.artifact-id }}'
           wait-for-completion: true
           output-artifact-directory: 'modules/'
