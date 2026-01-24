@@ -130,7 +130,11 @@ jobs:
         if: ${{ startsWith(github.ref, 'refs/tags/')  && startsWith(matrix.os, 'windows')}}
         shell: bash
         run: |
+          echo "--- signed"
           find signed/
+          echo "--- packages-image"
+          rm -v modules/editor-gui/target/packages-image/*/*.exe
+          echo "--- COPY"
           cp -v signed/*/*.exe modules/editor-gui/target/packages-image/*/
 
       - name: Build Editor Installers
