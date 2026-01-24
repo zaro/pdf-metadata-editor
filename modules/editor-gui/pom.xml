@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>pdf-metadata-edit</groupId>
 		<artifactId>pdf-metadata-editor-parent</artifactId>
-		<version>4.0.0beta2</version>
+		<version>4.0.0beta3</version>
 		<relativePath>../../pom.xml</relativePath>
 	</parent>
 
