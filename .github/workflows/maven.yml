@@ -40,6 +40,15 @@ jobs:
         exclude:
           - os: macos-15
             arch: amd64
+          # Testing only
+          - os: macos-15
+            arch: arm
+          - os: ubuntu-24.04
+            arch: amd64
+          - os: ubuntu-24.04
+            arch: arm
+          - os: windows-2022
+            arch: arm
     outputs:
       version: ${{ steps.getVersion.outputs.version }}
       preRelease: ${{ contains( steps.getVersion.outputs.version, 'beta' ) || contains( steps.getVersion.outputs.version, 'rc' )  }}
