@@ -180,10 +180,11 @@ if [ "${machine}" = "linux" ]; then
 fi
 
 ### Sign Windows deliveries
+echo "EXTERNAL_SIGNING=${EXTERNAL_SIGNING}"
 set +x
-if [ "${machine}" = "win" ]; then
+if [ "${machine}" = "win" -a "${EXTERNAL_SIGNING}" != "yes" ]; then
 
-  # try to detech signtool installation and add it to path
+  # try to detect signtool installation and add it to path
   SIGNTOOL_PFX=jpackage/cert/win-cert.pfx
 
   if [ -d '/c/WinKit/bin/' ]; then

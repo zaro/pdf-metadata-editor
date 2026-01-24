@@ -52,6 +52,8 @@ jobs:
     outputs:
       version: ${{ steps.getVersion.outputs.version }}
       preRelease: ${{ contains( steps.getVersion.outputs.version, 'beta' ) || contains( steps.getVersion.outputs.version, 'rc' )  }}
+    env:
+      EXTERNAL_SIGNING: ${{ startsWith(github.ref, 'refs/tags/') && 'yes' || 'no' }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/checkout@v6
