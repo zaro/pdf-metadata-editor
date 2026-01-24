@@ -35,6 +35,9 @@ public class Main {
         if (!isCli) {
             System.out.println("Logfile location:" + LocalDataDir.getAppDataDir() + logFilename);
         }
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            LOG().error("Uncaught exception in thread: {}", thread.getName(), throwable);
+        });
     }
     static final Logger LOG() { return LoggerFactory.getLogger(Main.class); }
 
