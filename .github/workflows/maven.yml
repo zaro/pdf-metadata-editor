@@ -91,7 +91,7 @@ jobs:
       - name: Build Editor Image for packaging
         env:
           SIGNTOOL_CERT: ${{ secrets.SIGNTOOL_CERT }}
-        run: ./mvnw --no-transfer-progress -B -DskipTests package -P-ext-dev -DpackExtensions -Dpack.image
+        run: ./mvnw --no-transfer-progress -B -DskipTests package -P-ext-dev -DpackExtensions -DpackImage
 
       - name: Create artifact for SignPath (Windows)
         uses: actions/upload-artifact@v6
@@ -104,7 +104,7 @@ jobs:
       - name: Build Editor Installers
         env:
           SIGNTOOL_CERT: ${{ secrets.SIGNTOOL_CERT }}
-        run: ./mvnw --no-transfer-progress -B -DskipTests package -P-ext-dev -DpackExtensions -Dpack.installers
+        run: ./mvnw --no-transfer-progress -B -DskipTests package -P-ext-dev -DpackExtensions -DpackInstallers
 
       # Publish
       - name: Get Version

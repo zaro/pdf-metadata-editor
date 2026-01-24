@@ -124,7 +124,7 @@
 			<id>packages-image</id>
 			<activation>
 				<property>
-					<name>pack.image</name>
+					<name>packImage</name>
 				</property>
 			</activation>
 			<properties>
@@ -140,7 +140,7 @@
 			<id>packages-installers</id>
 			<activation>
 				<property>
-					<name>pack.installers</name>
+					<name>packInstallers</name>
 				</property>
 			</activation>
 			<properties>
