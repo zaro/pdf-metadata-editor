@@ -200,7 +200,7 @@ jobs:
           draft: true
           prerelease: ${{ needs.build.outputs.preRelease }}
           files: |
-            release-files-*/*
+            editor-gui/target/packages/*
 
 #    # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
 #    - name: Update dependency graph
