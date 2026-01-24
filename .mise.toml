@@ -24,7 +24,7 @@ run = "java -DnoGui -DdevLog=true -jar modules/editor-gui/target/jar/pdf-metadat
 
 [tasks.build]
 description = "Build App Image"
-run = "mvn clean package -DskipTests -Dpackages.list=app-image "
+run = "mvn clean package -DskipTests -Dpackages.list=app-image -Dpackages.zip.skip=true"
 
 [tasks.release-build]
 description = "Release Build"

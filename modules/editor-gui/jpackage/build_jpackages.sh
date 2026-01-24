@@ -13,7 +13,16 @@ if [ -z "$PKG_LIST" ]; then
   exit 1
 fi
 
+if [ "$2" = "prebuilt-app-image" ]; then
+  PREBUILD_APP_IMAGE=1
+fi
+
 for pkg in ${PKG_LIST//,/ }; do
-    echo "*** Building $pkg ***"
+    if [ "$pkg" = "app-image" -a "$PREBUILD_APP_IMAGE" ]; then
+      echo "****** Not building $pkg ******"
+      continue
+    fi
+    echo "****** Building $pkg ******"
     bash $THIS_DIR/run_jpackage.sh $pkg
+    echo "****** Done building $pkg ******"
 done

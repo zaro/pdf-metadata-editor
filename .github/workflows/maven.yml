@@ -88,11 +88,23 @@ jobs:
         with:
           run: ./mvnw --no-transfer-progress -B test -Dmaven.test.redirectTestOutputToFile=true
 
-      - name: Build Editor
+      - name: Build Editor Image for packaging
         env:
-          PME_LICENSE: ${{ secrets.PME_LICENSE }}
           SIGNTOOL_CERT: ${{ secrets.SIGNTOOL_CERT }}
-        run: ./mvnw --no-transfer-progress -B -DskipTests package -P-ext-dev -DpackExtensions
+        run: ./mvnw --no-transfer-progress -B -DskipTests package -P-ext-dev -DpackExtensions -Dpackages.image
+
+      - name: Create artifact for SignPath (Windows)
+        uses: actions/upload-artifact@v6
+        if: ${{ startsWith( matrix.os, 'windows' ) }}
+        with:
+          name: binaries-to-sign-${{ matrix.os }}-${{ matrix.arch }}
+          path: modules/**/target/packages-image/*/*.exe
+          retention-days: 1
+
+      - name: Build Editor Installers
+        env:
+          SIGNTOOL_CERT: ${{ secrets.SIGNTOOL_CERT }}
+        run: ./mvnw --no-transfer-progress -B -DskipTests package -P-ext-dev -DpackExtensions -Dpackages.installers
 
       # Publish
       - name: Get Version

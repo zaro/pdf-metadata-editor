@@ -170,16 +170,17 @@ ls -la ${DEST_IMAGE_DIR}
 #  zip -r "${STAGING_DIR}/packages/$APP_NAME.app.zip" target/packages/
 #fi
 
-set +x
+
 ### Handle linux deliveries
 if [ "${machine}" = "linux" ]; then
   if [ "$TYPE" = "app-image" ]; then
-    # Copy the uberjar as release package
+    echo Copy the uberjar as release package
     cp -v "${STAGING_DIR}/jpackage/${MAIN_JAR}" target/packages/
   fi
 fi
 
 ### Sign Windows deliveries
+set +x
 if [ "${machine}" = "win" ]; then
 
   # try to detech signtool installation and add it to path
@@ -207,7 +208,7 @@ if [ "${machine}" = "win" ]; then
     echo "Using CERTUM_SHA=$CERTUM_SHA"
   fi
 
-  ls -lah jpackage/cert
+  ls -la jpackage/cert
 
   signtool_file() {
     # Based on https://simplefury.com/posts/java/windows/jpackage-win-codesign/
