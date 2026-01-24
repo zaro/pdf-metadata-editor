@@ -33,10 +33,12 @@ public class Main {
         String logFilename = secondary ? "log.singleInstance.txt" :"log.txt"; //"log." + ProcessHandle.current().pid() + ".txt";
         System.setProperty("logFileName", LocalDataDir.getAppDataDir() +logFilename);
         if (!isCli) {
-            System.out.println("Logfile location:" + LocalDataDir.getAppDataDir() + logFilename);
+            System.out.println("Logfile location: " + System.getProperty("logFileName", "<UNSET>"));
         }
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
             LOG().error("Uncaught exception in thread: {}", thread.getName(), throwable);
+            System.err.println("Uncaught exception in thread: " + thread.getName());
+            throwable.printStackTrace();
         });
     }
     static final Logger LOG() { return LoggerFactory.getLogger(Main.class); }

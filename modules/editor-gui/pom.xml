@@ -256,43 +256,40 @@
 						<configuration>
 							<outputDirectory>${project.build.directory}/jar</outputDirectory>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
-							<minimizeJar>true</minimizeJar> <!--  this is not supported in JDK11 -->
+<!--							<minimizeJar>true</minimizeJar>-->
 							<transformers>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer">
 								</transformer>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
 									<addHeader>false</addHeader>
 								</transformer>
-								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-									<resource>META-INF/services/javax.imageio.spi.ImageReaderSpi</resource>
-								</transformer>
-								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-									<resource>META-INF/services/javax.imageio.spi.ImageWriterSpi</resource>
-								</transformer>
-								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-									<resource>META-INF/services/javax.imageio.spi.ImageInputStreamSpi</resource>
-								</transformer>
-								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-									<resource>META-INF/services/javax.imageio.spi.ImageOutputStreamSpi</resource>
-								</transformer>
+<!--								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">-->
+<!--									<resource>META-INF/services/javax.imageio.spi.ImageReaderSpi</resource>-->
+<!--								</transformer>-->
+<!--								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">-->
+<!--									<resource>META-INF/services/javax.imageio.spi.ImageWriterSpi</resource>-->
+<!--								</transformer>-->
+<!--								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">-->
+<!--									<resource>META-INF/services/javax.imageio.spi.ImageInputStreamSpi</resource>-->
+<!--								</transformer>-->
+<!--								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">-->
+<!--									<resource>META-INF/services/javax.imageio.spi.ImageOutputStreamSpi</resource>-->
+<!--								</transformer>-->
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<manifestEntries>
 										<Main-Class>pmedit.Main</Main-Class>
 									</manifestEntries>
 								</transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
 							</transformers>
 							<artifactSet>
-								<excludes>
-									<exclude>org.junit.jupiter:*</exclude>
-								</excludes>
 							</artifactSet>
 							<filters>
 								<filter>
-									<artifact>*:*</artifact>
+									<artifact>pdf-metadata-edit:*</artifact>
 									<includes>
-										<include>pmedit/**</include>
+										<include>**</include>
 									</includes>
 								</filter>
 								<filter>
@@ -338,7 +335,20 @@
 								<filter>
 									<artifact>net.java.dev.jna:*</artifact>
 									<includes>
-										<include>**</include>
+										<include>META-INF/*</include>
+										<!-- Include all class files -->
+										<include>**/*.class</include>
+
+										<!-- Windows (x86-64, aarch64) -->
+										<include>com/sun/jna/win32-x86-64/**</include>
+										<include>com/sun/jna/win32-aarch64/**</include>
+
+										<!-- Linux (x86, x86-64, arm, aarch64) -->
+										<include>com/sun/jna/linux-x86-64/**</include>
+										<include>com/sun/jna/linux-aarch64/**</include>
+
+										<!-- macOS (x86-64, aarch64/Apple Silicon) -->
+										<include>com/sun/jna/darwin-aarch64/**</include>
 									</includes>
 								</filter>
 								<filter>

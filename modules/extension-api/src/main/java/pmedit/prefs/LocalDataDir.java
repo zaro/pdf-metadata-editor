@@ -43,7 +43,7 @@ public class LocalDataDir {
                 break;
         }
 
-        if (dir.length() > 0 && !dir.endsWith(File.separator)) {
+        if (!dir.isEmpty() && !dir.endsWith(File.separator)) {
             dir = dir + File.separator;
         }
         return dir;

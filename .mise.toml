@@ -26,6 +26,15 @@ run = "java -DnoGui -DdevLog=true -jar modules/editor-gui/target/jar/pdf-metadat
 description = "Build App Image"
 run = "mvn clean package -DskipTests -Dpackages.list=app-image -Dpackages.zip.skip=true"
 
+[tasks.build-app]
+description = "Build App Image (CI like)"
+run = [
+    "mvn clean",
+    "mvn install -pl modules/basic-extension --also-make",
+    "cd extensions/extension-dev/ && mvn --no-transfer-progress -B -DskipTests package",
+    "mvn --no-transfer-progress -B -DskipTests package -P-ext-dev -DpackExtensions -DpackImage"
+]
+
 [tasks.release-build]
 description = "Release Build"
 run = "mvn clean package -DskipTests"
