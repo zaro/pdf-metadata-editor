@@ -9,7 +9,7 @@
 ## Testing locally with act
 # act -j build -s EXTENSIONS_REPO_TOKEN=${PME_EXTENSIONS_ACT_LOCAL} -s PME_LICENSE=${PME_LICENSE}
 
-name: Java CI with Maven
+name: Build Release Files
 
 on:
   push:
