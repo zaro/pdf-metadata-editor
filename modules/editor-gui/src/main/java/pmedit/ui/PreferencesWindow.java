@@ -3,19 +3,20 @@ package pmedit.ui;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pmedit.ext.PmeExtension;
 import pmedit.ui.ext.PreferencesWindowInterface;
 import pmedit.ui.preferences.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.util.prefs.Preferences;
 
 public class PreferencesWindow extends JDialog implements PreferencesWindowInterface {
+    final Logger LOG = LoggerFactory.getLogger(PreferencesWindow.class);
+
     public JPanel contentPane;
     public JTabbedPane tabbedPane;
     public JButton closeButton;
@@ -39,13 +40,45 @@ public class PreferencesWindow extends JDialog implements PreferencesWindowInter
         setModal(true);
         setMinimumSize(new Dimension(860, 600));
         contentPane.doLayout();
+        LOG.debug("PreferencesWindow({}) = {}", owner, this);
 
         addWindowListener(new WindowAdapter() {
             @Override
+            public void windowOpened(WindowEvent e) {
+                LOG.debug("PreferencesWindow OPENED");
+            }
+            @Override
             public void windowClosing(WindowEvent arg0) {
+                LOG.debug("PreferencesWindow CLOSING");
                 save();
             }
+            @Override
+            public void windowClosed(WindowEvent e) {
+                LOG.debug("PreferencesWindow CLOSED");
+            }
+
+            @Override
+            public void windowActivated(WindowEvent e) {
+                LOG.debug("PreferencesWindow ACTIVATED");
+            }
+
+            @Override
+            public void windowDeactivated(WindowEvent e) {
+                LOG.debug("PreferencesWindow DEACTIVATED");
+            }
         });
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e) {
+                LOG.debug("PreferencesWindow component SHOWN");
+            }
+
+            @Override
+            public void componentHidden(ComponentEvent e) {
+                LOG.debug("PreferencesWindow component HIDDEN");
+            }
+        });
+
         closeButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);

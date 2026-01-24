@@ -777,12 +777,21 @@ public class MainWindow extends JFrame implements  ProgramWindow {
 
             @Override
             public void run() {
+                LOG.debug("preferencesWindow = {}", preferencesWindow);
                 if (preferencesWindow == null) {
                     preferencesWindow = new PreferencesWindow(MainWindow.this);
+                    preferencesWindow.pack();
+                    preferencesWindow.setLocationRelativeTo(MainWindow.this);
                     preferencesWindow.onSaveAction(updateSaveButton);
                 }
+                LOG.debug("Showing tab: {}", tabName);
                 preferencesWindow.showTab(tabName);
+                LOG.debug("Setting visible");
                 preferencesWindow.setVisible(true);
+
+                // Log window state
+                LOG.debug("Window visible: {} , showing: {},  location: {} ", preferencesWindow.isVisible(), preferencesWindow.isShowing(), preferencesWindow.getLocation());
+
             }
         });
     }
