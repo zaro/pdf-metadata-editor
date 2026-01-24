@@ -290,6 +290,12 @@
 							</artifactSet>
 							<filters>
 								<filter>
+									<artifact>*:*</artifact>
+									<includes>
+										<include>pmedit/**</include>
+									</includes>
+								</filter>
+								<filter>
 									<artifact>commons-logging:commons-logging</artifact>
 									<includes>
 										<include>org/apache/commons/logging/**</include>
