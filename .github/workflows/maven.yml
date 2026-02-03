@@ -67,7 +67,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           java-version: '25'
-          distribution: 'liberica'
+          distribution: 'temurin'
           cache: maven
 
       - name: Setup WiX
