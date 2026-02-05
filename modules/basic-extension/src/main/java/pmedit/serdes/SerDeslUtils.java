@@ -22,16 +22,19 @@ import java.util.Map;
 public class SerDeslUtils {
     static Logger LOG() { return LoggerFactory.getLogger(SerDeslUtils.class); }
 
+    protected static ObjectMapper _jsonMapperInstance;
     protected static ObjectMapper jsonMapper(){
-        var mapper = new ObjectMapper(JsonFactory.builder().enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION).build())
-                .enable(SerializationFeature.INDENT_OUTPUT)
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        // Register the custom serializer and deserializer
-        SimpleModule module = new SimpleModule();
-        PmeExtension.get().initSerializer(module);
-        mapper.registerModule(module);
-
-        return mapper;
+        if(_jsonMapperInstance == null) {
+            var mapper = new ObjectMapper(JsonFactory.builder().enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION).build())
+                    .enable(SerializationFeature.INDENT_OUTPUT)
+                    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            // Register the custom serializer and deserializer
+            SimpleModule module = new SimpleModule();
+            PmeExtension.get().initSerializer(module);
+            mapper.registerModule(module);
+            _jsonMapperInstance = mapper;
+        }
+        return _jsonMapperInstance;
     }
 
     public static String toJSON(boolean pretty, Object jsonObject) {
@@ -97,16 +100,19 @@ public class SerDeslUtils {
 
     }
 
+    protected static ObjectMapper _yamlMapperInstance;
     protected static ObjectMapper yamlMapper(){
-        ObjectMapper mapper =  new ObjectMapper(new YAMLFactory()
-                .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER))
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        // Register the custom serializer and deserializer
-        SimpleModule module = new SimpleModule();
-        PmeExtension.get().initSerializer(module);
-        mapper.registerModule(module);
-
-        return mapper;
+        if(_yamlMapperInstance == null) {
+            ObjectMapper mapper = new ObjectMapper(new YAMLFactory()
+                    .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER))
+                    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            // Register the custom serializer and deserializer
+            SimpleModule module = new SimpleModule();
+            PmeExtension.get().initSerializer(module);
+            mapper.registerModule(module);
+            _yamlMapperInstance = mapper;
+        }
+        return _yamlMapperInstance;
     }
 
     public static String toYAML(Object yamlObject) {
