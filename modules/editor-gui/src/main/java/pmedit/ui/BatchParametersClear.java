@@ -15,6 +15,7 @@ public class BatchParametersClear extends BatchParametersEdit {
     public BatchParametersClear(BatchOperationParameters params, Frame owner) {
         super(params, owner);
         defaultMetadataPane.disableEdit();
+        setTitle("Batch clear parameters");
         setMessage("Select fields to be cleared below");
 
         presetSelector.removeActionListeners();

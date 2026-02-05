@@ -96,9 +96,7 @@ public class GeneralPreferences {
         final Spacer spacer1 = new Spacer();
         panel1.add(spacer1, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         rdbtnSaveAndRename = new JRadioButton();
-        rdbtnSaveAndRename.setText("Save  Rename");
-        rdbtnSaveAndRename.setMnemonic(' ');
-        rdbtnSaveAndRename.setDisplayedMnemonicIndex(5);
+        rdbtnSaveAndRename.setText("Save and Rename");
         panel1.add(rdbtnSaveAndRename, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         rdbtnSaveAs = new JRadioButton();
         rdbtnSaveAs.setText("Save as ...");
