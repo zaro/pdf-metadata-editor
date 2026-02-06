@@ -269,7 +269,7 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
         menuBar.add(paramsMenu);
         menuBar.add(Box.createHorizontalGlue());
 
-        MainWindow.addHelpMenu(menuBar, e -> {
+        MainWindow.addHelpMenu(menuBar, "help/editor/batch/", e -> {
             openPreferencesWindow("About");
         });
         this.setJMenuBar(menuBar);

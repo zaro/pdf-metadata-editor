@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-public class MainWindow extends JFrame implements  ProgramWindow {
+public class MainWindow extends JFrame implements ProgramWindow {
     final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
 
     protected static final Dimension MIN_SIZE = new Dimension(860, 660);
@@ -628,7 +628,7 @@ public class MainWindow extends JFrame implements  ProgramWindow {
         menuBar.add(documentMenu);
         menuBar.add(Box.createHorizontalGlue());
 
-        addHelpMenu(menuBar, e -> {
+        addHelpMenu(menuBar, "help/editor/", e -> {
             openPreferencesWindow("About");
         });
         this.setJMenuBar(menuBar);
@@ -662,7 +662,7 @@ public class MainWindow extends JFrame implements  ProgramWindow {
         return fileMenu;
     }
 
-    public static void addHelpMenu(JMenuBar menuBar, ActionListener showAbout) {
+    public static void addHelpMenu(JMenuBar menuBar, String helpPage, ActionListener showAbout) {
         JMenu helpMenu = new JMenu("Help");
         helpMenu.setMnemonic('H');
         JMenuItem viewHelp = new JMenuItem("View Help");
@@ -670,11 +670,11 @@ public class MainWindow extends JFrame implements  ProgramWindow {
         JMenuItem about = new JMenuItem("About");
 
         viewHelp.addActionListener(e -> {
-            TextPaneWithLinks.openURL("https://pdf.metadata.care/help/");
+            TextPaneWithLinks.openURL(WebsiteConstants.websiteUrl + (helpPage != null ? helpPage : "help/") + WebsiteConstants.hrefQuery);
         });
 
         website.addActionListener(e -> {
-            TextPaneWithLinks.openURL("https://pdf.metadata.care/");
+            TextPaneWithLinks.openURL(WebsiteConstants.websiteUrl + WebsiteConstants.hrefQuery);
         });
         about.addActionListener(showAbout);
 
