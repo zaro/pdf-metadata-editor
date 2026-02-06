@@ -51,13 +51,13 @@ public class BasicPdfWriter implements PdfWriter {
     }
 
     protected static class AppliedChanges {
-        boolean docSet;
-        XMPMetadata xmpOld;
-        MetadataInfo.XmpSchemaOnDemand newXmp;
-        boolean xmpBasicSet;
-        boolean xmpPdfSet;
-        boolean xmpDcSet;
-        AppliedChanges() {
+        protected boolean docSet;
+        protected XMPMetadata xmpOld;
+        protected MetadataInfo.XmpSchemaOnDemand newXmp;
+        protected boolean xmpBasicSet;
+        protected boolean xmpPdfSet;
+        protected boolean xmpDcSet;
+        protected AppliedChanges() {
             this.docSet = false;
             this.xmpOld = null;
             this.newXmp = null;
@@ -65,7 +65,7 @@ public class BasicPdfWriter implements PdfWriter {
             this.xmpPdfSet = false;
             this.xmpDcSet = false;
         }
-        AppliedChanges(
+        protected AppliedChanges(
             boolean docSet,
             XMPMetadata xmpOld,
             MetadataInfo.XmpSchemaOnDemand newXmp,
