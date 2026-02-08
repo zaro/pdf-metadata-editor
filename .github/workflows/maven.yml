@@ -53,7 +53,8 @@ jobs:
       version: ${{ steps.getVersion.outputs.version }}
       preRelease: ${{ contains( steps.getVersion.outputs.version, 'beta' ) || contains( steps.getVersion.outputs.version, 'rc' )  }}
     env:
-      EXTERNAL_SIGNING: ${{ startsWith(github.ref, 'refs/tags/') && 'yes' || 'no' }}
+      EXTERNAL_SIGNING: 'no'
+      # EXTERNAL_SIGNING: ${{ startsWith(github.ref, 'refs/tags/') && 'yes' || 'no' }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/checkout@v6
@@ -114,7 +115,7 @@ jobs:
           retention-days: 1
 
       - name: Submit binaries to SignPath (Windows)
-        if: ${{ startsWith(github.ref, 'refs/tags/')  && startsWith(matrix.os, 'windows')}}
+        if: ${{ env.EXTERNAL_SIGNING == 'yes' && startsWith(github.ref, 'refs/tags/')  && startsWith(matrix.os, 'windows')}}
         uses: signpath/github-action-submit-signing-request@v2
         with:
           api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
@@ -127,7 +128,7 @@ jobs:
           output-artifact-directory: 'signed/'
 
       - name: Copy over signed binaries
-        if: ${{ startsWith(github.ref, 'refs/tags/')  && startsWith(matrix.os, 'windows')}}
+        if: ${{ env.EXTERNAL_SIGNING == 'yes' && startsWith(github.ref, 'refs/tags/')  && startsWith(matrix.os, 'windows')}}
         shell: bash
         run: |
           echo "--- signed"
@@ -165,7 +166,7 @@ jobs:
           retention-days: 1
 
       - name: Submit installers to SignPath (Windows)
-        if: ${{ startsWith(github.ref, 'refs/tags/')  && startsWith(matrix.os, 'windows')}}
+        if: ${{ env.EXTERNAL_SIGNING == 'yes' && startsWith(github.ref, 'refs/tags/')  && startsWith(matrix.os, 'windows')}}
         uses: signpath/github-action-submit-signing-request@v2
         with:
           api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
