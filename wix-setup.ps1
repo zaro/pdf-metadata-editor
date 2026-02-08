@@ -8,8 +8,8 @@ dotnet tool install --global wix --version 6.0.2
 $env:WIX_EXTENSIONS = Join-Path $PWD.Path "modules\editor-gui"
 
 # Add extensions
-wix extension add --global WixToolset.Util.wixext
-wix extension add --global WixToolset.UI.wixext
+wix extension add --global WixToolset.Util.wixext/6.0.2
+wix extension add --global WixToolset.UI.wixext/6.0.2
 
 # List installed extensions
 wix extension list
