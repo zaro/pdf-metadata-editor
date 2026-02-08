@@ -54,6 +54,9 @@ EXTENSIONS_DIR="${extensionsDir}"
 
 APP_VERSION="${FULL_APP_VERSION}"
 
+#SIGNTOOL_TS_SERVER="http://timestamp.sectigo.com"
+SIGNTOOL_TS_SERVER="http://timestamp.digicert.com"
+
 # Remove beta/rc qualifiers as they cannot be used on windows/macos
 if [ "${machine}" = "win" -o "$machine" = "mac" ]; then
   PRE_TAG="${APP_VERSION##[0-9].[0-9].[0-9]}"
@@ -223,7 +226,7 @@ if [ "${machine}" = "win" -a "${EXTERNAL_SIGNING}" != "yes" ]; then
     file "$FILE"
     if [ -z "$CERTUM_SHA" ]; then
       set -x
-      "${SIGNTOOL}"  sign /f jpackage/cert/win-cert.pfx /p 123456 /d "$DESC" /v /fd SHA256 /tr "http://timestamp.sectigo.com" /td SHA256 "$FILE"
+      "${SIGNTOOL}"  sign /f jpackage/cert/win-cert.pfx /p 123456 /d "$DESC" /v /fd SHA256 /tr "${SIGNTOOL_TS_SERVER}" /td SHA256 "$FILE"
       set +x
     else
       set -x
