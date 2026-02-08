@@ -95,7 +95,7 @@ public class BatchModifyMetadataTest  extends  BaseJemmyTest {
     public void testClearMetadata() throws FileNotFoundException, IOException, Exception {
         selectCommandAndAddFolder(CommandDescription.CLEAR);
         new JButtonOperator(topFrame, "Parameters").push();
-        JDialogOperator parameters = new JDialogOperator("Batch set parameters");
+        JDialogOperator parameters = new JDialogOperator("Batch clear parameters");
 
         MetadataInfo md = new MetadataInfo();
         md.setEnabled(false);
@@ -121,7 +121,7 @@ public class BatchModifyMetadataTest  extends  BaseJemmyTest {
     public void testClearAll() throws FileNotFoundException, IOException, Exception {
         selectCommandAndAddFolder(CommandDescription.CLEAR);
         new JButtonOperator(topFrame, "Parameters").push();
-        JDialogOperator parameters = new JDialogOperator("Batch set parameters");
+        JDialogOperator parameters = new JDialogOperator("Batch clear parameters");
 
         MetadataInfo md = new MetadataInfo();
         md.setEnabled(true);

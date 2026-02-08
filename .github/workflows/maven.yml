@@ -44,6 +44,14 @@ jobs:
           JEMMY_TIMEOUT: 20000
         with:
           run: ./mvnw --no-transfer-progress -B test -Dmaven.test.redirectTestOutputToFile=true
+
+      - name: Save Test Logs
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: test-job-output
+          path: modules/**/target/test-output/* # or path/to/artifact
+          retention-days: 1
   build:
     needs: test
     runs-on: ${{
