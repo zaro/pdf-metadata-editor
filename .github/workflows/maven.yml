@@ -20,7 +20,32 @@ on:
   pull_request:
   workflow_dispatch:
 jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: zaro/pdf-metadata-editor-extensions
+          token: ${{ secrets.EXTENSIONS_REPO_TOKEN }}
+          path: extensions
+      # Setup
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'liberica'
+          cache: maven
+      # Run tests
+      - name: Run Tests
+        uses: coactions/setup-xvfb@v1
+        env:
+          PME_LICENSE: ${{ secrets.PME_LICENSE }}
+          JEMMY_TIMEOUT: 20000
+        with:
+          run: ./mvnw --no-transfer-progress -B test -Dmaven.test.redirectTestOutputToFile=true
   build:
+    needs: test
     runs-on: ${{
         (startsWith(matrix.os, 'macos') && matrix.os) ||
         (matrix.arch == 'arm' && format('{0}-arm',
