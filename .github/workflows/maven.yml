@@ -186,7 +186,8 @@ jobs:
         run: rm -f modules/editor-gui/target/default._*.dmg
 
       - name: Make sure we release JAR file from only one OS
-        if: ${{ !startsWith( matrix.os, 'ubuntu' ) }}
+        # Until the uber jar is fixed, not JAR release
+        # if: ${{ !startsWith( matrix.os, 'ubuntu' ) }}
         run: rm -f modules/editor-gui/target/*.jar
         shell: bash
 
