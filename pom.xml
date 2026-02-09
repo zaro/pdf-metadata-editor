@@ -11,6 +11,12 @@
 		<module>modules/editor-gui</module>
 		<module>extensions/extension-dev</module>
 	</modules>
+	<licenses>
+		<license>
+			<name>GPL-3.0</name>
+			<url>https://www.gnu.org/licenses/gpl-3.0.txt</url>
+		</license>
+	</licenses>
     <packaging>pom</packaging>
 
 	<developers>

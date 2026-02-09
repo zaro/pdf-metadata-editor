@@ -49,4 +49,4 @@ Documentation is available at the [Help page](https://pdf.metadata.care/help/)
 
 ## License
 
-Distributed under the MIT License. See the [LICENSE](LICENSE) file for more information.
+Distributed under the GPL v3 License. See the [LICENSE](LICENSE) file for more information.
