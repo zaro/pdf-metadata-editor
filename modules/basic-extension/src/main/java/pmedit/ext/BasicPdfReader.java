@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
 
@@ -152,87 +153,90 @@ public class BasicPdfReader implements PdfReader{
 
 
         if (meta != null) {
+            try {
+                XMPMetadata xmp = MetadataInfoUtils.loadXMPMetadata(meta.createInputStream());
 
-            XMPMetadata xmp = MetadataInfoUtils.loadXMPMetadata(meta.createInputStream());
+                // XMP Basic
+                XMPBasicSchema bi = xmp.getXMPBasicSchema();
+                if (bi != null) {
 
-            // XMP Basic
-            XMPBasicSchema bi = xmp.getXMPBasicSchema();
-            if (bi != null) {
-
-                md.basic.creatorTool = bi.getCreatorTool();
-                md.basic.createDate = bi.getCreateDate();
-                md.basic.modifyDate = bi.getModifyDate();
-                md.basic.baseURL = bi.getBaseURL();
-                md.basic.rating = bi.getRating();
-                md.basic.label = bi.getLabel();
-                md.basic.nickname = bi.getNickname();
-                md.basic.identifiers = bi.getIdentifiers();
-                md.basic.advisories = bi.getAdvisory();
-                md.basic.metadataDate = bi.getMetadataDate();
-            }
-
-            // XMP PDF
-            AdobePDFSchema pi = xmp.getAdobePDFSchema();
-            if (pi != null) {
-                md.pdf.pdfVersion = pi.getPDFVersion();
-                md.pdf.keywords = pi.getKeywords();
-                md.pdf.producer = pi.getProducer();
-            }
-
-            // XMP Dublin Core
-            DublinCoreSchema dcS = xmp.getDublinCoreSchema();
-            if (dcS != null) {
-                try {
-                    md.dc.title = dcS.getTitle();
-                } catch (BadFieldValueException e) {
-                    md.dc.title = "[INVALID FIELD VALUE]";
+                    md.basic.creatorTool = bi.getCreatorTool();
+                    md.basic.createDate = bi.getCreateDate();
+                    md.basic.modifyDate = bi.getModifyDate();
+                    md.basic.baseURL = bi.getBaseURL();
+                    md.basic.rating = bi.getRating();
+                    md.basic.label = bi.getLabel();
+                    md.basic.nickname = bi.getNickname();
+                    md.basic.identifiers = bi.getIdentifiers();
+                    md.basic.advisories = bi.getAdvisory();
+                    md.basic.metadataDate = bi.getMetadataDate();
                 }
-                try {
-                    md.dc.description = dcS.getDescription();
-                } catch (BadFieldValueException e) {
-                    md.dc.description = "[INVALID FIELD VALUE]";
+
+                // XMP PDF
+                AdobePDFSchema pi = xmp.getAdobePDFSchema();
+                if (pi != null) {
+                    md.pdf.pdfVersion = pi.getPDFVersion();
+                    md.pdf.keywords = pi.getKeywords();
+                    md.pdf.producer = pi.getProducer();
                 }
-                md.dc.creators = dcS.getCreators();
-                md.dc.contributors = dcS.getContributors();
-                md.dc.coverage = dcS.getCoverage();
-                md.dc.dates = dcS.getDates();
-                md.dc.format = dcS.getFormat();
-                md.dc.identifier = dcS.getIdentifier();
-                md.dc.languages = dcS.getLanguages();
-                // It appears there are some PDF out there where the languages is stored as plain
-                // string instead of list. Try to workaround that.
-                if (md.dc.languages == null) {
-                    var s = dcS.getProperty(DublinCoreSchema.LANGUAGE);
-                    if (s instanceof TextType) {
-                        md.dc.languages = List.of(((TextType) s).getStringValue());
+
+                // XMP Dublin Core
+                DublinCoreSchema dcS = xmp.getDublinCoreSchema();
+                if (dcS != null) {
+                    try {
+                        md.dc.title = dcS.getTitle();
+                    } catch (BadFieldValueException e) {
+                        md.dc.title = "[INVALID FIELD VALUE]";
                     }
+                    try {
+                        md.dc.description = dcS.getDescription();
+                    } catch (BadFieldValueException e) {
+                        md.dc.description = "[INVALID FIELD VALUE]";
+                    }
+                    md.dc.creators = dcS.getCreators();
+                    md.dc.contributors = dcS.getContributors();
+                    md.dc.coverage = dcS.getCoverage();
+                    md.dc.dates = dcS.getDates();
+                    md.dc.format = dcS.getFormat();
+                    md.dc.identifier = dcS.getIdentifier();
+                    md.dc.languages = dcS.getLanguages();
+                    // It appears there are some PDF out there where the languages is stored as plain
+                    // string instead of list. Try to workaround that.
+                    if (md.dc.languages == null) {
+                        var s = dcS.getProperty(DublinCoreSchema.LANGUAGE);
+                        if (s instanceof TextType) {
+                            md.dc.languages = List.of(((TextType) s).getStringValue());
+                        }
+                    }
+                    md.dc.publishers = dcS.getPublishers();
+                    md.dc.relationships = dcS.getRelations();
+                    try {
+                        md.dc.rights = dcS.getRights();
+                    } catch (BadFieldValueException e) {
+                        md.dc.title = "[INVALID FIELD VALUE]";
+                    }
+                    md.dc.source = dcS.getSource();
+                    md.dc.subjects = dcS.getSubjects();
+                    md.dc.types = dcS.getTypes();
                 }
-                md.dc.publishers = dcS.getPublishers();
-                md.dc.relationships = dcS.getRelations();
-                try {
-                    md.dc.rights = dcS.getRights();
-                } catch (BadFieldValueException e) {
-                    md.dc.title = "[INVALID FIELD VALUE]";
-                }
-                md.dc.source = dcS.getSource();
-                md.dc.subjects = dcS.getSubjects();
-                md.dc.types = dcS.getTypes();
-            }
 
-            // XMP Rights
-            XMPRightsManagementSchema ri = xmp.getXMPRightsManagementSchema();
-            if (ri != null) {
-                md.rights.certificate = ri.getCertificate();
-                // rights.marked  = ri.getMarked(); // getMarked() return false on null value
-                md.rights.marked = ri.getMarked();
-                md.rights.owner = ri.getOwners();
-                try {
-                    md.rights.usageTerms = ri.getUsageTerms();
-                } catch (BadFieldValueException e) {
-                    md.rights.usageTerms = "[INVALID FIELD VALUE]";
+                // XMP Rights
+                XMPRightsManagementSchema ri = xmp.getXMPRightsManagementSchema();
+                if (ri != null) {
+                    md.rights.certificate = ri.getCertificate();
+                    // rights.marked  = ri.getMarked(); // getMarked() return false on null value
+                    md.rights.marked = ri.getMarked();
+                    md.rights.owner = ri.getOwners();
+                    try {
+                        md.rights.usageTerms = ri.getUsageTerms();
+                    } catch (BadFieldValueException e) {
+                        md.rights.usageTerms = "[INVALID FIELD VALUE]";
+                    }
+                    var c = ri.getProperty("Copyright");
+                    md.rights.webStatement = ri.getWebStatement();
                 }
-                var c = ri.getProperty("Copyright");
-                md.rights.webStatement = ri.getWebStatement();
+            }catch (XmpParsingException e){
+                LOG.error("Failed to parse XMP metadata, invalid XML", e);
             }
         }
 
