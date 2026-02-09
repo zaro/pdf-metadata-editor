@@ -9,7 +9,7 @@
     <name>Svetlozar Argirov</name>
   </developer>
   <metadata_license>CC0-1.0</metadata_license>
-  <project_license>MIT</project_license>
+  <project_license>GPL-3.0-or-later</project_license>
   <update_contact>zarrro@gmail.com</update_contact>
   <launchable type="desktop-id">me.broken_by.PdfMetadataEditor.desktop</launchable>
   <description>
