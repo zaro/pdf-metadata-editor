@@ -36,6 +36,7 @@
     <release version="3.1.0" date="2024-11-05" type="stable" />
   </releases>
   <url type="homepage">https://pdf.metadata.care/</url>
+  <url type="vcs-browser">https://github.com/zaro/pdf-metadata-editor</url>
   <url type="bugtracker">https://github.com/zaro/pdf-metadata-editor/issues</url>
   <url type="help">https://pdf.metadata.care/help/</url>
   <categories>
@@ -43,4 +44,8 @@
     <category>Office</category>
   </categories>
   <content_rating type="oars-1.1" />
+  <branding>
+    <color type="primary" scheme_preference="light">#4e46e5f1</color>
+    <color type="primary" scheme_preference="dark">#4e46e5f1</color>
+  </branding>
 </component>
