@@ -191,6 +191,18 @@ jobs:
         run: rm -f modules/editor-gui/target/packages/*.jar
         shell: bash
 
+      - name: Permissions of installers for signing
+        if: ${{ startsWith( matrix.os, 'windows' ) }}
+        shell: bash
+        run: |
+          chmod +w  "modules/editor-gui/target/packages/"*.exe
+          chmod +w  "modules/editor-gui/target/packages/"*.msi
+
+      - name: List installers for signing
+        shell: bash
+        run: 'ls -lah  "modules/editor-gui/target/packages/"'
+
+
       - name: Sign Installers with Artifact Signing
         uses: azure/artifact-signing-action@v1
         if: ${{ env.EXTERNAL_SIGNING == 'yes' && startsWith(github.ref, 'refs/tags/') && startsWith( matrix.os, 'windows' ) }}
