@@ -179,13 +179,12 @@ jobs:
         run: rm -f modules/editor-gui/target/default._*.dmg
 
       - name: Build Uber JAR
-        # Until the uber jar is fixed, not JAR release
-        if: ${{ startsWith( matrix.os, 'ubuntu' ) }}
+        if: ${{ startsWith( matrix.os, 'ubuntu' ) &&  startsWith( matrix.arch, 'amd64' ) }}
         run: ./mvnw package -Dpackages.skip=true -DskipTests
         shell: bash
 
       - name: Make sure we release JAR file from only one OS
-        if: ${{ !startsWith( matrix.os, 'ubuntu' ) }}
+        if: ${{ !startsWith( matrix.os, 'ubuntu' ) ||  !startsWith( matrix.arch, 'amd64' ) }}
         run: rm -f modules/editor-gui/target/packages/*.jar
         shell: bash
 
