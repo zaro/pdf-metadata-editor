@@ -86,8 +86,8 @@ jobs:
       version: ${{ steps.getVersion.outputs.version }}
       preRelease: ${{ contains( steps.getVersion.outputs.version, 'beta' ) || contains( steps.getVersion.outputs.version, 'rc' )  }}
     env:
-      EXTERNAL_SIGNING: 'no'
-      # EXTERNAL_SIGNING: ${{ startsWith(github.ref, 'refs/tags/') && 'yes' || 'no' }}
+       # EXTERNAL_SIGNING: 'no'
+       EXTERNAL_SIGNING: ${{ startsWith(github.ref, 'refs/tags/') && 'yes' || 'no' }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/checkout@v6
@@ -97,6 +97,12 @@ jobs:
           path: extensions
 
       # Setup
+      - name: Azure Login action
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
@@ -138,38 +144,18 @@ jobs:
           SIGNTOOL_CERT: ${{ secrets.SIGNTOOL_CERT }}
         run: ./mvnw --no-transfer-progress -B -DskipTests package -P-ext-dev -DpackExtensions -DpackImage
 
-      - name: Create artifact for SignPath (Windows)
-        id: upload-unsigned-binaries-artifact
-        uses: actions/upload-artifact@v6
+      - name: Sign Executables with Artifact Signing
+        uses: azure/artifact-signing-action@v1
         if: ${{ env.EXTERNAL_SIGNING == 'yes' && startsWith(github.ref, 'refs/tags/') && startsWith( matrix.os, 'windows' ) }}
         with:
-          name: binaries-to-sign-${{ matrix.os }}-${{ matrix.arch }}
-          path: modules/editor-gui/target/packages-image/*/*.exe
-          retention-days: 1
-
-      - name: Submit binaries to SignPath (Windows)
-        if: ${{ env.EXTERNAL_SIGNING == 'yes' && startsWith(github.ref, 'refs/tags/')  && startsWith(matrix.os, 'windows')}}
-        uses: signpath/github-action-submit-signing-request@v2
-        with:
-          api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
-          organization-id: '0ad9fcb4-6389-4e2b-a6a3-6974d3595766'
-          project-slug: 'pdf-metadata-editor'
-          signing-policy-slug: 'test-signing'
-          artifact-configuration-slug: 'gha-app-binaries'
-          github-artifact-id: '${{ steps.upload-unsigned-binaries-artifact.outputs.artifact-id }}'
-          wait-for-completion: true
-          output-artifact-directory: 'signed/'
-
-      - name: Copy over signed binaries
-        if: ${{ env.EXTERNAL_SIGNING == 'yes' && startsWith(github.ref, 'refs/tags/')  && startsWith(matrix.os, 'windows')}}
-        shell: bash
-        run: |
-          echo "--- signed"
-          find signed/
-          echo "--- packages-image"
-          rm -v modules/editor-gui/target/packages-image/*/*.exe
-          echo "--- COPY"
-          cp -v signed/*/*.exe modules/editor-gui/target/packages-image/*/
+          endpoint: https://neu.codesigning.azure.net/
+          signing-account-name: broken-by-design
+          certificate-profile-name: pdf-metadata-editor
+          files-folder: '${{ github.workspace }}\modules\editor-gui\target\packages-image\Pdf Metadata Editor\'
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
 
       - name: Build Editor Installers
         env:
@@ -185,10 +171,15 @@ jobs:
         if: ${{ startsWith( matrix.os, 'macos' ) }}
         run: rm -f modules/editor-gui/target/default._*.dmg
 
-      - name: Make sure we release JAR file from only one OS
+      - name: Build Uber JAR
         # Until the uber jar is fixed, not JAR release
-        # if: ${{ !startsWith( matrix.os, 'ubuntu' ) }}
-        run: rm -f modules/editor-gui/target/*.jar
+        if: ${{ startsWith( matrix.os, 'ubuntu' ) }}
+        run: ./mvnw package -Dpackages.skip=true -DskipTests
+        shell: bash
+
+      - name: Make sure we release JAR file from only one OS
+        if: ${{ !startsWith( matrix.os, 'ubuntu' ) }}
+        run: rm -f modules/editor-gui/target/packages/*.jar
         shell: bash
 
       - name: Save Release Files
@@ -199,17 +190,18 @@ jobs:
           path: modules/**/target/packages/* # or path/to/artifact
           retention-days: 1
 
-      - name: Submit installers to SignPath (Windows)
-        if: ${{ env.EXTERNAL_SIGNING == 'yes' && startsWith(github.ref, 'refs/tags/')  && startsWith(matrix.os, 'windows')}}
-        uses: signpath/github-action-submit-signing-request@v2
+      - name: Sign Installers with Artifact Signing
+        uses: azure/artifact-signing-action@v1
+        if: ${{ env.EXTERNAL_SIGNING == 'yes' && startsWith(github.ref, 'refs/tags/') && startsWith( matrix.os, 'windows' ) }}
         with:
-          api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
-          organization-id: '0ad9fcb4-6389-4e2b-a6a3-6974d3595766'
-          project-slug: 'pdf-metadata-editor'
-          signing-policy-slug: 'test-signing'
-          artifact-configuration-slug: 'gha-app-installers'
-          github-artifact-id: '${{ steps.upload-release-files.outputs.artifact-id }}'
-          wait-for-completion: true
+          endpoint: https://neu.codesigning.azure.net/
+          signing-account-name: broken-by-design
+          certificate-profile-name: pdf-metadata-editor
+          files-folder: '${{ github.workspace }}\modules\editor-gui\target\packages\'
+          files-folder-filter: exe,msi
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
 
       - name: Save Test Logs
         uses: actions/upload-artifact@v6
