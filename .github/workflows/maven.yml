@@ -144,7 +144,8 @@ jobs:
           SIGNTOOL_CERT: ${{ secrets.SIGNTOOL_CERT }}
         run: ./mvnw --no-transfer-progress -B -DskipTests package -P-ext-dev -DpackExtensions -DpackImage
 
-      - name: List files for signing
+      - name: Permissions of files for signing
+        if: ${{ startsWith( matrix.os, 'windows' ) }}
         shell: bash
         run: 'chmod +w  "modules/editor-gui/target/packages-image/Pdf Metadata Editor/"*.exe'
 
