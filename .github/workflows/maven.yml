@@ -144,6 +144,10 @@ jobs:
           SIGNTOOL_CERT: ${{ secrets.SIGNTOOL_CERT }}
         run: ./mvnw --no-transfer-progress -B -DskipTests package -P-ext-dev -DpackExtensions -DpackImage
 
+      - name: List files for signing
+        run: 'ls -lah  "modules/editor-gui/target/packages-image/Pdf Metadata Editor/"'
+
+
       - name: Sign Executables with Artifact Signing
         uses: azure/artifact-signing-action@v1
         if: ${{ env.EXTERNAL_SIGNING == 'yes' && startsWith(github.ref, 'refs/tags/') && startsWith( matrix.os, 'windows' ) }}
@@ -182,14 +186,6 @@ jobs:
         run: rm -f modules/editor-gui/target/packages/*.jar
         shell: bash
 
-      - name: Save Release Files
-        uses: actions/upload-artifact@v6
-        id: upload-release-files
-        with:
-          name: release-files-${{ matrix.os }}-${{ matrix.arch }}
-          path: modules/**/target/packages/* # or path/to/artifact
-          retention-days: 1
-
       - name: Sign Installers with Artifact Signing
         uses: azure/artifact-signing-action@v1
         if: ${{ env.EXTERNAL_SIGNING == 'yes' && startsWith(github.ref, 'refs/tags/') && startsWith( matrix.os, 'windows' ) }}
@@ -202,6 +198,14 @@ jobs:
           file-digest: SHA256
           timestamp-rfc3161: http://timestamp.acs.microsoft.com
           timestamp-digest: SHA256
+
+      - name: Save Release Files
+        uses: actions/upload-artifact@v6
+        id: upload-release-files
+        with:
+          name: release-files-${{ matrix.os }}-${{ matrix.arch }}
+          path: modules/**/target/packages/* # or path/to/artifact
+          retention-days: 1
 
       - name: Save Test Logs
         uses: actions/upload-artifact@v6
