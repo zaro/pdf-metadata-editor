@@ -145,6 +145,7 @@ jobs:
         run: ./mvnw --no-transfer-progress -B -DskipTests package -P-ext-dev -DpackExtensions -DpackImage
 
       - name: List files for signing
+        shell: bash
         run: 'ls -lah  "modules/editor-gui/target/packages-image/Pdf Metadata Editor/"'
 
       - name: Sign Executables with Artifact Signing
