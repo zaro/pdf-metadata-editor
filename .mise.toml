@@ -12,7 +12,10 @@ act = '0.2.84'
 
 [tasks.update-version]
 description = "Update version in child modules, from parent"
-run = "mvn -N versions:update-child-modules -DgenerateBackupPoms=false"
+run = [
+    "mvn -N versions:update-child-modules -DgenerateBackupPoms=false",
+    "scripts/update-metainfo-release.sh"
+]
 
 [tasks.build-jar]
 description = "Build Jar"
