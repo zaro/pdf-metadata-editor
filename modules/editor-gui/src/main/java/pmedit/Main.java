@@ -6,6 +6,7 @@ import pmedit.CommandLine.ParseError;
 import pmedit.prefs.GuiPreferences;
 import pmedit.prefs.LocalDataDir;
 import pmedit.prefs.Preferences;
+import pmedit.prefs.StartupPreferences;
 import pmedit.ui.BatchOperationWindow;
 import pmedit.ui.MainWindow;
 
@@ -41,6 +42,13 @@ public class Main {
             throwable.printStackTrace();
         });
     }
+    static public void setupStartupProperties(){
+        StartupPreferences prefs = StartupPreferences.load();
+        if(prefs.uiScale != null && !prefs.uiScale.isEmpty() && !prefs.uiScale.equals("default")) {
+            System.setProperty("sun.java2d.uiScale", prefs.uiScale);
+        }
+    }
+
     static final Logger LOG() { return LoggerFactory.getLogger(Main.class); }
 
     protected static int batchGuiCounter = 0;
@@ -174,6 +182,7 @@ public class Main {
 
 
     public static void main(final String[] args) {
+        setupStartupProperties();
 
         if (OsCheck.isWindows()) {
             boolean alreadyRunning = WindowsSingletonApplication.isAlreadyRunning();

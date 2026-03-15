@@ -64,6 +64,16 @@ public class SerDeslUtils {
         }
     }
 
+    public static <T> T fromJsonFile(File file, Class<T> clazz){
+        try {
+            return jsonMapper().readValue(file, clazz);
+        } catch (IOException e) {
+            LOG().error("fromJsonFile", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+
     public static List<HashMap<String, Object>> listFromJSON(String jsonString) {
         try {
             return  jsonMapper().readerForListOf(HashMap.class).readValue(jsonString);

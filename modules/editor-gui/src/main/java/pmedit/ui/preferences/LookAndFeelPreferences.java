@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import pmedit.OsCheck;
 import pmedit.WindowsRegisterContextMenu;
 import pmedit.prefs.GuiPreferences;
+import pmedit.prefs.StartupPreferences;
+import pmedit.ui.components.TextPaneWithLinks;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -30,6 +32,9 @@ public class LookAndFeelPreferences {
     public JButton registerContextMenu;
     public JButton unregisterContextMenu;
     public JCheckBox osFileChooser;
+    public JComboBox uiScale;
+
+    StartupPreferences startupPreferences;
 
     public record LaF(String name, String className) {
         public @NotNull String toString() {
@@ -100,6 +105,30 @@ public class LookAndFeelPreferences {
             unregisterContextMenu.setEnabled(false);
         }
 
+        startupPreferences = StartupPreferences.load();
+        if (startupPreferences.uiScale != null && !startupPreferences.uiScale.isEmpty()) {
+            uiScale.setSelectedItem(startupPreferences.uiScale);
+        }
+        uiScale.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String value = (String) uiScale.getModel().getSelectedItem();
+                if (value == null || value.isEmpty()) {
+                    value = "default";
+                }
+                if (!value.equals("default")) {
+                    // Try to parse as float
+                    try {
+                        Float.parseFloat(value);
+                    } catch (NumberFormatException ex) {
+                        JOptionPane.showMessageDialog((Component) e.getSource(), "Invalid scale format, must be floating point number", "Invalid Scale", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                }
+                startupPreferences.uiScale = value;
+                startupPreferences.store();
+            }
+        });
     }
 
 
@@ -150,20 +179,20 @@ public class LookAndFeelPreferences {
      */
     private void $$$setupUI$$$() {
         topPanel = new JPanel();
-        topPanel.setLayout(new GridLayoutManager(7, 2, new Insets(10, 10, 10, 10), -1, -1));
+        topPanel.setLayout(new GridLayoutManager(8, 3, new Insets(10, 10, 10, 10), -1, -1));
         final JLabel label1 = new JLabel();
         label1.setText("Select Look And Feel");
         topPanel.add(label1, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer1 = new Spacer();
-        topPanel.add(spacer1, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        topPanel.add(spacer1, new GridConstraints(7, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         lookAndFeelSelection = new JComboBox();
-        topPanel.add(lookAndFeelSelection, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        topPanel.add(lookAndFeelSelection, new GridConstraints(1, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer2 = new Spacer();
         topPanel.add(spacer2, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel1 = new JPanel();
         panel1.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
         panel1.setEnabled(false);
-        topPanel.add(panel1, new GridConstraints(5, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        topPanel.add(panel1, new GridConstraints(6, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         panel1.setBorder(BorderFactory.createTitledBorder(null, "Windows Explorer Context Menu Integration", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
         registerContextMenu = new JButton();
         registerContextMenu.setText("Install");
@@ -174,16 +203,33 @@ public class LookAndFeelPreferences {
         unregisterContextMenu.setText("Remove");
         panel1.add(unregisterContextMenu, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer4 = new Spacer();
-        topPanel.add(spacer4, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        topPanel.add(spacer4, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         osFileChooser = new JCheckBox();
         osFileChooser.setSelected(true);
         osFileChooser.setText("Use OS native file chooser");
-        topPanel.add(osFileChooser, new GridConstraints(2, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        topPanel.add(osFileChooser, new GridConstraints(2, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label2 = new JLabel();
         Font label2Font = this.$$$getFont$$$(null, Font.ITALIC, -1, label2.getFont());
         if (label2Font != null) label2.setFont(label2Font);
         label2.setText("Restart is required for these options to take effect");
-        topPanel.add(label2, new GridConstraints(3, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        topPanel.add(label2, new GridConstraints(4, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label3 = new JLabel();
+        label3.setText("UI Scale factor");
+        topPanel.add(label3, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        uiScale = new JComboBox();
+        uiScale.setEditable(true);
+        final DefaultComboBoxModel defaultComboBoxModel1 = new DefaultComboBoxModel();
+        defaultComboBoxModel1.addElement("default");
+        defaultComboBoxModel1.addElement("1.0");
+        defaultComboBoxModel1.addElement("1.25");
+        defaultComboBoxModel1.addElement("1.5");
+        defaultComboBoxModel1.addElement("1.75");
+        defaultComboBoxModel1.addElement("2.0");
+        uiScale.setModel(defaultComboBoxModel1);
+        topPanel.add(uiScale, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final TextPaneWithLinks textPaneWithLinks1 = new TextPaneWithLinks();
+        textPaneWithLinks1.setText("<html>\n  <head>\n    \n  </head>\n  <body>\n    <p style=\"margin-top: 0\">\n      <a href=\"https://docs.oracle.com/en/java/javase/25/troubleshoot/java-2d-properties.html#GUID-9A2EB40F-0534-47A1-B5CA-62828ABD52F9\">Explanation</a>\n    </p>\n  </body>\n</html>\n");
+        topPanel.add(textPaneWithLinks1, new GridConstraints(3, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
     }
 
     /**
