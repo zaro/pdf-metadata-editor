@@ -102,6 +102,8 @@ public class MetadataInfo implements MetadataCollection{
     public boolean removeDocumentInfo;
     public boolean removeXmp;
 
+    public List<Warning> warnings;
+
 
     public MetadataInfo() {
         super();
@@ -242,6 +244,8 @@ public class MetadataInfo implements MetadataCollection{
         this.viewerEnabled = new ViewerOptionsEnabled();
         this.fileEnabled = new FileInfoEnabled();
         this.propEnabled = new PdfPropertiesEnabled();
+
+        warnings = new ArrayList<>();
     }
 
     public AccessPermission getAccessPermissions(){
@@ -1535,5 +1539,6 @@ public class MetadataInfo implements MetadataCollection{
 
     }
 
+    public record Warning(String msg, Throwable exception){}
 
 }

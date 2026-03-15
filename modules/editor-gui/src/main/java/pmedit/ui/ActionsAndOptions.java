@@ -2,7 +2,6 @@ package pmedit.ui;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
-import pmedit.EncryptionOptions;
 import pmedit.MetadataInfo;
 import pmedit.ext.PmeExtension;
 import pmedit.preset.PresetStore;
@@ -14,11 +13,9 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeSupport;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Vector;
-import java.util.stream.Collectors;
 
 public class ActionsAndOptions {
     public JPanel topPanel;
@@ -39,7 +36,9 @@ public class ActionsAndOptions {
     public JButton xmpClearButton;
     public JRadioButton copyDocToXmpRadioButton;
     public JRadioButton copyXmpToDocRadioButton;
+    public JButton successfullyLoadedButton;
     public EncryptionOptionsDialog encryptionOptionsDialog;
+    public ShowWarnings showWarningsDialog;
     public MetadataInfo metadataInfo;
 
     void createUIComponents() {
@@ -86,6 +85,13 @@ public class ActionsAndOptions {
                 firePropertyChange("prop.encryption", old, newV);
             }
         });
+        successfullyLoadedButton.addActionListener(e -> {
+            showWarningsDialog = new ShowWarnings((JFrame) SwingUtilities.windowForComponent(topPanel), metadataInfo.warnings);
+            SwingUtilities.invokeLater(() -> {
+                showWarningsDialog.setVisible(true);
+
+            });
+        });
     }
 
     protected EncryptionOptionsDialog getEncryptionOptionsDialog() {
@@ -116,6 +122,16 @@ public class ActionsAndOptions {
                 fill();
             }
         });
+
+        if (metadataInfo.warnings.isEmpty()) {
+            successfullyLoadedButton.setText("Successfully Loaded");
+            successfullyLoadedButton.setEnabled(false);
+            successfullyLoadedButton.setForeground(null);
+        } else {
+            successfullyLoadedButton.setText(String.format("%d Warning(s)", metadataInfo.warnings.size()));
+            successfullyLoadedButton.setEnabled(true);
+            successfullyLoadedButton.setForeground(Color.RED);
+        }
     }
 
     protected void fill() {
@@ -168,7 +184,6 @@ public class ActionsAndOptions {
         fill();
         pdfVersion.setEnabled(b);
 
-
     }
 
     /**
@@ -183,7 +198,7 @@ public class ActionsAndOptions {
         topPanel = new JPanel();
         topPanel.setLayout(new GridLayoutManager(4, 5, new Insets(0, 0, 0, 0), 3, -1));
         final JPanel panel1 = new JPanel();
-        panel1.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        panel1.setLayout(new GridLayoutManager(2, 2, new Insets(0, 0, 0, 0), -1, -1));
         topPanel.add(panel1, new GridConstraints(3, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));
         final JLabel label1 = new JLabel();
         label1.setText("as PDF Version");
@@ -196,6 +211,12 @@ public class ActionsAndOptions {
         defaultComboBoxModel1.addElement("1.7");
         pdfVersion.setModel(defaultComboBoxModel1);
         panel1.add(pdfVersion, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        successfullyLoadedButton = new JButton();
+        successfullyLoadedButton.setActionCommand("Successfully Loaded");
+        successfullyLoadedButton.setBorderPainted(false);
+        successfullyLoadedButton.setEnabled(false);
+        successfullyLoadedButton.setText("No File Loaded");
+        panel1.add(successfullyLoadedButton, new GridConstraints(1, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel2 = new JPanel();
         panel2.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), 0, -1));
         topPanel.add(panel2, new GridConstraints(1, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));
