@@ -61,7 +61,7 @@
             <properties/>
             <border type="none"/>
             <children>
-              <component id="3db9c" class="javax.swing.JTextArea" binding="warnings">
+              <component id="a1194" class="pmedit.ui.components.TextPaneWithLinks" binding="warnings">
                 <constraints/>
                 <properties/>
               </component>

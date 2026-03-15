@@ -1539,6 +1539,29 @@ public class MetadataInfo implements MetadataCollection{
 
     }
 
-    public record Warning(String msg, Throwable exception){}
+    public record Warning(Type type, String msg, Throwable exception){
+        public enum Type{
+            NORMAL,
+            SEVERE,
+            CRITICAL
+        }
+
+        public String getColor() {
+            return switch (type){
+                case NORMAL -> "#000000";
+                case SEVERE -> "#FFA500";
+                case CRITICAL -> "#FF0000";
+            };
+        }
+
+        public boolean moreSevereThan(Warning other){
+            if(type == other.type){ return false; }
+            if(type == Type.NORMAL){
+                return true;
+            }
+            if(type == Type.SEVERE){ return other.type ==Type.CRITICAL; }
+            return false;
+        }
+    }
 
 }

@@ -130,7 +130,8 @@ public class ActionsAndOptions {
         } else {
             successfullyLoadedButton.setText(String.format("%d Warning(s)", metadataInfo.warnings.size()));
             successfullyLoadedButton.setEnabled(true);
-            successfullyLoadedButton.setForeground(Color.RED);
+            String color = metadataInfo.warnings.stream().reduce((result, element) -> element.moreSevereThan(result) ? element : result).get().getColor();
+            successfullyLoadedButton.setForeground(Color.decode(color));
         }
     }
 

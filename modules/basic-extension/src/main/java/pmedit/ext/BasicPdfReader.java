@@ -237,7 +237,7 @@ public class BasicPdfReader implements PdfReader{
                 }
             }catch (XmpParsingException e){
                 LOG.error("Failed to parse XMP metadata, invalid XML", e);
-                md.warnings.add(new MetadataInfo.Warning("Failed to parse XMP metadata, invalid XML", e));
+                md.warnings.add(new MetadataInfo.Warning(MetadataInfo.Warning.Type.CRITICAL, "Failed to parse XMP metadata, invalid XML", e));
             }
         }
 

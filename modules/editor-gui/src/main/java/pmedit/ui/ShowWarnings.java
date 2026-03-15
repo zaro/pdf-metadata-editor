@@ -4,6 +4,7 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import pmedit.MetadataInfo;
+import pmedit.ui.components.TextPaneWithLinks;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -16,7 +17,7 @@ import java.util.List;
 public class ShowWarnings extends JDialog {
     private JPanel contentPane;
     private JButton buttonOK;
-    public JTextArea warnings;
+    public TextPaneWithLinks warnings;
 
     public ShowWarnings() {
         this(null, null);
@@ -32,7 +33,7 @@ public class ShowWarnings extends JDialog {
 
         StringBuilder sb = new StringBuilder();
         for (MetadataInfo.Warning warn : warningList) {
-            sb.append(warn.msg()).append("\n  Error: ").append(warn.exception().getMessage()).append("\n");
+            sb.append("<div><font color=\"").append(warn.getColor()).append("\"><b>").append(warn.msg()).append("</b></font><br>\n  Error: <font>").append(warn.exception().getMessage()).append("</font></div>\n");
         }
         warnings.setText(sb.toString());
 
@@ -84,7 +85,7 @@ public class ShowWarnings extends JDialog {
         panel3.add(spacer2, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JScrollPane scrollPane1 = new JScrollPane();
         panel3.add(scrollPane1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        warnings = new JTextArea();
+        warnings = new TextPaneWithLinks();
         scrollPane1.setViewportView(warnings);
     }
 
