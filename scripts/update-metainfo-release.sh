@@ -11,7 +11,7 @@ if echo "$VERSION" | grep -qi 'SNAPSHOT'; then
     exit 0
 fi
 
-if echo "$VERSION" | grep -qiE '.*-(alpha|beta|rc|cr|a|b)[0-9]*'; then
+if echo "$VERSION" | grep -qiE '(alpha|beta|rc)[0-9]*$'; then
     echo "Version $VERSION is not stable (has qualifier), skipping metainfo update"
     exit 0
 fi
