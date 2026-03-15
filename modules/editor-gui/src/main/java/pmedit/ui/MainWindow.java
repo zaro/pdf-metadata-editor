@@ -666,11 +666,16 @@ public class MainWindow extends JFrame implements ProgramWindow {
         JMenu helpMenu = new JMenu("Help");
         helpMenu.setMnemonic('H');
         JMenuItem viewHelp = new JMenuItem("View Help");
+        JMenuItem reportBug = new JMenuItem("Report Bug");
         JMenuItem website = new JMenuItem("Website");
         JMenuItem about = new JMenuItem("About");
 
         viewHelp.addActionListener(e -> {
             TextPaneWithLinks.openURL(WebsiteConstants.websiteUrl + (helpPage != null ? helpPage : "help/") + WebsiteConstants.hrefQuery);
+        });
+
+        reportBug.addActionListener(e -> {
+            TextPaneWithLinks.openURL(WebsiteConstants.websiteUrl + "report-bug/" + WebsiteConstants.hrefQuery);
         });
 
         website.addActionListener(e -> {
@@ -680,6 +685,7 @@ public class MainWindow extends JFrame implements ProgramWindow {
 
 
         helpMenu.add(viewHelp);
+        helpMenu.add(reportBug);
         helpMenu.add(website);
         helpMenu.add(about);
 
