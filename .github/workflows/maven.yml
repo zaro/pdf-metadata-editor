@@ -38,7 +38,7 @@ jobs:
           cache: maven
       # Run tests
       - name: Run Tests
-        uses: coactions/setup-xvfb@v1
+        uses: GabrielBB/xvfb-action@v1
         env:
           PME_LICENSE: ${{ secrets.PME_LICENSE }}
           JEMMY_TIMEOUT: 20000
@@ -131,7 +131,7 @@ jobs:
       # - run: sudo add-apt-repository -y main restricted universe multiverse
       # - run: sudo apt-get install -y libxtst6 libxrender1 libxi6 fakeroot rpm build-essential
       - name: Run Tests
-        uses: coactions/setup-xvfb@v1
+        uses: GabrielBB/xvfb-action@v1
         env:
           PME_LICENSE: ${{ secrets.PME_LICENSE }}
           NO_GUI_TESTS: ${{ contains( matrix.os, 'macos') }}
