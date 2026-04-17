@@ -8,6 +8,7 @@ public class WebsiteConstants {
     public static String downloadUrl = "https://pdf.metadata.care/download/";
     public static String contactFormUrl = "https://pdf.metadata.care/contact/";
     public static String batchLicenseUrl = "https://pdf.metadata.care/buy/";
+    public static String activateLicenseUrl = "https://pdf.metadata.care/help/pro-license/";
 
     public static String pdfCompressionHelp = "https://pdf.metadata.care/help/pdf-file-compression/";
 
