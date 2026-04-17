@@ -1557,11 +1557,20 @@ public class MetadataInfo implements MetadataCollection{
         public boolean moreSevereThan(Warning other){
             if(type == other.type){ return false; }
             if(type == Type.NORMAL){
-                return true;
+                return false;
             }
-            if(type == Type.SEVERE){ return other.type ==Type.CRITICAL; }
+            if(type == Type.SEVERE){ return other.type ==Type.NORMAL; }
             return false;
         }
+
+        public boolean hasError(){
+            return exception != null;
+        }
+
+        public String getErrorMessage(){
+            return hasError() ? exception.getMessage() : "";
+        }
+
     }
 
 }

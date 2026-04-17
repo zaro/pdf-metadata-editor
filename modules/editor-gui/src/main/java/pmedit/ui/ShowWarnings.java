@@ -33,7 +33,10 @@ public class ShowWarnings extends JDialog {
 
         StringBuilder sb = new StringBuilder();
         for (MetadataInfo.Warning warn : warningList) {
-            sb.append("<div><font color=\"").append(warn.getColor()).append("\"><b>").append(warn.msg()).append("</b></font><br>\n  Error: <font>").append(warn.exception().getMessage()).append("</font></div>\n");
+            sb.append("<div><font color=\"").append(warn.getColor()).append("\"><b>").append(warn.msg()).append("</b></font>");
+            if(warn.hasError()) {
+                sb.append("<br>Error: <font>").append(warn.getErrorMessage()).append("</font></div>\n");
+            }
         }
         warnings.setText(sb.toString());
 
