@@ -11,6 +11,7 @@ import org.apache.xmpbox.XMPMetadata;
 import org.apache.xmpbox.schema.AdobePDFSchema;
 import org.apache.xmpbox.schema.DublinCoreSchema;
 import org.apache.xmpbox.schema.XMPBasicSchema;
+import org.apache.xmpbox.xml.XmpParsingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pmedit.FileOptimizer;
@@ -137,7 +138,11 @@ public class BasicPdfWriter implements PdfWriter {
 
         XMPMetadata xmpOld = null;
         if (meta != null) {
-            xmpOld = MetadataInfoUtils.loadXMPMetadata(meta.createInputStream());
+            try {
+                xmpOld = MetadataInfoUtils.loadXMPMetadata(meta.createInputStream());
+            } catch (XmpParsingException e){
+                LOG.error("Failed to parse XMP metadata, invalid XML", e);
+            }
         }
         changes.xmpOld = xmpOld;
         XMPMetadata xmpNew = XMPMetadata.createXMPMetadata();
