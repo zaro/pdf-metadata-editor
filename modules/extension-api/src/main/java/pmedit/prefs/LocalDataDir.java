@@ -21,7 +21,10 @@ public class LocalDataDir {
             if (!tempDir.exists()) {
                 tempDir.mkdirs();
             }
-            return tempDir.getAbsolutePath();
+            // Keep the same convention as the non-test branch below: the
+            // result ends with a separator, so callers may append file names
+            // directly (e.g. Main.setupLogging).
+            return tempDir.getAbsolutePath() + File.separator;
         }
         return get() + File.separator + "pdf-metadata-editor" + File.separator;
     }
