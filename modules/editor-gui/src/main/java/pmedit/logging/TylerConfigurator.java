@@ -6,7 +6,6 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.Configurator;
 import ch.qos.logback.classic.tyler.TylerConfiguratorBase;
 import ch.qos.logback.core.ConsoleAppender;
-import ch.qos.logback.core.FileAppender;
 
 /**
  *
@@ -57,7 +56,7 @@ public class TylerConfigurator extends TylerConfiguratorBase implements Configur
     /**
      * Appender variable referencing the appender named "FILE".
      */
-    protected FileAppender appenderFILE;
+    protected RotatingOnStartFileAppender appenderFILE;
 
     /**
      * Appender variable referencing the appender named "STDOUT".
@@ -106,8 +105,8 @@ public class TylerConfigurator extends TylerConfiguratorBase implements Configur
         return appender;
     }
 
-    FileAppender setupAppenderFILE() {
-        FileAppender appender = new FileAppender();
+    RotatingOnStartFileAppender setupAppenderFILE() {
+        RotatingOnStartFileAppender appender = new RotatingOnStartFileAppender();
         appender.setContext(context);
         appender.setName("FILE");
         appender.setFile(subst("${LOG_FILE}"));

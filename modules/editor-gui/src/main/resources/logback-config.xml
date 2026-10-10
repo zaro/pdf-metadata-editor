@@ -15,8 +15,21 @@
         </then>
     </if>
 
-    <!-- File appender -->
-    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+    <!-- ======================================================================
+     File appender — rotates the previous runs' logs on startup.
+     Uses a custom class (pmedit.logging.RotatingOnStartFileAppender) that
+     shifts log.txt -> log.1.txt ... -> log.5.txt BEFORE opening the file,
+     keeping the last LogRotator.KEEP_RUNS runs for troubleshooting.
+
+     REGENERATION WARNING (logback-tyler up to 1.0.3): the translator drops
+     the generated setupAppenderFILE() method for custom appender classes
+     (implicit <encoder> elements fail), leaving a compile error. If
+     TylerConfigurator is regenerated, restore the FILE appender method by
+     hand (see RotatingOnStartFileAppender / LogRotator) and do NOT replace
+     this class with ch.qos.logback.core.FileAppender — that would silently
+     remove the run-log rotation.
+     ====================================================================== -->
+    <appender name="FILE" class="pmedit.logging.RotatingOnStartFileAppender">
         <file>${LOG_FILE}</file>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>[%d{yyyy-MM-dd HH:mm:ss}] [%-5level] [%logger{36}] - %msg%n</pattern>
