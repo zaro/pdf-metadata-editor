@@ -1,0 +1,23 @@
+name: Trigger Flathub manifest update
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  dispatch:
+    # Stable releases only - pre-releases don't go to Flathub
+    if: ${{ !github.event.release.prerelease }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch release info to flathub repo
+        env:
+          FLATHUB_TOKEN: ${{ secrets.FLATHUB_REPO_TOKEN }}
+        run: |
+          curl -fsS \
+            -X POST \
+            -H "Authorization: Bearer ${FLATHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -d '{"event_type":"update-version","client_payload":{"version":"${{ github.event.release.tag_name }}"}}' \
+            https://api.github.com/repos/flathub/me.broken_by.PdfMetadataEditor/dispatches
