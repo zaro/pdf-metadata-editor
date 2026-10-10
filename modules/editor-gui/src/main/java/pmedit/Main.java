@@ -36,6 +36,10 @@ public class Main {
         if (!isCli) {
             System.out.println("Logfile location: " + System.getProperty("logFileName", "<UNSET>"));
         }
+        // Materialize the logback configuration now that logFileName is set,
+        // so any logger used later in startup writes to the configured file,
+        // and the previous runs' log rotation runs against the right file.
+        LoggerFactory.getILoggerFactory();
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
             LOG().error("Uncaught exception in thread: {}", thread.getName(), throwable);
             System.err.println("Uncaught exception in thread: " + thread.getName());
@@ -182,12 +186,19 @@ public class Main {
 
 
     public static void main(final String[] args) {
+        boolean alreadyRunning = false;
+        if (OsCheck.isWindows()) {
+            alreadyRunning = WindowsSingletonApplication.isAlreadyRunning();
+        }
+        // Configure logging before anything that might log during startup
+        // (startup preferences, JSON parsing and plugin loading all create
+        // slf4j loggers). Otherwise logback would initialize with the default
+        // "application.log" instead of the configured log file, and the
+        // run-log rotation would apply to the wrong file.
+        setupLogging(alreadyRunning, false);
         setupStartupProperties();
 
         if (OsCheck.isWindows()) {
-            boolean alreadyRunning = WindowsSingletonApplication.isAlreadyRunning();
-            setupLogging(alreadyRunning, false);
-
             if (alreadyRunning) {
                 LOG().info("WindowsSingletonApplication.isAlreadyRunning() = true");
                 boolean result = new NamedPipeCommunicator().sendArgumentsToServer(args);
@@ -206,8 +217,6 @@ public class Main {
 
                 });
             }
-        } else {
-            setupLogging(false, false);
         }
 
         CommandLine cmdLine = null;
