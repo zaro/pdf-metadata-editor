@@ -1,5 +1,8 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Main" type="Application" factoryName="Application">
+    <option name="envFilePaths">
+      <option value="$PROJECT_DIR$/.env" />
+    </option>
     <option name="MAIN_CLASS_NAME" value="pmedit.Main" />
     <module name="pdf-metadata-editor" />
     <option name="VM_PARAMETERS" value="-DdevLog=true --enable-native-access=ALL-UNNAMED" />
