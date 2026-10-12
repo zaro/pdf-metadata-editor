@@ -3,28 +3,68 @@ name: Submit to Microsoft Store
 on:
   release:
     types: [released]   # fires when a draft is published
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release tag to submit (e.g. v4.4.0). Required for manual runs.'
+        required: false
 
 jobs:
   store:
     # Actually skip pre-releases (the `released` event also fires for them)
     if: ${{ !github.event.release.prerelease }}
     runs-on: windows-latest
+    # The win32 action polls module status forever on modulenotready;
+    # bound the job so a stuck run fails with a clear timeout instead of
+    # burning the default 6h.
+    timeout-minutes: 60
     steps:
-      # The Store rejects URLs that redirect (e.g. GitHub release assets).
-      # Serve both installers through the pdf.metadata.care proxy, which
-      # streams the file directly (no redirects), keyed by release tag name.
+      # Fail fast with a clear message if the submission module is not ready
+      # (previous submission still in review, or package changes not saved),
+      # instead of letting the action's "Waiting 10 seconds" loop spin.
+      - name: Check submission module status
+        shell: pwsh
+        env:
+          TENANT_ID: ${{ secrets.TENANT_ID }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          SELLER_ID: ${{ secrets.SELLER_ID }}
+          PRODUCT_ID: ${{ secrets.PRODUCT_ID }}
+        run: |
+          $token = (Invoke-RestMethod -Method Post -Uri "https://login.microsoftonline.com/$env:TENANT_ID/oauth2/v2.0/token" -Body @{
+            grant_type = "client_credentials"
+            client_id = $env:CLIENT_ID
+            client_secret = $env:CLIENT_SECRET
+            scope = "https://api.store.microsoft.com/.default"
+          } -ContentType "application/x-www-form-urlencoded").access_token
+          $headers = @{ Authorization = "Bearer $token"; "X-Seller-Account-Id" = $env:SELLER_ID }
+          $status = Invoke-RestMethod -Headers $headers -Uri "https://api.store.microsoft.com/submission/v1/product/$env:PRODUCT_ID/status"
+          if ($status.responseData.isReady -ne $true) {
+            $codes = ($status.errors | ForEach-Object { $_.code }) -join ", "
+            Write-Host "::error::Submission module not ready ($codes). Check Partner Center: no submission may be in progress and all package changes must be saved (Save all), then re-run."
+            exit 1
+          }
+          Write-Host "Submission module is ready."
+
       - name: Build product update payload
         id: update
         shell: pwsh
         env:
           ASSETS: ${{ toJson(github.event.release.assets) }}
         run: |
-          $assets = $env:ASSETS | ConvertFrom-Json
-          $x64 = $assets | Where-Object { $_.name -like '*-amd64.msi' }
-          $arm = $assets | Where-Object { $_.name -like '*-arm64.msi' }
-          if (-not $x64) { throw "No amd64 .msi asset found on this release" }
-          if (-not $arm) { throw "No arm64 .msi asset found on this release" }
           $tag = "${{ github.event.release.tag_name }}"
+          if ([string]::IsNullOrEmpty($tag)) { $tag = "${{ inputs.version }}" }
+          if ([string]::IsNullOrEmpty($tag)) { throw "No version: on workflow_dispatch provide the 'version' input (e.g. v4.4.0)" }
+
+          $assets = $env:ASSETS
+          if ($assets -and $assets -ne 'null') {
+            $releaseAssets = $assets | ConvertFrom-Json
+            if (-not ($releaseAssets | Where-Object { $_.name -like '*-amd64.msi' })) { throw "No amd64 .msi asset found on this release" }
+            if (-not ($releaseAssets | Where-Object { $_.name -like '*-arm64.msi' })) { throw "No arm64 .msi asset found on this release" }
+          } else {
+            Write-Host "workflow_dispatch run: skipping release-asset existence check"
+          }
+
           $base = "https://pdf.metadata.care/microsoft-store-files/$tag/msi"
           # Full module update: BOTH packages must be present in one payload,
           # otherwise the missing architecture is dropped from the submission.
