@@ -28,11 +28,14 @@ jobs:
           $base = "https://pdf.metadata.care/microsoft-store-files/$tag/msi"
           # Full module update: BOTH packages must be present in one payload,
           # otherwise the missing architecture is dropped from the submission.
-          $packages = @(
-            @{ packageUrl = "$base/amd64/"; languages = @('en'); architectures = @('X64');   isSilentInstall = $true; packageType = 'msi' },
-            @{ packageUrl = "$base/arm64/"; languages = @('en'); architectures = @('Arm64'); isSilentInstall = $true; packageType = 'msi' }
-          ) | ConvertTo-Json -Depth 4 -Compress
-          "product-update=$packages" >> $env:GITHUB_OUTPUT
+          # The API expects {"packages":[...]}, not a bare array.
+          $productUpdate = @{
+            packages = @(
+              @{ packageUrl = "$base/amd64/"; languages = @('en'); architectures = @('X64');   isSilentInstall = $true; packageType = 'msi' },
+              @{ packageUrl = "$base/arm64/"; languages = @('en'); architectures = @('Arm64'); isSilentInstall = $true; packageType = 'msi' }
+            )
+          } | ConvertTo-Json -Depth 4 -Compress
+          "product-update=$productUpdate" >> $env:GITHUB_OUTPUT
 
       - name: Configure Store credentials
         uses: microsoft/store-submission@v1
