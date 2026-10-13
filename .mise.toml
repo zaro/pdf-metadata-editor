@@ -14,6 +14,10 @@ act = '0.2.84'
 description = "Validate version, propagate to child modules, update package metadata"
 run = "scripts/update-version.sh"
 
+[tasks.tag-release]
+description = "Validate version, commit version files, create and push the v<version> release tag"
+run = "scripts/tag-release.sh"
+
 [tasks.build-jar]
 description = "Build Jar"
 run = "mvn package -Dpackages.skip=true -DskipTests"
