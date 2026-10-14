@@ -1,0 +1,7 @@
+#!/bin/sh
+HERE=$(dirname "$(readlink -f "$0")")
+case "$(basename "$ARGV0")" in
+  pmedit-cli) exec "$HERE/Pdf Metadata Editor/bin/pmedit-cli" "$@" ;;
+  "Batch Pdf Metadata Editor") exec "$HERE/Pdf Metadata Editor/bin/Batch Pdf Metadata Editor" "$@" ;;
+  *) exec "$HERE/Pdf Metadata Editor/bin/Pdf Metadata Editor" "$@" ;;
+esac

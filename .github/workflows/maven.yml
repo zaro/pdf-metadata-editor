@@ -172,30 +172,7 @@ jobs:
       - name: Build AppImage
         if: ${{ startsWith( matrix.os, 'ubuntu' ) }}
         shell: bash
-        run: |
-          set -euo pipefail
-          cd modules/editor-gui/target/packages
-          TAR="$(ls pdf-metadata-editor-*-linux-portable.tar.gz | head -1)"
-          VERSION="$(echo "$TAR" | sed -E 's/pdf-metadata-editor-([0-9.]+)-.*/\1/')"
-          # Custom AppRun: expose all three launchers via symlink names
-          cat > AppRun <<'EOF'
-          #!/bin/sh
-          HERE=$(dirname "$(readlink -f "$0")")
-          case "$(basename "$ARGV0")" in
-            pmedit-cli) exec "$HERE/Pdf Metadata Editor/bin/pmedit-cli" "$@" ;;
-            "Batch Pdf Metadata Editor") exec "$HERE/Pdf Metadata Editor/bin/Batch Pdf Metadata Editor" "$@" ;;
-            *) exec "$HERE/Pdf Metadata Editor/bin/Pdf Metadata Editor" "$@" ;;
-          esac
-          EOF
-          chmod +x AppRun
-          curl -fsSL -o portable2appimage \
-            https://raw.githubusercontent.com/ivan-hc/portable2appimage/1.1.5/portable2appimage
-          chmod +x portable2appimage
-          export PATH="$PWD:$PATH" APPIMAGE_EXTRACT_AND_RUN=1
-          export arch="$( [ "${{ matrix.arch }}" = "arm" ] && echo aarch64 || echo x86_64 )"
-          UPINFO="zaro|pdf-metadata-editor|latest" \
-            ./portable2appimage "$TAR" "Pdf Metadata Editor" "$VERSION"
-          rm -rf ./*.AppDir ./*-workdir.tmp portable2appimage AppRun
+        run: appimage/build.sh
 
       # Publish
       - name: Get Version
