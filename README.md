@@ -17,6 +17,24 @@ flatpak install flathub me.broken_by.PdfMetadataEditor
 ```
     
 
+### AppImage (Linux)
+
+Download the AppImage for your architecture (`x86_64` or `aarch64`) from the
+[download page](https://pdf.metadata.care/download/), then:
+
+```sh
+chmod +x Pdf_Metadata_Editor-*.AppImage
+./Pdf_Metadata_Editor-*.AppImage
+```
+
+The command line interface (and the batch launcher) are reachable through
+symlinks with the respective name:
+
+```sh
+ln -s Pdf_Metadata_Editor-*.AppImage pmedit-cli
+./pmedit-cli --help
+```
+
 ### Arch Linux (AUR)
 
 Arch Linux users can install the package from the AUR.
