@@ -3,6 +3,7 @@ package pmedit;
 import org.slf4j.LoggerFactory;
 import pmedit.CommandLine.ParseError;
 import pmedit.ext.PmeExtension;
+import pmedit.mcp.McpMain;
 
 import java.io.File;
 
@@ -23,10 +24,21 @@ public class MainCli {
                     "       --releaseLicense           release current Pro license and quit\n" +
                     "       --showLicense              show current Pro license and quit\n" +
                     "       --offline                  set/release Pro license in offline mode\n" +
+                    "       --mcp                      start a Model Context Protocol server on stdin/stdout\n" +
+                    "       --mcp-root=DIR             root directory for MCP file access (default: current directory)\n" +
+                    "       --mcp-read-only            disable mutating MCP tools\n" +
                     "\n" +
                     "COMMANDS\n" +
                     "\n" +
                     CommandDescription.helpMessage(32) +
+                    "\n" +
+                    "MCP SERVER\n" +
+                    "\n" +
+                    "  pmedit-cli --mcp [--mcp-root=DIR] [--mcp-read-only]\n" +
+                    "\n" +
+                    "  Starts a Model Context Protocol server over stdin/stdout. All paths passed\n" +
+                    "  to MCP tools are resolved relative to --mcp-root (default: current working\n" +
+                    "  directory) and may not escape it. Mutating tools require a Pro license.\n" +
                     "\n" +
                     "METADATA FIELDS\n" +
                     "\n" +
@@ -67,6 +79,10 @@ public class MainCli {
     public static void executeCommand(final CommandLine cmdLine) {
         if (cmdLine.showHelp) {
             System.out.print(helpMessage);
+            return;
+        }
+        if (cmdLine.mcp) {
+            McpMain.run(cmdLine);
             return;
         }
         ActionStatus status = new ActionStatus() {

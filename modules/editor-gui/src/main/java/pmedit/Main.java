@@ -184,8 +184,24 @@ public class Main {
         return batchInstances.size() + editorInstances.size();
     }
 
+    private static boolean containsMcpFlag(final String[] args) {
+        for (String arg : args) {
+            if ("--mcp".equalsIgnoreCase(arg) || "-mcp".equalsIgnoreCase(arg)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     public static void main(final String[] args) {
+        // Handle the MCP server before the GUI / single-instance logic so that
+        // Windows does not forward the flag to an already running editor.
+        if (containsMcpFlag(args)) {
+            MainCli.main(args);
+            return;
+        }
+
         boolean alreadyRunning = false;
         if (OsCheck.isWindows()) {
             alreadyRunning = WindowsSingletonApplication.isAlreadyRunning();

@@ -15,6 +15,9 @@ public class CommandLine extends  CommandLineOptions {
     public boolean offline;
     public boolean showLicense;
     public String outputDir;
+    public boolean mcp = false;
+    public String mcpRoot;
+    public boolean mcpReadOnly = false;
     public CommandLine() {
     }
     public CommandLine(List<String> fileList) {
@@ -125,6 +128,15 @@ public class CommandLine extends  CommandLineOptions {
                 cmdLine.showLicense=true;
             } else if (arg.equalsIgnoreCase("h") || arg.equalsIgnoreCase("help")) {
                 cmdLine.showHelp = true;
+            } else if (arg.equalsIgnoreCase("mcp")) {
+                cmdLine.mcp = true;
+            } else if (arg.equalsIgnoreCase("mcp-root")
+                    || arg.toLowerCase(Locale.ROOT).startsWith("mcp-root=")) {
+                OptionArgument oa = getOptionArgument(arg, i, args);
+                cmdLine.mcpRoot = oa.arg.trim();
+                i += oa.advance;
+            } else if (arg.equalsIgnoreCase("mcp-read-only")) {
+                cmdLine.mcpReadOnly = true;
             } else if (arg.equalsIgnoreCase("o") || arg.equalsIgnoreCase("outputDir")) {
                 if (i + 1 < args.size()) {
                     cmdLine.outputDir = args.get(i + 1);
@@ -205,6 +217,15 @@ public class CommandLine extends  CommandLineOptions {
         sb.append(", ");
         sb.append("showHelp=");
         sb.append(showHelp);
+        sb.append(", ");
+        sb.append("mcp=");
+        sb.append(mcp);
+        sb.append(", ");
+        sb.append("mcpRoot=");
+        sb.append(mcpRoot);
+        sb.append(", ");
+        sb.append("mcpReadOnly=");
+        sb.append(mcpReadOnly);
         sb.append(", ");
         sb.append("command=");
         sb.append(command != null ? command.name : "");
