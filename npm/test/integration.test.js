@@ -52,6 +52,9 @@ function runWrapper(args, environment, input) {
 }
 
 const jar = process.env.PDF_METADATA_EDITOR_JAR || builtJar();
+if (jar && !fs.existsSync(jar)) {
+  throw new Error(`PDF_METADATA_EDITOR_JAR does not exist: ${jar}`);
+}
 const java = process.env.PDF_METADATA_EDITOR_JAVA || 'java';
 const skip =
   !jar ? 'application JAR is not built' :

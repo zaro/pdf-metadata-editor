@@ -21,8 +21,9 @@ jobs:
       dist_tag: ${{ steps.version.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.release.tag_name || inputs.tag }}
+
+      - name: Verify npm wrapper
+        run: test -x npm/bin/pdf-metadata-editor-mcp.js
 
       - uses: actions/setup-node@v4
         with:

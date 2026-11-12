@@ -3,3 +3,6 @@ dist/
 lib/*.jar
 *.tgz
 !lib/version.js
+
+!bin/
+!bin/**
