@@ -310,7 +310,7 @@ public final class McpMetadata {
         }
         if (!options.licenseGate().getAsBoolean()) {
             throw new McpToolException(
-                    "Editing PDF metadata through MCP requires a Pro license. You can get one at "
+                    "Editing PDF metadata through MCP requires a license. You can get one at "
                             + WebsiteConstants.batchLicenseUrl);
         }
     }
@@ -391,7 +391,7 @@ public final class McpMetadata {
 
     private static String unsupportedFieldsWarning() {
         return "The active extension may not support some requested fields "
-                + "(encryption, permissions, rights, or file properties). A Pro license may be required.";
+                + "(encryption, permissions, rights, or file properties). A license may be required.";
     }
 
     private static void putNullable(ObjectNode node, String name, String value) {

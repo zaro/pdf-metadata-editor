@@ -30,7 +30,7 @@ public final class McpServer {
     private static final String INSTRUCTIONS =
             "Tools operate on PDF files inside the configured root. "
                     + "Call pdf_list_fields before writing to discover valid field IDs. "
-                    + "Mutating tools require a Pro license.";
+                    + "Mutating tools may require a license.";
 
     private final BufferedReader reader;
     private final PrintStream out;

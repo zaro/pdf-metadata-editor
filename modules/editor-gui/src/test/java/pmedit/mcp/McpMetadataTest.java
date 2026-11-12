@@ -245,7 +245,8 @@ public class McpMetadataTest {
 
         McpToolException error = assertThrows(McpToolException.class,
                 () -> metadata.set(file.file.getName(), values, null, null));
-        assertTrue(error.getMessage().contains("Pro license"));
+        assertTrue(error.getMessage().contains("requires a license"));
+        assertFalse(error.getMessage().matches("(?is).*\\b(pro|oss|basic|professional)\\b.*"));
     }
 
     private McpMetadata metadata(boolean readOnly, boolean licensed) throws Exception {

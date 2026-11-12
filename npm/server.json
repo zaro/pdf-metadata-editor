@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.zaro/pdf-metadata-editor",
+  "description": "Read and edit PDF metadata through the Model Context Protocol.",
+  "repository": {
+    "url": "https://github.com/zaro/pdf-metadata-editor",
+    "source": "github"
+  },
+  "version": "4.5.0-rc.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "pdf-metadata-editor-mcp",
+      "version": "4.5.0-rc.1",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

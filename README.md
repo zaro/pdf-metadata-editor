@@ -54,9 +54,9 @@ pmedit-cli --mcp [--mcp-root=DIR] [--mcp-read-only]
 - `--mcp-root=DIR` restricts all file access to `DIR` (default: current directory).
 - `--mcp-read-only` disables every mutating tool.
 - Read-only tools (`pdf_read_metadata`, `pdf_list_fields`, `pdf_export_metadata`)
-  work without a Pro license.
+  are available without a license.
 - Mutating tools (`pdf_set_metadata`, `pdf_clear_metadata`, `pdf_rename`)
-  require a Pro license.
+  may require a license.
 
 The server speaks newline-delimited JSON-RPC over stdin/stdout. Configure it in
 your MCP client, for example:
@@ -82,6 +82,15 @@ Available tools:
 | `pdf_clear_metadata` | Clear all or selected metadata fields |
 | `pdf_rename` | Rename a PDF using a metadata template |
 | `pdf_export_metadata` | Export metadata as JSON or YAML |
+
+The MCP server is also available as an npm package:
+
+```sh
+npx -y pdf-metadata-editor-mcp@next --mcp-root /path/to/pdfs
+```
+
+See [npm/README.md](npm/README.md) for client configuration, platform details,
+and troubleshooting.
 
 ## Building from source
 

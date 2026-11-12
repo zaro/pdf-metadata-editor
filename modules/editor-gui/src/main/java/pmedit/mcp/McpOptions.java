@@ -14,7 +14,7 @@ import java.util.function.BooleanSupplier;
  *
  * @param root        canonical directory that all tool paths must stay inside
  * @param readOnly    when true, all mutating tools are rejected
- * @param licenseGate returns true when Pro/batch operations are licensed
+ * @param licenseGate returns true when licensed operations are allowed
  */
 public record McpOptions(Path root, boolean readOnly, BooleanSupplier licenseGate) {
 

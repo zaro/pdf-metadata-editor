@@ -92,6 +92,16 @@ public class McpServerTest {
     }
 
     @Test
+    public void protocolTextIsEditionNeutral() throws Exception {
+        List<JsonNode> responses = responses(run(
+                initialize(McpProtocol.LATEST_VERSION),
+                toolsList()));
+
+        assertEditionNeutral(McpJson.write(responses.get(0)));
+        assertEditionNeutral(McpJson.write(responses.get(1)));
+    }
+
+    @Test
     public void requestBeforeInitializeIsRejected() throws Exception {
         JsonNode response = responses(run(toolsList())).get(0);
         assertEquals(McpProtocol.SERVER_NOT_INITIALIZED, response.get("error").get("code").asInt());
@@ -148,6 +158,19 @@ public class McpServerTest {
 
         assertEquals(2, responses.size());
         assertTrue(responses.get(1).get("id").isNull());
+    }
+
+    @Test
+    public void successfulToolCallsReturnCallToolResultShape() throws Exception {
+        JsonNode response = responses(run(
+                initialize(McpProtocol.LATEST_VERSION),
+                callTool("pdf_list_fields", McpJson.object()))).get(1);
+
+        JsonNode result = response.get("result");
+        assertFalse(response.has("error"));
+        assertTrue(result.get("content").isArray());
+        assertTrue(result.get("structuredContent").isObject());
+        assertFalse(result.get("isError").asBoolean());
     }
 
     @Test
@@ -224,5 +247,9 @@ public class McpServerTest {
         request.put("id", 1);
         request.put("method", method);
         return request;
+    }
+
+    private static void assertEditionNeutral(String text) {
+        assertFalse(text.matches("(?is).*\\b(pro|oss|basic|professional)\\b.*"), text);
     }
 }

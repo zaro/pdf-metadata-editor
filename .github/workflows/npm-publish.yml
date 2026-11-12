@@ -1,0 +1,168 @@
+name: Publish MCP npm package
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag (for example v4.5.0rc1)
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    outputs:
+      npm_version: ${{ steps.version.outputs.npm }}
+      dist_tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install unzip
+        run: sudo apt-get update && sudo apt-get install -y unzip
+
+      - name: Determine versions
+        id: version
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.tag }}"
+          MAVEN="${TAG#v}"
+          NPM_VERSION="$(node npm/scripts/convert-version.js "$MAVEN")"
+          if [[ "$NPM_VERSION" == *-* ]]; then
+            DIST_TAG=next
+          else
+            DIST_TAG=latest
+          fi
+          echo "maven=$MAVEN" >> "$GITHUB_OUTPUT"
+          echo "npm=$NPM_VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$DIST_TAG" >> "$GITHUB_OUTPUT"
+          echo "Publishing $NPM_VERSION with dist-tag $DIST_TAG"
+
+      - name: Download release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.tag }}"
+          mkdir -p release-assets
+          gh release download "$TAG" --dir release-assets \
+            --pattern '*portable*' \
+            --pattern 'pdf-metadata-editor-*.jar'
+
+      - name: Run wrapper tests
+        env:
+          PDF_METADATA_EDITOR_JAR: ${{ github.workspace }}/release-assets/pdf-metadata-editor-${{ steps.version.outputs.maven }}.jar
+        run: npm --prefix npm test
+
+      - name: Package platform bundles
+        run: |
+          node npm/scripts/package-bundles.js \
+            --artifacts release-assets \
+            --out npm/dist \
+            --version "${{ steps.version.outputs.maven }}" \
+            --npm-version "${{ steps.version.outputs.npm }}"
+
+      - name: Stage main package
+        run: |
+          node npm/scripts/stage-main-package.js \
+            --artifacts release-assets \
+            --out npm/dist \
+            --bundles npm/dist/bundles \
+            --version "${{ steps.version.outputs.maven }}" \
+            --npm-version "${{ steps.version.outputs.npm }}"
+
+      - name: Check neutral wording
+        run: node npm/scripts/check-neutral.js
+
+      - name: Upload npm tarballs
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-tarballs
+          path: npm/dist/*.tgz
+          if-no-files-found: error
+
+  publish:
+    needs: package
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: npm-tarballs
+          path: npm-tarballs
+
+      - name: Publish platform bundles
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          for file in npm-tarballs/*mcp-bundle*.tgz; do
+            npm publish "$file" --tag "${{ needs.package.outputs.dist_tag }}" --access public --provenance
+          done
+
+      - name: Publish main package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          for file in npm-tarballs/*.tgz; do
+            case "$file" in
+              *mcp-bundle*) continue ;;
+            esac
+            npm publish "$file" --tag "${{ needs.package.outputs.dist_tag }}" --access public --provenance
+          done
+
+      - name: Publish to MCP registry
+        continue-on-error: true
+        env:
+          MCP_GITHUB_TOKEN: ${{ secrets.MCP_GITHUB_TOKEN }}
+          NPM_VERSION: ${{ needs.package.outputs.npm_version }}
+        run: |
+          if [ -z "$MCP_GITHUB_TOKEN" ]; then
+            echo "MCP_GITHUB_TOKEN is not configured; skipping registry publish."
+            exit 0
+          fi
+          node -e "const fs=require('fs'); const p='npm/server.json'; const s=JSON.parse(fs.readFileSync(p,'utf8')); s.version=process.env.NPM_VERSION; s.packages[0].version=process.env.NPM_VERSION; fs.writeFileSync(p, JSON.stringify(s,null,2)+'\n');"
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+          cd npm
+          ../mcp-publisher login github --token "$MCP_GITHUB_TOKEN"
+          ../mcp-publisher publish
+
+  smoke:
+    needs: [package, publish]
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-24.04
+          - windows-2022
+          - macos-15
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check bundled runtime resolution
+        shell: bash
+        run: |
+          npx -y "pdf-metadata-editor-mcp@${{ needs.package.outputs.dist_tag }}" --doctor | tee doctor.txt
+          grep -q "mode: bundled" doctor.txt

@@ -18,12 +18,12 @@ public class MainCli {
                     "  -rt, --renameTemplate=STRING    set a rename template for 'rename' command\n" +
                     "                                  any metadata field enclosed in {} will be substituted\n" +
                     "                                  with the actual field value\n" +
-                    "       --license=email,key        install Pro license and quit\n" +
+                    "       --license=email,key        install a license and quit\n" +
                     "                                  pass email and license ID separated with comma (no spaces) to \n" +
-                    "                                  install Pro license from the command line.\n" +
-                    "       --releaseLicense           release current Pro license and quit\n" +
-                    "       --showLicense              show current Pro license and quit\n" +
-                    "       --offline                  set/release Pro license in offline mode\n" +
+                    "                                  install a license from the command line.\n" +
+                    "       --releaseLicense           release the current license and quit\n" +
+                    "       --showLicense              show the current license and quit\n" +
+                    "       --offline                  set/release a license in offline mode\n" +
                     "       --mcp                      start a Model Context Protocol server on stdin/stdout\n" +
                     "       --mcp-root=DIR             root directory for MCP file access (default: current directory)\n" +
                     "       --mcp-read-only            disable mutating MCP tools\n" +
@@ -38,7 +38,7 @@ public class MainCli {
                     "\n" +
                     "  Starts a Model Context Protocol server over stdin/stdout. All paths passed\n" +
                     "  to MCP tools are resolved relative to --mcp-root (default: current working\n" +
-                    "  directory) and may not escape it. Mutating tools require a Pro license.\n" +
+                    "  directory) and may not escape it. Mutating tools may require a license.\n" +
                     "\n" +
                     "METADATA FIELDS\n" +
                     "\n" +

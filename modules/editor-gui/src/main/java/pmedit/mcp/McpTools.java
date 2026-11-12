@@ -78,11 +78,11 @@ public final class McpTools {
                 "List PDF metadata fields",
                 "List every metadata field identifier, its data type, and whether it is writable. "
                         + "Call this before pdf_set_metadata to discover valid field names. "
-                        + "Read-only; does not require a Pro license.",
+                        + "Read-only.",
                 emptySchema(),
                 listFieldsOutputSchema(),
                 McpJson.annotations(true, false, true),
-                args -> metadata.listFields()
+                args -> McpResult.success(metadata.listFields())
         ));
 
         definitions.add(new Tool(
@@ -90,14 +90,14 @@ public final class McpTools {
                 "Read PDF metadata",
                 "Read metadata from a PDF. Paths are relative to the configured MCP root unless absolute "
                         + "paths inside that root are used. By default only populated fields are returned; "
-                        + "pass fields to request specific field IDs. Read-only; does not require a Pro license.",
+                        + "pass fields to request specific field IDs. Read-only.",
                 readInputSchema(),
                 readOutputSchema(),
                 McpJson.annotations(true, false, true),
-                args -> metadata.read(
+                args -> McpResult.success(metadata.read(
                         requiredString(args, "path"),
                         optionalString(args, "ownerPassword"),
-                        optionalStringList(args, "fields"))
+                        optionalStringList(args, "fields")))
         ));
 
         definitions.add(new Tool(
@@ -105,30 +105,30 @@ public final class McpTools {
                 "Set PDF metadata",
                 "Set one or more metadata fields on a PDF. Only the supplied fields are changed; all other "
                         + "metadata in the document is preserved. Writes in place by default, or to outputPath "
-                        + "when supplied. Requires a Pro license.",
+                        + "when supplied. May require a license.",
                 setInputSchema(),
                 mutationOutputSchema("updated", "The field IDs that were written."),
                 McpJson.annotations(false, false, true),
-                args -> metadata.set(
+                args -> McpResult.success(metadata.set(
                         requiredString(args, "path"),
                         requiredObject(args, "metadata"),
                         optionalString(args, "outputPath"),
-                        optionalString(args, "ownerPassword"))
+                        optionalString(args, "ownerPassword")))
         ));
 
         definitions.add(new Tool(
                 "pdf_clear_metadata",
                 "Clear PDF metadata",
                 "Clear all metadata or only the selected fields. Writes in place by default, or to outputPath "
-                        + "when supplied. Requires a Pro license.",
+                        + "when supplied. May require a license.",
                 clearInputSchema(),
                 mutationOutputSchema("cleared", "The field IDs that were cleared."),
                 McpJson.annotations(false, true, true),
-                args -> metadata.clear(
+                args -> McpResult.success(metadata.clear(
                         requiredString(args, "path"),
                         optionalStringList(args, "fields"),
                         optionalString(args, "outputPath"),
-                        optionalString(args, "ownerPassword"))
+                        optionalString(args, "ownerPassword")))
         ));
 
         definitions.add(new Tool(
@@ -136,30 +136,30 @@ public final class McpTools {
                 "Rename PDF from metadata",
                 "Rename a PDF using a metadata template such as '{doc.author} - {doc.title}.pdf'. "
                         + "The destination must not exist. When outputDir is omitted the file is moved within "
-                        + "its current directory; when supplied the file is copied there. Requires a Pro license.",
+                        + "its current directory; when supplied the file is copied there. May require a license.",
                 renameInputSchema(),
                 renameOutputSchema(),
                 McpJson.annotations(false, false, false),
-                args -> metadata.rename(
+                args -> McpResult.success(metadata.rename(
                         requiredString(args, "path"),
                         requiredString(args, "template"),
                         optionalString(args, "outputDir"),
-                        optionalString(args, "ownerPassword"))
+                        optionalString(args, "ownerPassword")))
         ));
 
         definitions.add(new Tool(
                 "pdf_export_metadata",
                 "Export PDF metadata",
                 "Export metadata as JSON or YAML. When outputPath is omitted the serialized document is "
-                        + "returned inline. Read-only; does not require a Pro license.",
+                        + "returned inline. Read-only.",
                 exportInputSchema(),
                 exportOutputSchema(),
                 McpJson.annotations(true, false, true),
-                args -> metadata.export(
+                args -> McpResult.success(metadata.export(
                         requiredString(args, "path"),
                         requiredString(args, "format"),
                         optionalString(args, "outputPath"),
-                        optionalString(args, "ownerPassword"))
+                        optionalString(args, "ownerPassword")))
         ));
 
         return definitions;

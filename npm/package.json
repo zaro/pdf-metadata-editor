@@ -1,0 +1,47 @@
+{
+  "name": "pdf-metadata-editor-mcp",
+  "version": "4.5.0-rc.1",
+  "description": "Model Context Protocol server for reading and editing PDF metadata",
+  "license": "GPL-3.0",
+  "author": "Pdf Metadata Editor contributors",
+  "homepage": "https://pdf.metadata.care/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zaro/pdf-metadata-editor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zaro/pdf-metadata-editor/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "pdf-metadata-editor-mcp": "bin/pdf-metadata-editor-mcp.js",
+    "pmedit-mcp": "bin/pdf-metadata-editor-mcp.js"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+    "server.json"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "check:neutral": "node scripts/check-neutral.js",
+    "pack:bundles": "node scripts/package-bundles.js",
+    "stage:main": "node scripts/stage-main-package.js"
+  },
+  "optionalDependencies": {},
+  "mcpName": "io.github.zaro/pdf-metadata-editor",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "pdf",
+    "metadata"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
