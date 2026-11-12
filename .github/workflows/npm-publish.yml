@@ -165,5 +165,22 @@ jobs:
       - name: Check bundled runtime resolution
         shell: bash
         run: |
-          npx -y "pdf-metadata-editor-mcp@${{ needs.package.outputs.dist_tag }}" --doctor | tee doctor.txt
+          TAG="${{ needs.package.outputs.dist_tag }}"
+          for attempt in $(seq 1 20); do
+            echo "Waiting for pdf-metadata-editor-mcp@$TAG (attempt $attempt)"
+            if curl -fsS https://registry.npmjs.org/pdf-metadata-editor-mcp | node -e '
+              let data = "";
+              process.stdin.on("data", (chunk) => { data += chunk; });
+              process.stdin.on("end", () => {
+                const pkg = JSON.parse(data);
+                const tag = process.argv[1];
+                process.exit(pkg["dist-tags"] && pkg["dist-tags"][tag] ? 0 : 1);
+              });
+            ' "$TAG"; then
+              echo "Tag $TAG is visible"
+              break
+            fi
+            sleep 15
+          done
+          npx -y "pdf-metadata-editor-mcp@$TAG" --doctor | tee doctor.txt
           grep -q "mode: bundled" doctor.txt

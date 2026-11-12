@@ -1,0 +1,43 @@
+name: Set MCP npm dist-tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to tag (for example 0.0.0-stage or 4.5.0)
+        required: true
+      tag:
+        description: Dist-tag to set (for example latest or next)
+        required: true
+        default: latest
+
+permissions:
+  contents: read
+
+jobs:
+  tag:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Set dist-tags
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          VERSION: ${{ inputs.version }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          packages=(
+            "pdf-metadata-editor-mcp"
+            "@pdf-metadata-editor/mcp-bundle-linux-x64"
+            "@pdf-metadata-editor/mcp-bundle-linux-arm64"
+            "@pdf-metadata-editor/mcp-bundle-darwin-arm64"
+            "@pdf-metadata-editor/mcp-bundle-win32-x64"
+            "@pdf-metadata-editor/mcp-bundle-win32-arm64"
+          )
+          for package in "${packages[@]}"; do
+            echo "Setting $package@$VERSION -> $TAG"
+            npm dist-tag add "$package@$VERSION" "$TAG"
+          done
