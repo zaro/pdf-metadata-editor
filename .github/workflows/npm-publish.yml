@@ -117,7 +117,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           for file in npm-tarballs/*mcp-bundle*.tgz; do
-            npm publish "$file" --tag "${{ needs.package.outputs.dist_tag }}" --access public --provenance
+            npm publish "./$file" --tag "${{ needs.package.outputs.dist_tag }}" --access public --provenance
           done
 
       - name: Publish main package
@@ -128,7 +128,7 @@ jobs:
             case "$file" in
               *mcp-bundle*) continue ;;
             esac
-            npm publish "$file" --tag "${{ needs.package.outputs.dist_tag }}" --access public --provenance
+            npm publish "./$file" --tag "${{ needs.package.outputs.dist_tag }}" --access public --provenance
           done
 
       - name: Publish to MCP registry
