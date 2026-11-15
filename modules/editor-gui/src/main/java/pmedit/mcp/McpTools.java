@@ -155,14 +155,24 @@ public final class McpTools {
                 exportInputSchema(),
                 exportOutputSchema(),
                 McpJson.annotations(true, false, true),
-                args -> McpResult.success(metadata.export(
-                        requiredString(args, "path"),
-                        requiredString(args, "format"),
-                        optionalString(args, "outputPath"),
-                        optionalString(args, "ownerPassword")))
+                args -> exportResult(metadata, args)
         ));
 
         return definitions;
+    }
+
+    private static ObjectNode exportResult(McpMetadata metadata, ObjectNode args) throws Exception {
+        ObjectNode result = metadata.export(
+                requiredString(args, "path"),
+                requiredString(args, "format"),
+                optionalString(args, "outputPath"),
+                optionalString(args, "ownerPassword"));
+
+        JsonNode content = result.get("content");
+        if (content != null && content.isTextual()) {
+            return McpResult.success(content.asText(), result);
+        }
+        return McpResult.success(result);
     }
 
     // ---------------------------------------------------------------------

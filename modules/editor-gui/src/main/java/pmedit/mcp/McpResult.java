@@ -28,7 +28,9 @@ public final class McpResult {
 
     public static ObjectNode error(String message) {
         ObjectNode result = McpJson.object();
-        result.set("content", textContent("Error: " + message));
+        ObjectNode error = McpJson.object();
+        error.put("error", message == null ? "Unknown error" : message);
+        result.set("content", textContent(McpJson.write(error)));
         result.put("isError", true);
         return result;
     }

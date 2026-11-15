@@ -184,7 +184,12 @@ public class McpServerTest {
 
         assertFalse(response.has("error"));
         assertEquals(true, response.get("result").get("isError").asBoolean());
-        assertTrue(response.get("result").get("content").get(0).get("text").asText().contains("File not found"));
+
+        String text = response.get("result").get("content").get(0).get("text").asText();
+        assertTrue(text.contains("File not found"));
+
+        JsonNode error = McpJson.parse(text);
+        assertTrue(error.get("error").asText().contains("File not found"));
     }
 
     private String run(String... messages) throws Exception {

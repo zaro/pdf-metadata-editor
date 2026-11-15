@@ -2,11 +2,16 @@ package pmedit.mcp;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
+import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import pmedit.DateFormat;
 import pmedit.FilesTestHelper;
 import pmedit.MetadataInfo;
+import pmedit.serdes.SerDeslUtils;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -220,6 +225,56 @@ public class McpMetadataTest {
     }
 
     @Test
+    public void inlineExportTextIsTheRawDocument() throws Exception {
+        FilesTestHelper.PMTuple file = createFile("McpTitle");
+        McpTools tools = new McpTools(metadata(false, true));
+
+        for (String format : List.of("json", "yaml")) {
+            ObjectNode args = McpJson.object();
+            args.put("path", file.file.getName());
+            args.put("format", format);
+
+            ObjectNode result = tools.call("pdf_export_metadata", args);
+            assertFalse(result.get("isError").asBoolean());
+
+            String text = result.get("content").get(0).get("text").asText();
+            String content = result.get("structuredContent").get("content").asText();
+            assertEquals(content, text);
+
+            if ("json".equals(format)) {
+                JsonNode parsed = McpJson.parse(text);
+                assertEquals("McpTitle", parsed.get("doc.title").asText());
+            } else {
+                assertNotNull(SerDeslUtils.fromYAML(text));
+            }
+        }
+    }
+
+    @Test
+    public void readsAndExportsEncryptedPdfWithoutLeakingPassword() throws Exception {
+        FilesTestHelper.PMTuple file = createEncryptedFile("Encrypted Title");
+        McpMetadata metadata = metadata(false, true);
+
+        ObjectNode read = metadata.read(file.file.getName(), "ownerpass", null);
+        assertEquals("Encrypted Title", read.get("fields").get("doc.title").asText());
+        assertFalse(read.get("fields").has("prop.ownerPassword"));
+        assertFalse(read.get("fields").has("prop.userPassword"));
+
+        ObjectNode json = metadata.export(file.file.getName(), "json", null, "ownerpass");
+        String jsonText = json.get("content").asText();
+        assertFalse(jsonText.contains("ownerpass"));
+        assertFalse(jsonText.contains("ownerPassword"));
+        JsonNode parsedJson = McpJson.parse(jsonText);
+        assertEquals("Encrypted Title", parsedJson.get("doc.title").asText());
+
+        ObjectNode yaml = metadata.export(file.file.getName(), "yaml", null, "ownerpass");
+        String yamlText = yaml.get("content").asText();
+        assertFalse(yamlText.contains("ownerpass"));
+        assertFalse(yamlText.contains("ownerPassword"));
+        assertNotNull(SerDeslUtils.fromYAML(yamlText));
+    }
+
+    @Test
     public void readOnlyModeRejectsMutations() throws Exception {
         FilesTestHelper.PMTuple file = createFile("McpTitle");
         McpMetadata metadata = metadata(true, true);
@@ -273,5 +328,26 @@ public class McpMetadataTest {
         File pdf = FilesTestHelper.emptyPdf(tempDir.toFile());
         FilesTestHelper.save(metadata, pdf);
         return new FilesTestHelper.PMTuple(pdf, metadata);
+    }
+
+    private FilesTestHelper.PMTuple createEncryptedFile(String title) throws Exception {
+        MetadataInfo metadata = new MetadataInfo();
+        metadata.setEnabled(false);
+        metadata.set("doc.title", title);
+        metadata.setEnabled("doc.title", true);
+
+        File source = FilesTestHelper.emptyPdf(tempDir.toFile());
+        FilesTestHelper.save(metadata, source);
+
+        File encrypted = new File(tempDir.toFile(), "encrypted.pdf");
+        try (PDDocument document = Loader.loadPDF(source)) {
+            AccessPermission permissions = new AccessPermission();
+            StandardProtectionPolicy policy = new StandardProtectionPolicy(
+                    "ownerpass", "userpass", permissions);
+            policy.setEncryptionKeyLength(128);
+            document.protect(policy);
+            document.save(encrypted);
+        }
+        return new FilesTestHelper.PMTuple(encrypted, metadata);
     }
 }
