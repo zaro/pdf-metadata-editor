@@ -71,7 +71,7 @@ public class McpServerTest {
                 toolsList()));
 
         JsonNode tools = responses.get(1).get("result").get("tools");
-        assertEquals(6, tools.size());
+        assertEquals(5, tools.size());
 
         Set<String> names = new LinkedHashSet<>();
         for (JsonNode tool : tools) {
@@ -87,8 +87,25 @@ public class McpServerTest {
                 "pdf_read_metadata",
                 "pdf_set_metadata",
                 "pdf_clear_metadata",
-                "pdf_rename",
-                "pdf_export_metadata"), names);
+                "pdf_rename"), names);
+    }
+
+    @Test
+    public void batchToolsTakeAPathsArray() throws Exception {
+        List<JsonNode> responses = responses(run(
+                initialize(McpProtocol.LATEST_VERSION),
+                toolsList()));
+
+        for (JsonNode tool : responses.get(1).get("result").get("tools")) {
+            JsonNode schema = tool.get("inputSchema");
+            if ("pdf_list_fields".equals(tool.get("name").asText())) {
+                continue;
+            }
+            assertTrue(schema.get("properties").has("paths"), tool.get("name").asText());
+            assertFalse(schema.get("properties").has("path"), tool.get("name").asText());
+            assertEquals("array", schema.get("properties").get("paths").get("type").asText());
+            assertTrue(schema.get("required").toString().contains("paths"));
+        }
     }
 
     @Test
@@ -176,7 +193,7 @@ public class McpServerTest {
     @Test
     public void toolErrorsAreReturnedAsResultsNotProtocolErrors() throws Exception {
         ObjectNode args = McpJson.object();
-        args.put("path", "missing.pdf");
+        args.set("paths", McpJson.array().add("missing.pdf"));
 
         JsonNode response = responses(run(
                 initialize(McpProtocol.LATEST_VERSION),
@@ -186,10 +203,11 @@ public class McpServerTest {
         assertEquals(true, response.get("result").get("isError").asBoolean());
 
         String text = response.get("result").get("content").get(0).get("text").asText();
-        assertTrue(text.contains("File not found"));
+        assertTrue(text.contains("file_not_found"));
 
         JsonNode error = McpJson.parse(text);
-        assertTrue(error.get("error").asText().contains("File not found"));
+        assertEquals("file_not_found", error.get("error").asText());
+        assertTrue(error.get("message").asText().contains("File not found"));
     }
 
     private String run(String... messages) throws Exception {

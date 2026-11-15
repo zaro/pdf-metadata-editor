@@ -7,6 +7,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -104,6 +105,97 @@ public class McpPathsTest {
         }
 
         assertThrows(McpToolException.class, () -> paths().output("outside-dir/document.pdf"));
+    }
+
+    @Test
+    public void expandCollectsPdfsAndIgnoresOtherFiles() throws Exception {
+        file(root, "docs/a.pdf");
+        file(root, "docs/sub/b.pdf");
+        file(root, "docs/notes.txt");
+
+        var entries = paths().expand(List.of("docs"), null);
+
+        assertEquals(2, entries.size());
+        assertEquals("a.pdf", entries.get(0).relative());
+        assertEquals("sub/b.pdf", entries.get(1).relative());
+    }
+
+    @Test
+    public void expandKeepsFileRelativeNameForSingleFile() throws Exception {
+        file(root, "docs/a.pdf");
+
+        var entries = paths().expand(List.of("docs/a.pdf"), null);
+
+        assertEquals(1, entries.size());
+        assertEquals("a.pdf", entries.get(0).relative());
+    }
+
+    @Test
+    public void expandDeduplicatesOverlappingRoots() throws Exception {
+        file(root, "docs/a.pdf");
+        file(root, "docs/sub/b.pdf");
+
+        var entries = paths().expand(List.of("docs", "docs/a.pdf"), null);
+
+        assertEquals(2, entries.size());
+    }
+
+    @Test
+    public void expandSkipsTheOutputDirectory() throws Exception {
+        file(root, "docs/a.pdf");
+        file(root, "docs/out/previous.pdf");
+        Path outputDir = root.resolve("docs/out").toRealPath();
+
+        var entries = paths().expand(List.of("docs"), outputDir);
+
+        assertEquals(1, entries.size());
+        assertEquals("a.pdf", entries.get(0).relative());
+    }
+
+    @Test
+    public void expandRejectsExplicitNonPdf() throws Exception {
+        file(root, "notes.txt");
+
+        McpToolException error = assertThrows(McpToolException.class,
+                () -> paths().expand(List.of("notes.txt"), null));
+        assertEquals("not_a_pdf", error.code());
+    }
+
+    @Test
+    public void expandRejectsEmptyInput() throws Exception {
+        McpToolException error = assertThrows(McpToolException.class,
+                () -> paths().expand(List.of(), null));
+        assertEquals("no_input_files", error.code());
+    }
+
+    @Test
+    public void expandRejectsTooManyFiles() throws Exception {
+        Path dir = root.resolve("many");
+        Files.createDirectories(dir);
+        for (int i = 0; i <= McpPaths.MAX_BATCH_FILES; i++) {
+            Files.writeString(dir.resolve("file-" + i + ".pdf"), "test");
+        }
+
+        McpToolException error = assertThrows(McpToolException.class,
+                () -> paths().expand(List.of("many"), null));
+        assertEquals("batch_too_large", error.code());
+    }
+
+    @Test
+    public void expandRejectsSymlinkedFileThatEscapesRoot() throws Exception {
+        Path secret = file(outside, "secret.pdf");
+        Files.createDirectories(root.resolve("docs"));
+        Path link = root.resolve("docs/link.pdf");
+        try {
+            Files.createSymbolicLink(link, secret);
+        } catch (IOException | UnsupportedOperationException e) {
+            Assumptions.assumeTrue(false, "Symbolic links are not supported on this platform");
+            return;
+        }
+
+        McpToolException error = assertThrows(McpToolException.class,
+                () -> paths().expand(List.of("docs"), null));
+        assertEquals("path_outside_root", error.code());
     }
 
     private McpPaths paths() throws IOException {

@@ -29,6 +29,8 @@ public final class McpServer {
 
     private static final String INSTRUCTIONS =
             "Tools operate on PDF files inside the configured root. "
+                    + "Every file tool takes a paths array of files and/or directories; a single file is "
+                    + "[\"one.pdf\"]. Directories are searched recursively. "
                     + "Call pdf_list_fields before writing to discover valid field IDs. "
                     + "Mutating tools may require a license.";
 

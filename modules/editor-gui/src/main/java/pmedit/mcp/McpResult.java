@@ -26,6 +26,14 @@ public final class McpResult {
         return result;
     }
 
+    public static ObjectNode batch(McpBatchResult batch) {
+        ObjectNode result = McpJson.object();
+        result.set("content", textContent(batch.summaryText()));
+        result.set("structuredContent", batch.toNode());
+        result.put("isError", batch.isError());
+        return result;
+    }
+
     public static ObjectNode error(String message) {
         ObjectNode result = McpJson.object();
         ObjectNode error = McpJson.object();

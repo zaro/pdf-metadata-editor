@@ -53,10 +53,13 @@ pmedit-cli --mcp [--mcp-root=DIR] [--mcp-read-only]
 
 - `--mcp-root=DIR` restricts all file access to `DIR` (default: current directory).
 - `--mcp-read-only` disables every mutating tool.
-- Read-only tools (`pdf_read_metadata`, `pdf_list_fields`, `pdf_export_metadata`)
-  are available without a license.
+- `pdf_list_fields` and `pdf_read_metadata` are available without a license.
 - Mutating tools (`pdf_set_metadata`, `pdf_clear_metadata`, `pdf_rename`)
   may require a license.
+
+File tools take a `paths` array of files and/or directories, matching the CLI.
+A single file is `paths: ["one.pdf"]`. Directories are searched recursively for
+`.pdf` files, and a batch may contain at most 100 PDF files.
 
 The server speaks newline-delimited JSON-RPC over stdin/stdout. Configure it in
 your MCP client, for example:
@@ -77,11 +80,13 @@ Available tools:
 | Tool | Purpose |
 |---|---|
 | `pdf_list_fields` | List valid metadata field IDs, types, and writability |
-| `pdf_read_metadata` | Read metadata from a PDF |
-| `pdf_set_metadata` | Set one or more metadata fields |
-| `pdf_clear_metadata` | Clear all or selected metadata fields |
-| `pdf_rename` | Rename a PDF using a metadata template |
-| `pdf_export_metadata` | Export metadata as JSON or YAML |
+| `pdf_read_metadata` | Read metadata from one or more PDFs or directories |
+| `pdf_set_metadata` | Set one or more metadata fields on every input PDF (CLI `edit`) |
+| `pdf_clear_metadata` | Clear all or selected metadata fields on every input PDF (CLI `clear`) |
+| `pdf_rename` | Rename every input PDF using a metadata template (CLI `rename`) |
+
+Each batch tool returns a `summary` plus per-file `results`; a per-file failure
+does not abort the batch.
 
 The MCP server is also available as an npm package:
 

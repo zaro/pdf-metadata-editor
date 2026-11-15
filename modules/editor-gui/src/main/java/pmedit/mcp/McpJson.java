@@ -170,6 +170,13 @@ public final class McpJson {
         return property;
     }
 
+    public static ObjectNode integerProperty(String description) {
+        ObjectNode property = object();
+        property.put("type", "integer");
+        property.put("description", description);
+        return property;
+    }
+
     public static ObjectNode stringArrayProperty(String description) {
         ObjectNode property = object();
         property.put("type", "array");

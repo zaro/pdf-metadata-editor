@@ -92,7 +92,7 @@ test('serves JSON-RPC over stdio using the system Java fallback', { skip, timeou
       method: 'tools/call',
       params: {
         name: 'pdf_read_metadata',
-        arguments: { path: 'sample.pdf' }
+        arguments: { paths: ['sample.pdf'] }
       }
     }
   ];
@@ -117,10 +117,24 @@ test('serves JSON-RPC over stdio using the system Java fallback', { skip, timeou
   assert.equal(responses[0].result.protocolVersion, '2025-11-25');
   assert.equal(responses[1].id, 2);
   assert.ok(Array.isArray(responses[1].result.tools));
+  const toolNames = responses[1].result.tools.map((tool) => tool.name);
+  assert.ok(toolNames.includes('pdf_read_metadata'));
+  assert.ok(!toolNames.includes('pdf_export_metadata'));
+  for (const tool of responses[1].result.tools) {
+    if (tool.name === 'pdf_list_fields') {
+      continue;
+    }
+    assert.ok(tool.inputSchema.properties.paths, `${tool.name} takes paths`);
+    assert.equal(tool.inputSchema.properties.path, undefined);
+  }
+
   assert.equal(responses[2].id, 3);
   assert.equal(responses[2].result.isError, false);
-  assert.equal(responses[2].result.structuredContent.path, 'sample.pdf');
-  assert.equal(typeof responses[2].result.structuredContent.fields, 'object');
+  const batch = responses[2].result.structuredContent;
+  assert.equal(batch.summary.total, 1);
+  assert.equal(batch.summary.succeeded, 1);
+  assert.equal(batch.results[0].input, 'sample.pdf');
+  assert.equal(typeof batch.results[0].fields, 'object');
 
   fs.rmSync(root, { recursive: true, force: true });
 });

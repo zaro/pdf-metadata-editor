@@ -5,7 +5,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * Resolves input and output paths against a canonical root directory.
@@ -15,6 +20,8 @@ import java.util.Locale;
  * the containment check, so a link cannot be used to escape the sandbox.</p>
  */
 public final class McpPaths {
+
+    public static final int MAX_BATCH_FILES = 100;
 
     private final Path root;
 
@@ -84,42 +91,157 @@ public final class McpPaths {
     }
 
     /**
-     * Build and validate the destination for a rename operation.
+     * Resolve a path that must already exist. The path may be a regular file
+     * or a directory. The returned path is canonical and inside the root.
      */
-    public Path renameTarget(Path source, String newName, String outputDir) throws McpToolException {
-        if (newName == null || newName.isBlank()) {
-            throw new McpToolException("Rename template produced an empty file name");
+    public Path resolveExisting(String raw) throws McpToolException {
+        Path resolved = resolve(raw);
+        if (!Files.exists(resolved)) {
+            throw new McpToolException("file_not_found", "File not found: " + raw);
         }
 
-        Path namePath;
+        Path real;
         try {
-            namePath = Path.of(newName);
-        } catch (InvalidPathException e) {
-            throw new McpToolException("Invalid rename target: " + newName, e);
-        }
-        if (namePath.isAbsolute()) {
-            throw new McpToolException("Rename target must be relative: " + newName);
+            real = resolved.toRealPath();
+        } catch (IOException e) {
+            throw new McpToolException("file_not_found", "Cannot access file: " + raw, e);
         }
 
-        Path base;
-        if (outputDir == null || outputDir.isBlank()) {
-            base = source.getParent();
-        } else {
-            Path dir = resolve(outputDir);
-            ensureInsideLexically(dir, outputDir);
-            createDirectoriesInsideRoot(dir, outputDir);
+        ensureInside(real, raw);
+        return real;
+    }
+
+    /**
+     * Resolve an output directory without creating it. This lets a batch
+     * enforce its size limit before touching the filesystem.
+     */
+    public Path outputDirectoryPath(String raw) throws McpToolException {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+
+        Path resolved = resolve(raw);
+        ensureInsideLexically(resolved, raw);
+        if (!Files.exists(resolved)) {
+            return resolved;
+        }
+
+        Path real;
+        try {
+            real = resolved.toRealPath();
+        } catch (IOException e) {
+            throw new McpToolException("output_not_writable", "Cannot access output directory: " + raw, e);
+        }
+        ensureInside(real, raw);
+        if (!Files.isDirectory(real)) {
+            throw new McpToolException("output_not_writable", "Not a directory: " + raw);
+        }
+        return real;
+    }
+
+    /**
+     * Resolve an output directory, creating it inside the root when needed.
+     */
+    public Path outputDirectory(String raw) throws McpToolException {
+        Path path = outputDirectoryPath(raw);
+        if (path == null) {
+            return null;
+        }
+        if (!Files.exists(path)) {
+            createDirectoriesInsideRoot(path, raw);
             try {
-                base = dir.toRealPath();
+                path = path.toRealPath();
             } catch (IOException e) {
-                throw new McpToolException("Cannot create output directory: " + outputDir, e);
+                throw new McpToolException("output_not_writable", "Cannot access output directory: " + raw, e);
             }
-            ensureInside(base, outputDir);
-            if (!Files.isDirectory(base)) {
-                throw new McpToolException("Not a directory: " + outputDir);
+            ensureInside(path, raw);
+        }
+        return path;
+    }
+
+    /**
+     * Validate an already-resolved output path and create its parent.
+     */
+    public Path prepareOutput(Path target) throws McpToolException {
+        return prepareTarget(target, target.toString());
+    }
+
+    /**
+     * An input file selected for a batch call, together with the path it maps
+     * to under an output directory. {@code relative} mirrors the CLI layout:
+     * the contents of a top-level directory are placed directly under the
+     * output directory, without repeating the input directory's own name.
+     */
+    public record BatchEntry(Path input, String relative) {
+    }
+
+    /**
+     * Expand a list of files and directories into PDF inputs.
+     *
+     * <p>Directories are walked recursively. Non-PDF files inside a directory
+     * are ignored, while an explicitly supplied non-PDF file is rejected. The
+     * output directory, when it is inside an input directory, is skipped so a
+     * previous export cannot feed back into the next one.</p>
+     */
+    public List<BatchEntry> expand(List<String> rawPaths, Path outputDir) throws McpToolException {
+        if (rawPaths == null || rawPaths.isEmpty()) {
+            throw new McpToolException("no_input_files", "At least one path is required");
+        }
+
+        Map<Path, BatchEntry> entries = new LinkedHashMap<>();
+        for (String raw : rawPaths) {
+            Path resolved = resolveExisting(raw);
+            if (Files.isDirectory(resolved)) {
+                addDirectory(resolved, outputDir, entries);
+            } else if (isPdf(resolved)) {
+                addEntry(resolved, resolved.getFileName().toString(), raw, entries);
+            } else {
+                throw new McpToolException("not_a_pdf", "Not a PDF file: " + raw);
             }
         }
 
-        return prepareTarget(base.resolve(namePath).normalize(), newName);
+        if (entries.isEmpty()) {
+            throw new McpToolException("no_input_files", "No PDF files were found in the supplied paths");
+        }
+        if (entries.size() > MAX_BATCH_FILES) {
+            throw new McpToolException(
+                    "batch_too_large",
+                    "The batch contains " + entries.size() + " PDF files; the maximum is "
+                            + MAX_BATCH_FILES + ". Split the request into smaller batches.");
+        }
+        return new ArrayList<>(entries.values());
+    }
+
+    private void addDirectory(Path root, Path outputDir, Map<Path, BatchEntry> entries) throws McpToolException {
+        try (Stream<Path> stream = Files.walk(root)) {
+            List<Path> files = stream
+                    .filter(Files::isRegularFile)
+                    .filter(McpPaths::isPdf)
+                    .filter(file -> outputDir == null || !file.startsWith(outputDir))
+                    .sorted()
+                    .toList();
+            for (Path file : files) {
+                String relative = root.relativize(file).toString().replace(File.separatorChar, '/');
+                addEntry(file, relative, root.toString(), entries);
+            }
+        } catch (IOException e) {
+            throw new McpToolException("file_not_found", "Cannot read directory: " + root, e);
+        }
+    }
+
+    private void addEntry(
+            Path file,
+            String relative,
+            String display,
+            Map<Path, BatchEntry> entries) throws McpToolException {
+        Path real;
+        try {
+            real = file.toRealPath();
+        } catch (IOException e) {
+            throw new McpToolException("file_not_found", "Cannot access file: " + display, e);
+        }
+        ensureInside(real, display);
+        entries.putIfAbsent(real, new BatchEntry(real, relative));
     }
 
     private Path resolve(String raw) throws McpToolException {
@@ -139,7 +261,7 @@ public final class McpPaths {
 
         Path parent = target.getParent();
         if (parent == null) {
-            throw new McpToolException("Invalid target path: " + display);
+            throw new McpToolException("output_not_writable", "Invalid target path: " + display);
         }
 
         createDirectoriesInsideRoot(parent, display);
@@ -148,7 +270,9 @@ public final class McpPaths {
         try {
             realParent = parent.toRealPath();
         } catch (IOException e) {
-            throw new McpToolException("Cannot access parent directory for: " + display, e);
+            throw new McpToolException(
+                    "output_not_writable",
+                    "Cannot access parent directory for: " + display, e);
         }
         ensureInside(realParent, display);
 
@@ -160,11 +284,13 @@ public final class McpPaths {
             try {
                 realTarget = finalTarget.toRealPath();
             } catch (IOException e) {
-                throw new McpToolException("Cannot access target: " + display, e);
+                throw new McpToolException(
+                        "output_not_writable",
+                        "Cannot access target: " + display, e);
             }
             ensureInside(realTarget, display);
             if (Files.isDirectory(realTarget)) {
-                throw new McpToolException("Target is a directory: " + display);
+                throw new McpToolException("output_not_writable", "Target is a directory: " + display);
             }
             return realTarget;
         }
@@ -178,28 +304,36 @@ public final class McpPaths {
             existing = existing.getParent();
         }
         if (existing == null) {
-            throw new McpToolException("Cannot create directory outside the configured root: " + display);
+            throw new McpToolException(
+                    "output_not_writable",
+                    "Cannot create directory outside the configured root: " + display);
         }
 
         Path realExisting;
         try {
             realExisting = existing.toRealPath();
         } catch (IOException e) {
-            throw new McpToolException("Cannot access directory for: " + display, e);
+            throw new McpToolException(
+                    "output_not_writable",
+                    "Cannot access directory for: " + display, e);
         }
         ensureInside(realExisting, display);
 
         try {
             Files.createDirectories(directory);
         } catch (IOException e) {
-            throw new McpToolException("Cannot create directory for: " + display, e);
+            throw new McpToolException(
+                    "output_not_writable",
+                    "Cannot create directory for: " + display, e);
         }
 
         Path realDirectory;
         try {
             realDirectory = directory.toRealPath();
         } catch (IOException e) {
-            throw new McpToolException("Cannot access directory for: " + display, e);
+            throw new McpToolException(
+                    "output_not_writable",
+                    "Cannot access directory for: " + display, e);
         }
         ensureInside(realDirectory, display);
     }
@@ -207,13 +341,13 @@ public final class McpPaths {
     private void ensureInsideLexically(Path path, String display) throws McpToolException {
         Path normalized = path.toAbsolutePath().normalize();
         if (!normalized.startsWith(root)) {
-            throw new McpToolException("Path is outside the configured root: " + display);
+            throw new McpToolException("path_outside_root", "Path is outside the configured root: " + display);
         }
     }
 
     private void ensureInside(Path realPath, String display) throws McpToolException {
         if (!realPath.startsWith(root)) {
-            throw new McpToolException("Path is outside the configured root: " + display);
+            throw new McpToolException("path_outside_root", "Path is outside the configured root: " + display);
         }
     }
 

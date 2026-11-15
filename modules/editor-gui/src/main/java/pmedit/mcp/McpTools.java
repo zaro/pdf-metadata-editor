@@ -11,12 +11,25 @@ import java.util.List;
 
 /**
  * Tool definitions and argument dispatch for the MCP server.
+ *
+ * <p>Every file operation is a batch operation with CLI parity: callers pass a
+ * {@code paths} array containing files and/or directories, and the tool returns
+ * one result per PDF. A single file is just {@code paths: ["one.pdf"]}.</p>
  */
 public final class McpTools {
 
     private static final Logger LOG = LoggerFactory.getLogger(McpTools.class);
     private static final String OWNER_PASSWORD_DESCRIPTION =
             "Owner password for an encrypted PDF. If omitted, a protected PDF returns password_required.";
+    private static final String PATHS_DESCRIPTION =
+            "PDF files and/or directories, relative to the MCP root unless absolute paths inside the "
+                    + "root are used. Directories are searched recursively for .pdf files. "
+                    + "A single file is [\"one.pdf\"].";
+    private static final String OUTPUT_DIR_DESCRIPTION =
+            "Optional output directory, relative to the MCP root. The input directory structure is "
+                    + "preserved beneath it. When omitted, files are updated in place.";
+    private static final String BATCH_LIMIT =
+            "A batch may contain at most " + McpPaths.MAX_BATCH_FILES + " PDF files.";
 
     private final McpMetadata metadata;
     private final List<Tool> tools;
@@ -83,7 +96,7 @@ public final class McpTools {
                 "List PDF metadata fields",
                 "List every metadata field identifier, its data type, and whether it is writable. "
                         + "Call this before pdf_set_metadata to discover valid field names. "
-                        + "Read-only.",
+                        + "Read-only and free.",
                 emptySchema(),
                 listFieldsOutputSchema(),
                 McpJson.annotations(true, false, true),
@@ -93,14 +106,14 @@ public final class McpTools {
         definitions.add(new Tool(
                 "pdf_read_metadata",
                 "Read PDF metadata",
-                "Read metadata from a PDF. Paths are relative to the configured MCP root unless absolute "
-                        + "paths inside that root are used. By default only populated fields are returned; "
-                        + "pass fields to request specific field IDs. Read-only.",
+                "Read metadata from one or more PDFs or directories, like the CLI's batch input. "
+                        + "By default only populated fields are returned; pass fields to request specific "
+                        + "field IDs. " + BATCH_LIMIT + " Read-only and free.",
                 readInputSchema(),
-                readOutputSchema(),
+                batchOutputSchema("One entry per PDF file.", true),
                 McpJson.annotations(true, false, true),
-                args -> McpResult.success(metadata.read(
-                        requiredString(args, "path"),
+                args -> McpResult.batch(metadata.readBatch(
+                        requiredStringList(args, "paths"),
                         optionalString(args, "ownerPassword"),
                         optionalStringList(args, "fields")))
         ));
@@ -108,76 +121,56 @@ public final class McpTools {
         definitions.add(new Tool(
                 "pdf_set_metadata",
                 "Set PDF metadata",
-                "Set one or more metadata fields on a PDF. Only the supplied fields are changed; all other "
-                        + "metadata in the document is preserved. Writes in place by default, or to outputPath "
-                        + "when supplied. May require a license.",
+                "Set one or more metadata fields on every input PDF. Equivalent to the CLI 'edit' command. "
+                        + "Only the supplied fields are changed; all other metadata in each document is "
+                        + "preserved. Values can use {field.id} templates expanded from each file's own "
+                        + "metadata. Writes in place by default, or beneath outputDir when supplied. "
+                        + BATCH_LIMIT + " May require a license.",
                 setInputSchema(),
-                mutationOutputSchema("updated", "The field IDs that were written."),
+                batchOutputSchema("One entry per PDF file.", false),
                 McpJson.annotations(false, false, true),
-                args -> McpResult.success(metadata.set(
-                        requiredString(args, "path"),
+                args -> McpResult.batch(metadata.setBatch(
+                        requiredStringList(args, "paths"),
                         requiredObject(args, "metadata"),
-                        optionalString(args, "outputPath"),
+                        optionalString(args, "outputDir"),
                         optionalString(args, "ownerPassword")))
         ));
 
         definitions.add(new Tool(
                 "pdf_clear_metadata",
                 "Clear PDF metadata",
-                "Clear all metadata or only the selected fields. Writes in place by default, or to outputPath "
-                        + "when supplied. May require a license.",
+                "Clear all metadata or only the selected fields on every input PDF. Equivalent to the CLI "
+                        + "'clear' command. Writes in place by default, or beneath outputDir when supplied. "
+                        + BATCH_LIMIT + " May require a license.",
                 clearInputSchema(),
-                mutationOutputSchema("cleared", "The field IDs that were cleared."),
+                batchOutputSchema("One entry per PDF file.", false),
                 McpJson.annotations(false, true, true),
-                args -> McpResult.success(metadata.clear(
-                        requiredString(args, "path"),
+                args -> McpResult.batch(metadata.clearBatch(
+                        requiredStringList(args, "paths"),
                         optionalStringList(args, "fields"),
-                        optionalString(args, "outputPath"),
-                        optionalString(args, "ownerPassword")))
-        ));
-
-        definitions.add(new Tool(
-                "pdf_rename",
-                "Rename PDF from metadata",
-                "Rename a PDF using a metadata template such as '{doc.author} - {doc.title}.pdf'. "
-                        + "The destination must not exist. When outputDir is omitted the file is moved within "
-                        + "its current directory; when supplied the file is copied there. May require a license.",
-                renameInputSchema(),
-                renameOutputSchema(),
-                McpJson.annotations(false, false, false),
-                args -> McpResult.success(metadata.rename(
-                        requiredString(args, "path"),
-                        requiredString(args, "template"),
                         optionalString(args, "outputDir"),
                         optionalString(args, "ownerPassword")))
         ));
 
         definitions.add(new Tool(
-                "pdf_export_metadata",
-                "Export PDF metadata",
-                "Export metadata as JSON or YAML. When outputPath is omitted the serialized document is "
-                        + "returned inline. Read-only.",
-                exportInputSchema(),
-                exportOutputSchema(),
-                McpJson.annotations(true, false, true),
-                args -> exportResult(metadata, args)
+                "pdf_rename",
+                "Rename PDFs from metadata",
+                "Rename every input PDF using a metadata template such as "
+                        + "'{doc.author} - {doc.title}.pdf'. Equivalent to the CLI 'rename' command. "
+                        + "The destination must not exist. When outputDir is omitted the file is moved within "
+                        + "its current directory; when supplied the file is copied beneath outputDir. "
+                        + BATCH_LIMIT + " May require a license.",
+                renameInputSchema(),
+                batchOutputSchema("One entry per PDF file.", false),
+                McpJson.annotations(false, true, false),
+                args -> McpResult.batch(metadata.renameBatch(
+                        requiredStringList(args, "paths"),
+                        requiredString(args, "template"),
+                        optionalString(args, "outputDir"),
+                        optionalString(args, "ownerPassword")))
         ));
 
         return definitions;
-    }
-
-    private static ObjectNode exportResult(McpMetadata metadata, ObjectNode args) throws Exception {
-        ObjectNode result = metadata.export(
-                requiredString(args, "path"),
-                requiredString(args, "format"),
-                optionalString(args, "outputPath"),
-                optionalString(args, "ownerPassword"));
-
-        JsonNode content = result.get("content");
-        if (content != null && content.isTextual()) {
-            return McpResult.success(content.asText(), result);
-        }
-        return McpResult.success(result);
     }
 
     // ---------------------------------------------------------------------
@@ -188,9 +181,15 @@ public final class McpTools {
         return McpJson.objectSchema();
     }
 
+    private static ObjectNode pathsProperty() {
+        ObjectNode property = McpJson.stringArrayProperty(PATHS_DESCRIPTION);
+        property.put("minItems", 1);
+        return property;
+    }
+
     private static ObjectNode readInputSchema() {
         ObjectNode schema = McpJson.objectSchema();
-        McpJson.addProperty(schema, "path", McpJson.stringProperty("PDF path relative to the MCP root."), true);
+        McpJson.addProperty(schema, "paths", pathsProperty(), true);
         McpJson.addProperty(schema, "ownerPassword", McpJson.stringProperty(OWNER_PASSWORD_DESCRIPTION), false);
         McpJson.addProperty(schema, "fields", McpJson.stringArrayProperty("Optional subset of metadata field IDs."), false);
         return schema;
@@ -198,36 +197,29 @@ public final class McpTools {
 
     private static ObjectNode setInputSchema() {
         ObjectNode schema = McpJson.objectSchema();
-        McpJson.addProperty(schema, "path", McpJson.stringProperty("PDF path relative to the MCP root."), true);
+        McpJson.addProperty(schema, "paths", pathsProperty(), true);
         McpJson.addProperty(schema, "metadata", McpJson.objectProperty("Map of metadata field IDs to values."), true);
-        McpJson.addProperty(schema, "outputPath", McpJson.stringProperty("Optional output path. Defaults to in-place update."), false);
+        McpJson.addProperty(schema, "outputDir", McpJson.stringProperty(OUTPUT_DIR_DESCRIPTION), false);
         McpJson.addProperty(schema, "ownerPassword", McpJson.stringProperty(OWNER_PASSWORD_DESCRIPTION), false);
         return schema;
     }
 
     private static ObjectNode clearInputSchema() {
         ObjectNode schema = McpJson.objectSchema();
-        McpJson.addProperty(schema, "path", McpJson.stringProperty("PDF path relative to the MCP root."), true);
+        McpJson.addProperty(schema, "paths", pathsProperty(), true);
         McpJson.addProperty(schema, "fields", McpJson.stringArrayProperty("Field IDs to clear. Defaults to [\"all\"]."), false);
-        McpJson.addProperty(schema, "outputPath", McpJson.stringProperty("Optional output path. Defaults to in-place update."), false);
+        McpJson.addProperty(schema, "outputDir", McpJson.stringProperty(OUTPUT_DIR_DESCRIPTION), false);
         McpJson.addProperty(schema, "ownerPassword", McpJson.stringProperty(OWNER_PASSWORD_DESCRIPTION), false);
         return schema;
     }
 
     private static ObjectNode renameInputSchema() {
         ObjectNode schema = McpJson.objectSchema();
-        McpJson.addProperty(schema, "path", McpJson.stringProperty("PDF path relative to the MCP root."), true);
+        McpJson.addProperty(schema, "paths", pathsProperty(), true);
         McpJson.addProperty(schema, "template", McpJson.stringProperty("Rename template, e.g. '{doc.author} - {doc.title}.pdf'."), true);
-        McpJson.addProperty(schema, "outputDir", McpJson.stringProperty("Optional destination directory. Defaults to the source directory."), false);
-        McpJson.addProperty(schema, "ownerPassword", McpJson.stringProperty(OWNER_PASSWORD_DESCRIPTION), false);
-        return schema;
-    }
-
-    private static ObjectNode exportInputSchema() {
-        ObjectNode schema = McpJson.objectSchema();
-        McpJson.addProperty(schema, "path", McpJson.stringProperty("PDF path relative to the MCP root."), true);
-        McpJson.addProperty(schema, "format", McpJson.enumProperty("Export format.", "json", "yaml"), true);
-        McpJson.addProperty(schema, "outputPath", McpJson.stringProperty("Optional output file path. Omit to return the content inline."), false);
+        McpJson.addProperty(schema, "outputDir", McpJson.stringProperty(
+                "Optional destination directory. Defaults to moving within each source directory. "
+                        + "The input directory structure is preserved beneath it."), false);
         McpJson.addProperty(schema, "ownerPassword", McpJson.stringProperty(OWNER_PASSWORD_DESCRIPTION), false);
         return schema;
     }
@@ -250,38 +242,32 @@ public final class McpTools {
         return schema;
     }
 
-    private static ObjectNode readOutputSchema() {
-        ObjectNode schema = McpJson.outputObjectSchema();
-        McpJson.addProperty(schema, "path", McpJson.stringProperty("Path relative to the MCP root."), true);
-        McpJson.addProperty(schema, "file", McpJson.objectProperty("File information."), true);
-        McpJson.addProperty(schema, "fields", McpJson.objectMapProperty("Metadata field values."), true);
-        McpJson.addProperty(schema, "warnings", McpJson.stringArrayProperty("Parser warnings."), false);
-        return schema;
-    }
+    private static ObjectNode batchOutputSchema(String resultDescription, boolean readResults) {
+        ObjectNode summary = McpJson.outputObjectSchema();
+        McpJson.addProperty(summary, "total", McpJson.integerProperty("Number of PDF files selected."), true);
+        McpJson.addProperty(summary, "succeeded", McpJson.integerProperty("Number of files that succeeded."), true);
+        McpJson.addProperty(summary, "failed", McpJson.integerProperty("Number of files that failed."), true);
+        McpJson.addProperty(summary, "truncated", McpJson.booleanProperty("Whether the result list was capped."), true);
 
-    private static ObjectNode mutationOutputSchema(String listKey, String listDescription) {
-        ObjectNode schema = McpJson.outputObjectSchema();
-        McpJson.addProperty(schema, "path", McpJson.stringProperty("Input path relative to the MCP root."), true);
-        McpJson.addProperty(schema, "outputPath", McpJson.stringProperty("Output path relative to the MCP root."), true);
-        McpJson.addProperty(schema, listKey, McpJson.stringArrayProperty(listDescription), true);
-        McpJson.addProperty(schema, "warnings", McpJson.stringArrayProperty("Warnings produced while writing."), false);
-        return schema;
-    }
+        ObjectNode error = McpJson.outputObjectSchema();
+        McpJson.addProperty(error, "code", McpJson.stringProperty("Machine-readable error code."), true);
+        McpJson.addProperty(error, "message", McpJson.stringProperty("Human-readable error message."), true);
 
-    private static ObjectNode renameOutputSchema() {
-        ObjectNode schema = McpJson.outputObjectSchema();
-        McpJson.addProperty(schema, "inputPath", McpJson.stringProperty("Original path relative to the MCP root."), true);
-        McpJson.addProperty(schema, "outputPath", McpJson.stringProperty("New path relative to the MCP root."), true);
-        McpJson.addProperty(schema, "renamed", McpJson.booleanProperty("Whether the rename succeeded."), true);
-        return schema;
-    }
+        ObjectNode item = McpJson.outputObjectSchema();
+        McpJson.addProperty(item, "input", McpJson.stringProperty("Input path relative to the MCP root."), true);
+        McpJson.addProperty(item, "output", McpJson.stringProperty("Output path, when a new file was written."), false);
+        McpJson.addProperty(item, "ok", McpJson.booleanProperty("Whether the file was processed successfully."), true);
+        McpJson.addProperty(item, "action", McpJson.stringProperty("Operation performed on the file."), false);
+        McpJson.addProperty(item, "fields", readResults
+                ? McpJson.objectMapProperty("Metadata field values for each file.")
+                : McpJson.arrayProperty("Field IDs written or cleared.", McpJson.stringProperty("Metadata field ID.")), false);
+        McpJson.addProperty(item, "file", McpJson.objectProperty("File information for read results."), false);
+        McpJson.addProperty(item, "warnings", McpJson.stringArrayProperty("Warnings produced while processing."), false);
+        McpJson.addProperty(item, "error", error, false);
 
-    private static ObjectNode exportOutputSchema() {
         ObjectNode schema = McpJson.outputObjectSchema();
-        McpJson.addProperty(schema, "path", McpJson.stringProperty("Path relative to the MCP root."), true);
-        McpJson.addProperty(schema, "format", McpJson.enumProperty("Export format.", "json", "yaml"), true);
-        McpJson.addProperty(schema, "content", McpJson.stringProperty("Serialized metadata when no outputPath was supplied."), false);
-        McpJson.addProperty(schema, "outputPath", McpJson.stringProperty("Written file path when outputPath was supplied."), false);
+        McpJson.addProperty(schema, "summary", summary, true);
+        McpJson.addProperty(schema, "results", McpJson.arrayProperty(resultDescription, item), true);
         return schema;
     }
 
@@ -292,7 +278,7 @@ public final class McpTools {
     private static String requiredString(ObjectNode args, String name) throws McpToolException {
         JsonNode node = args.get(name);
         if (node == null || !node.isTextual() || node.asText().isBlank()) {
-            throw new McpToolException("Missing or invalid '" + name + "' argument");
+            throw new McpToolException("invalid_argument", "Missing or invalid '" + name + "' argument");
         }
         return node.asText();
     }
@@ -303,9 +289,17 @@ public final class McpTools {
             return null;
         }
         if (!node.isTextual()) {
-            throw new McpToolException("Invalid '" + name + "' argument: expected a string");
+            throw new McpToolException("invalid_argument", "Invalid '" + name + "' argument: expected a string");
         }
         return node.asText();
+    }
+
+    private static List<String> requiredStringList(ObjectNode args, String name) throws McpToolException {
+        List<String> values = optionalStringList(args, name);
+        if (values == null || values.isEmpty()) {
+            throw new McpToolException("invalid_argument", "Missing or empty '" + name + "' argument");
+        }
+        return values;
     }
 
     private static List<String> optionalStringList(ObjectNode args, String name) throws McpToolException {
@@ -314,13 +308,13 @@ public final class McpTools {
             return null;
         }
         if (!node.isArray()) {
-            throw new McpToolException("Invalid '" + name + "' argument: expected an array of strings");
+            throw new McpToolException("invalid_argument", "Invalid '" + name + "' argument: expected an array of strings");
         }
 
         List<String> result = new ArrayList<>();
         for (JsonNode item : node) {
             if (!item.isTextual()) {
-                throw new McpToolException("Invalid '" + name + "' argument: expected an array of strings");
+                throw new McpToolException("invalid_argument", "Invalid '" + name + "' argument: expected an array of strings");
             }
             result.add(item.asText());
         }
@@ -330,7 +324,7 @@ public final class McpTools {
     private static ObjectNode requiredObject(ObjectNode args, String name) throws McpToolException {
         JsonNode node = args.get(name);
         if (node == null || !node.isObject() || node.size() == 0) {
-            throw new McpToolException("Missing or invalid '" + name + "' argument: expected a non-empty object");
+            throw new McpToolException("invalid_argument", "Missing or invalid '" + name + "' argument: expected a non-empty object");
         }
         return (ObjectNode) node;
     }

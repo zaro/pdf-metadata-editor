@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
 import org.junit.jupiter.api.Test;
@@ -11,11 +12,12 @@ import org.junit.jupiter.api.io.TempDir;
 import pmedit.DateFormat;
 import pmedit.FilesTestHelper;
 import pmedit.MetadataInfo;
-import pmedit.serdes.SerDeslUtils;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -49,33 +51,165 @@ public class McpMetadataTest {
     }
 
     @Test
-    public void readReturnsPopulatedFieldsOnlyByDefault() throws Exception {
-        FilesTestHelper.PMTuple file = createMinimalFile("McpTitle");
+    public void readBatchReturnsOneResultPerFile() throws Exception {
+        FilesTestHelper.PMTuple first = createNamedFile("a.pdf", "Title A");
+        FilesTestHelper.PMTuple second = createNamedFile("b.pdf", "Title B");
 
-        ObjectNode result = metadata(false, true).read(file.file.getName(), null, null);
+        ObjectNode batch = node(metadata(false, true).readBatch(
+                List.of(first.file.getName(), second.file.getName()), null, null));
 
-        assertEquals(file.file.getName(), result.get("path").asText());
-        assertEquals("McpTitle", result.get("fields").get("doc.title").asText());
-        assertFalse(result.get("fields").has("prop.ownerPassword"));
-        assertFalse(result.get("fields").has("prop.userPassword"));
-        assertFalse(result.get("fields").has("dc.coverage"));
+        assertEquals(2, batch.get("summary").get("total").asInt());
+        assertEquals(2, batch.get("summary").get("succeeded").asInt());
+        assertEquals(0, batch.get("summary").get("failed").asInt());
+
+        JsonNode a = batch.get("results").get(0);
+        assertEquals("a.pdf", a.get("input").asText());
+        assertTrue(a.get("ok").asBoolean());
+        assertEquals("Title A", a.get("fields").get("doc.title").asText());
+        assertEquals("a.pdf", a.get("file").get("path").asText());
+
+        JsonNode b = batch.get("results").get(1);
+        assertEquals("b.pdf", b.get("input").asText());
+        assertEquals("Title B", b.get("fields").get("doc.title").asText());
+    }
+
+    @Test
+    public void readBatchExpandsDirectoriesRecursively() throws Exception {
+        createNamedFile("docs/a.pdf", "A");
+        createNamedFile("docs/sub/b.pdf", "B");
+        Files.writeString(tempDir.resolve("docs/notes.txt"), "not a pdf");
+
+        ObjectNode batch = node(metadata(false, true).readBatch(List.of("docs"), null, null));
+
+        assertEquals(2, batch.get("summary").get("total").asInt());
+        assertEquals("docs/a.pdf", batch.get("results").get(0).get("input").asText());
+        assertEquals("docs/sub/b.pdf", batch.get("results").get(1).get("input").asText());
+    }
+
+    @Test
+    public void readBatchDeduplicatesOverlappingPaths() throws Exception {
+        createNamedFile("docs/a.pdf", "A");
+        createNamedFile("docs/sub/b.pdf", "B");
+
+        ObjectNode batch = node(metadata(false, true).readBatch(
+                List.of("docs", "docs/a.pdf", "docs/../docs/sub/b.pdf"), null, null));
+
+        assertEquals(2, batch.get("summary").get("total").asInt());
     }
 
     @Test
     public void readWithRequestedFieldsReturnsExactlyThoseFields() throws Exception {
-        FilesTestHelper.PMTuple file = createFile("McpTitle");
+        FilesTestHelper.PMTuple file = createNamedFile("a.pdf", "McpTitle");
 
-        ObjectNode result = metadata(false, true).read(
-                file.file.getName(), null, List.of("doc.title", "doc.author"));
+        ObjectNode batch = node(metadata(false, true).readBatch(
+                List.of(file.file.getName()), null, List.of("doc.title", "doc.author")));
 
-        assertEquals(2, result.get("fields").size());
-        assertEquals("McpTitle", result.get("fields").get("doc.title").asText());
-        assertEquals("McpAuthor", result.get("fields").get("doc.author").asText());
+        JsonNode fields = batch.get("results").get(0).get("fields");
+        assertEquals(2, fields.size());
+        assertEquals("McpTitle", fields.get("doc.title").asText());
+        assertEquals("McpAuthor", fields.get("doc.author").asText());
     }
 
     @Test
-    public void setUpdatesFieldsAndPreservesUntouchedMetadata() throws Exception {
-        FilesTestHelper.PMTuple file = createFile("McpTitle");
+    public void readBatchReturnsPopulatedFieldsOnlyByDefault() throws Exception {
+        FilesTestHelper.PMTuple file = createNamedFile("a.pdf", "McpTitle");
+
+        JsonNode fields = node(metadata(false, true).readBatch(
+                List.of(file.file.getName()), null, null)).get("results").get(0).get("fields");
+
+        assertEquals("McpTitle", fields.get("doc.title").asText());
+        assertFalse(fields.has("prop.ownerPassword"));
+        assertFalse(fields.has("prop.userPassword"));
+        assertFalse(fields.has("dc.coverage"));
+    }
+
+    @Test
+    public void readBatchRejectsMissingPathBeforeReading() throws Exception {
+        McpToolException error = assertThrows(McpToolException.class,
+                () -> metadata(false, true).readBatch(List.of("missing.pdf"), null, null));
+
+        assertEquals("file_not_found", error.code());
+        assertTrue(error.getMessage().contains("File not found"));
+    }
+
+    @Test
+    public void readBatchRejectsExplicitNonPdf() throws Exception {
+        Files.writeString(tempDir.resolve("notes.txt"), "not a pdf");
+
+        McpToolException error = assertThrows(McpToolException.class,
+                () -> metadata(false, true).readBatch(List.of("notes.txt"), null, null));
+
+        assertEquals("not_a_pdf", error.code());
+    }
+
+    @Test
+    public void readBatchRejectsEmptyPathList() throws Exception {
+        McpToolException error = assertThrows(McpToolException.class,
+                () -> metadata(false, true).readBatch(List.of(), null, null));
+
+        assertEquals("no_input_files", error.code());
+    }
+
+    @Test
+    public void readBatchRejectsEmptyDirectory() throws Exception {
+        Files.createDirectories(tempDir.resolve("empty"));
+
+        McpToolException error = assertThrows(McpToolException.class,
+                () -> metadata(false, true).readBatch(List.of("empty"), null, null));
+
+        assertEquals("no_input_files", error.code());
+    }
+
+    @Test
+    public void readBatchRejectsBatchesOverTheLimit() throws Exception {
+        Files.createDirectories(tempDir.resolve("many"));
+        for (int i = 0; i <= McpPaths.MAX_BATCH_FILES; i++) {
+            Files.writeString(tempDir.resolve("many/file-" + i + ".pdf"), "not parsed");
+        }
+
+        McpToolException error = assertThrows(McpToolException.class,
+                () -> metadata(false, true).readBatch(List.of("many"), null, null));
+
+        assertEquals("batch_too_large", error.code());
+        assertTrue(error.getMessage().contains(String.valueOf(McpPaths.MAX_BATCH_FILES)));
+    }
+
+    @Test
+    public void setBatchUpdatesEveryFile() throws Exception {
+        FilesTestHelper.PMTuple first = createNamedFile("a.pdf", "Title A");
+        FilesTestHelper.PMTuple second = createNamedFile("b.pdf", "Title B");
+
+        ObjectNode values = McpJson.object();
+        values.put("doc.title", "Updated");
+
+        ObjectNode batch = node(metadata(false, true).setBatch(
+                List.of(first.file.getName(), second.file.getName()), values, null, null));
+
+        assertEquals(2, batch.get("summary").get("succeeded").asInt());
+        assertEquals("Updated", FilesTestHelper.load(first.file).doc.title);
+        assertEquals("Updated", FilesTestHelper.load(second.file).doc.title);
+        assertEquals("updated", batch.get("results").get(0).get("action").asText());
+        assertTrue(batch.get("results").get(0).get("fields").toString().contains("doc.title"));
+    }
+
+    @Test
+    public void setBatchExpandsTemplatesPerFile() throws Exception {
+        FilesTestHelper.PMTuple first = createNamedFile("a.pdf", md -> set(md, "doc.author", "Alice"));
+        FilesTestHelper.PMTuple second = createNamedFile("b.pdf", md -> set(md, "doc.author", "Bob"));
+
+        ObjectNode values = McpJson.object();
+        values.put("doc.title", "{doc.author} report");
+
+        metadata(false, true).setBatch(
+                List.of(first.file.getName(), second.file.getName()), values, null, null);
+
+        assertEquals("Alice report", FilesTestHelper.load(first.file).doc.title);
+        assertEquals("Bob report", FilesTestHelper.load(second.file).doc.title);
+    }
+
+    @Test
+    public void setBatchPreservesUntouchedMetadata() throws Exception {
+        FilesTestHelper.PMTuple file = createNamedFile("a.pdf", "McpTitle");
         String preservedSubject = file.md.doc.subject;
 
         ObjectNode values = McpJson.object();
@@ -83,9 +217,8 @@ public class McpMetadataTest {
         values.put("doc.author", "New Author");
         values.put("dc.creators", "New Creator");
 
-        ObjectNode result = metadata(false, true).set(file.file.getName(), values, null, null);
+        metadata(false, true).setBatch(List.of(file.file.getName()), values, null, null);
 
-        assertEquals(3, result.get("updated").size());
         MetadataInfo loaded = FilesTestHelper.load(file.file);
         assertEquals("New Title", loaded.doc.title);
         assertEquals("New Author", loaded.doc.author);
@@ -94,32 +227,52 @@ public class McpMetadataTest {
     }
 
     @Test
-    public void setCanWriteToADifferentOutputPath() throws Exception {
-        FilesTestHelper.PMTuple file = createFile("McpTitle");
-        String originalMetadataTitle = file.md.doc.title;
+    public void setBatchWritesUnderOutputDirPreservingStructure() throws Exception {
+        createNamedFile("docs/a.pdf", "Title A");
+        createNamedFile("docs/sub/b.pdf", "Title B");
 
         ObjectNode values = McpJson.object();
         values.put("doc.title", "Copied Title");
 
-        metadata(false, true).set(file.file.getName(), values, "copy.pdf", null);
+        ObjectNode batch = node(metadata(false, true).setBatch(
+                List.of("docs"), values, "out", null));
 
-        assertEquals(originalMetadataTitle, FilesTestHelper.load(file.file).doc.title);
-        File copy = new File(tempDir.toFile(), "copy.pdf");
-        assertTrue(copy.exists());
-        assertEquals("Copied Title", FilesTestHelper.load(copy).doc.title);
+        assertEquals(2, batch.get("summary").get("succeeded").asInt());
+        assertEquals("out/a.pdf", batch.get("results").get(0).get("output").asText());
+        assertEquals("out/sub/b.pdf", batch.get("results").get(1).get("output").asText());
+
+        assertTrue(Files.exists(tempDir.resolve("out/a.pdf")));
+        assertTrue(Files.exists(tempDir.resolve("out/sub/b.pdf")));
+        assertEquals("Copied Title", FilesTestHelper.load(tempDir.resolve("out/a.pdf").toFile()).doc.title);
+        assertEquals("Title A", FilesTestHelper.load(tempDir.resolve("docs/a.pdf").toFile()).doc.title);
+    }
+
+    @Test
+    public void setBatchWritesASingleFileToOutputDir() throws Exception {
+        FilesTestHelper.PMTuple file = createNamedFile("a.pdf", "McpTitle");
+
+        ObjectNode values = McpJson.object();
+        values.put("doc.title", "Copied Title");
+
+        ObjectNode batch = node(metadata(false, true).setBatch(
+                List.of(file.file.getName()), values, "copy", null));
+
+        assertEquals("copy/a.pdf", batch.get("results").get(0).get("output").asText());
+        assertEquals("McpTitle", FilesTestHelper.load(file.file).doc.title);
+        assertEquals("Copied Title", FilesTestHelper.load(tempDir.resolve("copy/a.pdf").toFile()).doc.title);
     }
 
     @Test
     public void convertsJsonValuesToMetadataTypes() throws Exception {
-        FilesTestHelper.PMTuple file = createFile("McpTitle");
+        FilesTestHelper.PMTuple file = createNamedFile("a.pdf", "McpTitle");
 
         ObjectNode values = McpJson.object();
         values.put("doc.creationDate", "2020-01-02T03:04:05");
         values.put("basic.rating", 4);
-        values.put("dc.creators", McpJson.array().add("Alice").add("Bob"));
-        values.put("basic.identifiers", McpJson.array().add("id-1"));
+        values.set("dc.creators", McpJson.array().add("Alice").add("Bob"));
+        values.set("basic.identifiers", McpJson.array().add("id-1"));
 
-        metadata(false, true).set(file.file.getName(), values, null, null);
+        metadata(false, true).setBatch(List.of(file.file.getName()), values, null, null);
 
         MetadataInfo loaded = FilesTestHelper.load(file.file);
         assertNotNull(loaded.doc.creationDate);
@@ -131,219 +284,264 @@ public class McpMetadataTest {
 
     @Test
     public void rejectsUnknownReadOnlyAndSecretFields() throws Exception {
-        FilesTestHelper.PMTuple file = createFile("McpTitle");
+        FilesTestHelper.PMTuple file = createNamedFile("a.pdf", "McpTitle");
         McpMetadata metadata = metadata(false, true);
 
         ObjectNode unknown = McpJson.object();
         unknown.put("does.not.exist", "x");
         McpToolException unknownError = assertThrows(McpToolException.class,
-                () -> metadata.set(file.file.getName(), unknown, null, null));
+                () -> metadata.setBatch(List.of(file.file.getName()), unknown, null, null));
         assertTrue(unknownError.getMessage().contains("Unknown metadata field"));
 
         ObjectNode readOnly = McpJson.object();
         readOnly.put("file.name", "x");
         McpToolException readOnlyError = assertThrows(McpToolException.class,
-                () -> metadata.set(file.file.getName(), readOnly, null, null));
+                () -> metadata.setBatch(List.of(file.file.getName()), readOnly, null, null));
         assertTrue(readOnlyError.getMessage().contains("read-only"));
 
         ObjectNode secret = McpJson.object();
         secret.put("prop.ownerPassword", "x");
         McpToolException secretError = assertThrows(McpToolException.class,
-                () -> metadata.set(file.file.getName(), secret, null, null));
+                () -> metadata.setBatch(List.of(file.file.getName()), secret, null, null));
         assertTrue(secretError.getMessage().contains("ownerPassword"));
     }
 
     @Test
     public void rejectsInvalidDateValue() throws Exception {
-        FilesTestHelper.PMTuple file = createFile("McpTitle");
+        FilesTestHelper.PMTuple file = createNamedFile("a.pdf", "McpTitle");
 
         ObjectNode values = McpJson.object();
         values.put("doc.creationDate", "not-a-date");
 
         McpToolException error = assertThrows(McpToolException.class,
-                () -> metadata(false, true).set(file.file.getName(), values, null, null));
+                () -> metadata(false, true).setBatch(List.of(file.file.getName()), values, null, null));
         assertTrue(error.getMessage().contains("doc.creationDate"));
     }
 
     @Test
-    public void clearSubsetClearsOnlySelectedFields() throws Exception {
-        FilesTestHelper.PMTuple file = createFile("McpTitle");
+    public void clearBatchClearsOnlySelectedFields() throws Exception {
+        FilesTestHelper.PMTuple first = createNamedFile("a.pdf", "Title A");
+        FilesTestHelper.PMTuple second = createNamedFile("b.pdf", "Title B");
 
-        metadata(false, true).clear(file.file.getName(), List.of("doc.title"), null, null);
+        ObjectNode batch = node(metadata(false, true).clearBatch(
+                List.of(first.file.getName(), second.file.getName()),
+                List.of("doc.title"), null, null));
 
-        MetadataInfo loaded = FilesTestHelper.load(file.file);
-        assertNull(loaded.doc.title);
-        assertEquals("McpAuthor", loaded.doc.author);
+        assertEquals(2, batch.get("summary").get("succeeded").asInt());
+
+        MetadataInfo loadedFirst = FilesTestHelper.load(first.file);
+        assertNull(loadedFirst.doc.title);
+        assertEquals("McpAuthor", loadedFirst.doc.author);
+
+        MetadataInfo loadedSecond = FilesTestHelper.load(second.file);
+        assertNull(loadedSecond.doc.title);
+        assertEquals("McpAuthor", loadedSecond.doc.author);
     }
 
     @Test
     public void clearAllRemovesMetadata() throws Exception {
-        FilesTestHelper.PMTuple file = createFile("McpTitle");
+        FilesTestHelper.PMTuple file = createNamedFile("a.pdf", "McpTitle");
 
-        metadata(false, true).clear(file.file.getName(), null, null, null);
+        metadata(false, true).clearBatch(List.of(file.file.getName()), null, null, null);
 
         MetadataInfo loaded = FilesTestHelper.load(file.file);
         FilesTestHelper.assertEqualsAllExceptFileProps(new MetadataInfo(), loaded, "Metadata was not cleared");
     }
 
     @Test
-    public void renameUsesMetadataTemplate() throws Exception {
-        FilesTestHelper.PMTuple file = createFile("McpRenameTitle");
+    public void renameBatchUsesMetadataTemplate() throws Exception {
+        createNamedFile("a.pdf", "McpRenameTitle");
 
-        ObjectNode result = metadata(false, true).rename(file.file.getName(), "{doc.title}", null, null);
+        ObjectNode batch = node(metadata(false, true).renameBatch(
+                List.of("a.pdf"), "{doc.title}", null, null));
 
-        assertEquals("McpRenameTitle.pdf", result.get("outputPath").asText());
+        assertEquals(1, batch.get("summary").get("succeeded").asInt());
+        assertEquals("McpRenameTitle.pdf", batch.get("results").get(0).get("output").asText());
         assertTrue(new File(tempDir.toFile(), "McpRenameTitle.pdf").exists());
-        assertFalse(file.file.exists());
+        assertFalse(tempDir.resolve("a.pdf").toFile().exists());
     }
 
     @Test
-    public void renameRefusesExistingDestination() throws Exception {
-        FilesTestHelper.PMTuple file = createFile("McpRenameTitle");
-        assertTrue(new File(tempDir.toFile(), "McpRenameTitle.pdf").createNewFile());
+    public void renameBatchCopiesUnderOutputDirPreservingStructure() throws Exception {
+        createNamedFile("docs/a.pdf", "McpRenameTitle");
 
-        McpToolException error = assertThrows(McpToolException.class,
-                () -> metadata(false, true).rename(file.file.getName(), "{doc.title}", null, null));
+        ObjectNode batch = node(metadata(false, true).renameBatch(
+                List.of("docs"), "{doc.title}", "renamed", null));
 
-        assertTrue(error.getMessage().contains("already exists"));
+        assertEquals(1, batch.get("summary").get("succeeded").asInt());
+        assertEquals("renamed/McpRenameTitle.pdf", batch.get("results").get(0).get("output").asText());
+        assertTrue(tempDir.resolve("docs/a.pdf").toFile().exists());
+        assertTrue(tempDir.resolve("renamed/McpRenameTitle.pdf").toFile().exists());
     }
 
     @Test
-    public void exportReturnsJsonAndYaml() throws Exception {
-        FilesTestHelper.PMTuple file = createFile("McpTitle");
+    public void renameRefusesExistingDestinationPerFile() throws Exception {
+        createNamedFile("a.pdf", "McpRenameTitle");
+        assertTrue(tempDir.resolve("McpRenameTitle.pdf").toFile().createNewFile());
+
+        ObjectNode batch = node(metadata(false, true).renameBatch(
+                List.of("a.pdf"), "{doc.title}", null, null));
+
+        assertEquals(0, batch.get("summary").get("succeeded").asInt());
+        assertEquals(1, batch.get("summary").get("failed").asInt());
+        assertEquals("destination_exists",
+                batch.get("results").get(0).get("error").get("code").asText());
+        assertTrue(tempDir.resolve("a.pdf").toFile().exists());
+    }
+
+    @Test
+    public void passwordErrorsAreClassifiedPerFile() throws Exception {
+        FilesTestHelper.PMTuple encrypted = createEncryptedFile("Encrypted Title");
         McpMetadata metadata = metadata(false, true);
 
-        ObjectNode json = metadata.export(file.file.getName(), "json", null, null);
-        assertEquals("json", json.get("format").asText());
-        assertTrue(json.get("content").asText().contains("\"doc.title\""));
-        assertFalse(json.get("content").asText().contains("ownerPassword"));
+        JsonNode requiredRead = node(metadata.readBatch(
+                List.of(encrypted.file.getName()), null, null)).get("results").get(0);
+        assertFalse(requiredRead.get("ok").asBoolean());
+        assertEquals("password_required", requiredRead.get("error").get("code").asText());
+        assertTrue(requiredRead.get("error").get("message").asText().contains("password-protected"));
 
-        ObjectNode yaml = metadata.export(file.file.getName(), "yaml", "export.yaml", null);
-        assertEquals("yaml", yaml.get("format").asText());
-        assertEquals("export.yaml", yaml.get("outputPath").asText());
-        assertTrue(new File(tempDir.toFile(), "export.yaml").exists());
-    }
+        JsonNode invalidRead = node(metadata.readBatch(
+                List.of(encrypted.file.getName()), "wrong", null)).get("results").get(0);
+        assertEquals("invalid_password", invalidRead.get("error").get("code").asText());
 
-    @Test
-    public void inlineExportTextIsTheRawDocument() throws Exception {
-        FilesTestHelper.PMTuple file = createFile("McpTitle");
-        McpTools tools = new McpTools(metadata(false, true));
-
-        for (String format : List.of("json", "yaml")) {
-            ObjectNode args = McpJson.object();
-            args.put("path", file.file.getName());
-            args.put("format", format);
-
-            ObjectNode result = tools.call("pdf_export_metadata", args);
-            assertFalse(result.get("isError").asBoolean());
-
-            String text = result.get("content").get(0).get("text").asText();
-            String content = result.get("structuredContent").get("content").asText();
-            assertEquals(content, text);
-
-            if ("json".equals(format)) {
-                JsonNode parsed = McpJson.parse(text);
-                assertEquals("McpTitle", parsed.get("doc.title").asText());
-            } else {
-                assertNotNull(SerDeslUtils.fromYAML(text));
-            }
-        }
-    }
-
-    @Test
-    public void readsAndExportsEncryptedPdfWithoutLeakingPassword() throws Exception {
-        FilesTestHelper.PMTuple file = createEncryptedFile("Encrypted Title");
-        McpMetadata metadata = metadata(false, true);
-
-        ObjectNode read = metadata.read(file.file.getName(), "ownerpass", null);
-        assertEquals("Encrypted Title", read.get("fields").get("doc.title").asText());
-        assertFalse(read.get("fields").has("prop.ownerPassword"));
-        assertFalse(read.get("fields").has("prop.userPassword"));
-
-        ObjectNode json = metadata.export(file.file.getName(), "json", null, "ownerpass");
-        String jsonText = json.get("content").asText();
-        assertFalse(jsonText.contains("ownerpass"));
-        assertFalse(jsonText.contains("ownerPassword"));
-        JsonNode parsedJson = McpJson.parse(jsonText);
-        assertEquals("Encrypted Title", parsedJson.get("doc.title").asText());
-
-        ObjectNode yaml = metadata.export(file.file.getName(), "yaml", null, "ownerpass");
-        String yamlText = yaml.get("content").asText();
-        assertFalse(yamlText.contains("ownerpass"));
-        assertFalse(yamlText.contains("ownerPassword"));
-        assertNotNull(SerDeslUtils.fromYAML(yamlText));
-    }
-
-    @Test
-    public void passwordErrorsAreClassified() throws Exception {
-        FilesTestHelper.PMTuple file = createEncryptedFile("Encrypted Title");
-        McpMetadata metadata = metadata(false, true);
-
-        McpToolException requiredRead = assertThrows(McpToolException.class,
-                () -> metadata.read(file.file.getName(), null, null));
-        assertEquals("password_required", requiredRead.code());
-        assertTrue(requiredRead.getMessage().contains("password-protected"));
-
-        McpToolException requiredExport = assertThrows(McpToolException.class,
-                () -> metadata.export(file.file.getName(), "json", null, null));
-        assertEquals("password_required", requiredExport.code());
+        JsonNode validRead = node(metadata.readBatch(
+                List.of(encrypted.file.getName()), "ownerpass", null)).get("results").get(0);
+        assertTrue(validRead.get("ok").asBoolean());
+        assertEquals("Encrypted Title", validRead.get("fields").get("doc.title").asText());
 
         ObjectNode values = McpJson.object();
         values.put("doc.title", "x");
-        McpToolException requiredSet = assertThrows(McpToolException.class,
-                () -> metadata.set(file.file.getName(), values, null, null));
-        assertEquals("password_required", requiredSet.code());
 
-        McpToolException invalidRead = assertThrows(McpToolException.class,
-                () -> metadata.read(file.file.getName(), "wrong", null));
-        assertEquals("invalid_password", invalidRead.code());
-        assertTrue(invalidRead.getMessage().contains("could not open"));
+        JsonNode requiredSet = node(metadata.setBatch(
+                List.of(encrypted.file.getName()), values, null, null)).get("results").get(0);
+        assertEquals("password_required", requiredSet.get("error").get("code").asText());
+
+        JsonNode invalidSet = node(metadata.setBatch(
+                List.of(encrypted.file.getName()), values, null, "wrong")).get("results").get(0);
+        assertEquals("invalid_password", invalidSet.get("error").get("code").asText());
     }
 
     @Test
-    public void passwordToolErrorIsStructuredJson() throws Exception {
-        FilesTestHelper.PMTuple file = createEncryptedFile("Encrypted Title");
+    public void partialFailureIsNotAToolError() throws Exception {
+        createNamedFile("a.pdf", "Title A");
+        FilesTestHelper.PMTuple encrypted = createEncryptedFile("Encrypted Title");
+
+        McpBatchResult batchResult = metadata(false, true).readBatch(
+                List.of("a.pdf", encrypted.file.getName()), null, null);
+        ObjectNode batch = batchResult.toNode();
+
+        assertFalse(batchResult.isError());
+        assertEquals(1, batch.get("summary").get("succeeded").asInt());
+        assertEquals(1, batch.get("summary").get("failed").asInt());
+        assertTrue(batch.get("results").get(0).get("ok").asBoolean());
+        assertEquals("password_required",
+                batch.get("results").get(1).get("error").get("code").asText());
+    }
+
+    @Test
+    public void allFailuresMakeTheToolResultAnError() throws Exception {
+        FilesTestHelper.PMTuple encrypted = createEncryptedFile("Encrypted Title");
+
+        McpBatchResult batch = metadata(false, true).readBatch(
+                List.of(encrypted.file.getName()), null, null);
+
+        assertTrue(batch.isError());
+    }
+
+    @Test
+    public void passwordToolResultExposesStructuredError() throws Exception {
+        FilesTestHelper.PMTuple encrypted = createEncryptedFile("Encrypted Title");
         McpTools tools = new McpTools(metadata(false, true));
 
         ObjectNode args = McpJson.object();
-        args.put("path", file.file.getName());
+        args.set("paths", McpJson.array().add(encrypted.file.getName()));
 
         ObjectNode result = tools.call("pdf_read_metadata", args);
         assertTrue(result.get("isError").asBoolean());
 
-        JsonNode error = McpJson.parse(result.get("content").get(0).get("text").asText());
-        assertEquals("password_required", error.get("error").asText());
+        JsonNode error = result.get("structuredContent").get("results").get(0).get("error");
+        assertEquals("password_required", error.get("code").asText());
         assertTrue(error.get("message").asText().contains("password-protected"));
+        assertTrue(result.get("content").get(0).get("text").asText().contains("password_required"));
     }
 
     @Test
     public void readOnlyModeRejectsMutations() throws Exception {
-        FilesTestHelper.PMTuple file = createFile("McpTitle");
+        FilesTestHelper.PMTuple file = createNamedFile("a.pdf", "McpTitle");
         McpMetadata metadata = metadata(true, true);
 
         ObjectNode values = McpJson.object();
         values.put("doc.title", "x");
 
         McpToolException error = assertThrows(McpToolException.class,
-                () -> metadata.set(file.file.getName(), values, null, null));
+                () -> metadata.setBatch(List.of(file.file.getName()), values, null, null));
+        assertEquals("read_only", error.code());
         assertTrue(error.getMessage().contains("read-only"));
     }
 
     @Test
     public void missingLicenseRejectsMutationsButAllowsReads() throws Exception {
-        FilesTestHelper.PMTuple file = createFile("McpTitle");
+        FilesTestHelper.PMTuple file = createNamedFile("a.pdf", "McpTitle");
         McpMetadata metadata = metadata(false, false);
 
-        ObjectNode read = metadata.read(file.file.getName(), null, null);
-        assertEquals("McpTitle", read.get("fields").get("doc.title").asText());
+        ObjectNode read = node(metadata.readBatch(List.of(file.file.getName()), null, null));
+        assertEquals("McpTitle", read.get("results").get(0).get("fields").get("doc.title").asText());
 
         ObjectNode values = McpJson.object();
         values.put("doc.title", "x");
 
         McpToolException error = assertThrows(McpToolException.class,
-                () -> metadata.set(file.file.getName(), values, null, null));
+                () -> metadata.setBatch(List.of(file.file.getName()), values, null, null));
+        assertEquals("license_required", error.code());
         assertTrue(error.getMessage().contains("requires a license"));
         assertFalse(error.getMessage().matches("(?is).*\\b(pro|oss|basic|professional)\\b.*"));
+    }
+
+    @Test
+    public void everyProToolRequiresALicense() throws Exception {
+        FilesTestHelper.PMTuple file = createNamedFile("a.pdf", "McpTitle");
+        McpMetadata metadata = metadata(false, false);
+
+        ObjectNode values = McpJson.object();
+        values.put("doc.title", "x");
+
+        assertEquals("license_required", assertThrows(McpToolException.class,
+                () -> metadata.setBatch(List.of(file.file.getName()), values, null, null)).code());
+        assertEquals("license_required", assertThrows(McpToolException.class,
+                () -> metadata.clearBatch(List.of(file.file.getName()), null, null, null)).code());
+        assertEquals("license_required", assertThrows(McpToolException.class,
+                () -> metadata.renameBatch(List.of(file.file.getName()), "{doc.title}", null, null)).code());
+    }
+
+    @Test
+    public void batchTooLargeDoesNotCreateTheOutputDirectory() throws Exception {
+        Files.createDirectories(tempDir.resolve("many"));
+        for (int i = 0; i <= McpPaths.MAX_BATCH_FILES; i++) {
+            Files.writeString(tempDir.resolve("many/file-" + i + ".pdf"), "not parsed");
+        }
+
+        ObjectNode values = McpJson.object();
+        values.put("doc.title", "x");
+
+        McpToolException error = assertThrows(McpToolException.class,
+                () -> metadata(false, true).setBatch(List.of("many"), values, "out", null));
+
+        assertEquals("batch_too_large", error.code());
+        assertFalse(Files.exists(tempDir.resolve("out")));
+    }
+
+    @Test
+    public void outputDirOutsideRootIsRejected() throws Exception {
+        FilesTestHelper.PMTuple file = createNamedFile("a.pdf", "McpTitle");
+
+        ObjectNode values = McpJson.object();
+        values.put("doc.title", "x");
+
+        McpToolException error = assertThrows(McpToolException.class,
+                () -> metadata(false, true).setBatch(
+                        List.of(file.file.getName()), values, "../outside", null));
+
+        assertEquals("path_outside_root", error.code());
     }
 
     private McpMetadata metadata(boolean readOnly, boolean licensed) throws Exception {
@@ -353,21 +551,35 @@ public class McpMetadataTest {
                 new McpOptions(root, readOnly, () -> licensed));
     }
 
-    private FilesTestHelper.PMTuple createFile(String title) throws Exception {
-        List<FilesTestHelper.PMTuple> files = FilesTestHelper.randomFiles(1, true, metadata -> {
-            metadata.doc.title = title;
-            metadata.doc.author = "McpAuthor";
-        }, tempDir.toFile());
-        return files.get(0);
+    private static ObjectNode node(McpBatchResult batch) {
+        return batch.toNode();
     }
 
-    private FilesTestHelper.PMTuple createMinimalFile(String title) throws Exception {
+    private static void set(MetadataInfo metadata, String id, Object value) {
+        metadata.set(id, value);
+        metadata.setEnabled(id, true);
+    }
+
+    private FilesTestHelper.PMTuple createNamedFile(String relativeName, String title) throws Exception {
+        return createNamedFile(relativeName, metadata -> set(metadata, "doc.title", title));
+    }
+
+    private FilesTestHelper.PMTuple createNamedFile(
+            String relativeName,
+            Consumer<MetadataInfo> configure) throws Exception {
         MetadataInfo metadata = new MetadataInfo();
         metadata.setEnabled(false);
-        metadata.set("doc.title", title);
-        metadata.setEnabled("doc.title", true);
+        configure.accept(metadata);
+        if (metadata.doc.author == null) {
+            set(metadata, "doc.author", "McpAuthor");
+        }
 
-        File pdf = FilesTestHelper.emptyPdf(tempDir.toFile());
+        File pdf = new File(tempDir.toFile(), relativeName);
+        Files.createDirectories(pdf.getParentFile().toPath());
+        try (PDDocument document = new PDDocument()) {
+            document.addPage(new PDPage());
+            document.save(pdf);
+        }
         FilesTestHelper.save(metadata, pdf);
         return new FilesTestHelper.PMTuple(pdf, metadata);
     }
@@ -375,8 +587,7 @@ public class McpMetadataTest {
     private FilesTestHelper.PMTuple createEncryptedFile(String title) throws Exception {
         MetadataInfo metadata = new MetadataInfo();
         metadata.setEnabled(false);
-        metadata.set("doc.title", title);
-        metadata.setEnabled("doc.title", true);
+        set(metadata, "doc.title", title);
 
         File source = FilesTestHelper.emptyPdf(tempDir.toFile());
         FilesTestHelper.save(metadata, source);

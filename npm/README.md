@@ -284,31 +284,86 @@ directory; set `--mcp-root` there if you need a predictable scope.
 
 ## Tools
 
+Every file operation is a batch operation, matching the CLI. Tools take a
+`paths` array containing files and/or directories; a single file is
+`paths: ["one.pdf"]`. Directories are searched recursively for `.pdf` files.
+A batch may contain at most 100 PDF files; larger requests are rejected before
+any file is touched.
+
 | Tool | Purpose |
 |---|---|
 | `pdf_list_fields` | List valid metadata field IDs, types, and writability. |
-| `pdf_read_metadata` | Read metadata from a PDF. |
-| `pdf_set_metadata` | Set one or more metadata fields. |
-| `pdf_clear_metadata` | Clear all or selected metadata fields. |
-| `pdf_rename` | Rename a PDF using a metadata template. |
-| `pdf_export_metadata` | Export metadata as JSON or YAML. |
+| `pdf_read_metadata` | Read metadata from one or more PDFs or directories. |
+| `pdf_set_metadata` | Set one or more metadata fields on every input PDF (CLI `edit`). |
+| `pdf_clear_metadata` | Clear all or selected metadata fields on every input PDF (CLI `clear`). |
+| `pdf_rename` | Rename every input PDF using a metadata template (CLI `rename`). |
 
-Read-only tools are available without a license. Some write operations may
-require a license; the server returns a clear message when one is needed.
+`pdf_list_fields` and `pdf_read_metadata` are available without a license. The
+mutating tools may require a license; the server returns a clear message when
+one is needed.
+
+### Batch results
+
+Every batch tool returns a summary plus one entry per file:
+
+```json
+{
+  "summary": { "total": 2, "succeeded": 1, "failed": 1, "truncated": false },
+  "results": [
+    { "input": "docs/a.pdf", "output": "out/a.pdf", "ok": true, "action": "updated" },
+    {
+      "input": "docs/b.pdf",
+      "ok": false,
+      "error": { "code": "password_required", "message": "This PDF is password-protected. Retry with the ownerPassword argument." }
+    }
+  ]
+}
+```
+
+A per-file failure does not abort the batch. The tool result is only marked as
+an error when the request itself is invalid or every file failed.
+
+### Output directory
+
+`pdf_set_metadata`, `pdf_clear_metadata`, and `pdf_rename` accept an optional
+`outputDir`. The input directory structure is preserved beneath it. When
+`outputDir` is omitted, set and clear update files in place, and rename moves
+files within their current directory.
+
+```json
+{
+  "paths": ["docs"],
+  "metadata": { "doc.title": "Weekly Report", "doc.author": "Jane Doe" },
+  "outputDir": "out"
+}
+```
+
+`docs/a.pdf` becomes `out/a.pdf`; `docs/sub/b.pdf` becomes `out/sub/b.pdf`.
+
+### Templates
+
+Values can use `{field.id}` templates expanded from each file's own metadata:
+
+```json
+{
+  "paths": ["docs"],
+  "metadata": { "doc.title": "{doc.author} - report" }
+}
+```
 
 ### Password-protected PDFs
 
-Pass `ownerPassword` to the tool. If the PDF is protected and no password is
-supplied, the tool returns a structured error:
+Pass `ownerPassword` to the tool. A protected PDF without a password produces a
+per-file error entry:
 
 ```json
-{"error":"password_required","message":"This PDF is password-protected. Retry with the ownerPassword argument."}
+{"code":"password_required","message":"This PDF is password-protected. Retry with the ownerPassword argument."}
 ```
 
 If the supplied password is rejected:
 
 ```json
-{"error":"invalid_password","message":"The supplied ownerPassword could not open this PDF."}
+{"code":"invalid_password","message":"The supplied ownerPassword could not open this PDF."}
 ```
 
 ## Supported platforms
@@ -329,7 +384,7 @@ application JAR.
 - The server is limited to the current working directory by default.
 - Use `--mcp-root` to narrow access to a specific directory.
 - Paths cannot escape the selected root; symlink escapes are rejected.
-- Only PDF files are accepted by the metadata tools.
+- Explicit non-PDF inputs are rejected; non-PDF files inside directories are ignored.
 - Use `--mcp-read-only` when write access is not needed.
 
 ## Troubleshooting
