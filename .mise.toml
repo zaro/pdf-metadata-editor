@@ -26,6 +26,11 @@ run = "mvn package -Dpackages.skip=true -DskipTests"
 description = "Run Jar"
 run = "java -DnoGui -DdevLog=true -jar modules/editor-gui/target/jar/pdf-metadata-editor-*.jar"
 
+[tasks.run-gui]
+description = "Run Jar (GUI)"
+run = "java -DdevLog=true -jar modules/editor-gui/target/jar/pdf-metadata-editor-*.jar"
+
+
 [tasks.build]
 description = "Build App Image"
 run = "mvn clean package -DskipTests -Dpackages.list=app-image -Dpackages.zip.skip=true"

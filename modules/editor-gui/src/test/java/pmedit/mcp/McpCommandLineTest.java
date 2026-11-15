@@ -3,7 +3,11 @@ package pmedit.mcp;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import pmedit.CommandLine;
+import pmedit.MainCli;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -67,5 +71,35 @@ public class McpCommandLineTest {
         McpOptions options = McpOptions.from(cmdLine);
 
         assertEquals(7, options.maxFiles());
+    }
+
+    @Test
+    public void parsesHelpMcp() throws Exception {
+        CommandLine cmdLine = CommandLine.parse(new String[]{"--help-mcp"});
+        assertTrue(cmdLine.helpMcp);
+
+        CommandLine singleDash = CommandLine.parse(new String[]{"-help-mcp"});
+        assertTrue(singleDash.helpMcp);
+    }
+
+    @Test
+    public void helpMcpPrintsConfiguration() throws Exception {
+        CommandLine cmdLine = CommandLine.parse(new String[]{"--help-mcp"});
+
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream previous = System.out;
+        try {
+            System.setOut(new PrintStream(buffer, true, StandardCharsets.UTF_8));
+            MainCli.executeCommand(cmdLine);
+        } finally {
+            System.setOut(previous);
+        }
+
+        String output = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("# MCP configuration"));
+        assertTrue(output.contains("mcpServers"));
+        assertTrue(output.contains("--mcp-root"));
+        assertTrue(output.contains("No npm install is required"));
+        assertTrue(output.contains("Supported MCP options"));
     }
 }

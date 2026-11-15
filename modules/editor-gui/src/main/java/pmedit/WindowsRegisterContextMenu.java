@@ -5,34 +5,17 @@ import com.sun.jna.platform.win32.WinReg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.net.URISyntaxException;
+import java.nio.file.Path;
 
 public class WindowsRegisterContextMenu {
     static Logger LOG() { return LoggerFactory.getLogger(WindowsRegisterContextMenu.class); };
 
     public static String exePath() throws Exception {
-        String thisJarDir;
-        try {
-            thisJarDir = new File(Version.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).getParentFile().getAbsolutePath();
-
-        } catch (URISyntaxException e) {
-            throw new Exception("Cannot find the path to current jar");
+        Path exe = AppLauncher.guiExecutable();
+        if (exe != null) {
+            return exe.toString();
         }
-        String paths = "";
-        String appName = Version.getAppName();
-        String exePath = thisJarDir + File.separator + appName + ".exe";
-        if (new File(exePath).exists()) {
-            return exePath;
-        }
-        paths += exePath;
-        exePath = thisJarDir + File.separator + "..\\" + appName + ".exe";
-        if (new File(exePath).exists()) {
-            return exePath;
-        }
-        paths += " , ";
-        paths += exePath;
-        throw new Exception("Cannot find the path to current exe, tried: " + paths);
+        throw new Exception("Cannot find the path to the current application executable");
     }
 
 

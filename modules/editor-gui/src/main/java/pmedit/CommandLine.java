@@ -10,6 +10,7 @@ public class CommandLine extends  CommandLineOptions {
     public BatchOperationParameters params = new BatchOperationParameters();
     public boolean batchGui = false;
     public boolean showHelp = false;
+    public boolean helpMcp = false;
     public String licenseKey;
     public boolean releaseLicense;
     public boolean offline;
@@ -129,6 +130,8 @@ public class CommandLine extends  CommandLineOptions {
                 cmdLine.showLicense=true;
             } else if (arg.equalsIgnoreCase("h") || arg.equalsIgnoreCase("help")) {
                 cmdLine.showHelp = true;
+            } else if (arg.equalsIgnoreCase("help-mcp")) {
+                cmdLine.helpMcp = true;
             } else if (arg.equalsIgnoreCase("mcp")) {
                 cmdLine.mcp = true;
             } else if (arg.equalsIgnoreCase("mcp-root")
@@ -230,6 +233,8 @@ public class CommandLine extends  CommandLineOptions {
         sb.append(", ");
         sb.append("showHelp=");
         sb.append(showHelp);
+        sb.append(", helpMcp=");
+        sb.append(helpMcp);
         sb.append(", ");
         sb.append("mcp=");
         sb.append(mcp);

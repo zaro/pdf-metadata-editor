@@ -668,6 +668,7 @@ public class MainWindow extends JFrame implements ProgramWindow {
         JMenuItem viewHelp = new JMenuItem("View Help");
         JMenuItem reportBug = new JMenuItem("Report Bug");
         JMenuItem website = new JMenuItem("Website");
+        JMenuItem mcp = new JMenuItem("MCP");
         JMenuItem about = new JMenuItem("About");
 
         viewHelp.addActionListener(e -> {
@@ -681,12 +682,14 @@ public class MainWindow extends JFrame implements ProgramWindow {
         website.addActionListener(e -> {
             TextPaneWithLinks.openURL(WebsiteConstants.websiteUrl + WebsiteConstants.hrefQuery);
         });
+        mcp.addActionListener(e -> McpHelpDialog.show(SwingUtilities.getWindowAncestor(menuBar)));
         about.addActionListener(showAbout);
 
 
         helpMenu.add(viewHelp);
         helpMenu.add(reportBug);
         helpMenu.add(website);
+        helpMenu.add(mcp);
         helpMenu.add(about);
 
         menuBar.add(helpMenu);

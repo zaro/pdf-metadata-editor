@@ -3,6 +3,7 @@ package pmedit;
 import org.slf4j.LoggerFactory;
 import pmedit.CommandLine.ParseError;
 import pmedit.ext.PmeExtension;
+import pmedit.mcp.McpHelpText;
 import pmedit.mcp.McpMain;
 
 import java.io.File;
@@ -28,6 +29,7 @@ public class MainCli {
                     "       --mcp-root=DIR             root directory for MCP file access (default: current directory)\n" +
                     "       --mcp-read-only            disable mutating MCP tools\n" +
                     "       --mcp-batch-limit=N        maximum files or operations per MCP batch (default: 100, 0 = unlimited)\n" +
+                    "       --help-mcp                 print MCP configuration for the installed desktop app\n" +
                     "\n" +
                     "COMMANDS\n" +
                     "\n" +
@@ -80,6 +82,12 @@ public class MainCli {
     public static void executeCommand(final CommandLine cmdLine) {
         if (cmdLine.showHelp) {
             System.out.print(helpMessage);
+            return;
+        }
+        if (cmdLine.helpMcp) {
+            System.out.print(McpHelpText.text());
+            System.out.println();
+            System.out.print(McpHelpText.optionsText());
             return;
         }
         if (cmdLine.mcp) {

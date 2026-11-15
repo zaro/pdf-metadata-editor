@@ -10,11 +10,17 @@ package pmedit;
  * http://www.docjar.com/html/api/org/apache/commons/lang/SystemUtils.java.html
  */
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Locale;
 
 public final class OsCheck {
+    public static final String DEFAULT_FLATPAK_ID = "me.broken_by.PdfMetadataEditor";
+
     // cached result of OS detection
     private static OSType detectedOS;
     private static String computerName;
@@ -48,6 +54,63 @@ public final class OsCheck {
         return getOperatingSystemType() == OSType.Linux;
     }
     public static boolean isMacOs() {return  getOperatingSystemType() == OSType.MacOS; }
+
+    /**
+     * True when the current process runs inside a Flatpak sandbox.
+     */
+    public static boolean isFlatpak() {
+        return hasText(System.getenv("FLATPAK_ID")) || Files.exists(Path.of("/.flatpak-info"));
+    }
+
+    /**
+     * The Flatpak application ID, falling back to this application's ID.
+     */
+    public static String flatpakId() {
+        String environmentId = System.getenv("FLATPAK_ID");
+        if (hasText(environmentId)) {
+            return environmentId.trim();
+        }
+        String infoId = flatpakIdFromInfo(Path.of("/.flatpak-info"));
+        return hasText(infoId) ? infoId : DEFAULT_FLATPAK_ID;
+    }
+
+    static String flatpakIdFromInfo(Path infoFile) {
+        if (infoFile == null || !Files.isRegularFile(infoFile)) {
+            return null;
+        }
+        try {
+            List<String> lines = Files.readAllLines(infoFile);
+            for (String line : lines) {
+                String trimmed = line.trim();
+                if (trimmed.startsWith("name=")) {
+                    String value = trimmed.substring("name=".length()).trim();
+                    return value.isEmpty() ? null : value;
+                }
+            }
+        } catch (IOException e) {
+            return null;
+        }
+        return null;
+    }
+
+    /**
+     * True when the current process was launched from an AppImage.
+     */
+    public static boolean isAppImage() {
+        return hasText(appImagePath());
+    }
+
+    /**
+     * The AppImage path from the APPIMAGE environment variable, or null.
+     */
+    public static String appImagePath() {
+        String path = System.getenv("APPIMAGE");
+        return hasText(path) ? path.trim() : null;
+    }
+
+    private static boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
+    }
 
     public static String getComputerName() {
         if(computerName == null) {

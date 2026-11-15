@@ -186,7 +186,8 @@ public class Main {
 
     private static boolean containsMcpFlag(final String[] args) {
         for (String arg : args) {
-            if ("--mcp".equalsIgnoreCase(arg) || "-mcp".equalsIgnoreCase(arg)) {
+            if ("--mcp".equalsIgnoreCase(arg) || "-mcp".equalsIgnoreCase(arg)
+                    || "--help-mcp".equalsIgnoreCase(arg) || "-help-mcp".equalsIgnoreCase(arg)) {
                 return true;
             }
         }

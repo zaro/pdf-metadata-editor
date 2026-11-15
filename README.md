@@ -51,6 +51,15 @@ server, letting AI clients read and edit PDF metadata through tools.
 pmedit-cli --mcp [--mcp-root=DIR] [--mcp-read-only] [--mcp-batch-limit=N]
 ```
 
+To print a ready-to-use MCP configuration for the installed desktop app:
+
+```sh
+pmedit-cli --help-mcp
+```
+
+The desktop app shows the same guide under **Help → MCP**. It detects
+AppImage, Flatpak, jpackage, and JAR installations; no npm install is needed.
+
 - `--mcp-root=DIR` restricts all file access to `DIR` (default: current directory).
 - `--mcp-read-only` disables every mutating tool.
 - `--mcp-batch-limit=N` sets the maximum files or operations per batch
@@ -71,11 +80,14 @@ your MCP client, for example:
   "mcpServers": {
     "pdf-metadata-editor": {
       "command": "pmedit-cli",
-      "args": ["--mcp", "--mcp-root", "/path/to/pdfs"]
+      "args": ["--mcp"]
     }
   }
 }
 ```
+
+Add `"--mcp-root", "/path/to/pdfs"` to `args` to restrict file access.
+Without it, the server uses the client's working directory.
 
 Available tools:
 
