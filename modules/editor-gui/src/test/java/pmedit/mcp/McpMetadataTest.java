@@ -7,6 +7,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import pmedit.DateFormat;
@@ -14,6 +15,7 @@ import pmedit.FilesTestHelper;
 import pmedit.MetadataInfo;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -30,6 +32,9 @@ public class McpMetadataTest {
 
     @TempDir
     Path tempDir;
+
+    @TempDir
+    Path outside;
 
     @Test
     public void listFieldsReturnsWritableFieldMetadata() throws Exception {
@@ -108,6 +113,21 @@ public class McpMetadataTest {
         assertEquals(2, fields.size());
         assertEquals("McpTitle", fields.get("doc.title").asText());
         assertEquals("McpAuthor", fields.get("doc.author").asText());
+    }
+
+    @Test
+    public void readRejectsUnknownAndSecretFields() throws Exception {
+        createNamedFile("a.pdf", "McpTitle");
+
+        McpToolException unknown = assertThrows(McpToolException.class,
+                () -> metadata(false, true).readBatch(
+                        List.of("a.pdf"), null, List.of("does.not.exist")));
+        assertEquals("invalid_argument", unknown.code());
+
+        McpToolException secret = assertThrows(McpToolException.class,
+                () -> metadata(false, true).readBatch(
+                        List.of("a.pdf"), null, List.of("prop.ownerPassword")));
+        assertEquals("invalid_argument", secret.code());
     }
 
     @Test
@@ -342,10 +362,17 @@ public class McpMetadataTest {
     public void clearAllRemovesMetadata() throws Exception {
         FilesTestHelper.PMTuple file = createNamedFile("a.pdf", "McpTitle");
 
-        metadata(false, true).clearBatch(List.of(file.file.getName()), null, null, null);
+        ObjectNode batch = node(metadata(false, true).clearBatch(
+                List.of(file.file.getName()), null, null, null));
 
         MetadataInfo loaded = FilesTestHelper.load(file.file);
         FilesTestHelper.assertEqualsAllExceptFileProps(new MetadataInfo(), loaded, "Metadata was not cleared");
+
+        JsonNode fields = batch.get("results").get(0).get("fields");
+        assertTrue(fields.toString().contains("doc.title"));
+        assertFalse(fields.toString().contains("prop.ownerPassword"));
+        assertFalse(fields.toString().contains("prop.userPassword"));
+        assertFalse(fields.toString().contains("file.name"));
     }
 
     @Test
@@ -419,6 +446,167 @@ public class McpMetadataTest {
         JsonNode invalidSet = node(metadata.setBatch(
                 List.of(encrypted.file.getName()), values, null, "wrong")).get("results").get(0);
         assertEquals("invalid_password", invalidSet.get("error").get("code").asText());
+    }
+
+    @Test
+    public void setBatchHandlesEncryptedPdfWithCorrectPassword() throws Exception {
+        FilesTestHelper.PMTuple encrypted = createEncryptedFile("Encrypted Title");
+
+        ObjectNode values = McpJson.object();
+        values.put("doc.title", "Updated Encrypted");
+
+        ObjectNode batch = node(metadata(false, true).setBatch(
+                List.of(encrypted.file.getName()), values, null, "ownerpass"));
+
+        assertEquals(1, batch.get("summary").get("succeeded").asInt());
+        assertEquals("Updated Encrypted",
+                FilesTestHelper.load(encrypted.file, "ownerpass").doc.title);
+    }
+
+    @Test
+    public void clearBatchHandlesEncryptedPdfPasswords() throws Exception {
+        FilesTestHelper.PMTuple encrypted = createEncryptedFile("Encrypted Title");
+        McpMetadata metadata = metadata(false, true);
+
+        ObjectNode required = node(metadata.clearBatch(
+                List.of(encrypted.file.getName()), List.of("doc.title"), null, null));
+        assertFalse(required.get("results").get(0).get("ok").asBoolean());
+        assertEquals("password_required",
+                required.get("results").get(0).get("error").get("code").asText());
+        assertEquals("Encrypted Title", FilesTestHelper.load(encrypted.file, "ownerpass").doc.title);
+
+        ObjectNode invalid = node(metadata.clearBatch(
+                List.of(encrypted.file.getName()), List.of("doc.title"), null, "wrong"));
+        assertEquals("invalid_password",
+                invalid.get("results").get(0).get("error").get("code").asText());
+        assertEquals("Encrypted Title", FilesTestHelper.load(encrypted.file, "ownerpass").doc.title);
+
+        ObjectNode cleared = node(metadata.clearBatch(
+                List.of(encrypted.file.getName()), List.of("doc.title"), null, "ownerpass"));
+        assertEquals(1, cleared.get("summary").get("succeeded").asInt());
+        assertNull(FilesTestHelper.load(encrypted.file, "ownerpass").doc.title);
+    }
+
+    @Test
+    public void renameBatchHandlesEncryptedPdfPasswords() throws Exception {
+        FilesTestHelper.PMTuple encrypted = createEncryptedFile("Encrypted Rename");
+        McpMetadata metadata = metadata(false, true);
+
+        ObjectNode required = node(metadata.renameBatch(
+                List.of(encrypted.file.getName()), "{doc.title}", null, null));
+        assertEquals("password_required",
+                required.get("results").get(0).get("error").get("code").asText());
+        assertTrue(encrypted.file.exists());
+
+        ObjectNode invalid = node(metadata.renameBatch(
+                List.of(encrypted.file.getName()), "{doc.title}", null, "wrong"));
+        assertEquals("invalid_password",
+                invalid.get("results").get(0).get("error").get("code").asText());
+        assertTrue(encrypted.file.exists());
+
+        ObjectNode renamed = node(metadata.renameBatch(
+                List.of(encrypted.file.getName()), "{doc.title}", null, "ownerpass"));
+        assertEquals(1, renamed.get("summary").get("succeeded").asInt());
+        assertEquals("Encrypted Rename.pdf",
+                renamed.get("results").get(0).get("output").asText());
+        assertTrue(tempDir.resolve("Encrypted Rename.pdf").toFile().exists());
+        assertFalse(encrypted.file.exists());
+    }
+
+    @Test
+    public void clearBatchWritesUnderOutputDirPreservingStructure() throws Exception {
+        FilesTestHelper.PMTuple first = createNamedFile("docs/a.pdf", "Title A");
+        FilesTestHelper.PMTuple second = createNamedFile("docs/sub/b.pdf", "Title B");
+
+        ObjectNode batch = node(metadata(false, true).clearBatch(
+                List.of("docs"), List.of("doc.title"), "cleared", null));
+
+        assertEquals(2, batch.get("summary").get("succeeded").asInt());
+        assertEquals("cleared/a.pdf", batch.get("results").get(0).get("output").asText());
+        assertEquals("cleared/sub/b.pdf", batch.get("results").get(1).get("output").asText());
+
+        assertEquals("Title A", FilesTestHelper.load(first.file).doc.title);
+        assertEquals("Title B", FilesTestHelper.load(second.file).doc.title);
+
+        MetadataInfo outputFirst = FilesTestHelper.load(tempDir.resolve("cleared/a.pdf").toFile());
+        assertNull(outputFirst.doc.title);
+        assertEquals("McpAuthor", outputFirst.doc.author);
+
+        MetadataInfo outputSecond = FilesTestHelper.load(tempDir.resolve("cleared/sub/b.pdf").toFile());
+        assertNull(outputSecond.doc.title);
+        assertEquals("McpAuthor", outputSecond.doc.author);
+    }
+
+    @Test
+    public void renameTemplateCannotEscapeRoot() throws Exception {
+        createNamedFile("docs/a.pdf", "EscapeRename");
+
+        ObjectNode batch = node(metadata(false, true).renameBatch(
+                List.of("docs/a.pdf"), "../../EscapeRename", null, null));
+
+        assertEquals(0, batch.get("summary").get("succeeded").asInt());
+        assertEquals(1, batch.get("summary").get("failed").asInt());
+        assertEquals("path_outside_root",
+                batch.get("results").get(0).get("error").get("code").asText());
+        assertTrue(tempDir.resolve("docs/a.pdf").toFile().exists());
+        assertFalse(tempDir.getParent().resolve("EscapeRename.pdf").toFile().exists());
+    }
+
+    @Test
+    public void globPatternsAreTreatedAsLiteralPaths() throws Exception {
+        createNamedFile("a.pdf", "A");
+
+        McpToolException error = assertThrows(McpToolException.class,
+                () -> metadata(false, true).readBatch(List.of("*.pdf"), null, null));
+
+        assertEquals("file_not_found", error.code());
+        assertTrue(error.getMessage().contains("*.pdf"));
+    }
+
+    @Test
+    public void clearAndRenameRejectBatchesOverTheLimitBeforeWriting() throws Exception {
+        Files.createDirectories(tempDir.resolve("many"));
+        for (int i = 0; i <= McpPaths.MAX_BATCH_FILES; i++) {
+            Files.writeString(tempDir.resolve("many/file-" + i + ".pdf"), "not parsed");
+        }
+
+        McpToolException clearError = assertThrows(McpToolException.class,
+                () -> metadata(false, true).clearBatch(
+                        List.of("many"), null, "clear-out", null));
+        assertEquals("batch_too_large", clearError.code());
+        assertFalse(Files.exists(tempDir.resolve("clear-out")));
+
+        McpToolException renameError = assertThrows(McpToolException.class,
+                () -> metadata(false, true).renameBatch(
+                        List.of("many"), "{doc.title}", "rename-out", null));
+        assertEquals("batch_too_large", renameError.code());
+        assertFalse(Files.exists(tempDir.resolve("rename-out")));
+    }
+
+    @Test
+    public void setBatchRejectsSymlinkedOutputSubdirectory() throws Exception {
+        createNamedFile("docs/sub/a.pdf", "Title A");
+        Files.createDirectories(tempDir.resolve("out"));
+        try {
+            Files.createSymbolicLink(tempDir.resolve("out/sub"), outside);
+        } catch (IOException | UnsupportedOperationException e) {
+            Assumptions.assumeTrue(false, "Symbolic links are not supported on this platform");
+            return;
+        }
+
+        ObjectNode values = McpJson.object();
+        values.put("doc.title", "Escaped");
+
+        ObjectNode batch = node(metadata(false, true).setBatch(
+                List.of("docs"), values, "out", null));
+
+        assertEquals(0, batch.get("summary").get("succeeded").asInt());
+        assertEquals(1, batch.get("summary").get("failed").asInt());
+        assertEquals("path_outside_root",
+                batch.get("results").get(0).get("error").get("code").asText());
+        assertFalse(Files.exists(outside.resolve("a.pdf")));
+        assertEquals("Title A",
+                FilesTestHelper.load(tempDir.resolve("docs/sub/a.pdf").toFile()).doc.title);
     }
 
     @Test
