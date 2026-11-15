@@ -246,7 +246,7 @@ public class Main {
         LOG().info("Parsed command line: {}", cmdLine);
         if (cmdLine.noGui) {
             MainCli.main(cmdLine);
-            System.exit(1);
+            System.exit(0);
         }
 
         if (OsCheck.isMacOs()){
