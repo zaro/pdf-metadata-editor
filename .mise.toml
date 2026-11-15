@@ -46,3 +46,7 @@ run = "mvn clean package -DskipTests"
 [tasks.test-license]
 description = "Set license for JUnit tests"
 run = 'java -DnoGui -DjunitTest=true -DdevLog=true -jar modules/editor-gui/target/jar/pdf-metadata-editor-*.jar'
+
+[tasks.test]
+description = "Run JUnit tests"
+run = "xwfb-run -- bash -c 'unset WAYLAND_DISPLAY && mvn test'"
