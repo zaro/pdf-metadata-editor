@@ -5,12 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.stream.Stream;
 
 /**
  * Resolves input and output paths against a canonical root directory.
@@ -164,84 +159,6 @@ public final class McpPaths {
      */
     public Path prepareOutput(Path target) throws McpToolException {
         return prepareTarget(target, target.toString());
-    }
-
-    /**
-     * An input file selected for a batch call, together with the path it maps
-     * to under an output directory. {@code relative} mirrors the CLI layout:
-     * the contents of a top-level directory are placed directly under the
-     * output directory, without repeating the input directory's own name.
-     */
-    public record BatchEntry(Path input, String relative) {
-    }
-
-    /**
-     * Expand a list of files and directories into PDF inputs.
-     *
-     * <p>Directories are walked recursively. Non-PDF files inside a directory
-     * are ignored, while an explicitly supplied non-PDF file is rejected. The
-     * output directory, when it is inside an input directory, is skipped so a
-     * previous export cannot feed back into the next one.</p>
-     */
-    public List<BatchEntry> expand(List<String> rawPaths, Path outputDir) throws McpToolException {
-        if (rawPaths == null || rawPaths.isEmpty()) {
-            throw new McpToolException("no_input_files", "At least one path is required");
-        }
-
-        Map<Path, BatchEntry> entries = new LinkedHashMap<>();
-        for (String raw : rawPaths) {
-            Path resolved = resolveExisting(raw);
-            if (Files.isDirectory(resolved)) {
-                addDirectory(resolved, outputDir, entries);
-            } else if (isPdf(resolved)) {
-                addEntry(resolved, resolved.getFileName().toString(), raw, entries);
-            } else {
-                throw new McpToolException("not_a_pdf", "Not a PDF file: " + raw);
-            }
-        }
-
-        if (entries.isEmpty()) {
-            throw new McpToolException("no_input_files", "No PDF files were found in the supplied paths");
-        }
-        if (entries.size() > MAX_BATCH_FILES) {
-            throw new McpToolException(
-                    "batch_too_large",
-                    "The batch contains " + entries.size() + " PDF files; the maximum is "
-                            + MAX_BATCH_FILES + ". Split the request into smaller batches.");
-        }
-        return new ArrayList<>(entries.values());
-    }
-
-    private void addDirectory(Path root, Path outputDir, Map<Path, BatchEntry> entries) throws McpToolException {
-        try (Stream<Path> stream = Files.walk(root)) {
-            List<Path> files = stream
-                    .filter(Files::isRegularFile)
-                    .filter(McpPaths::isPdf)
-                    .filter(file -> outputDir == null || !file.startsWith(outputDir))
-                    .sorted()
-                    .toList();
-            for (Path file : files) {
-                String relative = root.relativize(file).toString().replace(File.separatorChar, '/');
-                addEntry(file, relative, root.toString(), entries);
-            }
-        } catch (IOException e) {
-            throw new McpToolException("file_not_found", "Cannot read directory: " + root, e);
-        }
-    }
-
-    private void addEntry(
-            Path file,
-            String relative,
-            String display,
-            Map<Path, BatchEntry> entries) throws McpToolException {
-        Path real;
-        try {
-            real = file.toRealPath();
-        } catch (IOException e) {
-            throw new McpToolException("file_not_found", "Cannot access file: " + display, e);
-        }
-        ensureInside(real, display);
-        entries.putIfAbsent(real, new BatchEntry(real, relative));
     }
 
     private Path resolve(String raw) throws McpToolException {

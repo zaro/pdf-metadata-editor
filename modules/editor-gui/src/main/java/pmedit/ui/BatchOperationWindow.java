@@ -548,20 +548,31 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
         btnCancel.setText("Cancel");
         worker = new BatchOperationWindow.Worker(logOut, command) {
             boolean hasErrors = false;
-            final ActionStatus actionStatus = new ActionStatus() {
-                public void showStatus(String filename, String message) {
-                    LOG.info("{} : {}", filename, message);
-                    out.info("{} : {}", filename, message);
-                    publish(new BatchOperationWindow.FileOpResult(filename, message));
+            final BatchListener listener = new BatchListener() {
+                public void onFile(BatchFileOutcome outcome) {
+                    if (outcome.ok()) {
+                        LOG.info("{} : {}", outcome.displayLabel(), outcome.displayMessage());
+                        out.info("{} : {}", outcome.displayLabel(), outcome.displayMessage());
+                        publish(new BatchOperationWindow.FileOpResult(outcome.displayLabel(), outcome.displayMessage()));
+                    } else {
+                        hasErrors = true;
+                        Throwable error = outcome.failure().cause() != null
+                                ? outcome.failure().cause()
+                                : new Exception(outcome.displayMessage());
+                        LOG.error("Input file: {}", outcome.displayLabel(), error);
+                        out.error("Input file: {}", outcome.displayLabel(), error);
+                        publish(new BatchOperationWindow.FileOpResult(
+                                outcome.displayLabel(), outcome.displayMessage(), error));
+                    }
                 }
 
-                public void showError(String filename, Throwable error) {
+                public void onBatchError(BatchError error) {
                     hasErrors = true;
-                    LOG.error("Input file: {}", filename, error);
-                    out.error("Input file: {}", filename, error);
-                    publish(new BatchOperationWindow.FileOpResult(filename, error.getMessage(), error));
+                    Throwable cause = error.cause() != null ? error.cause() : new Exception(error.message());
+                    LOG.error("Input file: {}", error.displayLabel(), cause);
+                    out.error("Input file: {}", error.displayLabel(), cause);
+                    publish(new BatchOperationWindow.FileOpResult(error.displayLabel(), error.message(), cause));
                 }
-
             };
 
             @Override
@@ -577,7 +588,7 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
                 LOG.info("Output Folder :{}", outputDir);
                 out.info("Output Folder :{}", outputDir);
 
-                batch.runCommand(command, batchFileList, outputDir, actionStatus);
+                batch.runCommand(command, batchFileList, outputDir, listener);
                 return null;
             }
 

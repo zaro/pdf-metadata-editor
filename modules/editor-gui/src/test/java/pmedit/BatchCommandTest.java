@@ -30,16 +30,8 @@ public class BatchCommandTest extends BaseTest{
 		}
 
 		CommandLine c = CommandLine.parse(args);
-		PDFMetadataEditBatch batch =new PDFMetadataEditBatch(c.params);
-		batch.runCommand(c.command, FileList.fileList(c.fileList), null, new ActionStatus(){
-			public void showStatus(String filename, String message) {
-			}
-
-			public void showError(String filename, Throwable error) {
-                fail(error);
-			}
-
-		});
+		PDFMetadataEditBatch batch =new PDFMetadataEditBatch(c.params, testOptions());
+		batch.runCommand(c.command, FileList.fileList(c.fileList), null, failingListener());
 		MetadataInfo empty = new MetadataInfo();
 		for(PMTuple t: fileList){
 			MetadataInfo loaded = FilesTestHelper.load(t.file);
@@ -61,16 +53,8 @@ public class BatchCommandTest extends BaseTest{
 		}
 
 		CommandLine c = CommandLine.parse(args);
-		PDFMetadataEditBatch batch =new PDFMetadataEditBatch(c.params);
-		batch.runCommand(c.command, FileList.fileList(c.fileList), null,  new ActionStatus(){
-			public void showStatus(String filename, String message) {
-			}
-
-			public void showError(String filename, Throwable error) {
-				fail(error);
-			}
-
-		});
+		PDFMetadataEditBatch batch =new PDFMetadataEditBatch(c.params, testOptions());
+		batch.runCommand(c.command, FileList.fileList(c.fileList), null, failingListener());
 		MetadataInfo empty = new MetadataInfo();
 		for(PMTuple t: fileList){
 			MetadataInfo loaded = FilesTestHelper.load(t.file);
@@ -96,17 +80,8 @@ public class BatchCommandTest extends BaseTest{
 		}
 
 		CommandLine c = CommandLine.parse(args);
-		PDFMetadataEditBatch batch = new PDFMetadataEditBatch(c.params);
-		batch.runCommand(c.command, FileList.fileList(c.fileList), null,  new ActionStatus() {
-			public void showStatus(String filename, String message) {
-			}
-
-			public void showError(String filename, Throwable error) {
-				System.out.println(error);
-				fail(error);
-			}
-
-		});
+		PDFMetadataEditBatch batch = new PDFMetadataEditBatch(c.params, testOptions());
+		batch.runCommand(c.command, FileList.fileList(c.fileList), null, failingListener());
 
 		for (PMTuple t : fileList) {
 			MetadataInfo loaded = FilesTestHelper.load(t.file);
@@ -140,17 +115,8 @@ public class BatchCommandTest extends BaseTest{
 		args.add(csvFile.getAbsolutePath());
 
 		CommandLine c = CommandLine.parse(args);
-		PDFMetadataEditBatch batch =new PDFMetadataEditBatch(c.params);
-		batch.runCommand(c.command, FileList.fileList(c.fileList), null, new ActionStatus(){
-			public void showStatus(String filename, String message) {
-			}
-
-			public void showError(String filename, Throwable error) {
-				System.out.println(error);
-				fail(error);
-			}
-
-		});
+		PDFMetadataEditBatch batch =new PDFMetadataEditBatch(c.params, testOptions());
+		batch.runCommand(c.command, FileList.fileList(c.fileList), null, failingListener());
 		MetadataInfo empty = new MetadataInfo();
 		for(PMTuple t: fileList){
 			MetadataInfo loaded = FilesTestHelper.load(t.file);
@@ -160,6 +126,32 @@ public class BatchCommandTest extends BaseTest{
 			assertEquals(loaded.doc.author,"AUTHOR-AUTHOR");
 			assertEquals(loaded.dc.title,"TITLE,TITLE");
 		}
+	}
+
+	private static BatchOptions testOptions() {
+		return new BatchOptions(false, () -> true, 0, false, false, true, null, BatchPathPolicy.permissive());
+	}
+
+	private static BatchListener failingListener() {
+		return new BatchListener() {
+			public void onFile(BatchFileOutcome outcome) {
+				if (!outcome.ok()) {
+					if (outcome.failure().cause() != null) {
+						fail(outcome.failure().cause());
+					} else {
+						fail(outcome.failure().message());
+					}
+				}
+			}
+
+			public void onBatchError(BatchError error) {
+				if (error.cause() != null) {
+					fail(error.cause());
+				} else {
+					fail(error.message());
+				}
+			}
+		};
 	}
 
 

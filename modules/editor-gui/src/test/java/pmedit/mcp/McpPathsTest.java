@@ -3,10 +3,17 @@ package pmedit.mcp;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import pmedit.BatchEngine;
+import pmedit.BatchException;
+import pmedit.BatchOptions;
+import pmedit.BatchPreflight;
+import pmedit.BatchRequest;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -108,81 +115,82 @@ public class McpPathsTest {
     }
 
     @Test
-    public void expandCollectsPdfsAndIgnoresOtherFiles() throws Exception {
+    public void preflightCollectsPdfsAndIgnoresOtherFiles() throws Exception {
         file(root, "docs/a.pdf");
         file(root, "docs/sub/b.pdf");
         file(root, "docs/notes.txt");
 
-        var entries = paths().expand(List.of("docs"), null);
+        var files = preflight(List.of("docs"), null).files();
 
-        assertEquals(2, entries.size());
-        assertEquals("a.pdf", entries.get(0).relative());
-        assertEquals("sub/b.pdf", entries.get(1).relative());
+        assertEquals(2, files.size());
+        assertEquals(
+                java.util.Set.of("a.pdf", "b.pdf"),
+                java.util.Set.of(files.get(0).getName(), files.get(1).getName()));
     }
 
     @Test
-    public void expandKeepsFileRelativeNameForSingleFile() throws Exception {
-        file(root, "docs/a.pdf");
+    public void preflightKeepsSingleFile() throws Exception {
+        Path file = file(root, "docs/a.pdf");
 
-        var entries = paths().expand(List.of("docs/a.pdf"), null);
+        var files = preflight(List.of("docs/a.pdf"), null).files();
 
-        assertEquals(1, entries.size());
-        assertEquals("a.pdf", entries.get(0).relative());
+        assertEquals(1, files.size());
+        assertEquals(file.toRealPath().toFile(), files.get(0));
     }
 
     @Test
-    public void expandDeduplicatesOverlappingRoots() throws Exception {
+    public void preflightDeduplicatesOverlappingRoots() throws Exception {
         file(root, "docs/a.pdf");
         file(root, "docs/sub/b.pdf");
 
-        var entries = paths().expand(List.of("docs", "docs/a.pdf"), null);
+        var files = preflight(List.of("docs", "docs/a.pdf"), null).files();
 
-        assertEquals(2, entries.size());
+        assertEquals(2, files.size());
     }
 
     @Test
-    public void expandSkipsTheOutputDirectory() throws Exception {
+    public void preflightSkipsTheOutputDirectory() throws Exception {
         file(root, "docs/a.pdf");
         file(root, "docs/out/previous.pdf");
         Path outputDir = root.resolve("docs/out").toRealPath();
 
-        var entries = paths().expand(List.of("docs"), outputDir);
+        var files = preflight(List.of("docs"), outputDir).files();
 
-        assertEquals(1, entries.size());
-        assertEquals("a.pdf", entries.get(0).relative());
+        assertEquals(1, files.size());
+        assertEquals("a.pdf", files.get(0).getName());
     }
 
     @Test
-    public void expandRejectsExplicitNonPdf() throws Exception {
+    public void preflightRejectsExplicitNonPdf() throws Exception {
         file(root, "notes.txt");
 
-        McpToolException error = assertThrows(McpToolException.class,
-                () -> paths().expand(List.of("notes.txt"), null));
+        BatchException error = assertThrows(BatchException.class,
+                () -> preflight(List.of("notes.txt"), null));
         assertEquals("not_a_pdf", error.code());
     }
 
     @Test
-    public void expandRejectsEmptyInput() throws Exception {
-        McpToolException error = assertThrows(McpToolException.class,
-                () -> paths().expand(List.of(), null));
+    public void preflightRejectsEmptyInput() throws Exception {
+        BatchException error = assertThrows(BatchException.class,
+                () -> preflight(List.of(), null));
         assertEquals("no_input_files", error.code());
     }
 
     @Test
-    public void expandRejectsTooManyFiles() throws Exception {
+    public void preflightRejectsTooManyFiles() throws Exception {
         Path dir = root.resolve("many");
         Files.createDirectories(dir);
         for (int i = 0; i <= McpPaths.MAX_BATCH_FILES; i++) {
             Files.writeString(dir.resolve("file-" + i + ".pdf"), "test");
         }
 
-        McpToolException error = assertThrows(McpToolException.class,
-                () -> paths().expand(List.of("many"), null));
+        BatchException error = assertThrows(BatchException.class,
+                () -> preflight(List.of("many"), null));
         assertEquals("batch_too_large", error.code());
     }
 
     @Test
-    public void expandRejectsSymlinkedFileThatEscapesRoot() throws Exception {
+    public void preflightRejectsSymlinkedFileThatEscapesRoot() throws Exception {
         Path secret = file(outside, "secret.pdf");
         Files.createDirectories(root.resolve("docs"));
         Path link = root.resolve("docs/link.pdf");
@@ -193,9 +201,29 @@ public class McpPathsTest {
             return;
         }
 
-        McpToolException error = assertThrows(McpToolException.class,
-                () -> paths().expand(List.of("docs"), null));
+        BatchException error = assertThrows(BatchException.class,
+                () -> preflight(List.of("docs"), null));
         assertEquals("path_outside_root", error.code());
+    }
+
+    private BatchPreflight preflight(List<String> rawPaths, Path outputDir) throws Exception {
+        McpPaths paths = paths();
+        List<File> roots = new ArrayList<>();
+        for (String raw : rawPaths) {
+            roots.add(paths.resolveExisting(raw).toFile());
+        }
+        BatchOptions options = new BatchOptions(
+                false,
+                () -> true,
+                McpPaths.MAX_BATCH_FILES,
+                true,
+                true,
+                false,
+                null,
+                new McpBatchPathPolicy(paths));
+        return new BatchEngine().preflight(
+                BatchEngine.PDF_EXTENSIONS,
+                new BatchRequest(roots, outputDir == null ? null : outputDir.toFile(), options));
     }
 
     private McpPaths paths() throws IOException {

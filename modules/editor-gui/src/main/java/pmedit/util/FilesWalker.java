@@ -2,34 +2,47 @@ package pmedit.util;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class FilesWalker {
     protected FileFilter fileFilter;
     protected String[] allowedExtensions;
     public List<File> files;
     File outDir;
+    final boolean deduplicate;
+    final Set<Path> seen = new HashSet<>();
 
-    public FilesWalker(String[] extensions, List<File> files, File outDir){
+    public FilesWalker(String[] extensions, List<File> files, File outDir) {
+        this(extensions, files, outDir, false);
+    }
+
+    public FilesWalker(String[] extensions, List<File> files, File outDir, boolean deduplicate) {
         this.files = files;
         this.outDir = outDir;
+        this.deduplicate = deduplicate;
         allowedExtensions = new String[extensions.length];
 
-        for(int i=0; i < extensions.length; i++){
+        for (int i = 0; i < extensions.length; i++) {
             allowedExtensions[i] = "." + extensions[i].toLowerCase();
         }
 
         fileFilter = new FileFilter() {
             @Override
             public boolean accept(File pathname) {
-                if(pathname.isDirectory()){
-                    return  true;
+                if (pathname.isDirectory()) {
+                    return true;
                 }
                 String ln = pathname.getName().toLowerCase();
-                for(String ext: allowedExtensions){
-                    if(ln.endsWith(ext)){
-                        return  true;
+                for (String ext : allowedExtensions) {
+                    if (ln.endsWith(ext)) {
+                        return true;
                     }
                 }
                 return false;
@@ -40,6 +53,9 @@ public class FilesWalker {
     protected void _forFiles(File file, FileFilter filter, FileAction action, int level) {
         if (file.isFile()) {
             if (filter.accept(file)) {
+                if (alreadySeen(file)) {
+                    return;
+                }
                 action.beforeEach();
                 action.apply(file);
                 action.afterEach();
@@ -52,6 +68,9 @@ public class FilesWalker {
                 return;
             }
             File[]  files = file.listFiles(filter);
+            if (files != null) {
+                Arrays.sort(files, Comparator.comparing(File::getName));
+            }
 
             // Don't push outputDirs for directories from the original input list
             // as it creates additional directory level
@@ -76,6 +95,7 @@ public class FilesWalker {
         if(files == null || files.isEmpty()){
             return;
         }
+        seen.clear();
         action.setCurrentInputDir(files.get(0));
         action.beforeAll();
         for (File file : files) {
@@ -83,6 +103,19 @@ public class FilesWalker {
             _forFiles(file, fileFilter, action, 0);
         }
         action.afterAll();
+    }
+
+    private boolean alreadySeen(File file) {
+        if (!deduplicate) {
+            return false;
+        }
+        Path path;
+        try {
+            path = file.toPath().toRealPath();
+        } catch (IOException e) {
+            path = file.getAbsoluteFile().toPath().normalize();
+        }
+        return !seen.add(path);
     }
 
     public List<File> list(){

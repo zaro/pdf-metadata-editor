@@ -1,6 +1,8 @@
 package pmedit.util;
 
-import pmedit.ActionStatus;
+import pmedit.BatchFailure;
+import pmedit.BatchFileOutcome;
+import pmedit.BatchListener;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -9,11 +11,17 @@ import java.util.Stack;
 public abstract class FileAction {
     File currentInputDir;
     Stack<File> outDirStack = new Stack<>();
-    ActionStatus status;
+    final BatchListener listener;
+    final boolean reportIgnored;
 
-    public FileAction(File outDir, ActionStatus status) {
+    public FileAction(File outDir, BatchListener listener) {
+        this(outDir, listener, listener != null);
+    }
+
+    public FileAction(File outDir, BatchListener listener, boolean reportIgnored) {
         outDirStack.push(outDir);
-        this.status = status;
+        this.listener = listener;
+        this.reportIgnored = reportIgnored;
     }
 
     public File outDir() {
@@ -118,7 +126,15 @@ public abstract class FileAction {
 
     public abstract void apply(File file);
 
-    public void ignore(File file){
-        status.addError(file.getName(), new Exception("Ignore file: " + file.getAbsolutePath()) );
+    public void ignore(File file) {
+        if (!reportIgnored || listener == null) {
+            return;
+        }
+        String message = "Ignore file: " + file.getAbsolutePath();
+        listener.onFile(BatchFileOutcome.error(
+                file,
+                file.getName(),
+                message,
+                new BatchFailure("skipped_non_pdf", message, null)));
     }
 }

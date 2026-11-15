@@ -3,22 +3,26 @@ package pmedit.mcp;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
+import pmedit.BatchEngine;
+import pmedit.BatchException;
+import pmedit.BatchFailure;
+import pmedit.BatchFailures;
+import pmedit.BatchOperationParameters;
+import pmedit.BatchOptions;
+import pmedit.BatchPreflight;
+import pmedit.BatchRequest;
+import pmedit.CommandDescription;
 import pmedit.DateFormat;
 import pmedit.MetadataInfo;
-import pmedit.TemplateString;
 import pmedit.WebsiteConstants;
 import pmedit.ext.PdfReader;
-import pmedit.ext.PdfWriter;
 import pmedit.ext.PmeExtension;
 
-import java.io.IOException;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -27,18 +31,20 @@ import java.util.Set;
 /**
  * Metadata operations exposed through MCP tools.
  *
- * <p>All file operations are batch operations, mirroring the CLI: they take a
- * list of files or directories and return one result per file. Writes follow
- * the same rules as the GUI and CLI: only fields whose enabled flag is set are
- * written; everything else in the PDF is preserved by the active
- * {@link PdfWriter}.</p>
+ * <p>File tools use the same {@link BatchEngine} as the CLI and GUI. The MCP
+ * layer is responsible for JSON conversion, schemas, the result envelope, and
+ * the read-only/root policy.</p>
  */
 public final class McpMetadata {
 
-    private static final Set<String> SECRET_FIELDS = Set.of(
+    static final Set<String> SECRET_FIELDS = Set.of(
             "prop.ownerPassword",
             "prop.userPassword"
     );
+
+    static final String LICENSE_MESSAGE =
+            "Editing PDF metadata through MCP requires a license. You can get one at "
+                    + WebsiteConstants.batchLicenseUrl;
 
     private final McpPaths paths;
     private final McpOptions options;
@@ -88,23 +94,25 @@ public final class McpMetadata {
             List<String> rawPaths,
             String ownerPassword,
             List<String> requestedFields) throws Exception {
-        if (requestedFields != null) {
-            for (String id : requestedFields) {
-                if (SECRET_FIELDS.contains(id)) {
-                    throw new McpToolException("invalid_argument", "Field " + id + " is not readable");
-                }
-                requireKnownField(id);
-            }
+        validateRequestedFields(requestedFields);
+
+        BatchRequest request = new BatchRequest(toFiles(rawPaths), null, readOptions(ownerPassword));
+        BatchPreflight preflight;
+        try {
+            preflight = new BatchEngine().preflight(BatchEngine.PDF_EXTENSIONS, request);
+        } catch (BatchException e) {
+            throw new McpToolException(e.code(), e.getMessage(), e);
         }
 
-        List<McpPaths.BatchEntry> entries = paths.expand(rawPaths, null);
         McpBatchResult batch = new McpBatchResult();
-        for (McpPaths.BatchEntry entry : entries) {
+        for (File file : preflight.files()) {
+            Path path = file.toPath();
             try {
-                MetadataInfo metadata = load(entry.input(), ownerPassword);
-                batch.addReadSuccess(entry.input(), readPayload(entry.input(), metadata, requestedFields), paths);
+                MetadataInfo metadata = load(path, ownerPassword);
+                batch.addReadSuccess(path, readPayload(path, metadata, requestedFields), paths);
             } catch (Exception e) {
-                batch.addError(entry.input(), paths, classifyReadError(e, ownerPassword));
+                BatchFailure failure = BatchFailures.classify(e, ownerPassword, "read_failed");
+                batch.addError(paths.relative(path), failure.code(), failure.message());
             }
         }
         return batch;
@@ -120,34 +128,20 @@ public final class McpMetadata {
             throw new McpToolException("invalid_argument", "metadata must be a non-empty object");
         }
 
-        Map<String, Object> values = prepareChanges(metadataValues);
-        List<String> updated = new ArrayList<>(values.keySet());
-
-        Path outputDir = paths.outputDirectoryPath(rawOutputDir);
-        List<McpPaths.BatchEntry> entries = paths.expand(rawPaths, outputDir);
-        outputDir = paths.outputDirectory(rawOutputDir);
-
-        PdfWriter writer = writer();
-        McpBatchResult batch = new McpBatchResult();
-        for (McpPaths.BatchEntry entry : entries) {
-            try {
-                MetadataInfo fileMetadata = load(entry.input(), ownerPassword);
-                MetadataInfo changes = buildChanges(values, fileMetadata, ownerPassword);
-                Path output = outputPath(entry, outputDir);
-                boolean unsupported = writer.allFieldsSupported(changes);
-                writer.saveAsPDF(changes, entry.input().toFile(), output.toFile());
-                batch.addMutationSuccess(
-                        entry.input(),
-                        output,
-                        paths,
-                        "updated",
-                        updated,
-                        unsupported ? List.of(unsupportedFieldsWarning()) : List.of());
-            } catch (Exception e) {
-                batch.addError(entry.input(), paths, classifyWriteError(e, ownerPassword));
-            }
+        MetadataInfo metadata = new MetadataInfo();
+        metadata.setEnabled(false);
+        Iterator<Map.Entry<String, JsonNode>> iterator = metadataValues.fields();
+        while (iterator.hasNext()) {
+            Map.Entry<String, JsonNode> entry = iterator.next();
+            String id = entry.getKey();
+            MetadataInfo.FieldDescription description = writableField(id);
+            metadata.set(id, McpJson.toMetadataValue(description, entry.getValue()));
+            metadata.setEnabled(id, true);
         }
-        return batch;
+
+        BatchOperationParameters params = new BatchOperationParameters();
+        params.metadata = metadata;
+        return run(CommandDescription.EDIT, params, rawPaths, rawOutputDir, ownerPassword);
     }
 
     public McpBatchResult clearBatch(
@@ -161,57 +155,25 @@ public final class McpMetadata {
                 ? List.of("all")
                 : requestedFields;
 
-        MetadataInfo params = new MetadataInfo();
-        params.setEnabled(false);
+        MetadataInfo metadata = new MetadataInfo();
+        metadata.setEnabled(false);
 
-        List<String> cleared = new ArrayList<>();
         boolean all = requested.stream().anyMatch("all"::equalsIgnoreCase);
         if (all) {
-            params.setEnabled(true);
-            for (String id : MetadataInfo.keys()) {
-                if (!SECRET_FIELDS.contains(id) && MetadataInfo.keyIsWritable(id)) {
-                    cleared.add(id);
-                }
-            }
+            metadata.setEnabled(true);
         } else {
             for (String id : requested) {
                 if ("none".equalsIgnoreCase(id)) {
                     throw new McpToolException("invalid_argument", "'none' is not a valid clear target");
                 }
                 writableField(id);
-                params.setEnabled(id, true);
-                cleared.add(id);
+                metadata.setEnabled(id, true);
             }
         }
 
-        Path outputDir = paths.outputDirectoryPath(rawOutputDir);
-        List<McpPaths.BatchEntry> entries = paths.expand(rawPaths, outputDir);
-        outputDir = paths.outputDirectory(rawOutputDir);
-
-        PdfWriter writer = writer();
-        McpBatchResult batch = new McpBatchResult();
-        for (McpPaths.BatchEntry entry : entries) {
-            try {
-                MetadataInfo changes = new MetadataInfo();
-                changes.copyEnabled(params);
-                if (ownerPassword != null && !ownerPassword.isEmpty()) {
-                    changes.prop.ownerPassword = ownerPassword;
-                }
-                Path output = outputPath(entry, outputDir);
-                boolean unsupported = writer.allFieldsSupported(changes);
-                writer.saveAsPDF(changes, entry.input().toFile(), output.toFile());
-                batch.addMutationSuccess(
-                        entry.input(),
-                        output,
-                        paths,
-                        "cleared",
-                        cleared,
-                        unsupported ? List.of(unsupportedFieldsWarning()) : List.of());
-            } catch (Exception e) {
-                batch.addError(entry.input(), paths, classifyWriteError(e, ownerPassword));
-            }
-        }
-        return batch;
+        BatchOperationParameters params = new BatchOperationParameters();
+        params.metadata = metadata;
+        return run(CommandDescription.CLEAR, params, rawPaths, rawOutputDir, ownerPassword);
     }
 
     public McpBatchResult renameBatch(
@@ -224,57 +186,72 @@ public final class McpMetadata {
             throw new McpToolException("invalid_argument", "template is required");
         }
 
-        Path outputDir = paths.outputDirectoryPath(rawOutputDir);
-        List<McpPaths.BatchEntry> entries = paths.expand(rawPaths, outputDir);
-        outputDir = paths.outputDirectory(rawOutputDir);
+        BatchOperationParameters params = new BatchOperationParameters();
+        params.renameTemplate = template;
+        return run(CommandDescription.RENAME, params, rawPaths, rawOutputDir, ownerPassword);
+    }
 
-        String targetTemplate = template.toLowerCase(Locale.ROOT).endsWith(".pdf")
-                ? template
-                : template + ".pdf";
+    private McpBatchResult run(
+            CommandDescription command,
+            BatchOperationParameters params,
+            List<String> rawPaths,
+            String rawOutputDir,
+            String ownerPassword) throws Exception {
+        BatchRequest request = new BatchRequest(
+                toFiles(rawPaths),
+                outputDir(rawOutputDir),
+                mutationOptions(ownerPassword));
+        McpBatchListener listener = new McpBatchListener(paths);
+        new BatchEngine().run(command, params, request, listener);
+        return listener.finish();
+    }
 
-        McpBatchResult batch = new McpBatchResult();
-        for (McpPaths.BatchEntry entry : entries) {
-            try {
-                MetadataInfo metadata = load(entry.input(), ownerPassword);
-
-                String evaluated;
-                try {
-                    evaluated = new TemplateString(targetTemplate).process(metadata);
-                } catch (RuntimeException e) {
-                    throw new McpToolException(
-                            "invalid_template",
-                            "Failed to evaluate rename template: " + e.getMessage(),
-                            e);
-                }
-                if (evaluated.isBlank()) {
-                    throw new McpToolException(
-                            "invalid_template",
-                            "Rename template produced an empty file name");
-                }
-
-                Path base = outputDir == null
-                        ? entry.input().getParent()
-                        : outputDir.resolve(entry.relative()).normalize().getParent();
-                Path target = paths.prepareOutput(base.resolve(evaluated).normalize());
-                if (Files.exists(target)) {
-                    throw new McpToolException(
-                            "destination_exists",
-                            "Destination file already exists: " + paths.relative(target));
-                }
-
-                if (outputDir == null) {
-                    Files.move(entry.input(), target);
-                } else {
-                    Files.copy(entry.input(), target, StandardCopyOption.COPY_ATTRIBUTES);
-                }
-
-                batch.addMutationSuccess(
-                        entry.input(), target, paths, "renamed", List.of(), List.of());
-            } catch (Exception e) {
-                batch.addError(entry.input(), paths, classifyWriteError(e, ownerPassword));
+    private List<File> toFiles(List<String> rawPaths) throws McpToolException {
+        List<File> files = new ArrayList<>();
+        for (String raw : rawPaths) {
+            Path resolved = paths.resolveExisting(raw);
+            if (Files.isRegularFile(resolved) && !isPdf(resolved)) {
+                throw new McpToolException("not_a_pdf", "Not a PDF file: " + raw);
             }
+            files.add(resolved.toFile());
         }
-        return batch;
+        return files;
+    }
+
+    private static boolean isPdf(Path path) {
+        Path name = path.getFileName();
+        return name != null && name.toString().toLowerCase(Locale.ROOT).endsWith(".pdf");
+    }
+
+    private File outputDir(String raw) throws McpToolException {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        return paths.outputDirectoryPath(raw).toFile();
+    }
+
+    private BatchOptions readOptions(String ownerPassword) {
+        return new BatchOptions(
+                false,
+                options.licenseGate(),
+                McpPaths.MAX_BATCH_FILES,
+                true,
+                true,
+                false,
+                ownerPassword,
+                new McpBatchPathPolicy(paths));
+    }
+
+    private BatchOptions mutationOptions(String ownerPassword) {
+        return new BatchOptions(
+                true,
+                options.licenseGate(),
+                McpPaths.MAX_BATCH_FILES,
+                true,
+                true,
+                false,
+                ownerPassword,
+                new McpBatchPathPolicy(paths));
     }
 
     private ObjectNode readPayload(Path file, MetadataInfo metadata, List<String> requestedFields) {
@@ -312,62 +289,16 @@ public final class McpMetadata {
         return payload;
     }
 
-    private Map<String, Object> prepareChanges(JsonNode metadataValues) throws McpToolException {
-        Map<String, Object> values = new LinkedHashMap<>();
-        Iterator<Map.Entry<String, JsonNode>> iterator = metadataValues.fields();
-        while (iterator.hasNext()) {
-            Map.Entry<String, JsonNode> entry = iterator.next();
-            String id = entry.getKey();
-            MetadataInfo.FieldDescription description = writableField(id);
-            values.put(id, McpJson.toMetadataValue(description, entry.getValue()));
+    private static void validateRequestedFields(List<String> requestedFields) throws McpToolException {
+        if (requestedFields == null) {
+            return;
         }
-        return values;
-    }
-
-    private static MetadataInfo buildChanges(
-            Map<String, Object> values,
-            MetadataInfo expandInfo,
-            String ownerPassword) throws McpToolException {
-        MetadataInfo changes = new MetadataInfo();
-        changes.setEnabled(false);
-        for (Map.Entry<String, Object> entry : values.entrySet()) {
-            changes.set(entry.getKey(), expandValue(entry.getValue(), expandInfo));
-            changes.setEnabled(entry.getKey(), true);
-        }
-        if (ownerPassword != null && !ownerPassword.isEmpty()) {
-            changes.prop.ownerPassword = ownerPassword;
-        }
-        return changes;
-    }
-
-    private static Object expandValue(Object value, MetadataInfo expandInfo) throws McpToolException {
-        try {
-            if (value instanceof String stringValue) {
-                return new TemplateString(stringValue).process(expandInfo);
+        for (String id : requestedFields) {
+            if (SECRET_FIELDS.contains(id)) {
+                throw new McpToolException("invalid_argument", "Field " + id + " is not readable");
             }
-            if (value instanceof List<?> list) {
-                List<Object> expanded = new ArrayList<>();
-                for (Object item : list) {
-                    expanded.add(item instanceof String stringItem
-                            ? new TemplateString(stringItem).process(expandInfo)
-                            : item);
-                }
-                return expanded;
-            }
-            return value;
-        } catch (RuntimeException e) {
-            throw new McpToolException(
-                    "invalid_template",
-                    "Failed to expand metadata template: " + e.getMessage(),
-                    e);
+            requireKnownField(id);
         }
-    }
-
-    private Path outputPath(McpPaths.BatchEntry entry, Path outputDir) throws McpToolException {
-        if (outputDir == null) {
-            return entry.input();
-        }
-        return paths.prepareOutput(outputDir.resolve(entry.relative()).normalize());
     }
 
     private void requireWritable() throws McpToolException {
@@ -376,75 +307,12 @@ public final class McpMetadata {
                     "read_only",
                     "The MCP server is running in read-only mode.");
         }
-        if (!options.licenseGate().getAsBoolean()) {
-            throw new McpToolException(
-                    "license_required",
-                    "Editing PDF metadata through MCP requires a license. You can get one at "
-                            + WebsiteConstants.batchLicenseUrl);
-        }
     }
 
-    private MetadataInfo load(Path input, String ownerPassword) throws Exception {
+    private static MetadataInfo load(Path input, String ownerPassword) throws Exception {
         MetadataInfo metadata = new MetadataInfo();
-        try {
-            reader().loadFromPDF(input.toFile(), ownerPassword, metadata);
-        } catch (InvalidPasswordException e) {
-            throw passwordException(ownerPassword, e);
-        } catch (IOException e) {
-            throw new McpToolException("read_failed", "Failed to read " + paths.relative(input) + ": " + e.getMessage(), e);
-        }
+        reader().loadFromPDF(input.toFile(), ownerPassword, metadata);
         return metadata;
-    }
-
-    private static McpToolException classifyReadError(Exception e, String ownerPassword) {
-        if (e instanceof McpToolException toolError) {
-            return toolError;
-        }
-        InvalidPasswordException passwordError = findInvalidPassword(e);
-        if (passwordError != null) {
-            return passwordException(ownerPassword, passwordError);
-        }
-        return new McpToolException("read_failed", safeMessage(e), e);
-    }
-
-    private McpToolException classifyWriteError(Exception e, String ownerPassword) {
-        if (e instanceof McpToolException toolError) {
-            return toolError;
-        }
-        InvalidPasswordException passwordError = findInvalidPassword(e);
-        if (passwordError != null) {
-            return passwordException(ownerPassword, passwordError);
-        }
-        return new McpToolException("write_failed", safeMessage(e), e);
-    }
-
-    private static McpToolException passwordException(String suppliedPassword, InvalidPasswordException cause) {
-        if (suppliedPassword == null || suppliedPassword.isEmpty()) {
-            return new McpToolException(
-                    "password_required",
-                    "This PDF is password-protected. Retry with the ownerPassword argument.",
-                    cause);
-        }
-        return new McpToolException(
-                "invalid_password",
-                "The supplied ownerPassword could not open this PDF.",
-                cause);
-    }
-
-    private static InvalidPasswordException findInvalidPassword(Throwable throwable) {
-        Throwable current = throwable;
-        while (current != null) {
-            if (current instanceof InvalidPasswordException passwordException) {
-                return passwordException;
-            }
-            current = current.getCause();
-        }
-        return null;
-    }
-
-    private static String safeMessage(Exception e) {
-        String message = e.getMessage();
-        return message == null || message.isBlank() ? e.getClass().getSimpleName() : message;
     }
 
     private static void requireKnownField(String id) throws McpToolException {
@@ -495,11 +363,6 @@ public final class McpMetadata {
         return warnings;
     }
 
-    private static String unsupportedFieldsWarning() {
-        return "The active extension may not support some requested fields "
-                + "(encryption, permissions, rights, or file properties). A license may be required.";
-    }
-
     private static void putNullable(ObjectNode node, String name, String value) {
         if (value == null) {
             node.putNull(name);
@@ -518,9 +381,5 @@ public final class McpMetadata {
 
     private static PdfReader reader() {
         return PmeExtension.get().newPdfReader();
-    }
-
-    private static PdfWriter writer() {
-        return PmeExtension.get().newPdfWriter();
     }
 }

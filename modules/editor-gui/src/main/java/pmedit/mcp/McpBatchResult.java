@@ -47,7 +47,7 @@ public final class McpBatchResult {
         }
         result.put("ok", true);
         result.put("action", action);
-        if (changed != null) {
+        if (changed != null && !changed.isEmpty()) {
             ArrayNode values = McpJson.array();
             for (String value : changed) {
                 values.add(value);

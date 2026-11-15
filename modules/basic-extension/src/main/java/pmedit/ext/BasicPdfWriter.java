@@ -48,7 +48,7 @@ public class BasicPdfWriter implements PdfWriter {
                         md.rightsEnabled.atLeastOne()
                         || md.removeXmp || md.removeDocumentInfo
                         || md.fileEnabled.atLeastOne() || md.propEnabled.atLeastOne();
-        return  atLeastOneUnsupportedChange;
+        return !atLeastOneUnsupportedChange;
     }
 
     protected static class AppliedChanges {

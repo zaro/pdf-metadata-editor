@@ -1,0 +1,142 @@
+package pmedit;
+
+import pmedit.util.FilesWalker;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+/**
+ * The shared batch runner used by the CLI, GUI, and MCP server.
+ *
+ * <p>The engine owns preflight validation (path policy, deduplication, file
+ * limit, license gate) and delegates the actual work to
+ * {@link PDFMetadataEditBatch}. Callers receive typed {@link BatchFileOutcome}
+ * events.</p>
+ */
+public final class BatchEngine {
+
+    public static final String[] PDF_EXTENSIONS = {"pdf"};
+
+    public BatchPreflight preflight(CommandDescription command, BatchRequest request) throws BatchException {
+        if (command == null) {
+            throw new BatchException("invalid_command", "Invalid command");
+        }
+        return preflight(command.inputFileExtensions, request);
+    }
+
+    public BatchPreflight preflight(String[] extensions, BatchRequest request) throws BatchException {
+        BatchOptions options = request.options();
+        if (request.roots().isEmpty()) {
+            if (options.rejectExplicitNonPdf()) {
+                throw new BatchException("no_input_files", "At least one path is required");
+            }
+            return new BatchPreflight(
+                    List.of(),
+                    List.of(),
+                    options.pathPolicy().prepareOutputDirectory(request.outputDir()));
+        }
+
+        List<File> roots = new ArrayList<>();
+        for (File root : request.roots()) {
+            if (root == null) {
+                throw new BatchException("invalid_argument", "A file path is required");
+            }
+
+            File validated = options.pathPolicy().validateInput(root);
+            if (validated.isFile()
+                    && !hasExtension(validated, extensions)
+                    && options.rejectExplicitNonPdf()) {
+                throw new BatchException(nonPdfCode(extensions), nonPdfMessage(extensions, root));
+            }
+            roots.add(validated);
+        }
+
+        FilesWalker walker = new FilesWalker(extensions, roots, request.outputDir(), options.deduplicate());
+        List<File> files = walker.list();
+        for (File file : files) {
+            options.pathPolicy().validateInput(file);
+        }
+
+        if (files.isEmpty() && options.rejectExplicitNonPdf()) {
+            throw new BatchException("no_input_files", "No PDF files were found in the supplied paths");
+        }
+        if (options.maxFiles() > 0 && files.size() > options.maxFiles()) {
+            throw new BatchException(
+                    "batch_too_large",
+                    "The batch contains " + files.size() + " PDF files; the maximum is "
+                            + options.maxFiles() + ". Split the request into smaller batches.");
+        }
+
+        File outputDir = options.pathPolicy().prepareOutputDirectory(request.outputDir());
+        return new BatchPreflight(roots, files, outputDir);
+    }
+
+    public void run(
+            CommandDescription command,
+            BatchOperationParameters params,
+            BatchRequest request,
+            BatchListener listener) {
+        BatchOptions options = request.options();
+
+        if (options.checkLicense() && !options.licenseGate().getAsBoolean()) {
+            listener.onBatchError(new BatchError(
+                    "*",
+                    "license_required",
+                    "Invalid license, you can get a license at " + WebsiteConstants.batchLicenseUrl,
+                    null));
+            return;
+        }
+
+        BatchPreflight preflight;
+        try {
+            preflight = preflight(command, request);
+        } catch (BatchException e) {
+            listener.onBatchError(new BatchError("*", e.code(), e.getMessage(), e));
+            return;
+        }
+
+        FilesWalker walker = new FilesWalker(
+                command.inputFileExtensions,
+                preflight.roots(),
+                preflight.outputDir(),
+                options.deduplicate());
+        PDFMetadataEditBatch batch = new PDFMetadataEditBatch(params, options);
+        batch.runCommand(command, walker, preflight.outputDir(), listener);
+    }
+
+    private static boolean hasExtension(File file, String[] extensions) {
+        if (extensions == null) {
+            return false;
+        }
+        String name = file.getName().toLowerCase(Locale.ROOT);
+        for (String extension : extensions) {
+            if (name.endsWith("." + extension.toLowerCase(Locale.ROOT))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isPdfExtensions(String[] extensions) {
+        if (extensions != null) {
+            for (String extension : extensions) {
+                if ("pdf".equalsIgnoreCase(extension)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static String nonPdfCode(String[] extensions) {
+        return isPdfExtensions(extensions) ? "not_a_pdf" : "invalid_input";
+    }
+
+    private static String nonPdfMessage(String[] extensions, File root) {
+        return isPdfExtensions(extensions)
+                ? "Not a PDF file: " + root
+                : "Not a supported input file: " + root;
+    }
+}

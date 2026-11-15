@@ -85,28 +85,32 @@ public class MainCli {
             McpMain.run(cmdLine);
             return;
         }
-        ActionStatus status = new ActionStatus() {
-            public void showStatus(String filename, String message) {
-                System.out.print(filename);
+        BatchListener listener = new BatchListener() {
+            public void onFile(BatchFileOutcome outcome) {
+                System.out.print(outcome.displayLabel());
                 System.out.print(" -> ");
-                System.out.println(message);
+                System.out.println(outcome.displayMessage());
             }
 
-            public void showError(String filename, Throwable error) {
-                System.out.print(filename);
+            public void onBatchError(BatchError error) {
+                System.out.print(error.displayLabel());
                 System.out.print(" -> ");
-                System.out.println(error.getMessage());
+                System.out.println(error.message());
             }
         };
 
         if (cmdLine.hasCommand()) {
             PDFMetadataEditBatch batch = new PDFMetadataEditBatch(cmdLine.params);
             File outDir = cmdLine.outputDir != null ? new File(cmdLine.outputDir) : null;
-            batch.runCommand(cmdLine.command, FileList.fileList(cmdLine.fileList),outDir,  status);
+            batch.runCommand(cmdLine.command, FileList.fileList(cmdLine.fileList), outDir, listener);
         } else if (cmdLine.batchGui) {
-            status.addError("*", new Exception("Batch gui command not allowed in console mode"));
+            listener.onBatchError(new BatchError(
+                    "*", "invalid_command", "Batch gui command not allowed in console mode",
+                    new Exception("Batch gui command not allowed in console mode")));
         } else {
-            status.addError("*", new Exception("No command specified"));
+            listener.onBatchError(new BatchError(
+                    "*", "invalid_command", "No command specified",
+                    new Exception("No command specified")));
         }
     }
 
