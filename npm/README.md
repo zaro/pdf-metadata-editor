@@ -19,20 +19,216 @@ system Java installation.
 ### npx
 
 ```sh
-npx -y pdf-metadata-editor-mcp@next --mcp-root /path/to/pdfs
+npx -y pdf-metadata-editor-mcp@next
 ```
 
 ### Global install
 
 ```sh
 npm install -g pdf-metadata-editor-mcp@next
-pdf-metadata-editor-mcp --mcp-root /path/to/pdfs
+pdf-metadata-editor-mcp
 ```
 
-`--mcp-root` should be set explicitly. It is the only directory tree the server
-may read or write.
+By default, the server is limited to the current working directory. Use
+`--mcp-root` only when you want to restrict access to a specific folder.
 
-## MCP client configuration
+The examples use the `@next` prerelease tag. After the stable `4.5.0` release,
+remove `@next`.
+
+## Choose your client
+
+The configuration shape differs between MCP clients. Use the section for your
+client rather than copying a `mcpServers` block into a client that expects
+`servers`, `mcp.servers`, or TOML.
+
+| Client | Where to configure | Format |
+|---|---|---|
+| OpenCode | `opencode.json(c)` or `~/.config/opencode/opencode.json(c)` | `mcp.servers` |
+| Claude Code | `.mcp.json` or `claude mcp add` | `mcpServers` |
+| Codex CLI | `~/.codex/config.toml` or `.codex/config.toml` | `[mcp_servers.*]` |
+| Cursor | `~/.cursor/mcp.json` or `.cursor/mcp.json` | `mcpServers` |
+| VS Code / GitHub Copilot | `.vscode/mcp.json` | `servers` |
+| Claude Desktop | `claude_desktop_config.json` | `mcpServers` |
+
+## OpenCode
+
+Add the server to the current project:
+
+```sh
+opencode mcp add pdf-metadata-editor -- npx -y pdf-metadata-editor-mcp@next
+```
+
+Add it globally:
+
+```sh
+opencode mcp add pdf-metadata-editor --global -- npx -y pdf-metadata-editor-mcp@next
+```
+
+Manual configuration in `opencode.jsonc`:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "servers": {
+      "pdf-metadata-editor": {
+        "type": "local",
+        "command": ["npx", "-y", "pdf-metadata-editor-mcp@next"]
+      }
+    }
+  }
+}
+```
+
+OpenCode uses `mcp.servers`, requires `"type": "local"` for local servers, and
+stores the executable and arguments in a single `command` array. Local servers
+start in the workspace directory by default, so `--mcp-root` is not needed for
+normal use.
+
+Global configuration lives at `~/.config/opencode/opencode.json(c)`. Project
+configuration can be `opencode.json(c)` or `.opencode/opencode.json(c)`.
+
+## Claude Code
+
+Add the server with the Claude Code CLI:
+
+```sh
+claude mcp add --transport stdio pdf-metadata-editor -- npx -y pdf-metadata-editor-mcp@next
+```
+
+For a project-scoped server:
+
+```sh
+claude mcp add --scope project --transport stdio pdf-metadata-editor -- npx -y pdf-metadata-editor-mcp@next
+```
+
+Or add it to `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "pdf-metadata-editor": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "pdf-metadata-editor-mcp@next"]
+    }
+  }
+}
+```
+
+On Windows, if `npx` is not available to Claude Code, wrap the command:
+
+```sh
+claude mcp add --transport stdio pdf-metadata-editor -- cmd /c npx -y pdf-metadata-editor-mcp@next
+```
+
+## Codex CLI
+
+Add the server to `~/.codex/config.toml`, or to `.codex/config.toml` for a
+project-scoped configuration:
+
+```toml
+[mcp_servers.pdf-metadata-editor]
+command = "npx"
+args = ["-y", "pdf-metadata-editor-mcp@next"]
+```
+
+## Cursor
+
+Global configuration is `~/.cursor/mcp.json`; project configuration is
+`.cursor/mcp.json`.
+
+```json
+{
+  "mcpServers": {
+    "pdf-metadata-editor": {
+      "command": "npx",
+      "args": ["-y", "pdf-metadata-editor-mcp@next"]
+    }
+  }
+}
+```
+
+## VS Code / GitHub Copilot
+
+Use `.vscode/mcp.json` in the workspace:
+
+```json
+{
+  "servers": {
+    "pdf-metadata-editor": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "pdf-metadata-editor-mcp@next"]
+    }
+  }
+}
+```
+
+VS Code and GitHub Copilot use the `servers` key, not `mcpServers`.
+
+## Claude Desktop
+
+Configuration file locations:
+
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+- Linux: use your client’s documented configuration path
+
+```json
+{
+  "mcpServers": {
+    "pdf-metadata-editor": {
+      "command": "npx",
+      "args": ["-y", "pdf-metadata-editor-mcp@next"]
+    }
+  }
+}
+```
+
+Restart Claude Desktop after changing the file.
+
+## Other clients
+
+If your client uses the `mcpServers` shape, use `command` and `args`:
+
+```json
+{
+  "mcpServers": {
+    "pdf-metadata-editor": {
+      "command": "npx",
+      "args": ["-y", "pdf-metadata-editor-mcp@next"]
+    }
+  }
+}
+```
+
+If the package is installed globally, use the binary directly:
+
+```json
+{
+  "mcpServers": {
+    "pdf-metadata-editor": {
+      "command": "pdf-metadata-editor-mcp",
+      "args": []
+    }
+  }
+}
+```
+
+Follow your client’s documentation if it uses a different key or file format.
+
+## Optional: restrict file access
+
+`--mcp-root` is an additional security measure, not a required setting. The
+default root is the process working directory. Use `--mcp-root` when you want a
+fixed, narrower scope:
+
+```sh
+npx -y pdf-metadata-editor-mcp@next --mcp-root /absolute/path/to/pdfs
+```
+
+In a client that uses `mcpServers`:
 
 ```json
 {
@@ -50,24 +246,37 @@ may read or write.
 }
 ```
 
-Alternatively, use the globally installed command:
+In OpenCode:
 
-```json
+```jsonc
 {
-  "mcpServers": {
-    "pdf-metadata-editor": {
-      "command": "pdf-metadata-editor-mcp",
-      "args": ["--mcp-root", "/absolute/path/to/pdfs"]
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "servers": {
+      "pdf-metadata-editor": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "pdf-metadata-editor-mcp@next",
+          "--mcp-root",
+          "/absolute/path/to/pdfs"
+        ]
+      }
     }
   }
 }
 ```
 
+Project-oriented clients such as OpenCode, Claude Code, and Cursor usually start
+in the project directory. Desktop clients may use a different working
+directory; set `--mcp-root` there if you need a predictable scope.
+
 ## Options
 
 | Option | Description |
 |---|---|
-| `--mcp-root DIR` | Restrict all file access to `DIR` (default: current directory). |
+| `--mcp-root DIR` | Optional. Restrict file access to `DIR`; defaults to the current working directory. |
 | `--mcp-read-only` | Disable every mutating tool. |
 | `--doctor` | Print the selected runtime, JAR path, root, and write mode. |
 | `--version` | Print the package version. |
@@ -102,8 +311,9 @@ application JAR.
 
 ## Security
 
-- All paths are resolved against `--mcp-root` and may not escape it.
-- Symlink escapes are rejected.
+- The server is limited to the current working directory by default.
+- Use `--mcp-root` to narrow access to a specific directory.
+- Paths cannot escape the selected root; symlink escapes are rejected.
 - Only PDF files are accepted by the metadata tools.
 - Use `--mcp-read-only` when write access is not needed.
 
@@ -121,7 +331,7 @@ If no platform bundle is available, install Java 17 or newer and optionally
 point the wrapper at it:
 
 ```sh
-PDF_METADATA_EDITOR_JAVA=/path/to/java pdf-metadata-editor-mcp --mcp-root /path/to/pdfs
+PDF_METADATA_EDITOR_JAVA=/path/to/java pdf-metadata-editor-mcp
 ```
 
 ### Custom JAR
@@ -129,7 +339,7 @@ PDF_METADATA_EDITOR_JAVA=/path/to/java pdf-metadata-editor-mcp --mcp-root /path/
 For development or a custom build, point the wrapper at an application JAR:
 
 ```sh
-PDF_METADATA_EDITOR_JAR=/path/to/pdf-metadata-editor.jar pdf-metadata-editor-mcp --mcp-root /path/to/pdfs
+PDF_METADATA_EDITOR_JAR=/path/to/pdf-metadata-editor.jar pdf-metadata-editor-mcp
 ```
 
 ### Startup logs

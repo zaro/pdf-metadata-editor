@@ -86,7 +86,7 @@ Available tools:
 The MCP server is also available as an npm package:
 
 ```sh
-npx -y pdf-metadata-editor-mcp@next --mcp-root /path/to/pdfs
+npx -y pdf-metadata-editor-mcp@next
 ```
 
 See [npm/README.md](npm/README.md) for client configuration, platform details,
