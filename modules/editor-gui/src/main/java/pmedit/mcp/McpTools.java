@@ -28,15 +28,25 @@ public final class McpTools {
     private static final String OUTPUT_DIR_DESCRIPTION =
             "Optional output directory, relative to the MCP root. The input directory structure is "
                     + "preserved beneath it. When omitted, files are updated in place.";
-    private static final String BATCH_LIMIT =
-            "A batch may contain at most " + McpPaths.MAX_BATCH_FILES + " PDF files.";
 
     private final McpMetadata metadata;
+    private final int maxFiles;
     private final List<Tool> tools;
 
     public McpTools(McpMetadata metadata) {
+        this(metadata, McpPaths.MAX_BATCH_FILES);
+    }
+
+    public McpTools(McpMetadata metadata, int maxFiles) {
         this.metadata = metadata;
+        this.maxFiles = maxFiles;
         this.tools = buildTools();
+    }
+
+    private String batchLimit() {
+        return maxFiles > 0
+                ? "A batch may contain at most " + maxFiles + " files or operations."
+                : "No fixed batch limit is configured.";
     }
 
     public ObjectNode listResult() {
@@ -108,7 +118,7 @@ public final class McpTools {
                 "Read PDF metadata",
                 "Read metadata from one or more PDFs or directories, like the CLI's batch input. "
                         + "By default only populated fields are returned; pass fields to request specific "
-                        + "field IDs. " + BATCH_LIMIT + " Read-only and free.",
+                        + "field IDs. " + batchLimit() + " Read-only and free.",
                 readInputSchema(),
                 batchOutputSchema("One entry per PDF file.", true),
                 McpJson.annotations(true, false, true),
@@ -125,7 +135,7 @@ public final class McpTools {
                         + "Only the supplied fields are changed; all other metadata in each document is "
                         + "preserved. Values can use {field.id} templates expanded from each file's own "
                         + "metadata. Writes in place by default, or beneath outputDir when supplied. "
-                        + BATCH_LIMIT + " May require a license.",
+                        + batchLimit() + " May require a license.",
                 setInputSchema(),
                 batchOutputSchema("One entry per PDF file.", false),
                 McpJson.annotations(false, false, true),
@@ -141,7 +151,7 @@ public final class McpTools {
                 "Clear PDF metadata",
                 "Clear all metadata or only the selected fields on every input PDF. Equivalent to the CLI "
                         + "'clear' command. Writes in place by default, or beneath outputDir when supplied. "
-                        + BATCH_LIMIT + " May require a license.",
+                        + batchLimit() + " May require a license.",
                 clearInputSchema(),
                 batchOutputSchema("One entry per PDF file.", false),
                 McpJson.annotations(false, true, true),
@@ -159,13 +169,140 @@ public final class McpTools {
                         + "'{doc.author} - {doc.title}.pdf'. Equivalent to the CLI 'rename' command. "
                         + "The destination must not exist. When outputDir is omitted the file is moved within "
                         + "its current directory; when supplied the file is copied beneath outputDir. "
-                        + BATCH_LIMIT + " May require a license.",
+                        + batchLimit() + " May require a license.",
                 renameInputSchema(),
                 batchOutputSchema("One entry per PDF file.", false),
                 McpJson.annotations(false, true, false),
                 args -> McpResult.batch(metadata.renameBatch(
                         requiredStringList(args, "paths"),
                         requiredString(args, "template"),
+                        optionalString(args, "outputDir"),
+                        optionalString(args, "ownerPassword")))
+        ));
+
+        definitions.add(new Tool(
+                "pdf_export_json",
+                "Export PDF metadata as JSON",
+                "Export metadata from one or more PDFs or directories to JSON. Equivalent to the CLI "
+                        + "'tojson' command. By default one aggregate file is written; set perFileExport "
+                        + "to write one file per PDF. " + batchLimit() + " May require a license.",
+                exportInputSchema(),
+                batchOutputSchema("One entry per input PDF.", false),
+                McpJson.annotations(false, false, true),
+                args -> McpResult.batch(metadata.exportBatch(
+                        "json",
+                        requiredStringList(args, "paths"),
+                        optionalStringList(args, "fields"),
+                        optionalString(args, "outputDir"),
+                        optionalString(args, "outputFile"),
+                        optionalBoolean(args, "perFileExport"),
+                        optionalBoolean(args, "relativePaths"),
+                        optionalString(args, "ownerPassword")))
+        ));
+
+        definitions.add(new Tool(
+                "pdf_export_yaml",
+                "Export PDF metadata as YAML",
+                "Export metadata from one or more PDFs or directories to YAML. Equivalent to the CLI "
+                        + "'toyaml' command. By default one aggregate file is written; set perFileExport "
+                        + "to write one file per PDF. " + batchLimit() + " May require a license.",
+                exportInputSchema(),
+                batchOutputSchema("One entry per input PDF.", false),
+                McpJson.annotations(false, false, true),
+                args -> McpResult.batch(metadata.exportBatch(
+                        "yaml",
+                        requiredStringList(args, "paths"),
+                        optionalStringList(args, "fields"),
+                        optionalString(args, "outputDir"),
+                        optionalString(args, "outputFile"),
+                        optionalBoolean(args, "perFileExport"),
+                        optionalBoolean(args, "relativePaths"),
+                        optionalString(args, "ownerPassword")))
+        ));
+
+        definitions.add(new Tool(
+                "pdf_export_csv",
+                "Export PDF metadata as CSV",
+                "Export metadata from one or more PDFs or directories to CSV. Equivalent to the CLI "
+                        + "'tocsv' command. By default one aggregate file is written; set perFileExport "
+                        + "to write one file per PDF. " + batchLimit() + " May require a license.",
+                exportInputSchema(),
+                batchOutputSchema("One entry per input PDF.", false),
+                McpJson.annotations(false, false, true),
+                args -> McpResult.batch(metadata.exportBatch(
+                        "csv",
+                        requiredStringList(args, "paths"),
+                        optionalStringList(args, "fields"),
+                        optionalString(args, "outputDir"),
+                        optionalString(args, "outputFile"),
+                        optionalBoolean(args, "perFileExport"),
+                        optionalBoolean(args, "relativePaths"),
+                        optionalString(args, "ownerPassword")))
+        ));
+
+        definitions.add(new Tool(
+                "pdf_import_from_filename",
+                "Import PDF metadata from file names",
+                "Extract metadata from each PDF's file name and write it back. Equivalent to the CLI "
+                        + "'fromfilename' command. The template uses {field.id} placeholders, for example "
+                        + "'{doc.author} - {doc.title}'. " + batchLimit() + " May require a license.",
+                importFromFilenameInputSchema(),
+                batchOutputSchema("One entry per input PDF.", false),
+                McpJson.annotations(false, false, true),
+                args -> McpResult.batch(metadata.importFromFilenameBatch(
+                        requiredStringList(args, "paths"),
+                        requiredString(args, "template"),
+                        optionalString(args, "outputDir"),
+                        optionalString(args, "ownerPassword")))
+        ));
+
+        definitions.add(new Tool(
+                "pdf_import_from_json",
+                "Import PDF metadata from JSON",
+                "Import metadata from JSON files. Equivalent to the CLI 'fromjson' command. Each record "
+                        + "must contain file.fullPath. A record's prop.ownerPassword is used to open that "
+                        + "PDF when present; otherwise ownerPassword is used. " + batchLimit()
+                        + " May require a license.",
+                importFileInputSchema(),
+                importOutputSchema(),
+                McpJson.annotations(false, false, true),
+                args -> McpResult.batch(metadata.importBatch(
+                        "json",
+                        requiredStringList(args, "importPaths"),
+                        optionalString(args, "outputDir"),
+                        optionalString(args, "ownerPassword")))
+        ));
+
+        definitions.add(new Tool(
+                "pdf_import_from_yaml",
+                "Import PDF metadata from YAML",
+                "Import metadata from YAML files. Equivalent to the CLI 'fromyaml' command. Each record "
+                        + "must contain file.fullPath. A record's prop.ownerPassword is used to open that "
+                        + "PDF when present; otherwise ownerPassword is used. " + batchLimit()
+                        + " May require a license.",
+                importFileInputSchema(),
+                importOutputSchema(),
+                McpJson.annotations(false, false, true),
+                args -> McpResult.batch(metadata.importBatch(
+                        "yaml",
+                        requiredStringList(args, "importPaths"),
+                        optionalString(args, "outputDir"),
+                        optionalString(args, "ownerPassword")))
+        ));
+
+        definitions.add(new Tool(
+                "pdf_import_from_csv",
+                "Import PDF metadata from CSV",
+                "Import metadata from CSV files. Equivalent to the CLI 'fromcsv' command. Each record "
+                        + "must contain file.fullPath. A record's prop.ownerPassword is used to open that "
+                        + "PDF when present; otherwise ownerPassword is used. " + batchLimit()
+                        + " May require a license.",
+                importFileInputSchema(),
+                importOutputSchema(),
+                McpJson.annotations(false, false, true),
+                args -> McpResult.batch(metadata.importBatch(
+                        "csv",
+                        requiredStringList(args, "importPaths"),
                         optionalString(args, "outputDir"),
                         optionalString(args, "ownerPassword")))
         ));
@@ -224,6 +361,55 @@ public final class McpTools {
         return schema;
     }
 
+    private static ObjectNode exportInputSchema() {
+        ObjectNode schema = McpJson.objectSchema();
+        McpJson.addProperty(schema, "paths", pathsProperty(), true);
+        McpJson.addProperty(schema, "fields", McpJson.stringArrayProperty(
+                "Optional field IDs to export. Defaults to all readable, non-secret fields. "
+                        + "Use [\"all\"] explicitly or omit. file.fullPath is always included."), false);
+        McpJson.addProperty(schema, "outputDir", McpJson.stringProperty(
+                "Optional output directory. Defaults to the input directory."), false);
+        McpJson.addProperty(schema, "outputFile", McpJson.stringProperty(
+                "Base output file name, default 'metadata-export'. The format extension is added. "
+                        + "Do not include directories; use outputDir."), false);
+        McpJson.addProperty(schema, "perFileExport", McpJson.booleanProperty(
+                "When true, write one export file per input PDF. Default false: one aggregate file."), false);
+        McpJson.addProperty(schema, "relativePaths", McpJson.booleanProperty(
+                "When true (default), file.fullPath values are relative to the input directory. "
+                        + "When false, absolute paths are exported."), false);
+        McpJson.addProperty(schema, "ownerPassword", McpJson.stringProperty(OWNER_PASSWORD_DESCRIPTION), false);
+        return schema;
+    }
+
+    private static ObjectNode importFromFilenameInputSchema() {
+        ObjectNode schema = McpJson.objectSchema();
+        McpJson.addProperty(schema, "paths", pathsProperty(), true);
+        McpJson.addProperty(schema, "template", McpJson.stringProperty(
+                "Extract template, e.g. '{doc.author} - {doc.title}'."), true);
+        McpJson.addProperty(schema, "outputDir", McpJson.stringProperty(OUTPUT_DIR_DESCRIPTION), false);
+        McpJson.addProperty(schema, "ownerPassword", McpJson.stringProperty(OWNER_PASSWORD_DESCRIPTION), false);
+        return schema;
+    }
+
+    private static ObjectNode importFileInputSchema() {
+        ObjectNode schema = McpJson.objectSchema();
+        McpJson.addProperty(schema, "importPaths", importPathsProperty(), true);
+        McpJson.addProperty(schema, "outputDir", McpJson.stringProperty(OUTPUT_DIR_DESCRIPTION), false);
+        McpJson.addProperty(schema, "ownerPassword", McpJson.stringProperty(
+                OWNER_PASSWORD_DESCRIPTION
+                        + " Used when an import record does not contain prop.ownerPassword."), false);
+        return schema;
+    }
+
+    private static ObjectNode importPathsProperty() {
+        ObjectNode property = McpJson.stringArrayProperty(
+                "Import files and/or directories, relative to the MCP root. Directories are searched "
+                        + "for files matching this tool's format. A single file is [\"one.json\"] for JSON "
+                        + "imports; use the matching extension for YAML or CSV.");
+        property.put("minItems", 1);
+        return property;
+    }
+
     // ---------------------------------------------------------------------
     // Output schemas
     // ---------------------------------------------------------------------
@@ -267,7 +453,36 @@ public final class McpTools {
 
         ObjectNode schema = McpJson.outputObjectSchema();
         McpJson.addProperty(schema, "summary", summary, true);
+        McpJson.addProperty(schema, "outputs", McpJson.stringArrayProperty("Files generated by the batch."), false);
         McpJson.addProperty(schema, "results", McpJson.arrayProperty(resultDescription, item), true);
+        return schema;
+    }
+
+    private static ObjectNode importOutputSchema() {
+        ObjectNode summary = McpJson.outputObjectSchema();
+        McpJson.addProperty(summary, "total", McpJson.integerProperty("Number of import operations and parse failures."), true);
+        McpJson.addProperty(summary, "succeeded", McpJson.integerProperty("Number of PDFs imported successfully."), true);
+        McpJson.addProperty(summary, "failed", McpJson.integerProperty("Number of import operations or parse failures that failed."), true);
+        McpJson.addProperty(summary, "truncated", McpJson.booleanProperty("Whether the result list was capped."), true);
+
+        ObjectNode error = McpJson.outputObjectSchema();
+        McpJson.addProperty(error, "code", McpJson.stringProperty("Machine-readable error code."), true);
+        McpJson.addProperty(error, "message", McpJson.stringProperty("Human-readable error message."), true);
+
+        ObjectNode item = McpJson.outputObjectSchema();
+        McpJson.addProperty(item, "source", McpJson.stringProperty("Import file path relative to the MCP root."), true);
+        McpJson.addProperty(item, "input", McpJson.stringProperty("Referenced PDF path, when one was resolved."), false);
+        McpJson.addProperty(item, "output", McpJson.stringProperty("Output path, when a file was written."), false);
+        McpJson.addProperty(item, "ok", McpJson.booleanProperty("Whether the import succeeded."), true);
+        McpJson.addProperty(item, "action", McpJson.stringProperty("Operation performed on the file."), false);
+        McpJson.addProperty(item, "fields", McpJson.arrayProperty(
+                "Field IDs applied.", McpJson.stringProperty("Metadata field ID.")), false);
+        McpJson.addProperty(item, "warnings", McpJson.stringArrayProperty("Warnings produced while processing."), false);
+        McpJson.addProperty(item, "error", error, false);
+
+        ObjectNode schema = McpJson.outputObjectSchema();
+        McpJson.addProperty(schema, "summary", summary, true);
+        McpJson.addProperty(schema, "results", McpJson.arrayProperty("One entry per import operation or parse failure.", item), true);
         return schema;
     }
 
@@ -319,6 +534,17 @@ public final class McpTools {
             result.add(item.asText());
         }
         return result;
+    }
+
+    private static Boolean optionalBoolean(ObjectNode args, String name) throws McpToolException {
+        JsonNode node = args.get(name);
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        if (!node.isBoolean()) {
+            throw new McpToolException("invalid_argument", "Invalid '" + name + "' argument: expected a boolean");
+        }
+        return node.asBoolean();
     }
 
     private static ObjectNode requiredObject(ObjectNode args, String name) throws McpToolException {

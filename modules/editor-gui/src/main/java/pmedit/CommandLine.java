@@ -18,6 +18,7 @@ public class CommandLine extends  CommandLineOptions {
     public boolean mcp = false;
     public String mcpRoot;
     public boolean mcpReadOnly = false;
+    public int mcpBatchLimit = BatchEngine.DEFAULT_MAX_FILES;
     public CommandLine() {
     }
     public CommandLine(List<String> fileList) {
@@ -137,6 +138,18 @@ public class CommandLine extends  CommandLineOptions {
                 i += oa.advance;
             } else if (arg.equalsIgnoreCase("mcp-read-only")) {
                 cmdLine.mcpReadOnly = true;
+            } else if (arg.equalsIgnoreCase("mcp-batch-limit")
+                    || arg.toLowerCase(Locale.ROOT).startsWith("mcp-batch-limit=")) {
+                OptionArgument oa = getOptionArgument(arg, i, args);
+                try {
+                    cmdLine.mcpBatchLimit = Integer.parseInt(oa.arg.trim());
+                } catch (NumberFormatException e) {
+                    throw new ParseError("Invalid mcp-batch-limit: " + oa.arg);
+                }
+                if (cmdLine.mcpBatchLimit < 0) {
+                    throw new ParseError("mcp-batch-limit must be 0 or greater");
+                }
+                i += oa.advance;
             } else if (arg.equalsIgnoreCase("o") || arg.equalsIgnoreCase("outputDir")) {
                 if (i + 1 < args.size()) {
                     cmdLine.outputDir = args.get(i + 1);
@@ -226,6 +239,8 @@ public class CommandLine extends  CommandLineOptions {
         sb.append(", ");
         sb.append("mcpReadOnly=");
         sb.append(mcpReadOnly);
+        sb.append(", mcpBatchLimit=");
+        sb.append(mcpBatchLimit);
         sb.append(", ");
         sb.append("command=");
         sb.append(command != null ? command.name : "");

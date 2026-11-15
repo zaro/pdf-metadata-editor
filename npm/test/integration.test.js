@@ -124,6 +124,13 @@ test('serves JSON-RPC over stdio using the system Java fallback', { skip, timeou
     if (tool.name === 'pdf_list_fields') {
       continue;
     }
+    if (tool.name === 'pdf_import_from_json'
+        || tool.name === 'pdf_import_from_yaml'
+        || tool.name === 'pdf_import_from_csv') {
+      assert.ok(tool.inputSchema.properties.importPaths, `${tool.name} takes importPaths`);
+      assert.equal(tool.inputSchema.properties.paths, undefined);
+      continue;
+    }
     assert.ok(tool.inputSchema.properties.paths, `${tool.name} takes paths`);
     assert.equal(tool.inputSchema.properties.path, undefined);
   }

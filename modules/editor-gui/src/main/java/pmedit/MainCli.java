@@ -27,6 +27,7 @@ public class MainCli {
                     "       --mcp                      start a Model Context Protocol server on stdin/stdout\n" +
                     "       --mcp-root=DIR             root directory for MCP file access (default: current directory)\n" +
                     "       --mcp-read-only            disable mutating MCP tools\n" +
+                    "       --mcp-batch-limit=N        maximum files or operations per MCP batch (default: 100, 0 = unlimited)\n" +
                     "\n" +
                     "COMMANDS\n" +
                     "\n" +
@@ -34,7 +35,7 @@ public class MainCli {
                     "\n" +
                     "MCP SERVER\n" +
                     "\n" +
-                    "  pmedit-cli --mcp [--mcp-root=DIR] [--mcp-read-only]\n" +
+                    "  pmedit-cli --mcp [--mcp-root=DIR] [--mcp-read-only] [--mcp-batch-limit=N]\n" +
                     "\n" +
                     "  Starts a Model Context Protocol server over stdin/stdout. All paths passed\n" +
                     "  to MCP tools are resolved relative to --mcp-root (default: current working\n" +
@@ -87,6 +88,9 @@ public class MainCli {
         }
         BatchListener listener = new BatchListener() {
             public void onFile(BatchFileOutcome outcome) {
+                if (outcome.displayLabel() == null) {
+                    return;
+                }
                 System.out.print(outcome.displayLabel());
                 System.out.print(" -> ");
                 System.out.println(outcome.displayMessage());

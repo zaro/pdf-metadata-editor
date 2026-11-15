@@ -55,6 +55,19 @@ function rootFromArgs(args) {
   return process.cwd();
 }
 
+function batchLimitFromArgs(args) {
+  for (let i = 0; i < args.length; i += 1) {
+    const arg = args[i];
+    if (arg === '--mcp-batch-limit' && i + 1 < args.length) {
+      return args[i + 1];
+    }
+    if (arg.startsWith('--mcp-batch-limit=')) {
+      return arg.substring('--mcp-batch-limit='.length);
+    }
+  }
+  return '100';
+}
+
 function resolveBundleDir() {
   const override = process.env.PDF_METADATA_EDITOR_BUNDLE_DIR;
   if (override) {
@@ -153,7 +166,7 @@ function javaVersionOf(java) {
 function helpText() {
   return [
     'Usage:',
-    '  pdf-metadata-editor-mcp [--mcp-root DIR] [--mcp-read-only]',
+    '  pdf-metadata-editor-mcp [--mcp-root DIR] [--mcp-read-only] [--mcp-batch-limit N]',
     '  pdf-metadata-editor-mcp --doctor',
     '  pdf-metadata-editor-mcp --version',
     '  pdf-metadata-editor-mcp --help',
@@ -163,6 +176,7 @@ function helpText() {
     'Options:',
     '  --mcp-root DIR     Restrict file access to DIR (default: current directory)',
     '  --mcp-read-only    Disable mutating tools',
+    '  --mcp-batch-limit N  Maximum files or operations per batch (default: 100, 0 = unlimited)',
     '  --doctor           Show runtime and configuration details',
     '  --version          Print the package version',
     '  --help             Show this help',
@@ -180,6 +194,7 @@ function doctorText(args) {
     `platform: ${platformKey(process.platform, process.arch)}`,
     `mode: ${bundled ? 'bundled' : 'system Java'}`,
     `root: ${rootFromArgs(args)}`,
+    `batch limit: ${batchLimitFromArgs(args)}`,
     `write mode: ${args.includes('--mcp-read-only') ? 'read-only' : 'read-write'}`
   ];
 

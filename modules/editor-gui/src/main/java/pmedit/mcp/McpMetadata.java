@@ -191,15 +191,162 @@ public final class McpMetadata {
         return run(CommandDescription.RENAME, params, rawPaths, rawOutputDir, ownerPassword);
     }
 
+    public McpBatchResult exportBatch(
+            String format,
+            List<String> rawPaths,
+            List<String> fields,
+            String rawOutputDir,
+            String rawOutputFile,
+            Boolean perFileExport,
+            Boolean relativePaths,
+            String ownerPassword) throws Exception {
+        requireWritable();
+
+        BatchOperationParameters params = new BatchOperationParameters();
+        params.metadata = exportFields(fields);
+        params.outputFile = outputFile(rawOutputFile);
+        params.perFileExport = perFileExport;
+        params.useRelativePaths = relativePaths;
+        return run(exportCommand(format), params, rawPaths, rawOutputDir, ownerPassword);
+    }
+
+    public McpBatchResult importBatch(
+            String format,
+            List<String> rawImportPaths,
+            String rawOutputDir,
+            String ownerPassword) throws Exception {
+        requireWritable();
+
+        BatchOperationParameters params = new BatchOperationParameters();
+        return run(
+                importCommand(format),
+                params,
+                toImportRoots(rawImportPaths),
+                outputDir(rawOutputDir),
+                ownerPassword);
+    }
+
+    public McpBatchResult importFromFilenameBatch(
+            List<String> rawPaths,
+            String template,
+            String rawOutputDir,
+            String ownerPassword) throws Exception {
+        requireWritable();
+        if (template == null || template.isBlank()) {
+            throw new McpToolException("invalid_argument", "template is required");
+        }
+
+        BatchOperationParameters params = new BatchOperationParameters();
+        params.extractTemplate = template;
+        return run(CommandDescription.FROM_FILE_NAME, params, rawPaths, rawOutputDir, ownerPassword);
+    }
+
+    private static CommandDescription importCommand(String format) throws McpToolException {
+        if ("json".equalsIgnoreCase(format)) {
+            return CommandDescription.FROM_JSON;
+        }
+        if ("yaml".equalsIgnoreCase(format)) {
+            return CommandDescription.FROM_YAML;
+        }
+        if ("csv".equalsIgnoreCase(format)) {
+            return CommandDescription.FROM_CSV;
+        }
+        throw new McpToolException("invalid_argument", "format must be json, yaml, or csv");
+    }
+
+    private static CommandDescription exportCommand(String format) throws McpToolException {
+        if ("json".equalsIgnoreCase(format)) {
+            return CommandDescription.TO_JSON;
+        }
+        if ("yaml".equalsIgnoreCase(format)) {
+            return CommandDescription.TO_YAML;
+        }
+        if ("csv".equalsIgnoreCase(format)) {
+            return CommandDescription.TO_CSV;
+        }
+        throw new McpToolException("invalid_argument", "format must be json, yaml, or csv");
+    }
+
+    private static String outputFile(String raw) throws McpToolException {
+        if (raw == null || raw.isBlank()) {
+            return BatchOperationParameters.DEFAULT_OUTPUT_FILENAME;
+        }
+        String name = raw.trim();
+        if (".".equals(name) || "..".equals(name)
+                || name.contains("/") || name.contains("\\")) {
+            throw new McpToolException(
+                    "invalid_argument",
+                    "outputFile must be a base file name; use outputDir for directories");
+        }
+        return name;
+    }
+
+    private static MetadataInfo exportFields(List<String> requestedFields) throws McpToolException {
+        MetadataInfo metadata = new MetadataInfo();
+        metadata.setEnabled(false);
+
+        if (requestedFields == null) {
+            enableAllExportFields(metadata);
+            return metadata;
+        }
+        if (requestedFields.isEmpty()) {
+            throw new McpToolException("invalid_argument", "fields must not be empty; omit it to export all fields");
+        }
+
+        boolean all = requestedFields.stream().anyMatch("all"::equalsIgnoreCase);
+        if (all) {
+            if (requestedFields.size() != 1) {
+                throw new McpToolException("invalid_argument", "'all' must be used alone");
+            }
+            enableAllExportFields(metadata);
+            return metadata;
+        }
+
+        for (String id : requestedFields) {
+            if ("none".equalsIgnoreCase(id)) {
+                throw new McpToolException("invalid_argument", "'none' is not a valid export field selection");
+            }
+            exportField(id);
+            metadata.setEnabled(id, true);
+        }
+        return metadata;
+    }
+
+    private static void enableAllExportFields(MetadataInfo metadata) {
+        metadata.setEnabled(true);
+        for (String secret : SECRET_FIELDS) {
+            metadata.setEnabled(secret, false);
+        }
+    }
+
+    private static void exportField(String id) throws McpToolException {
+        if (SECRET_FIELDS.contains(id)) {
+            throw new McpToolException("invalid_argument", "Field " + id + " is not exportable");
+        }
+        requireKnownField(id);
+        if (MetadataInfo.getFieldDescription(id) == null) {
+            throw new McpToolException("invalid_argument", "Unknown metadata field: " + id);
+        }
+    }
+
     private McpBatchResult run(
             CommandDescription command,
             BatchOperationParameters params,
             List<String> rawPaths,
             String rawOutputDir,
             String ownerPassword) throws Exception {
+        return run(command, params, toFiles(rawPaths), outputDir(rawOutputDir), ownerPassword);
+    }
+
+    private McpBatchResult run(
+            CommandDescription command,
+            BatchOperationParameters params,
+            List<File> roots,
+            File outputDir,
+            String ownerPassword) throws Exception {
         BatchRequest request = new BatchRequest(
-                toFiles(rawPaths),
-                outputDir(rawOutputDir),
+                roots,
+                outputDir,
                 mutationOptions(ownerPassword));
         McpBatchListener listener = new McpBatchListener(paths);
         new BatchEngine().run(command, params, request, listener);
@@ -218,6 +365,14 @@ public final class McpMetadata {
         return files;
     }
 
+    private List<File> toImportRoots(List<String> rawPaths) throws McpToolException {
+        List<File> roots = new ArrayList<>();
+        for (String raw : rawPaths) {
+            roots.add(paths.resolveExisting(raw).toFile());
+        }
+        return roots;
+    }
+
     private static boolean isPdf(Path path) {
         Path name = path.getFileName();
         return name != null && name.toString().toLowerCase(Locale.ROOT).endsWith(".pdf");
@@ -234,7 +389,7 @@ public final class McpMetadata {
         return new BatchOptions(
                 false,
                 options.licenseGate(),
-                McpPaths.MAX_BATCH_FILES,
+                options.maxFiles(),
                 true,
                 true,
                 false,
@@ -246,7 +401,7 @@ public final class McpMetadata {
         return new BatchOptions(
                 true,
                 options.licenseGate(),
-                McpPaths.MAX_BATCH_FILES,
+                options.maxFiles(),
                 true,
                 true,
                 false,

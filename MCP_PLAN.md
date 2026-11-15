@@ -1,7 +1,8 @@
 # MCP Server Implementation Plan
 
-Status: **implemented on branch `mcp`** — MCP tests and the shaded build are passing.
-This document remains the design reference and implementation record.
+Status: **historical design record**. Phase 1 (batch read/edit/clear/rename),
+phase 2 (exports), and phase 3 (imports) are implemented. The current tool
+surface and usage are documented in `README.md` and `npm/README.md`.
 
 This document describes the design for adding a [Model Context Protocol](https://modelcontextprotocol.io/)
 (MCP) server to the PDF Metadata Editor command line tool.

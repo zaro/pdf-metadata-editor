@@ -278,29 +278,39 @@ directory; set `--mcp-root` there if you need a predictable scope.
 |---|---|
 | `--mcp-root DIR` | Optional. Restrict file access to `DIR`; defaults to the current working directory. |
 | `--mcp-read-only` | Disable every mutating tool. |
-| `--doctor` | Print the selected runtime, JAR path, root, and write mode. |
+| `--mcp-batch-limit N` | Maximum files or operations per batch. Default `100`; `0` means unlimited. |
+| `--doctor` | Print the selected runtime, JAR path, root, batch limit, and write mode. |
 | `--version` | Print the package version. |
 | `--help` | Print usage. |
 
 ## Tools
 
-Every file operation is a batch operation, matching the CLI. Tools take a
+Every file operation is a batch operation, matching the CLI. PDF tools take a
 `paths` array containing files and/or directories; a single file is
-`paths: ["one.pdf"]`. Directories are searched recursively for `.pdf` files.
-A batch may contain at most 100 PDF files; larger requests are rejected before
-any file is touched.
+`paths: ["one.pdf"]`. Import tools use `importPaths` for JSON/YAML/CSV files and
+directories. Directories are searched recursively for the matching extensions.
+
+The default batch limit is 100 files or operations. Use `--mcp-batch-limit N`
+to change it; `0` removes the limit.
 
 | Tool | Purpose |
 |---|---|
 | `pdf_list_fields` | List valid metadata field IDs, types, and writability. |
 | `pdf_read_metadata` | Read metadata from one or more PDFs or directories. |
-| `pdf_set_metadata` | Set one or more metadata fields on every input PDF (CLI `edit`). |
-| `pdf_clear_metadata` | Clear all or selected metadata fields on every input PDF (CLI `clear`). |
+| `pdf_set_metadata` | Set metadata fields on every input PDF (CLI `edit`). |
+| `pdf_clear_metadata` | Clear metadata fields on every input PDF (CLI `clear`). |
 | `pdf_rename` | Rename every input PDF using a metadata template (CLI `rename`). |
+| `pdf_export_json` | Export metadata to JSON (CLI `tojson`). |
+| `pdf_export_yaml` | Export metadata to YAML (CLI `toyaml`). |
+| `pdf_export_csv` | Export metadata to CSV (CLI `tocsv`). |
+| `pdf_import_from_filename` | Set metadata extracted from PDF file names (CLI `fromfilename`). |
+| `pdf_import_from_json` | Import metadata from JSON (CLI `fromjson`). |
+| `pdf_import_from_yaml` | Import metadata from YAML (CLI `fromyaml`). |
+| `pdf_import_from_csv` | Import metadata from CSV (CLI `fromcsv`). |
 
 `pdf_list_fields` and `pdf_read_metadata` are available without a license. The
-mutating tools may require a license; the server returns a clear message when
-one is needed.
+CLI-parity batch tools may require a license; the server returns a clear message
+when one is needed.
 
 ### Batch results
 
@@ -351,6 +361,65 @@ Values can use `{field.id}` templates expanded from each file's own metadata:
 }
 ```
 
+### Exports
+
+Export tools write files and return their paths in an `outputs` list.
+
+```json
+{
+  "paths": ["docs"],
+  "fields": ["all"],
+  "outputDir": "exports",
+  "outputFile": "metadata-export",
+  "perFileExport": false,
+  "relativePaths": true
+}
+```
+
+- `fields` defaults to all readable, non-secret fields, including read-only
+  file properties.
+- `perFileExport: false` writes one aggregate file. `true` writes one file per
+  PDF.
+- `relativePaths: true` writes `file.fullPath` relative to the input directory.
+  Set it to `false` to write absolute paths.
+- When exporting to a custom `outputDir`, relative `file.fullPath` values are
+  still based on the input directory, not the export directory. For round-trip
+  imports from a custom export directory, use `relativePaths: false` or keep the
+  export file beside the inputs.
+- `file.fullPath` is always included so the export can be imported again.
+- Aggregate and per-file output write failures are reported as errors.
+
+### Imports
+
+```json
+{
+  "importPaths": ["exports/metadata-export.json"],
+  "outputDir": "imported"
+}
+```
+
+- JSON/YAML/CSV records must contain `file.fullPath`.
+- Relative PDF paths resolve against the import file's directory.
+- With `outputDir`, relative paths preserve their subdirectories. Absolute paths
+  that are outside the import file's directory are flattened to the PDF file
+  name, matching the CLI.
+- Referenced PDFs and outputs must stay inside the MCP root.
+- Parse failures are reported per import file and do not stop other files.
+- A record can contain `prop.ownerPassword`; it opens that PDF and overrides the
+  top-level `ownerPassword` argument. `prop.userPassword` is applied only as an
+  encryption setting, not as the password used to open the file.
+- Import files may contain passwords; treat them as sensitive.
+
+`pdf_import_from_filename` uses a template instead of import files:
+
+```json
+{
+  "paths": ["docs"],
+  "template": "{doc.author} - {doc.title}",
+  "outputDir": "imported"
+}
+```
+
 ### Password-protected PDFs
 
 Pass `ownerPassword` to the tool. A protected PDF without a password produces a
@@ -384,7 +453,9 @@ application JAR.
 - The server is limited to the current working directory by default.
 - Use `--mcp-root` to narrow access to a specific directory.
 - Paths cannot escape the selected root; symlink escapes are rejected.
-- Explicit non-PDF inputs are rejected; non-PDF files inside directories are ignored.
+- Explicit inputs with the wrong extension are rejected; unrelated files inside
+  directories are ignored.
+- Import files can contain per-record passwords; treat them as sensitive.
 - Use `--mcp-read-only` when write access is not needed.
 
 ## Troubleshooting

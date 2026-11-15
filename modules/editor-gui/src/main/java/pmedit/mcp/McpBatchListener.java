@@ -5,6 +5,7 @@ import pmedit.BatchFileOutcome;
 import pmedit.BatchListener;
 import pmedit.MetadataInfo;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,18 +44,43 @@ final class McpBatchListener implements BatchListener {
 
             Path input = outcome.input().toPath();
             Path output = outcome.output() != null ? outcome.output().toPath() : input;
-            result.addMutationSuccess(
-                    input,
-                    output,
-                    paths,
-                    outcome.action(),
-                    fields,
-                    outcome.warnings());
+            if (outcome.source() != null) {
+                result.addImportSuccess(
+                        outcome.source().toPath(),
+                        input,
+                        output,
+                        paths,
+                        outcome.action(),
+                        fields,
+                        outcome.warnings());
+            } else {
+                result.addMutationSuccess(
+                        input,
+                        output,
+                        paths,
+                        outcome.action(),
+                        fields,
+                        outcome.warnings());
+            }
+            if ("exported".equals(outcome.action())) {
+                for (File file : outcome.outputs()) {
+                    result.addOutput(file.toPath(), paths);
+                }
+            }
         } else {
-            String input = outcome.input() == null
-                    ? outcome.displayLabel()
-                    : paths.relative(outcome.input().toPath());
-            result.addError(input, outcome.failure().code(), outcome.failure().message());
+            if (outcome.source() != null) {
+                result.addImportError(
+                        outcome.source().toPath(),
+                        outcome.input() == null ? null : outcome.input().toPath(),
+                        paths,
+                        outcome.failure().code(),
+                        outcome.failure().message());
+            } else {
+                String input = outcome.input() == null
+                        ? outcome.displayLabel()
+                        : paths.relative(outcome.input().toPath());
+                result.addError(input, outcome.failure().code(), outcome.failure().message());
+            }
         }
     }
 

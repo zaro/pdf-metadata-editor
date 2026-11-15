@@ -17,6 +17,7 @@ import java.util.Locale;
  */
 public final class BatchEngine {
 
+    public static final int DEFAULT_MAX_FILES = 100;
     public static final String[] PDF_EXTENSIONS = {"pdf"};
 
     public BatchPreflight preflight(CommandDescription command, BatchRequest request) throws BatchException {
@@ -27,6 +28,21 @@ public final class BatchEngine {
     }
 
     public BatchPreflight preflight(String[] extensions, BatchRequest request) throws BatchException {
+        return preflight(extensions, request, true, true);
+    }
+
+    public BatchPreflight preflight(
+            String[] extensions,
+            BatchRequest request,
+            boolean enforceFileLimit) throws BatchException {
+        return preflight(extensions, request, enforceFileLimit, true);
+    }
+
+    public BatchPreflight preflight(
+            String[] extensions,
+            BatchRequest request,
+            boolean enforceFileLimit,
+            boolean prepareOutput) throws BatchException {
         BatchOptions options = request.options();
         if (request.roots().isEmpty()) {
             if (options.rejectExplicitNonPdf()) {
@@ -60,16 +76,18 @@ public final class BatchEngine {
         }
 
         if (files.isEmpty() && options.rejectExplicitNonPdf()) {
-            throw new BatchException("no_input_files", "No PDF files were found in the supplied paths");
+            throw new BatchException("no_input_files", "No matching input files were found in the supplied paths");
         }
-        if (options.maxFiles() > 0 && files.size() > options.maxFiles()) {
+        if (options.maxFiles() > 0 && enforceFileLimit && files.size() > options.maxFiles()) {
             throw new BatchException(
                     "batch_too_large",
                     "The batch contains " + files.size() + " PDF files; the maximum is "
                             + options.maxFiles() + ". Split the request into smaller batches.");
         }
 
-        File outputDir = options.pathPolicy().prepareOutputDirectory(request.outputDir());
+        File outputDir = prepareOutput
+                ? options.pathPolicy().prepareOutputDirectory(request.outputDir())
+                : request.outputDir();
         return new BatchPreflight(roots, files, outputDir);
     }
 
@@ -91,7 +109,8 @@ public final class BatchEngine {
 
         BatchPreflight preflight;
         try {
-            preflight = preflight(command, request);
+            boolean isImport = isImportCommand(command);
+            preflight = preflight(command.inputFileExtensions, request, !isImport, !isImport);
         } catch (BatchException e) {
             listener.onBatchError(new BatchError("*", e.code(), e.getMessage(), e));
             return;
@@ -103,7 +122,21 @@ public final class BatchEngine {
                 preflight.outputDir(),
                 options.deduplicate());
         PDFMetadataEditBatch batch = new PDFMetadataEditBatch(params, options);
-        batch.runCommand(command, walker, preflight.outputDir(), listener);
+        try {
+            batch.runCommand(command, walker, preflight.outputDir(), listener);
+        } catch (BatchAbortException e) {
+            listener.onBatchError(e.error());
+        } catch (RuntimeException e) {
+            listener.onBatchError(new BatchError(
+                    "*", "tool_error", BatchFailures.message(e), e));
+        }
+    }
+
+    public static boolean isImportCommand(CommandDescription command) {
+        return command != null
+                && (command.is(CommandDescription.FROM_JSON)
+                || command.is(CommandDescription.FROM_YAML)
+                || command.is(CommandDescription.FROM_CSV));
     }
 
     private static boolean hasExtension(File file, String[] extensions) {

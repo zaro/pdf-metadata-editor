@@ -550,6 +550,9 @@ public class BatchOperationWindow extends JFrame implements ProgramWindow {
             boolean hasErrors = false;
             final BatchListener listener = new BatchListener() {
                 public void onFile(BatchFileOutcome outcome) {
+                    if (outcome.displayLabel() == null) {
+                        return;
+                    }
                     if (outcome.ok()) {
                         LOG.info("{} : {}", outcome.displayLabel(), outcome.displayMessage());
                         out.info("{} : {}", outcome.displayLabel(), outcome.displayMessage());

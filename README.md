@@ -48,18 +48,20 @@ yay -S pdf-metadata-editor-bin
 server, letting AI clients read and edit PDF metadata through tools.
 
 ```sh
-pmedit-cli --mcp [--mcp-root=DIR] [--mcp-read-only]
+pmedit-cli --mcp [--mcp-root=DIR] [--mcp-read-only] [--mcp-batch-limit=N]
 ```
 
 - `--mcp-root=DIR` restricts all file access to `DIR` (default: current directory).
 - `--mcp-read-only` disables every mutating tool.
+- `--mcp-batch-limit=N` sets the maximum files or operations per batch
+  (default: 100, `0` = unlimited).
 - `pdf_list_fields` and `pdf_read_metadata` are available without a license.
-- Mutating tools (`pdf_set_metadata`, `pdf_clear_metadata`, `pdf_rename`)
-  may require a license.
+- The CLI-parity batch tools (`pdf_set_metadata`, `pdf_clear_metadata`,
+  `pdf_rename`, the export tools, and the import tools) may require a license.
 
-File tools take a `paths` array of files and/or directories, matching the CLI.
-A single file is `paths: ["one.pdf"]`. Directories are searched recursively for
-`.pdf` files, and a batch may contain at most 100 PDF files.
+PDF tools take a `paths` array of files and/or directories, matching the CLI.
+A single file is `paths: ["one.pdf"]`. Import tools use `importPaths` for the
+JSON/YAML/CSV files and directories. Directories are searched recursively.
 
 The server speaks newline-delimited JSON-RPC over stdin/stdout. Configure it in
 your MCP client, for example:
@@ -81,12 +83,20 @@ Available tools:
 |---|---|
 | `pdf_list_fields` | List valid metadata field IDs, types, and writability |
 | `pdf_read_metadata` | Read metadata from one or more PDFs or directories |
-| `pdf_set_metadata` | Set one or more metadata fields on every input PDF (CLI `edit`) |
-| `pdf_clear_metadata` | Clear all or selected metadata fields on every input PDF (CLI `clear`) |
+| `pdf_set_metadata` | Set metadata fields on every input PDF (CLI `edit`) |
+| `pdf_clear_metadata` | Clear metadata fields on every input PDF (CLI `clear`) |
 | `pdf_rename` | Rename every input PDF using a metadata template (CLI `rename`) |
+| `pdf_export_json` | Export metadata to JSON (CLI `tojson`) |
+| `pdf_export_yaml` | Export metadata to YAML (CLI `toyaml`) |
+| `pdf_export_csv` | Export metadata to CSV (CLI `tocsv`) |
+| `pdf_import_from_filename` | Set metadata extracted from PDF file names (CLI `fromfilename`) |
+| `pdf_import_from_json` | Import metadata from JSON (CLI `fromjson`) |
+| `pdf_import_from_yaml` | Import metadata from YAML (CLI `fromyaml`) |
+| `pdf_import_from_csv` | Import metadata from CSV (CLI `fromcsv`) |
 
 Each batch tool returns a `summary` plus per-file `results`; a per-file failure
-does not abort the batch.
+does not abort the batch. Exports additionally return an `outputs` list, and
+import results include both the import-file `source` and the target PDF `input`.
 
 The MCP server is also available as an npm package:
 

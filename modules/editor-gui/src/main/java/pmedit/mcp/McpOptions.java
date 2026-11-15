@@ -1,5 +1,6 @@
 package pmedit.mcp;
 
+import pmedit.BatchEngine;
 import pmedit.CommandLine;
 import pmedit.ext.PmeExtension;
 
@@ -15,8 +16,13 @@ import java.util.function.BooleanSupplier;
  * @param root        canonical directory that all tool paths must stay inside
  * @param readOnly    when true, all mutating tools are rejected
  * @param licenseGate returns true when licensed operations are allowed
+ * @param maxFiles    maximum files or operations per batch; 0 means unlimited
  */
-public record McpOptions(Path root, boolean readOnly, BooleanSupplier licenseGate) {
+public record McpOptions(Path root, boolean readOnly, BooleanSupplier licenseGate, int maxFiles) {
+
+    public McpOptions(Path root, boolean readOnly, BooleanSupplier licenseGate) {
+        this(root, readOnly, licenseGate, BatchEngine.DEFAULT_MAX_FILES);
+    }
 
     public McpOptions {
         if (root == null) {
@@ -24,6 +30,9 @@ public record McpOptions(Path root, boolean readOnly, BooleanSupplier licenseGat
         }
         if (licenseGate == null) {
             licenseGate = () -> false;
+        }
+        if (maxFiles < 0) {
+            throw new IllegalArgumentException("MCP batch limit must be 0 or greater");
         }
     }
 
@@ -48,7 +57,7 @@ public record McpOptions(Path root, boolean readOnly, BooleanSupplier licenseGat
         return new McpOptions(
                 absolute.toRealPath(),
                 cmdLine.mcpReadOnly,
-                () -> PmeExtension.get().hasBatch()
-        );
+                () -> PmeExtension.get().hasBatch(),
+                cmdLine.mcpBatchLimit);
     }
 }

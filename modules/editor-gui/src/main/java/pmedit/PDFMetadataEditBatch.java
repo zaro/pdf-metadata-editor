@@ -210,9 +210,9 @@ public class PDFMetadataEditBatch {
                     if (output != null) {
                         output = options.pathPolicy().validateOutput(output);
                     }
-                    boolean allSupported = writer.allFieldsSupported(mdFile);
+                    boolean allSupported = writer.allFieldsSupported(mdExtracted);
                     writer.saveAsPDF(mdFile, file, output);
-                    success(listener, file, output, "updated",
+                    success(listener, file, output, "imported",
                             enabledFields(mdExtracted),
                             allSupported ? List.of() : List.of(BatchWarnings.unsupportedFields()),
                             outputFileRelativeName(file), "Done");
@@ -225,7 +225,8 @@ public class PDFMetadataEditBatch {
     }
 
     public void fromjson(FilesWalker filesWalker, File outDir, final BatchListener listener) {
-        List<ImportFileParsed> imports = new ArrayList<>();
+        List<ImportRecord> records = new ArrayList<>();
+        List<ImportParseFailure> failures = new ArrayList<>();
         for (File jsonFile : filesWalker.list()) {
             try {
                 List<MetadataInfo> actionList = SerDeslUtils.fromJSONFileAsList(jsonFile).stream().map(e -> {
@@ -233,14 +234,15 @@ public class PDFMetadataEditBatch {
                     md.fromFlatMap(e);
                     return md;
                 }).toList();
-                imports.add(new ImportFileParsed(jsonFile, actionList));
+                for (MetadataInfo md : actionList) {
+                    records.add(new ImportRecord(jsonFile, md));
+                }
             } catch (Exception e) {
                 logger.error("fromjson", e);
-                failure(listener, jsonFile, jsonFile.getName(),
-                        new BatchException("parse_failed", "Failed to parse: " + e, e), "parse_failed");
+                failures.add(parseFailure(jsonFile, "Failed to parse: " + e, e, "fromjson"));
             }
         }
-        fromImportFile(imports, outDir, listener, "fromjson");
+        applyImportPlan(new ImportPlan(records, failures), outDir, listener);
     }
 
     protected String makeExportFilename(File f, String extension) {
@@ -271,12 +273,24 @@ public class PDFMetadataEditBatch {
                     } else {
                         SerDeslUtils.toJSONFile(outFile, firstRecord.data);
                     }
-                    listener.onFile(BatchFileOutcome.success(
-                            firstRecord.file, outFile, "exported", List.of(), List.of(),
-                            inputFileRelativeName(outFile),
-                            "Wrote: " + outputFileRelativeName(outFile)));
+                    for (int index = 0; index < records.size(); index++) {
+                        ExportedObject exported = records.get(index);
+                        listener.onFile(BatchFileOutcome.success(
+                                exported.file,
+                                outFile,
+                                "exported",
+                                List.of(),
+                                List.of(),
+                                index == 0 ? inputFileRelativeName(outFile) : null,
+                                index == 0 ? "Wrote: " + outputFileRelativeName(outFile) : null));
+                    }
                 } catch (Exception e) {
                     logger.error("tojson", e);
+                    if (singleFile) {
+                        BatchFailure classified = BatchFailures.classify(e, options.ownerPassword(), "write_failed");
+                        throw new BatchAbortException(new BatchError(
+                                "*", classified.code(), classified.message(), e));
+                    }
                     failure(listener, firstRecord.file, inputFileRelativeName(outFile), e, "write_failed");
                 }
             }
@@ -306,7 +320,8 @@ public class PDFMetadataEditBatch {
     }
 
     public void fromyaml(FilesWalker filesWalker, File outDir, final BatchListener listener) {
-        List<ImportFileParsed> imports = new ArrayList<>();
+        List<ImportRecord> records = new ArrayList<>();
+        List<ImportParseFailure> failures = new ArrayList<>();
         for (File yamlFile : filesWalker.list()) {
             try {
                 List<MetadataInfo> actionList = SerDeslUtils.fromYAMLFileAsList(yamlFile).stream().map(e -> {
@@ -314,14 +329,15 @@ public class PDFMetadataEditBatch {
                     md.fromFlatMap(e);
                     return md;
                 }).toList();
-                imports.add(new ImportFileParsed(yamlFile, actionList));
+                for (MetadataInfo md : actionList) {
+                    records.add(new ImportRecord(yamlFile, md));
+                }
             } catch (Exception e) {
                 logger.error("fromyaml", e);
-                failure(listener, yamlFile, yamlFile.getName(),
-                        new BatchException("parse_failed", "Failed to parse YAML: " + e, e), "parse_failed");
+                failures.add(parseFailure(yamlFile, "Failed to parse YAML: " + e, e, "fromyaml"));
             }
         }
-        fromImportFile(imports, outDir, listener, "fromyaml");
+        applyImportPlan(new ImportPlan(records, failures), outDir, listener);
     }
 
     public void toyaml(FilesWalker filesWalker, File outDir, final BatchListener listener) {
@@ -345,12 +361,24 @@ public class PDFMetadataEditBatch {
                     } else {
                         SerDeslUtils.toYamlFile(outFile, firstRecord.data);
                     }
-                    listener.onFile(BatchFileOutcome.success(
-                            firstRecord.file, outFile, "exported", List.of(), List.of(),
-                            inputFileRelativeName(outFile),
-                            "Wrote: " + outputFileRelativeName(outFile)));
+                    for (int index = 0; index < records.size(); index++) {
+                        ExportedObject exported = records.get(index);
+                        listener.onFile(BatchFileOutcome.success(
+                                exported.file,
+                                outFile,
+                                "exported",
+                                List.of(),
+                                List.of(),
+                                index == 0 ? inputFileRelativeName(outFile) : null,
+                                index == 0 ? "Wrote: " + outputFileRelativeName(outFile) : null));
+                    }
                 } catch (Exception e) {
                     logger.error("toyaml", e);
+                    if (singleFile) {
+                        BatchFailure classified = BatchFailures.classify(e, options.ownerPassword(), "write_failed");
+                        throw new BatchAbortException(new BatchError(
+                                "*", classified.code(), classified.message(), e));
+                    }
                     failure(listener, firstRecord.file, inputFileRelativeName(outFile), e, "write_failed");
                 }
             }
@@ -380,18 +408,20 @@ public class PDFMetadataEditBatch {
     }
 
     public void fromcsv(FilesWalker filesWalker, File outDir, final BatchListener listener) {
-        List<ImportFileParsed> imports = new ArrayList<>();
+        List<ImportRecord> records = new ArrayList<>();
+        List<ImportParseFailure> failures = new ArrayList<>();
         for (File csvFile : filesWalker.list()) {
             try {
                 List<MetadataInfo> actionList = CsvMetadata.readFile(csvFile);
-                imports.add(new ImportFileParsed(csvFile, actionList));
+                for (MetadataInfo md : actionList) {
+                    records.add(new ImportRecord(csvFile, md));
+                }
             } catch (Exception e) {
                 logger.error("fromcsv", e);
-                failure(listener, csvFile, csvFile.getName(),
-                        new BatchException("parse_failed", "Failed to parse CSV: " + e, e), "parse_failed");
+                failures.add(parseFailure(csvFile, "Failed to parse CSV: " + e, e, "fromcsv"));
             }
         }
-        fromImportFile(imports, outDir, listener, "fromcsv");
+        applyImportPlan(new ImportPlan(records, failures), outDir, listener);
     }
 
     public void tocsv(FilesWalker filesWalker, File outDir, final BatchListener listener) {
@@ -411,12 +441,24 @@ public class PDFMetadataEditBatch {
                 try {
                     outFile = options.pathPolicy().validateOutput(outFile);
                     CsvMetadata.writeFile(outFile, records.stream().map(e -> (Map) e.data()).toList());
-                    listener.onFile(BatchFileOutcome.success(
-                            firstRecord.file, outFile, "exported", List.of(), List.of(),
-                            inputFileRelativeName(outFile),
-                            "Wrote: " + outputFileRelativeName(outFile)));
+                    for (int index = 0; index < records.size(); index++) {
+                        ExportedObject exported = records.get(index);
+                        listener.onFile(BatchFileOutcome.success(
+                                exported.file,
+                                outFile,
+                                "exported",
+                                List.of(),
+                                List.of(),
+                                index == 0 ? inputFileRelativeName(outFile) : null,
+                                index == 0 ? "Wrote: " + outputFileRelativeName(outFile) : null));
+                    }
                 } catch (Exception e) {
                     logger.error("tocsv", e);
+                    if (singleFile) {
+                        BatchFailure classified = BatchFailures.classify(e, options.ownerPassword(), "write_failed");
+                        throw new BatchAbortException(new BatchError(
+                                "*", classified.code(), classified.message(), e));
+                    }
                     failure(listener, firstRecord.file, inputFileRelativeName(outFile), e, "write_failed");
                 }
             }
@@ -445,33 +487,129 @@ public class PDFMetadataEditBatch {
         });
     }
 
-    public void fromImportFile(
-            List<ImportFileParsed> importFiles,
-            File outDir,
-            final BatchListener listener,
-            String commandName) {
+    private ImportParseFailure parseFailure(File source, String message, Exception cause, String commandName) {
+        logger.error(commandName, cause);
+        BatchFailure failure = BatchFailures.classify(
+                new BatchException("parse_failed", message, cause),
+                options.ownerPassword(),
+                "parse_failed");
+        return new ImportParseFailure(source, message, failure);
+    }
+
+    private void applyImportPlan(ImportPlan plan, File outDir, BatchListener listener) {
+        if (plan.records().isEmpty() && plan.parseFailures().isEmpty()) {
+            throw new BatchAbortException(new BatchError(
+                    "*", "no_input_files", "No import records were found", null));
+        }
+        if (options.maxFiles() > 0 && plan.records().size() > options.maxFiles()) {
+            throw new BatchAbortException(new BatchError(
+                    "*",
+                    "batch_too_large",
+                    "The batch contains " + plan.records().size()
+                            + " imported PDFs; the maximum is " + options.maxFiles()
+                            + ". Split the request into smaller batches.",
+                    null));
+        }
+
+        for (ImportParseFailure parseFailure : plan.parseFailures()) {
+            listener.onFile(BatchFileOutcome.importFailed(
+                    parseFailure.source(),
+                    null,
+                    parseFailure.source().getName(),
+                    parseFailure.displayMessage(),
+                    parseFailure.failure()));
+        }
+
+        File preparedOutDir;
+        try {
+            preparedOutDir = plan.records().isEmpty()
+                    ? outDir
+                    : options.pathPolicy().prepareOutputDirectory(outDir);
+        } catch (BatchException e) {
+            throw new BatchAbortException(new BatchError("*", e.code(), e.getMessage(), e));
+        }
+
         PdfWriter writer = PmeExtension.get().newPdfWriter();
         PdfReader reader = PmeExtension.get().newPdfReader();
 
-        for (ImportFileParsed importFile : importFiles) {
-            for (MetadataInfo mdParams : importFile.data) {
-                FilePathProperty fileProperty = new FilePathProperty(mdParams.file.fullPath, outDir, importFile.importFile);
-                File inputFile = null;
-                try {
-                    inputFile = options.pathPolicy().validateInput(fileProperty.getInputFile());
-                    MetadataInfo mdFile = new MetadataInfo();
-                    reader.loadFromPDF(inputFile, options.ownerPassword(), mdFile);
-                    mdFile.copyFromWithExpand(mdParams, mdFile);
-                    File output = options.pathPolicy().validateOutput(fileProperty.getOutputFile(false));
-                    writer.saveAsPDF(mdFile, inputFile, output);
-                    success(listener, inputFile, output, "imported",
-                            enabledFields(mdParams), List.of(),
-                            inputFile.getPath(), "Done");
-                } catch (Exception e) {
-                    logger.error(commandName, e);
-                    File labelFile = inputFile != null ? inputFile : fileProperty.getInputFile();
-                    failure(listener, labelFile, labelFile.getPath(), e, "write_failed");
+        for (ImportRecord record : plan.records()) {
+            MetadataInfo mdParams = record.metadata();
+            if (mdParams.file.fullPath == null || mdParams.file.fullPath.isBlank()) {
+                String message = "Import record is missing file.fullPath";
+                listener.onFile(BatchFileOutcome.importFailed(
+                        record.source(),
+                        null,
+                        record.source().getName(),
+                        message,
+                        new BatchFailure("invalid_argument", message, null)));
+                continue;
+            }
+
+            FilePathProperty fileProperty = new FilePathProperty(
+                    mdParams.file.fullPath, preparedOutDir, record.source());
+
+            File inputFile;
+            try {
+                inputFile = options.pathPolicy().validateInput(fileProperty.getInputFile());
+            } catch (Exception e) {
+                BatchFailure failure = BatchFailures.classify(e, options.ownerPassword(), "write_failed");
+                File labelFile = fileProperty.getInputFile();
+                listener.onFile(BatchFileOutcome.importFailed(
+                        record.source(),
+                        null,
+                        labelFile.getPath(),
+                        BatchFailures.message(e),
+                        failure));
+                continue;
+            }
+
+            File output;
+            try {
+                output = options.pathPolicy().validateOutput(fileProperty.getOutputFile(false));
+            } catch (Exception e) {
+                BatchFailure failure = BatchFailures.classify(e, options.ownerPassword(), "write_failed");
+                listener.onFile(BatchFileOutcome.importFailed(
+                        record.source(),
+                        inputFile,
+                        inputFile.getPath(),
+                        BatchFailures.message(e),
+                        failure));
+                continue;
+            }
+
+            String password = mdParams.prop.ownerPassword != null
+                    && !mdParams.prop.ownerPassword.isEmpty()
+                    ? mdParams.prop.ownerPassword
+                    : options.ownerPassword();
+
+            try {
+                MetadataInfo mdFile = new MetadataInfo();
+                reader.loadFromPDF(inputFile, password, mdFile);
+                mdFile.copyFromWithExpand(mdParams, mdFile);
+                if (password != null) {
+                    mdFile.prop.ownerPassword = password;
                 }
+
+                boolean allSupported = writer.allFieldsSupported(mdParams);
+                writer.saveAsPDF(mdFile, inputFile, output);
+                listener.onFile(BatchFileOutcome.imported(
+                        record.source(),
+                        inputFile,
+                        output,
+                        "imported",
+                        enabledFields(mdParams),
+                        allSupported ? List.of() : List.of(BatchWarnings.unsupportedFields()),
+                        inputFile.getPath(),
+                        "Done"));
+            } catch (Exception e) {
+                logger.error("import", e);
+                BatchFailure failure = BatchFailures.classify(e, password, "write_failed");
+                listener.onFile(BatchFileOutcome.importFailed(
+                        record.source(),
+                        inputFile,
+                        inputFile.getPath(),
+                        BatchFailures.message(e),
+                        failure));
             }
         }
     }
@@ -636,7 +774,13 @@ public class PDFMetadataEditBatch {
         return fields;
     }
 
-    public record ImportFileParsed(File importFile, List<MetadataInfo> data) {
+    public record ImportRecord(File source, MetadataInfo metadata) {
+    }
+
+    public record ImportParseFailure(File source, String displayMessage, BatchFailure failure) {
+    }
+
+    public record ImportPlan(List<ImportRecord> records, List<ImportParseFailure> parseFailures) {
     }
 
     public static class FilePathProperty {

@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Collects per-file results for a batch MCP tool call.
@@ -18,9 +20,21 @@ import java.util.Map;
 public final class McpBatchResult {
 
     private final ArrayNode results = McpJson.array();
+    private final ArrayNode outputs = McpJson.array();
+    private final Set<String> outputPaths = new LinkedHashSet<>();
     private final Map<String, Integer> failureCodes = new LinkedHashMap<>();
     private int succeeded;
     private int failed;
+
+    public void addOutput(Path output, McpPaths paths) {
+        if (output == null) {
+            return;
+        }
+        String relative = paths.relative(output);
+        if (outputPaths.add(relative)) {
+            outputs.add(relative);
+        }
+    }
 
     public void addReadSuccess(Path file, ObjectNode payload, McpPaths paths) {
         ObjectNode result = base(paths.relative(file));
@@ -63,6 +77,64 @@ public final class McpBatchResult {
         }
         results.add(result);
         succeeded++;
+    }
+
+    public void addImportSuccess(
+            Path source,
+            Path input,
+            Path output,
+            McpPaths paths,
+            String action,
+            List<String> changed,
+            List<String> warnings) {
+        ObjectNode result = McpJson.object();
+        result.put("source", paths.relative(source));
+        if (input != null) {
+            result.put("input", paths.relative(input));
+        }
+        if (output != null) {
+            result.put("output", paths.relative(output));
+        }
+        result.put("ok", true);
+        result.put("action", action);
+        if (changed != null && !changed.isEmpty()) {
+            ArrayNode values = McpJson.array();
+            for (String value : changed) {
+                values.add(value);
+            }
+            result.set("fields", values);
+        }
+        if (warnings != null && !warnings.isEmpty()) {
+            ArrayNode warningNodes = McpJson.array();
+            for (String warning : warnings) {
+                warningNodes.add(warning);
+            }
+            result.set("warnings", warningNodes);
+        }
+        results.add(result);
+        succeeded++;
+    }
+
+    public void addImportError(
+            Path source,
+            Path input,
+            McpPaths paths,
+            String code,
+            String message) {
+        ObjectNode result = McpJson.object();
+        result.put("source", paths.relative(source));
+        if (input != null) {
+            result.put("input", paths.relative(input));
+        }
+        result.put("ok", false);
+
+        ObjectNode errorNode = McpJson.object();
+        errorNode.put("code", code == null ? "tool_error" : code);
+        errorNode.put("message", message == null || message.isBlank() ? "Unknown error" : message);
+        result.set("error", errorNode);
+        results.add(result);
+        failed++;
+        failureCodes.merge(errorNode.get("code").asText(), 1, Integer::sum);
     }
 
     public void addError(Path input, McpPaths paths, Throwable error) {
@@ -133,6 +205,9 @@ public final class McpBatchResult {
         summary.put("truncated", false);
         node.set("summary", summary);
 
+        if (outputs.size() > 0) {
+            node.set("outputs", outputs);
+        }
         node.set("results", results);
         return node;
     }

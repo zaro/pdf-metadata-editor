@@ -13,12 +13,15 @@ import org.junit.jupiter.api.io.TempDir;
 import pmedit.DateFormat;
 import pmedit.FilesTestHelper;
 import pmedit.MetadataInfo;
+import pmedit.serdes.CsvMetadata;
+import pmedit.serdes.SerDeslUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -192,6 +195,27 @@ public class McpMetadataTest {
 
         assertEquals("batch_too_large", error.code());
         assertTrue(error.getMessage().contains(String.valueOf(McpPaths.MAX_BATCH_FILES)));
+    }
+
+    @Test
+    public void batchLimitIsConfigurable() throws Exception {
+        createNamedFile("a.pdf", "A");
+        createNamedFile("b.pdf", "B");
+        Path root = tempDir.toRealPath();
+
+        McpMetadata limited = new McpMetadata(
+                McpPaths.forRoot(root),
+                new McpOptions(root, false, () -> true, 1));
+        McpToolException error = assertThrows(McpToolException.class,
+                () -> limited.readBatch(List.of("a.pdf", "b.pdf"), null, null));
+        assertEquals("batch_too_large", error.code());
+        assertTrue(error.getMessage().contains("1"));
+
+        McpMetadata unlimited = new McpMetadata(
+                McpPaths.forRoot(root),
+                new McpOptions(root, false, () -> true, 0));
+        ObjectNode batch = node(unlimited.readBatch(List.of("a.pdf", "b.pdf"), null, null));
+        assertEquals(2, batch.get("summary").get("succeeded").asInt());
     }
 
     @Test
@@ -607,6 +631,500 @@ public class McpMetadataTest {
         assertFalse(Files.exists(outside.resolve("a.pdf")));
         assertEquals("Title A",
                 FilesTestHelper.load(tempDir.resolve("docs/sub/a.pdf").toFile()).doc.title);
+    }
+
+    @Test
+    public void exportBatchWritesAggregateJsonWithAllFields() throws Exception {
+        createNamedFile("a.pdf", "Export Title");
+
+        ObjectNode batch = node(metadata(false, true).exportBatch(
+                "json", List.of("a.pdf"), null, null, null, null, null, null));
+
+        assertEquals(1, batch.get("summary").get("succeeded").asInt());
+        assertNotNull(batch.get("outputs"));
+        assertEquals("metadata-export.json", batch.get("outputs").get(0).asText());
+
+        File exported = tempDir.resolve("metadata-export.json").toFile();
+        assertTrue(exported.exists());
+        List<Map<String, Object>> rows = SerDeslUtils.fromJSONFileAsList(exported);
+        assertEquals(1, rows.size());
+        assertEquals("Export Title", rows.get(0).get("doc.title"));
+        assertEquals("a.pdf", rows.get(0).get("file.fullPath"));
+        assertTrue(rows.get(0).containsKey("file.nameWithExt"));
+        assertFalse(rows.get(0).containsKey("prop.ownerPassword"));
+    }
+
+    @Test
+    public void exportBatchAggregateCountsEachInput() throws Exception {
+        createNamedFile("a.pdf", "A");
+        createNamedFile("b.pdf", "B");
+
+        ObjectNode batch = node(metadata(false, true).exportBatch(
+                "json", List.of("a.pdf", "b.pdf"), null, null, "meta", null, null, null));
+
+        assertEquals(2, batch.get("summary").get("total").asInt());
+        assertEquals(2, batch.get("summary").get("succeeded").asInt());
+        assertEquals(1, batch.get("outputs").size());
+        assertEquals(2, batch.get("results").size());
+    }
+
+    @Test
+    public void exportBatchAggregateContinuesAfterReadFailure() throws Exception {
+        createNamedFile("a.pdf", "Good Export");
+        FilesTestHelper.PMTuple encrypted = createEncryptedFile("Encrypted Export");
+
+        ObjectNode batch = node(metadata(false, true).exportBatch(
+                "json", List.of("a.pdf", encrypted.file.getName()),
+                null, null, "meta", null, null, null));
+
+        assertEquals(1, batch.get("summary").get("succeeded").asInt());
+        assertEquals(1, batch.get("summary").get("failed").asInt());
+        assertTrue(tempDir.resolve("meta.json").toFile().exists());
+        assertTrue(batch.get("outputs").toString().contains("meta.json"));
+
+        JsonNode failure = null;
+        for (JsonNode result : batch.get("results")) {
+            if (!result.get("ok").asBoolean()) {
+                failure = result;
+            }
+        }
+        assertNotNull(failure);
+        assertEquals("password_required", failure.get("error").get("code").asText());
+    }
+
+    @Test
+    public void exportBatchWritesOneFilePerPdf() throws Exception {
+        createNamedFile("a.pdf", "Export A");
+        createNamedFile("b.pdf", "Export B");
+
+        ObjectNode batch = node(metadata(false, true).exportBatch(
+                "yaml", List.of("a.pdf", "b.pdf"), null, null, null, true, null, null));
+
+        assertEquals(2, batch.get("summary").get("succeeded").asInt());
+        assertTrue(batch.get("outputs").toString().contains("a.yaml"));
+        assertTrue(batch.get("outputs").toString().contains("b.yaml"));
+
+        List<Map<String, Object>> rows = SerDeslUtils.fromYAMLFileAsList(
+                tempDir.resolve("a.yaml").toFile());
+        assertEquals("Export A", rows.get(0).get("doc.title"));
+    }
+
+    @Test
+    public void exportBatchWritesCsvWithExplicitFields() throws Exception {
+        createNamedFile("a.pdf", "Export Csv");
+
+        ObjectNode batch = node(metadata(false, true).exportBatch(
+                "csv", List.of("a.pdf"), List.of("doc.title", "doc.author"),
+                null, "people", null, null, null));
+
+        assertEquals("people.csv", batch.get("outputs").get(0).asText());
+        List<MetadataInfo> rows = CsvMetadata.readFile(tempDir.resolve("people.csv").toFile());
+        assertEquals(1, rows.size());
+        assertEquals("Export Csv", rows.get(0).doc.title);
+        assertEquals("McpAuthor", rows.get(0).doc.author);
+    }
+
+    @Test
+    public void exportBatchRejectsInvalidFieldSelections() throws Exception {
+        createNamedFile("a.pdf", "A");
+        McpMetadata metadata = metadata(false, true);
+
+        McpToolException secret = assertThrows(McpToolException.class,
+                () -> metadata.exportBatch("json", List.of("a.pdf"),
+                        List.of("prop.ownerPassword"), null, null, null, null, null));
+        assertEquals("invalid_argument", secret.code());
+
+        McpToolException none = assertThrows(McpToolException.class,
+                () -> metadata.exportBatch("json", List.of("a.pdf"),
+                        List.of("none"), null, null, null, null, null));
+        assertEquals("invalid_argument", none.code());
+
+        McpToolException empty = assertThrows(McpToolException.class,
+                () -> metadata.exportBatch("json", List.of("a.pdf"),
+                        List.of(), null, null, null, null, null));
+        assertEquals("invalid_argument", empty.code());
+
+        McpToolException mixed = assertThrows(McpToolException.class,
+                () -> metadata.exportBatch("json", List.of("a.pdf"),
+                        List.of("all", "doc.title"), null, null, null, null, null));
+        assertEquals("invalid_argument", mixed.code());
+
+        McpToolException path = assertThrows(McpToolException.class,
+                () -> metadata.exportBatch("json", List.of("a.pdf"),
+                        null, null, "sub/report", null, null, null));
+        assertEquals("invalid_argument", path.code());
+    }
+
+    @Test
+    public void exportBatchCanWriteAbsolutePaths() throws Exception {
+        createNamedFile("a.pdf", "A");
+
+        metadata(false, true).exportBatch(
+                "json", List.of("a.pdf"), List.of("file.fullPath"),
+                null, null, null, false, null);
+
+        List<Map<String, Object>> rows = SerDeslUtils.fromJSONFileAsList(
+                tempDir.resolve("metadata-export.json").toFile());
+        String fullPath = (String) rows.get(0).get("file.fullPath");
+        assertTrue(new File(fullPath).isAbsolute());
+        assertTrue(fullPath.endsWith("a.pdf"));
+    }
+
+    @Test
+    public void exportBatchHandlesEncryptedPdf() throws Exception {
+        FilesTestHelper.PMTuple encrypted = createEncryptedFile("Encrypted Export");
+
+        ObjectNode batch = node(metadata(false, true).exportBatch(
+                "json", List.of(encrypted.file.getName()), null, null, null, null, null, "ownerpass"));
+
+        assertEquals(1, batch.get("summary").get("succeeded").asInt());
+        List<Map<String, Object>> rows = SerDeslUtils.fromJSONFileAsList(
+                tempDir.resolve("metadata-export.json").toFile());
+        assertEquals("Encrypted Export", rows.get(0).get("doc.title"));
+        assertFalse(rows.get(0).containsKey("prop.ownerPassword"));
+    }
+
+    @Test
+    public void exportBatchReportsAggregateWriteFailureAsRequestError() throws Exception {
+        createNamedFile("a.pdf", "A");
+        Files.createDirectories(tempDir.resolve("metadata-export.json"));
+
+        McpToolException error = assertThrows(McpToolException.class,
+                () -> metadata(false, true).exportBatch(
+                        "json", List.of("a.pdf"), null, null, null, null, null, null));
+
+        assertEquals("output_not_writable", error.code());
+    }
+
+    @Test
+    public void exportBatchContinuesAfterPerFileWriteFailure() throws Exception {
+        createNamedFile("a.pdf", "A");
+        createNamedFile("b.pdf", "B");
+        Files.createDirectories(tempDir.resolve("a.json"));
+
+        ObjectNode batch = node(metadata(false, true).exportBatch(
+                "json", List.of("a.pdf", "b.pdf"), null, null, null, true, null, null));
+
+        assertEquals(1, batch.get("summary").get("succeeded").asInt());
+        assertEquals(1, batch.get("summary").get("failed").asInt());
+        assertEquals("output_not_writable",
+                batch.get("results").get(0).get("error").get("code").asText());
+        assertTrue(tempDir.resolve("b.json").toFile().exists());
+        assertFalse(batch.get("outputs").toString().contains("a.json"));
+        assertTrue(batch.get("outputs").toString().contains("b.json"));
+    }
+
+    @Test
+    public void exportBatchRejectsBatchesOverTheLimit() throws Exception {
+        Files.createDirectories(tempDir.resolve("many"));
+        for (int i = 0; i <= McpPaths.MAX_BATCH_FILES; i++) {
+            Files.writeString(tempDir.resolve("many/file-" + i + ".pdf"), "not parsed");
+        }
+
+        McpToolException error = assertThrows(McpToolException.class,
+                () -> metadata(false, true).exportBatch(
+                        "json", List.of("many"), null, "out", null, null, null, null));
+
+        assertEquals("batch_too_large", error.code());
+        assertFalse(Files.exists(tempDir.resolve("out")));
+    }
+
+    @Test
+    public void exportRequiresLicense() throws Exception {
+        createNamedFile("a.pdf", "A");
+
+        McpToolException error = assertThrows(McpToolException.class,
+                () -> metadata(false, false).exportBatch(
+                        "json", List.of("a.pdf"), null, null, null, null, null, null));
+
+        assertEquals("license_required", error.code());
+    }
+
+    @Test
+    public void exportToolReturnsOutputs() throws Exception {
+        createNamedFile("a.pdf", "A");
+        McpTools tools = new McpTools(metadata(false, true));
+
+        ObjectNode args = McpJson.object();
+        args.set("paths", McpJson.array().add("a.pdf"));
+
+        ObjectNode result = tools.call("pdf_export_json", args);
+
+        assertFalse(result.get("isError").asBoolean());
+        assertTrue(result.get("structuredContent").get("outputs").toString()
+                .contains("metadata-export.json"));
+    }
+
+    @Test
+    public void importFromFilenameExtractsMetadata() throws Exception {
+        FilesTestHelper.PMTuple file = createNamedFile("Alice - My Title.pdf", md -> {
+            set(md, "doc.title", "Old Title");
+            set(md, "doc.author", "Old Author");
+        });
+
+        ObjectNode batch = node(metadata(false, true).importFromFilenameBatch(
+                List.of(file.file.getName()),
+                "{doc.author} - {doc.title}",
+                null,
+                null));
+
+        assertEquals(1, batch.get("summary").get("succeeded").asInt());
+        assertEquals("imported", batch.get("results").get(0).get("action").asText());
+        MetadataInfo loaded = FilesTestHelper.load(file.file);
+        assertEquals("Alice", loaded.doc.author);
+        assertEquals("My Title", loaded.doc.title);
+    }
+
+    @Test
+    public void importFromJsonAppliesExportedMetadata() throws Exception {
+        FilesTestHelper.PMTuple first = createNamedFile("a.pdf", "Import A");
+        FilesTestHelper.PMTuple second = createNamedFile("b.pdf", "Import B");
+
+        metadata(false, true).exportBatch(
+                "json", List.of("a.pdf", "b.pdf"), null, null, "meta", null, null, null);
+
+        ObjectNode values = McpJson.object();
+        values.put("doc.title", "Changed");
+        metadata(false, true).setBatch(List.of("a.pdf", "b.pdf"), values, null, null);
+
+        ObjectNode batch = node(metadata(false, true).importBatch(
+                "json", List.of("meta.json"), null, null));
+
+        assertEquals(2, batch.get("summary").get("succeeded").asInt());
+        assertEquals("Import A", FilesTestHelper.load(first.file).doc.title);
+        assertEquals("Import B", FilesTestHelper.load(second.file).doc.title);
+        assertEquals("meta.json", batch.get("results").get(0).get("source").asText());
+    }
+
+    @Test
+    public void importFromYamlAppliesExportedMetadata() throws Exception {
+        FilesTestHelper.PMTuple file = createNamedFile("a.pdf", "Yaml Import");
+        metadata(false, true).exportBatch(
+                "yaml", List.of("a.pdf"),
+                List.of("doc.title", "doc.author", "file.fullPath"),
+                null, "meta", null, null, null);
+
+        ObjectNode values = McpJson.object();
+        values.put("doc.title", "Changed");
+        metadata(false, true).setBatch(List.of("a.pdf"), values, null, null);
+
+        ObjectNode batch = node(metadata(false, true).importBatch(
+                "yaml", List.of("meta.yaml"), null, null));
+
+        assertEquals(1, batch.get("summary").get("succeeded").asInt());
+        assertEquals("Yaml Import", FilesTestHelper.load(file.file).doc.title);
+    }
+
+    @Test
+    public void importFromCsvAppliesExportedMetadata() throws Exception {
+        FilesTestHelper.PMTuple file = createNamedFile("a.pdf", "Csv Import");
+        metadata(false, true).exportBatch(
+                "csv", List.of("a.pdf"),
+                List.of("doc.title", "doc.author", "file.fullPath"),
+                null, "meta", null, null, null);
+
+        ObjectNode values = McpJson.object();
+        values.put("doc.title", "Changed");
+        metadata(false, true).setBatch(List.of("a.pdf"), values, null, null);
+
+        ObjectNode batch = node(metadata(false, true).importBatch(
+                "csv", List.of("meta.csv"), null, null));
+
+        assertEquals(1, batch.get("summary").get("succeeded").asInt());
+        assertEquals("Csv Import", FilesTestHelper.load(file.file).doc.title);
+    }
+
+    @Test
+    public void importUsesPerRecordPassword() throws Exception {
+        FilesTestHelper.PMTuple encrypted = createEncryptedFile("Encrypted Import");
+        metadata(false, true).exportBatch(
+                "json", List.of(encrypted.file.getName()),
+                List.of("doc.title", "file.fullPath"),
+                null, "meta", null, null, "ownerpass");
+
+        File json = tempDir.resolve("meta.json").toFile();
+        List<Map<String, Object>> rows = SerDeslUtils.fromJSONFileAsList(json);
+        rows.get(0).put("doc.title", "Imported Encrypted");
+        rows.get(0).put("prop.ownerPassword", "ownerpass");
+        SerDeslUtils.toJSONFile(json, rows);
+
+        ObjectNode batch = node(metadata(false, true).importBatch(
+                "json", List.of("meta.json"), null, null));
+
+        assertEquals(1, batch.get("summary").get("succeeded").asInt());
+        assertEquals("Imported Encrypted",
+                FilesTestHelper.load(encrypted.file, "ownerpass").doc.title);
+        assertFalse(batch.get("results").get(0).get("fields").toString()
+                .contains("prop.ownerPassword"));
+    }
+
+    @Test
+    public void importRejectsExplicitWrongExtension() throws Exception {
+        createNamedFile("a.pdf", "A");
+
+        McpToolException error = assertThrows(McpToolException.class,
+                () -> metadata(false, true).importBatch(
+                        "json", List.of("a.pdf"), null, null));
+
+        assertEquals("invalid_input", error.code());
+    }
+
+    @Test
+    public void importUsesTopLevelPasswordFallback() throws Exception {
+        FilesTestHelper.PMTuple encrypted = createEncryptedFile("Encrypted Import");
+        metadata(false, true).exportBatch(
+                "json", List.of(encrypted.file.getName()),
+                List.of("doc.title", "file.fullPath"),
+                null, "meta", null, null, "ownerpass");
+
+        File json = tempDir.resolve("meta.json").toFile();
+        List<Map<String, Object>> rows = SerDeslUtils.fromJSONFileAsList(json);
+        rows.get(0).put("doc.title", "Top Level Import");
+        rows.get(0).remove("prop.ownerPassword");
+        SerDeslUtils.toJSONFile(json, rows);
+
+        ObjectNode batch = node(metadata(false, true).importBatch(
+                "json", List.of("meta.json"), null, "ownerpass"));
+
+        assertEquals(1, batch.get("summary").get("succeeded").asInt());
+        assertEquals("Top Level Import",
+                FilesTestHelper.load(encrypted.file, "ownerpass").doc.title);
+    }
+
+    @Test
+    public void importReportsWrongPerRecordPassword() throws Exception {
+        FilesTestHelper.PMTuple encrypted = createEncryptedFile("Encrypted Import");
+        metadata(false, true).exportBatch(
+                "json", List.of(encrypted.file.getName()),
+                List.of("doc.title", "file.fullPath"),
+                null, "meta", null, null, "ownerpass");
+
+        File json = tempDir.resolve("meta.json").toFile();
+        List<Map<String, Object>> rows = SerDeslUtils.fromJSONFileAsList(json);
+        rows.get(0).put("doc.title", "Should Not Apply");
+        rows.get(0).put("prop.ownerPassword", "wrong");
+        SerDeslUtils.toJSONFile(json, rows);
+
+        ObjectNode batch = node(metadata(false, true).importBatch(
+                "json", List.of("meta.json"), null, null));
+
+        assertEquals(1, batch.get("summary").get("failed").asInt());
+        assertEquals("invalid_password",
+                batch.get("results").get(0).get("error").get("code").asText());
+        assertEquals("Encrypted Import",
+                FilesTestHelper.load(encrypted.file, "ownerpass").doc.title);
+    }
+
+    @Test
+    public void importContinuesAfterParseFailure() throws Exception {
+        createNamedFile("a.pdf", "Good Import");
+        metadata(false, true).exportBatch(
+                "json", List.of("a.pdf"), null, null, "good", null, null, null);
+        Files.writeString(tempDir.resolve("bad.json"), "{not-json");
+
+        ObjectNode batch = node(metadata(false, true).importBatch(
+                "json", List.of("bad.json", "good.json"), null, null));
+
+        assertEquals(1, batch.get("summary").get("succeeded").asInt());
+        assertEquals(1, batch.get("summary").get("failed").asInt());
+
+        boolean parseFailed = false;
+        boolean imported = false;
+        for (JsonNode result : batch.get("results")) {
+            if ("bad.json".equals(result.get("source").asText())) {
+                parseFailed = "parse_failed".equals(result.get("error").get("code").asText());
+                assertFalse(result.has("input"));
+            }
+            if ("good.json".equals(result.get("source").asText())) {
+                imported = result.get("ok").asBoolean();
+            }
+        }
+        assertTrue(parseFailed);
+        assertTrue(imported);
+    }
+
+    @Test
+    public void importRejectsReferencedPathOutsideRoot() throws Exception {
+        File outsidePdf = FilesTestHelper.emptyPdf(outside.toFile());
+        MetadataInfo metadata = new MetadataInfo();
+        metadata.setEnabled(false);
+        set(metadata, "doc.title", "Outside");
+        FilesTestHelper.save(metadata, outsidePdf);
+
+        SerDeslUtils.toJSONFile(tempDir.resolve("outside.json").toFile(), List.of(Map.of(
+                "file.fullPath", outsidePdf.getAbsolutePath(),
+                "doc.title", "Outside Import")));
+
+        ObjectNode batch = node(this.metadata(false, true).importBatch(
+                "json", List.of("outside.json"), null, null));
+
+        assertEquals(0, batch.get("summary").get("succeeded").asInt());
+        assertEquals(1, batch.get("summary").get("failed").asInt());
+        assertEquals("path_outside_root",
+                batch.get("results").get(0).get("error").get("code").asText());
+        assertFalse(batch.get("results").get(0).has("input"));
+    }
+
+    @Test
+    public void importRejectsEmptyImportFiles() throws Exception {
+        SerDeslUtils.toJSONFile(tempDir.resolve("empty.json").toFile(), List.of());
+
+        McpToolException error = assertThrows(McpToolException.class,
+                () -> metadata(false, true).importBatch(
+                        "json", List.of("empty.json"), null, null));
+
+        assertEquals("no_input_files", error.code());
+    }
+
+    @Test
+    public void importRejectsRecordWithoutFullPath() throws Exception {
+        SerDeslUtils.toJSONFile(tempDir.resolve("nopath.json").toFile(),
+                List.of(Map.of("doc.title", "No Path")));
+
+        ObjectNode batch = node(metadata(false, true).importBatch(
+                "json", List.of("nopath.json"), null, null));
+
+        assertEquals(1, batch.get("summary").get("failed").asInt());
+        assertEquals("invalid_argument",
+                batch.get("results").get(0).get("error").get("code").asText());
+        assertFalse(batch.get("results").get(0).has("input"));
+    }
+
+    @Test
+    public void importRejectsBatchesOverTheLimitBeforeWriting() throws Exception {
+        createNamedFile("a.pdf", "A");
+        createNamedFile("b.pdf", "B");
+        metadata(false, true).exportBatch(
+                "json", List.of("a.pdf", "b.pdf"), null, null, "meta", null, null, null);
+
+        Path root = tempDir.toRealPath();
+        McpMetadata limited = new McpMetadata(
+                McpPaths.forRoot(root),
+                new McpOptions(root, false, () -> true, 1));
+
+        McpToolException error = assertThrows(McpToolException.class,
+                () -> limited.importBatch(
+                        "json", List.of("meta.json"), "out", null));
+
+        assertEquals("batch_too_large", error.code());
+        assertFalse(Files.exists(tempDir.resolve("out")));
+    }
+
+    @Test
+    public void importToolReturnsSource() throws Exception {
+        createNamedFile("a.pdf", "Tool Import");
+        metadata(false, true).exportBatch(
+                "json", List.of("a.pdf"), null, null, "meta", null, null, null);
+
+        McpTools tools = new McpTools(metadata(false, true));
+        ObjectNode args = McpJson.object();
+        args.set("importPaths", McpJson.array().add("meta.json"));
+
+        ObjectNode result = tools.call("pdf_import_from_json", args);
+
+        assertFalse(result.get("isError").asBoolean());
+        assertEquals("meta.json",
+                result.get("structuredContent").get("results").get(0).get("source").asText());
     }
 
     @Test

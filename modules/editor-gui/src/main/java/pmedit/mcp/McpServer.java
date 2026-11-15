@@ -28,9 +28,11 @@ public final class McpServer {
     private static final int MAX_FRAME_LENGTH = 16 * 1024 * 1024;
 
     private static final String INSTRUCTIONS =
-            "Tools operate on PDF files inside the configured root. "
-                    + "Every file tool takes a paths array of files and/or directories; a single file is "
-                    + "[\"one.pdf\"]. Directories are searched recursively. "
+            "Tools operate on files inside the configured root. "
+                    + "PDF tools take a paths array of files and/or directories; a single file is "
+                    + "[\"one.pdf\"]. Import tools take importPaths for JSON, YAML, or CSV files. "
+                    + "Directories are searched recursively. Exports write files and return their paths. "
+                    + "The configured batch limit applies to every call. "
                     + "Call pdf_list_fields before writing to discover valid field IDs. "
                     + "Mutating tools may require a license.";
 
@@ -44,7 +46,7 @@ public final class McpServer {
         this.reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
         this.out = new PrintStream(out, false, StandardCharsets.UTF_8);
         McpPaths paths = McpPaths.forRoot(options.root());
-        this.tools = new McpTools(new McpMetadata(paths, options));
+        this.tools = new McpTools(new McpMetadata(paths, options), options.maxFiles());
     }
 
     public void run() {

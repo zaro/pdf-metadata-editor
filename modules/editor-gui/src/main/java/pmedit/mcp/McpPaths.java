@@ -1,5 +1,7 @@
 package pmedit.mcp;
 
+import pmedit.BatchEngine;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,7 +18,7 @@ import java.util.Locale;
  */
 public final class McpPaths {
 
-    public static final int MAX_BATCH_FILES = 100;
+    public static final int MAX_BATCH_FILES = BatchEngine.DEFAULT_MAX_FILES;
 
     private final Path root;
 

@@ -71,7 +71,7 @@ public class McpServerTest {
                 toolsList()));
 
         JsonNode tools = responses.get(1).get("result").get("tools");
-        assertEquals(5, tools.size());
+        assertEquals(12, tools.size());
 
         Set<String> names = new LinkedHashSet<>();
         for (JsonNode tool : tools) {
@@ -87,7 +87,14 @@ public class McpServerTest {
                 "pdf_read_metadata",
                 "pdf_set_metadata",
                 "pdf_clear_metadata",
-                "pdf_rename"), names);
+                "pdf_rename",
+                "pdf_export_json",
+                "pdf_export_yaml",
+                "pdf_export_csv",
+                "pdf_import_from_filename",
+                "pdf_import_from_json",
+                "pdf_import_from_yaml",
+                "pdf_import_from_csv"), names);
     }
 
     @Test
@@ -98,11 +105,21 @@ public class McpServerTest {
 
         for (JsonNode tool : responses.get(1).get("result").get("tools")) {
             JsonNode schema = tool.get("inputSchema");
-            if ("pdf_list_fields".equals(tool.get("name").asText())) {
+            String name = tool.get("name").asText();
+            if ("pdf_list_fields".equals(name)) {
                 continue;
             }
-            assertTrue(schema.get("properties").has("paths"), tool.get("name").asText());
-            assertFalse(schema.get("properties").has("path"), tool.get("name").asText());
+            if ("pdf_import_from_json".equals(name)
+                    || "pdf_import_from_yaml".equals(name)
+                    || "pdf_import_from_csv".equals(name)) {
+                assertTrue(schema.get("properties").has("importPaths"), name);
+                assertFalse(schema.get("properties").has("paths"), name);
+                assertEquals("array", schema.get("properties").get("importPaths").get("type").asText());
+                assertTrue(schema.get("required").toString().contains("importPaths"));
+                continue;
+            }
+            assertTrue(schema.get("properties").has("paths"), name);
+            assertFalse(schema.get("properties").has("path"), name);
             assertEquals("array", schema.get("properties").get("paths").get("type").asText());
             assertTrue(schema.get("required").toString().contains("paths"));
         }
