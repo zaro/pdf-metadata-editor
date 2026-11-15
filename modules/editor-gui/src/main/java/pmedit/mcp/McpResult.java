@@ -35,6 +35,16 @@ public final class McpResult {
         return result;
     }
 
+    public static ObjectNode error(String code, String message) {
+        ObjectNode result = McpJson.object();
+        ObjectNode error = McpJson.object();
+        error.put("error", code == null ? "tool_error" : code);
+        error.put("message", message == null ? "" : message);
+        result.set("content", textContent(McpJson.write(error)));
+        result.put("isError", true);
+        return result;
+    }
+
     private static ArrayNode textContent(String text) {
         ArrayNode content = McpJson.array();
         ObjectNode item = McpJson.object();

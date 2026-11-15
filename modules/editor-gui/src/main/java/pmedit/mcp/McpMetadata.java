@@ -3,6 +3,7 @@ package pmedit.mcp;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 import pmedit.DateFormat;
 import pmedit.MetadataInfo;
 import pmedit.TemplateString;
@@ -49,7 +50,11 @@ public final class McpMetadata {
     public ObjectNode read(String rawPath, String ownerPassword, List<String> requestedFields) throws Exception {
         Path file = paths.input(rawPath);
         MetadataInfo metadata = new MetadataInfo();
-        reader().loadFromPDF(file.toFile(), ownerPassword, metadata);
+        try {
+            reader().loadFromPDF(file.toFile(), ownerPassword, metadata);
+        } catch (InvalidPasswordException e) {
+            throw passwordException(ownerPassword, e);
+        }
 
         ObjectNode result = McpJson.object();
         result.put("path", paths.relative(file));
@@ -156,7 +161,15 @@ public final class McpMetadata {
 
         PdfWriter writer = writer();
         boolean unsupported = writer.allFieldsSupported(changes);
-        writer.saveAsPDF(changes, input.toFile(), output.toFile());
+        try {
+            writer.saveAsPDF(changes, input.toFile(), output.toFile());
+        } catch (Exception e) {
+            InvalidPasswordException passwordError = findInvalidPassword(e);
+            if (passwordError != null) {
+                throw passwordException(ownerPassword, passwordError);
+            }
+            throw e;
+        }
 
         ObjectNode result = mutationResult("path", input, "outputPath", output, "updated", updated);
         if (unsupported) {
@@ -206,7 +219,15 @@ public final class McpMetadata {
 
         PdfWriter writer = writer();
         boolean unsupported = writer.allFieldsSupported(changes);
-        writer.saveAsPDF(changes, input.toFile(), output.toFile());
+        try {
+            writer.saveAsPDF(changes, input.toFile(), output.toFile());
+        } catch (Exception e) {
+            InvalidPasswordException passwordError = findInvalidPassword(e);
+            if (passwordError != null) {
+                throw passwordException(ownerPassword, passwordError);
+            }
+            throw e;
+        }
 
         ObjectNode result = mutationResult("path", input, "outputPath", output, "cleared", cleared);
         if (unsupported) {
@@ -223,7 +244,11 @@ public final class McpMetadata {
 
         Path input = paths.input(rawPath);
         MetadataInfo metadata = new MetadataInfo();
-        reader().loadFromPDF(input.toFile(), ownerPassword, metadata);
+        try {
+            reader().loadFromPDF(input.toFile(), ownerPassword, metadata);
+        } catch (InvalidPasswordException e) {
+            throw passwordException(ownerPassword, e);
+        }
 
         String targetName = template.toLowerCase(Locale.ROOT).endsWith(".pdf")
                 ? template
@@ -274,7 +299,11 @@ public final class McpMetadata {
         }
 
         MetadataInfo metadata = new MetadataInfo();
-        reader().loadFromPDF(input.toFile(), ownerPassword, metadata);
+        try {
+            reader().loadFromPDF(input.toFile(), ownerPassword, metadata);
+        } catch (InvalidPasswordException e) {
+            throw passwordException(ownerPassword, e);
+        }
 
         Map<String, Object> values = metadata.asFlatMap(false);
         values.remove("prop.ownerPassword");
@@ -313,6 +342,30 @@ public final class McpMetadata {
                     "Editing PDF metadata through MCP requires a license. You can get one at "
                             + WebsiteConstants.batchLicenseUrl);
         }
+    }
+
+    private static McpToolException passwordException(String suppliedPassword, InvalidPasswordException cause) {
+        if (suppliedPassword == null || suppliedPassword.isEmpty()) {
+            return new McpToolException(
+                    "password_required",
+                    "This PDF is password-protected. Retry with the ownerPassword argument.",
+                    cause);
+        }
+        return new McpToolException(
+                "invalid_password",
+                "The supplied ownerPassword could not open this PDF.",
+                cause);
+    }
+
+    private static InvalidPasswordException findInvalidPassword(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (current instanceof InvalidPasswordException passwordException) {
+                return passwordException;
+            }
+            current = current.getCause();
+        }
+        return null;
     }
 
     private static void requireKnownField(String id) throws McpToolException {

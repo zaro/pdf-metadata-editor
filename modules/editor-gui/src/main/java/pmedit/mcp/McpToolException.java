@@ -6,11 +6,26 @@ package pmedit.mcp;
  */
 public class McpToolException extends Exception {
 
+    private final String code;
+
     public McpToolException(String message) {
-        super(message);
+        this(null, message, null);
     }
 
     public McpToolException(String message, Throwable cause) {
+        this(null, message, cause);
+    }
+
+    public McpToolException(String code, String message) {
+        this(code, message, null);
+    }
+
+    public McpToolException(String code, String message, Throwable cause) {
         super(message, cause);
+        this.code = code;
+    }
+
+    public String code() {
+        return code;
     }
 }

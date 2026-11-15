@@ -296,6 +296,21 @@ directory; set `--mcp-root` there if you need a predictable scope.
 Read-only tools are available without a license. Some write operations may
 require a license; the server returns a clear message when one is needed.
 
+### Password-protected PDFs
+
+Pass `ownerPassword` to the tool. If the PDF is protected and no password is
+supplied, the tool returns a structured error:
+
+```json
+{"error":"password_required","message":"This PDF is password-protected. Retry with the ownerPassword argument."}
+```
+
+If the supplied password is rejected:
+
+```json
+{"error":"invalid_password","message":"The supplied ownerPassword could not open this PDF."}
+```
+
 ## Supported platforms
 
 The package includes platform bundles for:

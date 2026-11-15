@@ -275,6 +275,48 @@ public class McpMetadataTest {
     }
 
     @Test
+    public void passwordErrorsAreClassified() throws Exception {
+        FilesTestHelper.PMTuple file = createEncryptedFile("Encrypted Title");
+        McpMetadata metadata = metadata(false, true);
+
+        McpToolException requiredRead = assertThrows(McpToolException.class,
+                () -> metadata.read(file.file.getName(), null, null));
+        assertEquals("password_required", requiredRead.code());
+        assertTrue(requiredRead.getMessage().contains("password-protected"));
+
+        McpToolException requiredExport = assertThrows(McpToolException.class,
+                () -> metadata.export(file.file.getName(), "json", null, null));
+        assertEquals("password_required", requiredExport.code());
+
+        ObjectNode values = McpJson.object();
+        values.put("doc.title", "x");
+        McpToolException requiredSet = assertThrows(McpToolException.class,
+                () -> metadata.set(file.file.getName(), values, null, null));
+        assertEquals("password_required", requiredSet.code());
+
+        McpToolException invalidRead = assertThrows(McpToolException.class,
+                () -> metadata.read(file.file.getName(), "wrong", null));
+        assertEquals("invalid_password", invalidRead.code());
+        assertTrue(invalidRead.getMessage().contains("could not open"));
+    }
+
+    @Test
+    public void passwordToolErrorIsStructuredJson() throws Exception {
+        FilesTestHelper.PMTuple file = createEncryptedFile("Encrypted Title");
+        McpTools tools = new McpTools(metadata(false, true));
+
+        ObjectNode args = McpJson.object();
+        args.put("path", file.file.getName());
+
+        ObjectNode result = tools.call("pdf_read_metadata", args);
+        assertTrue(result.get("isError").asBoolean());
+
+        JsonNode error = McpJson.parse(result.get("content").get(0).get("text").asText());
+        assertEquals("password_required", error.get("error").asText());
+        assertTrue(error.get("message").asText().contains("password-protected"));
+    }
+
+    @Test
     public void readOnlyModeRejectsMutations() throws Exception {
         FilesTestHelper.PMTuple file = createFile("McpTitle");
         McpMetadata metadata = metadata(true, true);

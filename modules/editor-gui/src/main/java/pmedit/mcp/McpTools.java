@@ -15,6 +15,8 @@ import java.util.List;
 public final class McpTools {
 
     private static final Logger LOG = LoggerFactory.getLogger(McpTools.class);
+    private static final String OWNER_PASSWORD_DESCRIPTION =
+            "Owner password for an encrypted PDF. If omitted, a protected PDF returns password_required.";
 
     private final McpMetadata metadata;
     private final List<Tool> tools;
@@ -54,7 +56,10 @@ public final class McpTools {
         try {
             return tool.handler().call(args);
         } catch (McpToolException e) {
-            return McpResult.error(e.getMessage());
+            if (e.code() == null) {
+                return McpResult.error(e.getMessage());
+            }
+            return McpResult.error(e.code(), e.getMessage());
         } catch (Exception e) {
             LOG.error("MCP tool {} failed", name, e);
             return McpResult.error("Unexpected error while executing " + name + ": " + safeMessage(e));
@@ -186,7 +191,7 @@ public final class McpTools {
     private static ObjectNode readInputSchema() {
         ObjectNode schema = McpJson.objectSchema();
         McpJson.addProperty(schema, "path", McpJson.stringProperty("PDF path relative to the MCP root."), true);
-        McpJson.addProperty(schema, "ownerPassword", McpJson.stringProperty("Owner password for an encrypted PDF."), false);
+        McpJson.addProperty(schema, "ownerPassword", McpJson.stringProperty(OWNER_PASSWORD_DESCRIPTION), false);
         McpJson.addProperty(schema, "fields", McpJson.stringArrayProperty("Optional subset of metadata field IDs."), false);
         return schema;
     }
@@ -196,7 +201,7 @@ public final class McpTools {
         McpJson.addProperty(schema, "path", McpJson.stringProperty("PDF path relative to the MCP root."), true);
         McpJson.addProperty(schema, "metadata", McpJson.objectProperty("Map of metadata field IDs to values."), true);
         McpJson.addProperty(schema, "outputPath", McpJson.stringProperty("Optional output path. Defaults to in-place update."), false);
-        McpJson.addProperty(schema, "ownerPassword", McpJson.stringProperty("Owner password for an encrypted PDF."), false);
+        McpJson.addProperty(schema, "ownerPassword", McpJson.stringProperty(OWNER_PASSWORD_DESCRIPTION), false);
         return schema;
     }
 
@@ -205,7 +210,7 @@ public final class McpTools {
         McpJson.addProperty(schema, "path", McpJson.stringProperty("PDF path relative to the MCP root."), true);
         McpJson.addProperty(schema, "fields", McpJson.stringArrayProperty("Field IDs to clear. Defaults to [\"all\"]."), false);
         McpJson.addProperty(schema, "outputPath", McpJson.stringProperty("Optional output path. Defaults to in-place update."), false);
-        McpJson.addProperty(schema, "ownerPassword", McpJson.stringProperty("Owner password for an encrypted PDF."), false);
+        McpJson.addProperty(schema, "ownerPassword", McpJson.stringProperty(OWNER_PASSWORD_DESCRIPTION), false);
         return schema;
     }
 
@@ -214,7 +219,7 @@ public final class McpTools {
         McpJson.addProperty(schema, "path", McpJson.stringProperty("PDF path relative to the MCP root."), true);
         McpJson.addProperty(schema, "template", McpJson.stringProperty("Rename template, e.g. '{doc.author} - {doc.title}.pdf'."), true);
         McpJson.addProperty(schema, "outputDir", McpJson.stringProperty("Optional destination directory. Defaults to the source directory."), false);
-        McpJson.addProperty(schema, "ownerPassword", McpJson.stringProperty("Owner password for an encrypted PDF."), false);
+        McpJson.addProperty(schema, "ownerPassword", McpJson.stringProperty(OWNER_PASSWORD_DESCRIPTION), false);
         return schema;
     }
 
@@ -223,7 +228,7 @@ public final class McpTools {
         McpJson.addProperty(schema, "path", McpJson.stringProperty("PDF path relative to the MCP root."), true);
         McpJson.addProperty(schema, "format", McpJson.enumProperty("Export format.", "json", "yaml"), true);
         McpJson.addProperty(schema, "outputPath", McpJson.stringProperty("Optional output file path. Omit to return the content inline."), false);
-        McpJson.addProperty(schema, "ownerPassword", McpJson.stringProperty("Owner password for an encrypted PDF."), false);
+        McpJson.addProperty(schema, "ownerPassword", McpJson.stringProperty(OWNER_PASSWORD_DESCRIPTION), false);
         return schema;
     }
 
