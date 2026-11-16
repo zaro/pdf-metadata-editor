@@ -15,6 +15,7 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.text.DecimalFormat;
 import java.util.Arrays;
+import java.util.Random;
 import java.util.Vector;
 
 public class ActionsAndOptions {
@@ -40,6 +41,16 @@ public class ActionsAndOptions {
     public EncryptionOptionsDialog encryptionOptionsDialog;
     public ShowWarnings showWarningsDialog;
     public MetadataInfo metadataInfo;
+
+    static final String MCP_PROMO_TEXT = "Try the new MCP";
+    private static final String MCP_PROMO_HTML = "<html><u>" + MCP_PROMO_TEXT + "</u></html>";
+    private static final String MCP_PROMO_TOOLTIP = "Open the MCP configuration guide";
+    private static final int MCP_PROMO_MIN_DELAY_MS = 8_000;
+    private static final int MCP_PROMO_MAX_DELAY_MS = 16_000;
+    private static final Random PROMO_RANDOM = new Random();
+    private final Timer mcpPromoTimer = new Timer(MCP_PROMO_MIN_DELAY_MS, e -> showMcpPromo());
+    private boolean mcpPromoActive;
+    private Color statusForeground;
 
     void createUIComponents() {
         btnSaveMenu = new JButton(new MetalComboBoxIcon());
@@ -86,12 +97,64 @@ public class ActionsAndOptions {
             }
         });
         successfullyLoadedButton.addActionListener(e -> {
+            if (mcpPromoActive) {
+                McpHelpDialog.show(SwingUtilities.getWindowAncestor(topPanel));
+                return;
+            }
+            if (metadataInfo == null || metadataInfo.warnings.isEmpty()) {
+                return;
+            }
             showWarningsDialog = new ShowWarnings((JFrame) SwingUtilities.windowForComponent(topPanel), metadataInfo.warnings);
             SwingUtilities.invokeLater(() -> {
                 showWarningsDialog.setVisible(true);
 
             });
         });
+
+        mcpPromoTimer.setRepeats(false);
+        configureStatusButton();
+        showMcpPromo();
+    }
+
+    /**
+     * The status button sits directly on the panel, so it must not paint its own
+     * background: FlatLaf's enabled button colour differs from the panel colour.
+     */
+    private void configureStatusButton() {
+        successfullyLoadedButton.setBorderPainted(false);
+        successfullyLoadedButton.setContentAreaFilled(false);
+        successfullyLoadedButton.setOpaque(false);
+        successfullyLoadedButton.getModel().addChangeListener(e -> applyStatusForeground());
+    }
+
+    private void applyStatusForeground() {
+        if (statusForeground == null) {
+            successfullyLoadedButton.setForeground(null);
+            return;
+        }
+        ButtonModel model = successfullyLoadedButton.getModel();
+        boolean active = successfullyLoadedButton.isEnabled() && (model.isRollover() || model.isPressed());
+        successfullyLoadedButton.setForeground(active ? highlight(statusForeground) : statusForeground);
+    }
+
+    static Color highlight(Color base) {
+        Color background = UIManager.getColor("Panel.background");
+        boolean darkBackground = background != null && luminance(background) < 0.5;
+        int target = darkBackground ? 255 : 0;
+        return new Color(
+                blend(base.getRed(), target, 0.18),
+                blend(base.getGreen(), target, 0.18),
+                blend(base.getBlue(), target, 0.18));
+    }
+
+    private static double luminance(Color color) {
+        return (0.299 * color.getRed()
+                + 0.587 * color.getGreen()
+                + 0.114 * color.getBlue()) / 255.0;
+    }
+
+    private static int blend(int channel, int target, double amount) {
+        return (int) Math.round(channel + (target - channel) * amount);
     }
 
     protected EncryptionOptionsDialog getEncryptionOptionsDialog() {
@@ -124,15 +187,74 @@ public class ActionsAndOptions {
         });
 
         if (metadataInfo.warnings.isEmpty()) {
-            successfullyLoadedButton.setText("Successfully Loaded");
-            successfullyLoadedButton.setEnabled(false);
-            successfullyLoadedButton.setForeground(null);
+            showLoadedClean();
         } else {
-            successfullyLoadedButton.setText(String.format("%d Warning(s)", metadataInfo.warnings.size()));
-            successfullyLoadedButton.setEnabled(true);
-            String color = metadataInfo.warnings.stream().reduce((result, element) -> element.moreSevereThan(result) ? element : result).get().getColor();
-            successfullyLoadedButton.setForeground(Color.decode(color));
+            showWarnings();
         }
+    }
+
+    /**
+     * Promotes the MCP setup guide when nothing is loaded, and after a clean load
+     * has been shown long enough to be read.
+     */
+    void showMcpPromo() {
+        mcpPromoTimer.stop();
+        mcpPromoActive = true;
+        statusForeground = linkColor();
+        successfullyLoadedButton.setText(MCP_PROMO_HTML);
+        successfullyLoadedButton.setEnabled(true);
+        successfullyLoadedButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        successfullyLoadedButton.setToolTipText(MCP_PROMO_TOOLTIP);
+        applyStatusForeground();
+    }
+
+    void showLoadedClean() {
+        mcpPromoTimer.stop();
+        mcpPromoActive = false;
+        statusForeground = null;
+        successfullyLoadedButton.setText("Successfully Loaded");
+        successfullyLoadedButton.setEnabled(false);
+        successfullyLoadedButton.setForeground(null);
+        successfullyLoadedButton.setCursor(Cursor.getDefaultCursor());
+        successfullyLoadedButton.setToolTipText(null);
+        mcpPromoTimer.setInitialDelay(nextPromoDelay());
+        mcpPromoTimer.restart();
+    }
+
+    private void showWarnings() {
+        mcpPromoTimer.stop();
+        mcpPromoActive = false;
+        String color = metadataInfo.warnings.stream().reduce((result, element) -> element.moreSevereThan(result) ? element : result).get().getColor();
+        statusForeground = Color.decode(color);
+        successfullyLoadedButton.setText(String.format("%d Warning(s)", metadataInfo.warnings.size()));
+        successfullyLoadedButton.setEnabled(true);
+        successfullyLoadedButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        successfullyLoadedButton.setToolTipText("Show warnings");
+        applyStatusForeground();
+    }
+
+    void resetLoadStatus() {
+        showMcpPromo();
+    }
+
+    boolean isMcpPromoActive() {
+        return mcpPromoActive;
+    }
+
+    boolean isPromoTimerRunning() {
+        return mcpPromoTimer.isRunning();
+    }
+
+    static int nextPromoDelay() {
+        return MCP_PROMO_MIN_DELAY_MS + PROMO_RANDOM.nextInt(MCP_PROMO_MAX_DELAY_MS - MCP_PROMO_MIN_DELAY_MS + 1);
+    }
+
+    private static Color linkColor() {
+        Color color = UIManager.getColor("Component.linkColor");
+        if (color == null) {
+            color = UIManager.getColor("Link.foreground");
+        }
+        return color != null ? color : Color.decode("#1155cc");
     }
 
     protected void fill() {

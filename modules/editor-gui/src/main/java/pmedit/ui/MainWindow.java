@@ -422,6 +422,7 @@ public class MainWindow extends JFrame implements ProgramWindow {
 
     private void clear() {
         actionsAndOptions.setEnabled(false);
+        actionsAndOptions.resetLoadStatus();
         filename.setText("");
         metadataEditor.clear();
     }
