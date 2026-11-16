@@ -140,6 +140,19 @@ public class McpHelpTextTest {
         assertTrue(text.contains("command = \"C:\\\\Program Files\\\\Pdf Metadata Editor\\\\pmedit-cli.exe\""));
     }
 
+    @Test
+    public void normalizesWindowsLineEndings() {
+        AppLauncher.LaunchCommand launch = new AppLauncher.LaunchCommand(
+                "/usr/bin/pmedit-cli",
+                List.of(),
+                "Installed desktop app");
+
+        String text = McpHelpText.clientsText(launch, "```json\r\n{\"a\":1}\r\n```\r\n");
+
+        assertFalse(text.contains("\r"));
+        assertTrue(text.contains("```json\n{\"a\":1}\n```"));
+    }
+
     private static List<String> jsonBlocks(String text) {
         List<String> blocks = new ArrayList<>();
         int index = 0;

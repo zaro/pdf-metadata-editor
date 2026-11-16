@@ -72,8 +72,14 @@ public final class McpHelpText {
      * The shared client sections with this installation's launcher filled in.
      */
     static String clientsText(AppLauncher.LaunchCommand launch) {
+        return clientsText(launch, readClientsTemplate());
+    }
+
+    static String clientsText(AppLauncher.LaunchCommand launch, String template) {
         List<String> commandLine = launch.commandLine("--mcp");
-        String filled = readClientsTemplate()
+        String filled = template
+                .replace("\r\n", "\n")
+                .replace('\r', '\n')
                 .replace("{{COMMAND_AND_ARGS}}", jsonArray(commandLine))
                 .replace("{{COMMAND_LINE}}", shellJoin(commandLine))
                 .replace("{{COMMAND}}", McpJson.quote(launch.command()))
