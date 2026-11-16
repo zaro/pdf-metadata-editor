@@ -17,5 +17,6 @@ jpackage/cert/*.pfx
 build-dir/
 test-data/
 test-output/
+issues/
 .mc/
 .env
