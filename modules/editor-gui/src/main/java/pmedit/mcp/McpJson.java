@@ -42,6 +42,20 @@ public final class McpJson {
         return WIRE_MAPPER.readTree(json);
     }
 
+    /**
+     * Serialize a string as a JSON string literal, including the quotes.
+     *
+     * <p>The escaping is also valid TOML basic-string escaping, so the result
+     * can be used in both JSON and TOML configuration snippets.</p>
+     */
+    public static String quote(String value) {
+        try {
+            return WIRE_MAPPER.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Failed to serialize string", e);
+        }
+    }
+
     public static String write(JsonNode node) {
         try {
             return WIRE_MAPPER.writeValueAsString(node);

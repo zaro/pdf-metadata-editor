@@ -213,6 +213,14 @@
 				<directory>src/main/resources/</directory>
 				<filtering>true</filtering>
 			</resource>
+			<resource>
+				<directory>${project.basedir}/../../docs</directory>
+				<includes>
+					<include>mcp-clients.md</include>
+				</includes>
+				<targetPath>pmedit/mcp</targetPath>
+				<filtering>false</filtering>
+			</resource>
 		</resources>
 		<plugins>
 			<plugin>

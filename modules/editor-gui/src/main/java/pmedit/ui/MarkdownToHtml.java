@@ -8,13 +8,15 @@ import java.util.regex.Pattern;
 /**
  * Converts the small Markdown subset used by the MCP help into HTML.
  *
- * <p>Supported: headings, fenced code blocks, and inline links. Everything else
- * is rendered as escaped text.</p>
+ * <p>Supported: headings, fenced code blocks, inline links, bold ({@code **})
+ * and italic ({@code *}). Everything else is rendered as escaped text.</p>
  */
 public final class MarkdownToHtml {
 
     private static final Pattern HEADING = Pattern.compile("^(#{1,6})\\s+(.*)$");
     private static final Pattern LINK = Pattern.compile("\\[([^\\]]+)\\]\\(([^)]+)\\)");
+    private static final Pattern BOLD = Pattern.compile("\\*\\*(.+?)\\*\\*");
+    private static final Pattern ITALIC = Pattern.compile("\\*([^*\\n]+?)\\*");
     private static final Color DEFAULT_BACKGROUND = new Color(0xf2f2f2);
 
     private MarkdownToHtml() {
@@ -55,7 +57,7 @@ public final class MarkdownToHtml {
                 flushParagraph(body, paragraph);
                 int level = heading.group(1).length();
                 body.append("<h").append(level).append('>')
-                        .append(linkify(escape(heading.group(2))))
+                        .append(inline(escape(heading.group(2))))
                         .append("</h").append(level).append('>');
             } else if (line.isBlank()) {
                 flushParagraph(body, paragraph);
@@ -63,7 +65,7 @@ public final class MarkdownToHtml {
                 if (paragraph.length() > 0) {
                     paragraph.append("<br>");
                 }
-                paragraph.append(linkify(escape(line)));
+                paragraph.append(inline(escape(line)));
             }
         }
 
@@ -122,6 +124,25 @@ public final class MarkdownToHtml {
         return value.replace("&", "&amp;")
                 .replace("<", "&lt;")
                 .replace(">", "&gt;");
+    }
+
+    private static String inline(String value) {
+        return emphasis(linkify(value));
+    }
+
+    private static String emphasis(String value) {
+        return wrap(ITALIC, wrap(BOLD, value, "<b>", "</b>"), "<i>", "</i>");
+    }
+
+    private static String wrap(Pattern pattern, String value, String open, String close) {
+        Matcher matcher = pattern.matcher(value);
+        StringBuilder result = new StringBuilder();
+        while (matcher.find()) {
+            matcher.appendReplacement(result,
+                    Matcher.quoteReplacement(open + matcher.group(1) + close));
+        }
+        matcher.appendTail(result);
+        return result.toString();
     }
 
     private static String linkify(String value) {

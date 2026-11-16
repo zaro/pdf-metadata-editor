@@ -1,21 +1,29 @@
 package pmedit.mcp;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import pmedit.AppLauncher;
 import pmedit.OsCheck;
 import pmedit.Version;
 import pmedit.WebsiteConstants;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
  * Generates the MCP configuration guide shown by {@code --help-mcp} and by
  * the GUI Help → MCP dialog.
+ *
+ * <p>The client sections are shared with {@code npm/README.md} and live in
+ * {@code docs/mcp-clients.md}. This class fills the placeholders with the
+ * detected launcher; {@code npm/scripts/gen-readme.js} fills the same
+ * placeholders with the npm invocation.</p>
  */
 public final class McpHelpText {
 
     public static final String DEFAULT_ROOT = "/path/to/pdfs";
+
+    static final String CLIENTS_RESOURCE = "/pmedit/mcp/mcp-clients.md";
 
     private McpHelpText() {
     }
@@ -37,18 +45,12 @@ public final class McpHelpText {
         out.append("No npm install is required. The installed desktop app includes the MCP server.\n\n");
         out.append("## Detected launcher\n\n");
         appendCode(out, "text", commandLine);
-        out.append("\n## Generic MCP client configuration\n\n");
-        appendCode(out, "json", McpJson.pretty(genericConfig(launch)));
-        out.append("\n## OpenCode (mcp.servers)\n\n");
-        appendCode(out, "json", McpJson.pretty(openCodeConfig(launch)));
-        out.append("\n## Claude Code\n\n");
-        appendCode(out, "sh", "claude mcp add --transport stdio pdf-metadata-editor -- " + commandLine);
+        out.append('\n');
+        out.append(clientsText(launch));
         out.append("\n## Notes\n\n");
         out.append("- Add --mcp-root ").append(root).append(" to restrict file access. Without it, the client's working directory is used.\n");
         out.append("- Add --mcp-read-only to disable mutating tools.\n");
         out.append("- Add --mcp-batch-limit N to change the default limit of 100 (0 = unlimited).\n");
-        out.append("- VS Code uses a \"servers\" key with \"type\": \"stdio\".\n");
-        out.append("- Codex uses [mcp_servers.pdf-metadata-editor] with command and args.\n");
         out.append("- On Windows, use the command syntax required by your shell or client.\n");
 
         if (isFlatpak(launch)) {
@@ -64,6 +66,44 @@ public final class McpHelpText {
         out.append("\n## Documentation\n\n");
         out.append("[MCP help](").append(WebsiteConstants.websiteUrl).append("help/)\n");
         return out.toString();
+    }
+
+    /**
+     * The shared client sections with this installation's launcher filled in.
+     */
+    static String clientsText(AppLauncher.LaunchCommand launch) {
+        List<String> commandLine = launch.commandLine("--mcp");
+        String filled = readClientsTemplate()
+                .replace("{{COMMAND_AND_ARGS}}", jsonArray(commandLine))
+                .replace("{{COMMAND_LINE}}", shellJoin(commandLine))
+                .replace("{{COMMAND}}", McpJson.quote(launch.command()))
+                .replace("{{ARGS}}", jsonArray(launch.mcpArguments(null)));
+        if (filled.contains("{{")) {
+            throw new IllegalStateException("Unresolved placeholder in " + CLIENTS_RESOURCE);
+        }
+        return filled;
+    }
+
+    private static String readClientsTemplate() {
+        try (InputStream in = McpHelpText.class.getResourceAsStream(CLIENTS_RESOURCE)) {
+            if (in == null) {
+                throw new IllegalStateException("Missing resource " + CLIENTS_RESOURCE);
+            }
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to read " + CLIENTS_RESOURCE, e);
+        }
+    }
+
+    private static String jsonArray(List<String> values) {
+        StringBuilder array = new StringBuilder("[");
+        for (int i = 0; i < values.size(); i++) {
+            if (i > 0) {
+                array.append(", ");
+            }
+            array.append(McpJson.quote(values.get(i)));
+        }
+        return array.append(']').toString();
     }
 
     public static String optionsText() {
@@ -97,42 +137,6 @@ public final class McpHelpText {
             out.append('\n');
         }
         out.append("```\n");
-    }
-
-    private static ObjectNode genericConfig(AppLauncher.LaunchCommand launch) {
-        ObjectNode config = McpJson.object();
-        ObjectNode servers = McpJson.object();
-        ObjectNode server = McpJson.object();
-
-        server.put("command", launch.command());
-        ArrayNode args = McpJson.array();
-        for (String argument : launch.mcpArguments(null)) {
-            args.add(argument);
-        }
-        server.set("args", args);
-
-        servers.set("pdf-metadata-editor", server);
-        config.set("mcpServers", servers);
-        return config;
-    }
-
-    private static ObjectNode openCodeConfig(AppLauncher.LaunchCommand launch) {
-        ObjectNode config = McpJson.object();
-        ObjectNode mcp = McpJson.object();
-        ObjectNode servers = McpJson.object();
-        ObjectNode server = McpJson.object();
-
-        server.put("type", "local");
-        ArrayNode command = McpJson.array();
-        for (String part : launch.commandLine("--mcp")) {
-            command.add(part);
-        }
-        server.set("command", command);
-
-        servers.set("pdf-metadata-editor", server);
-        mcp.set("servers", servers);
-        config.set("mcp", mcp);
-        return config;
     }
 
     private static boolean isFlatpak(AppLauncher.LaunchCommand launch) {

@@ -63,6 +63,37 @@ public class MarkdownToHtmlTest {
     }
 
     @Test
+    public void convertsBold() {
+        String html = MarkdownToHtml.toHtml("**Claude Desktop**: *claude_desktop_config.json*");
+
+        assertTrue(html.contains("<b>Claude Desktop</b>"));
+        assertTrue(html.contains("<i>claude_desktop_config.json</i>"));
+    }
+
+    @Test
+    public void convertsItalics() {
+        String html = MarkdownToHtml.toHtml("The *mcpServers* shape");
+
+        assertTrue(html.contains("The <i>mcpServers</i> shape"));
+    }
+
+    @Test
+    public void keepsEmphasisOutOfCodeBlocks() {
+        String html = MarkdownToHtml.toHtml("```\n**bold** *italic*\n```");
+
+        assertTrue(html.contains("**bold** *italic*"));
+        assertFalse(html.contains("<b>"));
+        assertFalse(html.contains("<i>"));
+    }
+
+    @Test
+    public void convertsEmphasisInsideLinks() {
+        String html = MarkdownToHtml.toHtml("[**MCP help**](https://pdf.metadata.care/help/)");
+
+        assertTrue(html.contains("<a href=\"https://pdf.metadata.care/help/\"><b>MCP help</b></a>"));
+    }
+
+    @Test
     public void closesUnclosedCodeBlock() {
         Color base = new Color(0xf2f2f2);
         String html = MarkdownToHtml.toHtml("```sh\necho hi", base);

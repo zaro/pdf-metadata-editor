@@ -3,8 +3,10 @@ package pmedit.mcp;
 import org.junit.jupiter.api.Test;
 import pmedit.AppLauncher;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -80,5 +82,75 @@ public class McpHelpTextTest {
         assertTrue(text.contains("-jar"));
         assertTrue(text.contains("/opt/app/pdf-metadata-editor.jar"));
         assertTrue(text.contains("\"command\""));
+    }
+
+    @Test
+    public void fillsSharedClientSections() {
+        AppLauncher.LaunchCommand launch = new AppLauncher.LaunchCommand(
+                "/usr/bin/pmedit-cli",
+                List.of(),
+                "Installed desktop app");
+
+        String text = McpHelpText.text(launch);
+
+        assertFalse(text.contains("{{"));
+        assertTrue(text.contains("opencode mcp add pdf-metadata-editor -- /usr/bin/pmedit-cli --mcp"));
+        assertTrue(text.contains("opencode mcp add pdf-metadata-editor --global -- "));
+        assertTrue(text.contains("claude mcp add --transport stdio pdf-metadata-editor -- "));
+        assertTrue(text.contains("[mcp_servers.pdf-metadata-editor]"));
+        assertTrue(text.contains("\"servers\""));
+    }
+
+    @Test
+    public void sharedJsonBlocksAreValid() throws Exception {
+        AppLauncher.LaunchCommand launch = new AppLauncher.LaunchCommand(
+                "/usr/bin/java",
+                List.of("-jar", "/opt/app/pdf-metadata-editor.jar"),
+                "Application JAR");
+
+        List<String> blocks = jsonBlocks(McpHelpText.text(launch));
+
+        assertEquals(3, blocks.size());
+        for (String block : blocks) {
+            McpJson.parse(block);
+        }
+    }
+
+    @Test
+    public void codexBlockReusesTheJsonArgsArray() {
+        AppLauncher.LaunchCommand launch = new AppLauncher.LaunchCommand(
+                "/usr/bin/java",
+                List.of("-jar", "/opt/app/pdf-metadata-editor.jar"),
+                "Application JAR");
+
+        String text = McpHelpText.text(launch);
+
+        assertTrue(text.contains("args = [\"-jar\", \"/opt/app/pdf-metadata-editor.jar\", \"--mcp\"]"));
+    }
+
+    @Test
+    public void escapesWindowsPathsInSharedSections() {
+        AppLauncher.LaunchCommand launch = new AppLauncher.LaunchCommand(
+                "C:\\Program Files\\Pdf Metadata Editor\\pmedit-cli.exe",
+                List.of(),
+                "Installed desktop app");
+
+        String text = McpHelpText.text(launch);
+
+        assertTrue(text.contains("command = \"C:\\\\Program Files\\\\Pdf Metadata Editor\\\\pmedit-cli.exe\""));
+    }
+
+    private static List<String> jsonBlocks(String text) {
+        List<String> blocks = new ArrayList<>();
+        int index = 0;
+        while (true) {
+            int start = text.indexOf("```json\n", index);
+            if (start < 0) {
+                return blocks;
+            }
+            int end = text.indexOf("\n```", start);
+            blocks.add(text.substring(start + "```json\n".length(), end));
+            index = end + 1;
+        }
     }
 }

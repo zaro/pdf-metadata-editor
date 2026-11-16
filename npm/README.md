@@ -35,24 +35,33 @@ By default, the server is limited to the current working directory. Use
 The examples use the `@next` prerelease tag. After the stable `4.5.0` release,
 remove `@next`.
 
-## Choose your client
+<!-- BEGIN MCP CLIENTS -->
+## Generic MCP client configuration
 
-The configuration shape differs between MCP clients. Use the section for your
-client rather than copying a `mcpServers` block into a client that expects
-`servers`, `mcp.servers`, or TOML.
+This configuration applies to clients that use the *mcpServers* JSON shape:
 
-| Client | Where to configure | Format |
-|---|---|---|
-| OpenCode | `opencode.json(c)` or `~/.config/opencode/opencode.json(c)` | `mcp.servers` |
-| Claude Code | `.mcp.json` or `claude mcp add` | `mcpServers` |
-| Codex CLI | `~/.codex/config.toml` or `.codex/config.toml` | `[mcp_servers.*]` |
-| Cursor | `~/.cursor/mcp.json` or `.cursor/mcp.json` | `mcpServers` |
-| VS Code / GitHub Copilot | `.vscode/mcp.json` | `servers` |
-| Claude Desktop | `claude_desktop_config.json` | `mcpServers` |
+- **Claude Desktop**: *claude_desktop_config.json* in *~/Library/Application Support/Claude* (macOS), *%APPDATA%\Claude* (Windows), or *~/.config/Claude* (Linux)
+- **Claude Code**: *.mcp.json* in the project, or claude mcp add
+- **Cursor**: *~/.cursor/mcp.json*, or *.cursor/mcp.json* in the project
+- **Windsurf**: *~/.codeium/windsurf/mcp_config.json*
+- **Cline**: *cline_mcp_settings.json* in the VS Code Cline extension settings
 
-## OpenCode
+Other clients may use a different shape; OpenCode, VS Code/Copilot, and Codex are covered separately below.
 
-Add the server to the current project:
+```json
+{
+  "mcpServers": {
+    "pdf-metadata-editor": {
+      "command": "npx",
+      "args": ["-y", "pdf-metadata-editor-mcp@next"]
+    }
+  }
+}
+```
+
+## OpenCode (mcp.servers)
+
+Add it to the current project:
 
 ```sh
 opencode mcp add pdf-metadata-editor -- npx -y pdf-metadata-editor-mcp@next
@@ -64,9 +73,11 @@ Add it globally:
 opencode mcp add pdf-metadata-editor --global -- npx -y pdf-metadata-editor-mcp@next
 ```
 
-Manual configuration in `opencode.jsonc`:
+Or configure *opencode.json* (or *opencode.jsonc*) manually. The project file is
+*opencode.json* in the project root; the global file is
+*~/.config/opencode/opencode.json*.
 
-```jsonc
+```json
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
@@ -80,14 +91,6 @@ Manual configuration in `opencode.jsonc`:
 }
 ```
 
-OpenCode uses `mcp.servers`, requires `"type": "local"` for local servers, and
-stores the executable and arguments in a single `command` array. Local servers
-start in the workspace directory by default, so `--mcp-root` is not needed for
-normal use.
-
-Global configuration lives at `~/.config/opencode/opencode.json(c)`. Project
-configuration can be `opencode.json(c)` or `.opencode/opencode.json(c)`.
-
 ## Claude Code
 
 Add the server with the Claude Code CLI:
@@ -96,62 +99,12 @@ Add the server with the Claude Code CLI:
 claude mcp add --transport stdio pdf-metadata-editor -- npx -y pdf-metadata-editor-mcp@next
 ```
 
-For a project-scoped server:
+For a project-scoped server, add --scope project. Or add it to *.mcp.json*, which
+uses the *mcpServers* shape shown above.
 
-```sh
-claude mcp add --scope project --transport stdio pdf-metadata-editor -- npx -y pdf-metadata-editor-mcp@next
-```
+## VS Code / Copilot (servers)
 
-Or add it to `.mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "pdf-metadata-editor": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "pdf-metadata-editor-mcp@next"]
-    }
-  }
-}
-```
-
-On Windows, if `npx` is not available to Claude Code, wrap the command:
-
-```sh
-claude mcp add --transport stdio pdf-metadata-editor -- cmd /c npx -y pdf-metadata-editor-mcp@next
-```
-
-## Codex CLI
-
-Add the server to `~/.codex/config.toml`, or to `.codex/config.toml` for a
-project-scoped configuration:
-
-```toml
-[mcp_servers.pdf-metadata-editor]
-command = "npx"
-args = ["-y", "pdf-metadata-editor-mcp@next"]
-```
-
-## Cursor
-
-Global configuration is `~/.cursor/mcp.json`; project configuration is
-`.cursor/mcp.json`.
-
-```json
-{
-  "mcpServers": {
-    "pdf-metadata-editor": {
-      "command": "npx",
-      "args": ["-y", "pdf-metadata-editor-mcp@next"]
-    }
-  }
-}
-```
-
-## VS Code / GitHub Copilot
-
-Use `.vscode/mcp.json` in the workspace:
+Use *.vscode/mcp.json* in the workspace. VS Code and Copilot use *servers*, not *mcpServers*.
 
 ```json
 {
@@ -165,56 +118,23 @@ Use `.vscode/mcp.json` in the workspace:
 }
 ```
 
-VS Code and GitHub Copilot use the `servers` key, not `mcpServers`.
+## Codex (mcp_servers)
 
-## Claude Desktop
+Add this to *~/.codex/config.toml*, or *.codex/config.toml* for a project-scoped configuration.
 
-Configuration file locations:
-
-- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-- Linux: use your client’s documented configuration path
-
-```json
-{
-  "mcpServers": {
-    "pdf-metadata-editor": {
-      "command": "npx",
-      "args": ["-y", "pdf-metadata-editor-mcp@next"]
-    }
-  }
-}
+```toml
+[mcp_servers.pdf-metadata-editor]
+command = "npx"
+args = ["-y", "pdf-metadata-editor-mcp@next"]
 ```
-
-Restart Claude Desktop after changing the file.
+<!-- END MCP CLIENTS -->
 
 ## Other clients
 
-If your client uses the `mcpServers` shape, use `command` and `args`:
+If your client uses the `mcpServers` shape, start from the generic block above.
 
-```json
-{
-  "mcpServers": {
-    "pdf-metadata-editor": {
-      "command": "npx",
-      "args": ["-y", "pdf-metadata-editor-mcp@next"]
-    }
-  }
-}
-```
-
-If the package is installed globally, use the binary directly:
-
-```json
-{
-  "mcpServers": {
-    "pdf-metadata-editor": {
-      "command": "pdf-metadata-editor-mcp",
-      "args": []
-    }
-  }
-}
-```
+- `npx` install: `command` is `npx`, `args` is `["-y", "pdf-metadata-editor-mcp@next"]`.
+- Global install: `command` is `pdf-metadata-editor-mcp`, `args` is `[]`.
 
 Follow your client’s documentation if it uses a different key or file format.
 
