@@ -577,14 +577,15 @@ public class McpMetadataTest {
     }
 
     @Test
-    public void globPatternsAreTreatedAsLiteralPaths() throws Exception {
+    public void globPatternsAreRejectedAsUnsupported() throws Exception {
         createNamedFile("a.pdf", "A");
 
         McpToolException error = assertThrows(McpToolException.class,
                 () -> metadata(false, true).readBatch(List.of("*.pdf"), null, null));
 
-        assertEquals("file_not_found", error.code());
+        assertEquals("invalid_argument", error.code());
         assertTrue(error.getMessage().contains("*.pdf"));
+        assertTrue(error.getMessage().contains("Glob patterns are not supported"));
     }
 
     @Test

@@ -165,13 +165,18 @@ public final class McpPaths {
 
     private Path resolve(String raw) throws McpToolException {
         if (raw == null || raw.isBlank()) {
-            throw new McpToolException("A file path is required");
+            throw new McpToolException("invalid_argument", "A file path is required");
+        }
+        if (raw.indexOf('*') >= 0 || raw.indexOf('?') >= 0) {
+            throw new McpToolException(
+                    "invalid_argument",
+                    "Glob patterns are not supported. Pass explicit files or directories: " + raw);
         }
         try {
             Path path = Path.of(raw);
             return path.isAbsolute() ? path.normalize() : root.resolve(path).normalize();
         } catch (InvalidPathException e) {
-            throw new McpToolException("Invalid path: " + raw, e);
+            throw new McpToolException("invalid_argument", "Invalid path: " + raw, e);
         }
     }
 
