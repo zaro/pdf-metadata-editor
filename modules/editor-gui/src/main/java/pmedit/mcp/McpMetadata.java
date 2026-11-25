@@ -15,6 +15,7 @@ import pmedit.CommandDescription;
 import pmedit.DateFormat;
 import pmedit.MetadataInfo;
 import pmedit.WebsiteConstants;
+import pmedit.ext.CommandResult;
 import pmedit.ext.PdfReader;
 import pmedit.ext.PmeExtension;
 
@@ -48,10 +49,26 @@ public final class McpMetadata {
 
     private final McpPaths paths;
     private final McpOptions options;
+    private final CommandRunner commands;
 
     public McpMetadata(McpPaths paths, McpOptions options) {
+        this(paths, options, (command, argument) -> PmeExtension.get().executeCommand(command, argument));
+    }
+
+    public McpMetadata(McpPaths paths, McpOptions options, CommandRunner commands) {
         this.paths = paths;
         this.options = options;
+        this.commands = commands == null
+                ? (command, argument) -> PmeExtension.get().executeCommand(command, argument)
+                : commands;
+    }
+
+    /**
+     * Runs an extension command such as license activation. The command name
+     * and argument are passed through unchanged.
+     */
+    public CommandResult executeCommand(String command, String argument) {
+        return commands.execute(command, argument);
     }
 
     public ObjectNode listFields() {

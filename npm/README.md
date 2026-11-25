@@ -227,10 +227,16 @@ to change it; `0` removes the limit.
 | `pdf_import_from_json` | Import metadata from JSON (CLI `fromjson`). |
 | `pdf_import_from_yaml` | Import metadata from YAML (CLI `fromyaml`). |
 | `pdf_import_from_csv` | Import metadata from CSV (CLI `fromcsv`). |
+| `pdf_license` | Check, activate, or release the license (CLI `--showLicense`, `--license`, `--releaseLicense`). |
 
-`pdf_list_fields` and `pdf_read_metadata` are available without a license. The
-CLI-parity batch tools may require a license; the server returns a clear message
-when one is needed.
+`pdf_list_fields`, `pdf_read_metadata`, and `pdf_license` are available without a
+license. The CLI-parity batch tools may require a license; the server returns a
+clear message when one is needed.
+
+`pdf_license` takes an `action` of `status`, `activate`, or `release`. Activation
+takes the license information as one comma-separated string — the email address
+and license ID from the purchase email — and passes it to the license provider
+unchanged.
 
 ### Batch results
 

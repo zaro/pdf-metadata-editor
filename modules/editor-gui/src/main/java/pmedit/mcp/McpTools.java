@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pmedit.ext.CommandResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -307,7 +308,88 @@ public final class McpTools {
                         optionalString(args, "ownerPassword")))
         ));
 
+        definitions.add(new Tool(
+                "pdf_license",
+                "Manage the license",
+                "Check, activate, or release the license. Activate needs the license information the "
+                        + "user received by email: the agent should ask the user for the email address and "
+                        + "the license ID, then pass them as one comma-separated string in the license "
+                        + "argument, for example \"name@example.com,ABC-123\". Pass the values unchanged, "
+                        + "never invent them, and never repeat the license back. Activation contacts the "
+                        + "license server and is bound to this computer. Use status to check the current "
+                        + "license, and release before moving it to another computer.",
+                licenseInputSchema(),
+                licenseOutputSchema(),
+                McpJson.annotations(false, false, true),
+                this::license
+        ));
+
         return definitions;
+    }
+
+    private ObjectNode license(ObjectNode args) throws McpToolException {
+        String action = optionalString(args, "action");
+        if (action == null || action.isBlank()) {
+            action = "status";
+        }
+
+        String command;
+        String argument = "";
+        switch (action) {
+            case "status" -> command = "showLicense";
+            case "activate" -> {
+                String license = optionalString(args, "license");
+                if (license == null || license.isBlank()) {
+                    throw new McpToolException("invalid_argument",
+                            "The license argument is required for activate: pass the email and license ID "
+                                    + "as one comma-separated string.");
+                }
+                if (license.indexOf(',') < 0) {
+                    throw new McpToolException("invalid_argument",
+                            "The license argument must contain the email and license ID separated by a comma.");
+                }
+                command = "license";
+                argument = license.trim();
+            }
+            case "release" -> command = "releaseLicense";
+            default -> throw new McpToolException("invalid_argument",
+                    "Unknown license action: " + action + ". Use status, activate, or release.");
+        }
+
+        CommandResult result = metadata.executeCommand(command, argument);
+
+        ObjectNode payload = McpJson.object();
+        payload.put("ok", result.ok());
+        payload.put("message", result.message());
+
+        ObjectNode response = McpResult.success(payload);
+        if (!result.ok() && !"status".equals(action)) {
+            response.put("isError", true);
+        }
+        return response;
+    }
+
+    private static ObjectNode licenseInputSchema() {
+        ObjectNode schema = McpJson.objectSchema();
+        McpJson.addProperty(schema, "action",
+                McpJson.enumProperty(
+                        "status checks the current license, activate installs one, release removes it.",
+                        "status", "activate", "release"),
+                false);
+        McpJson.addProperty(schema, "license", McpJson.stringProperty(
+                "License information passed to the license provider unchanged. For activate, the email "
+                        + "address and the license ID from the purchase email, separated by a comma. "
+                        + "Ignored for status and release."), false);
+        return schema;
+    }
+
+    private static ObjectNode licenseOutputSchema() {
+        ObjectNode schema = McpJson.outputObjectSchema();
+        McpJson.addProperty(schema, "ok", McpJson.booleanProperty(
+                "True when the command succeeded. For status, whether a license is installed."), true);
+        McpJson.addProperty(schema, "message", McpJson.stringProperty(
+                "Human-readable status or failure reason."), true);
+        return schema;
     }
 
     // ---------------------------------------------------------------------

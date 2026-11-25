@@ -71,7 +71,7 @@ public class McpServerTest {
                 toolsList()));
 
         JsonNode tools = responses.get(1).get("result").get("tools");
-        assertEquals(12, tools.size());
+        assertEquals(13, tools.size());
 
         Set<String> names = new LinkedHashSet<>();
         for (JsonNode tool : tools) {
@@ -94,7 +94,8 @@ public class McpServerTest {
                 "pdf_import_from_filename",
                 "pdf_import_from_json",
                 "pdf_import_from_yaml",
-                "pdf_import_from_csv"), names);
+                "pdf_import_from_csv",
+                "pdf_license"), names);
     }
 
     @Test
@@ -106,7 +107,7 @@ public class McpServerTest {
         for (JsonNode tool : responses.get(1).get("result").get("tools")) {
             JsonNode schema = tool.get("inputSchema");
             String name = tool.get("name").asText();
-            if ("pdf_list_fields".equals(name)) {
+            if ("pdf_list_fields".equals(name) || "pdf_license".equals(name)) {
                 continue;
             }
             if ("pdf_import_from_json".equals(name)

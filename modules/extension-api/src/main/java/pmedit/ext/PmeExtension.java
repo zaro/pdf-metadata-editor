@@ -26,6 +26,20 @@ public abstract class PmeExtension {
     public abstract int priority();
     public abstract boolean hasBatch();
     public abstract boolean handleCommandLine(CommandLineOptions options);
+
+    /**
+     * Runs an extension command without writing to stdout.
+     *
+     * <p>The host treats the command name and argument as opaque strings and
+     * leaves their meaning to the extension. The MCP server uses this for
+     * operations such as license activation, where stdout must stay clean.</p>
+     *
+     * @param command  extension defined command name
+     * @param argument extension defined payload, passed unchanged
+     */
+    public CommandResult executeCommand(String command, String argument) {
+        return CommandResult.failure("This command is not supported by this edition.");
+    }
 //    public abstract boolean giveBatch(String moto, HttpResponseCallback responseCallback);
 //    public abstract boolean removeBatch(HttpResponseCallback responseCallback);
 //    public abstract String offlineBatchRequest(String moto);
