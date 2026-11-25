@@ -132,6 +132,10 @@ function main() {
   const pkg = JSON.parse(fs.readFileSync(path.join(NPM_ROOT, 'package.json'), 'utf8'));
   pkg.version = npmVersion;
   pkg.optionalDependencies = readBundleDependencies(bundlesDir);
+  // The repository scripts (docs:render, check:readme, pack:bundles, stage:main,
+  // test) reference files that are not part of the published package, so they
+  // must not be advertised there.
+  delete pkg.scripts;
 
   fs.writeFileSync(
     path.join(mainDir, 'package.json'),

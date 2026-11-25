@@ -42,6 +42,7 @@ test('stages the main package with the shared JAR and bundle dependencies', () =
   const pkg = JSON.parse(fs.readFileSync(path.join(mainDir, 'package.json'), 'utf8'));
 
   assert.equal(pkg.version, '4.5.0-rc.1');
+  assert.equal(pkg.scripts, undefined);
   assert.deepEqual(pkg.optionalDependencies, {
     '@pdf-metadata-editor/mcp-bundle-darwin-arm64': '4.5.0-rc.1',
     '@pdf-metadata-editor/mcp-bundle-linux-x64': '4.5.0-rc.1'

@@ -16,10 +16,13 @@ function builtJar() {
   if (!fs.existsSync(directory)) {
     return null;
   }
-  const file = fs.readdirSync(directory).find((name) => {
-    return name.startsWith('pdf-metadata-editor-') && name.endsWith('.jar') && !name.startsWith('original-');
-  });
-  return file ? path.join(directory, file) : null;
+  const candidates = fs.readdirSync(directory)
+    .filter((name) => {
+      return name.startsWith('pdf-metadata-editor-') && name.endsWith('.jar') && !name.startsWith('original-');
+    })
+    .map((name) => path.join(directory, name))
+    .sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
+  return candidates.length > 0 ? candidates[0] : null;
 }
 
 function javaAvailable(java) {
@@ -121,7 +124,7 @@ test('serves JSON-RPC over stdio using the system Java fallback', { skip, timeou
   assert.ok(toolNames.includes('pdf_read_metadata'));
   assert.ok(!toolNames.includes('pdf_export_metadata'));
   for (const tool of responses[1].result.tools) {
-    if (tool.name === 'pdf_list_fields') {
+    if (tool.name === 'pdf_list_fields' || tool.name === 'pdf_license') {
       continue;
     }
     if (tool.name === 'pdf_import_from_json'
@@ -134,6 +137,15 @@ test('serves JSON-RPC over stdio using the system Java fallback', { skip, timeou
     assert.ok(tool.inputSchema.properties.paths, `${tool.name} takes paths`);
     assert.equal(tool.inputSchema.properties.path, undefined);
   }
+
+  const licenseTool = responses[1].result.tools.find((tool) => tool.name === 'pdf_license');
+  assert.ok(licenseTool, 'pdf_license is listed');
+  assert.deepEqual(
+    [...licenseTool.inputSchema.properties.action.enum].sort(),
+    ['activate', 'release', 'status']
+  );
+  assert.equal(licenseTool.inputSchema.properties.license.type, 'string');
+  assert.equal(licenseTool.inputSchema.properties.paths, undefined);
 
   assert.equal(responses[2].id, 3);
   assert.equal(responses[2].result.isError, false);
