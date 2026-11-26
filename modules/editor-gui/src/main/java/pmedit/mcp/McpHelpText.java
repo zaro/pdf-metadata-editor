@@ -133,7 +133,8 @@ public final class McpHelpText {
                 + "## Notes\n\n"
                 + "- MCP options are CLI options and appear before the command/arguments.\n"
                 + "- The server uses stdio; client diagnostics must not share stdout.\n"
-                + "- Mutating tools may require a license.\n";
+                + "- Mutating tools may require a license.\n"
+                + "- The server writes its own log under the application data directory and prints its path to stderr.\n";
     }
 
     private static void appendCode(StringBuilder out, String language, String code) {

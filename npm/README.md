@@ -414,6 +414,13 @@ For development or a custom build, point the wrapper at an application JAR:
 PDF_METADATA_EDITOR_JAR=/path/to/pdf-metadata-editor.jar pdf-metadata-editor-mcp
 ```
 
+### Log file
+
+Each MCP server writes its own log under the application data directory
+(`pdf-metadata-editor/mcp/mcp-<timestamp>-<pid>.log`) and prints the path to
+stderr on startup. The desktop app keeps using its own `log.txt`, so starting
+one no longer rotates the other's log. The ten most recent server logs are kept.
+
 ### Startup logs
 
 The wrapper reserves stdout for MCP JSON-RPC messages. Diagnostic messages are

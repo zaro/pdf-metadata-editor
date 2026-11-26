@@ -135,8 +135,21 @@ public class MainCli {
         executeCommand(cmdLine);
     }
 
+    /**
+     * True only for the long lived MCP server. {@code --help-mcp} is a normal
+     * one-shot CLI command and keeps the shared CLI log.
+     */
+    static boolean isMcpServe(final String[] args) {
+        for (String arg : args) {
+            if ("--mcp".equalsIgnoreCase(arg) || "-mcp".equalsIgnoreCase(arg)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static void main(final String[] args) {
-        Main.setupLogging(false, true);
+        Main.setupLogging(false, true, isMcpServe(args));
         try {
             CommandLine cmdLine = null;
             try {

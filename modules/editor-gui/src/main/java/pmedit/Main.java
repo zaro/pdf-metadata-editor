@@ -3,6 +3,7 @@ package pmedit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pmedit.CommandLine.ParseError;
+import pmedit.logging.McpLogFiles;
 import pmedit.prefs.GuiPreferences;
 import pmedit.prefs.LocalDataDir;
 import pmedit.prefs.Preferences;
@@ -21,7 +22,7 @@ import java.util.concurrent.*;
 
 
 public class Main {
-    static void setupLogging(boolean secondary, boolean isCli) {
+    static void setupLogging(boolean secondary, boolean isCli, boolean isMcp) {
         java.util.logging.Logger.getLogger("org.apache").setLevel(java.util.logging.Level.FINE);
         isCli = isCli || isCli();
         if (System.getProperty("devLog") != null && isCli) {
@@ -31,10 +32,20 @@ public class Main {
             System.setProperty("org.apache.commons.logging.simplelog.defaultlog", "debug");
             System.setProperty("logLevel", "debug");
         }
-        String logFilename = secondary ? "log.singleInstance.txt" :"log.txt"; //"log." + ProcessHandle.current().pid() + ".txt";
-        System.setProperty("logFileName", LocalDataDir.getAppDataDir() +logFilename);
-        if (!isCli) {
-            System.out.println("Logfile location: " + System.getProperty("logFileName", "<UNSET>"));
+        String logPath;
+        if (isMcp) {
+            // One file per MCP server: the GUI log is rotated on startup and
+            // several MCP clients can run their own server at the same time.
+            logPath = McpLogFiles.newLogPath().toString();
+        } else {
+            String logFilename = secondary ? "log.singleInstance.txt" : "log.txt";
+            logPath = LocalDataDir.getAppDataDir() + logFilename;
+        }
+        System.setProperty("logFileName", logPath);
+        if (isMcp) {
+            System.err.println("MCP log file: " + logPath);
+        } else if (!isCli) {
+            System.out.println("Logfile location: " + logPath);
         }
         // Materialize the logback configuration now that logFileName is set,
         // so any logger used later in startup writes to the configured file,
@@ -212,7 +223,7 @@ public class Main {
         // slf4j loggers). Otherwise logback would initialize with the default
         // "application.log" instead of the configured log file, and the
         // run-log rotation would apply to the wrong file.
-        setupLogging(alreadyRunning, false);
+        setupLogging(alreadyRunning, false, false);
         setupStartupProperties();
 
         if (OsCheck.isWindows()) {
