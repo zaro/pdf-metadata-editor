@@ -10,6 +10,10 @@ This configuration applies to clients that use the *mcpServers* JSON shape:
 
 Other clients may use a different shape; OpenCode, VS Code/Copilot, and Codex are covered separately below.
 
+Directories in *paths* are walked recursively. A walk stops after the batch limit
+(default 100 files) or after the walk timeout (default 20 seconds), and the call
+fails instead of returning partial results.
+
 ```json
 {
   "mcpServers": {

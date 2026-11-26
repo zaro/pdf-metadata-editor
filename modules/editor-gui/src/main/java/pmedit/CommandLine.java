@@ -20,6 +20,7 @@ public class CommandLine extends  CommandLineOptions {
     public String mcpRoot;
     public boolean mcpReadOnly = false;
     public int mcpBatchLimit = BatchEngine.DEFAULT_MAX_FILES;
+    public int mcpWalkTimeout = WalkLimits.DEFAULT_TIMEOUT_SECONDS;
     public CommandLine() {
     }
     public CommandLine(List<String> fileList) {
@@ -151,6 +152,18 @@ public class CommandLine extends  CommandLineOptions {
                 }
                 if (cmdLine.mcpBatchLimit < 0) {
                     throw new ParseError("mcp-batch-limit must be 0 or greater");
+                }
+                i += oa.advance;
+            } else if (arg.equalsIgnoreCase("mcp-walk-timeout")
+                    || arg.toLowerCase(Locale.ROOT).startsWith("mcp-walk-timeout=")) {
+                OptionArgument oa = getOptionArgument(arg, i, args);
+                try {
+                    cmdLine.mcpWalkTimeout = Integer.parseInt(oa.arg.trim());
+                } catch (NumberFormatException e) {
+                    throw new ParseError("Invalid mcp-walk-timeout: " + oa.arg);
+                }
+                if (cmdLine.mcpWalkTimeout < 0) {
+                    throw new ParseError("mcp-walk-timeout must be 0 or greater");
                 }
                 i += oa.advance;
             } else if (arg.equalsIgnoreCase("o") || arg.equalsIgnoreCase("outputDir")) {

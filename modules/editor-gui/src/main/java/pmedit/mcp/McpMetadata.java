@@ -14,6 +14,7 @@ import pmedit.BatchRequest;
 import pmedit.CommandDescription;
 import pmedit.DateFormat;
 import pmedit.MetadataInfo;
+import pmedit.WalkLimits;
 import pmedit.WebsiteConstants;
 import pmedit.ext.CommandResult;
 import pmedit.ext.PdfReader;
@@ -411,7 +412,12 @@ public final class McpMetadata {
                 true,
                 false,
                 ownerPassword,
-                new McpBatchPathPolicy(paths));
+                new McpBatchPathPolicy(paths),
+                walkLimits());
+    }
+
+    private WalkLimits walkLimits() {
+        return new WalkLimits(options.walkTimeoutSeconds(), true, true);
     }
 
     private BatchOptions mutationOptions(String ownerPassword) {
@@ -423,7 +429,8 @@ public final class McpMetadata {
                 true,
                 false,
                 ownerPassword,
-                new McpBatchPathPolicy(paths));
+                new McpBatchPathPolicy(paths),
+                walkLimits());
     }
 
     private ObjectNode readPayload(Path file, MetadataInfo metadata, List<String> requestedFields) {

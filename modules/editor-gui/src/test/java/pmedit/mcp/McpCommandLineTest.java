@@ -53,6 +53,29 @@ public class McpCommandLineTest {
     }
 
     @Test
+    public void parsesWalkTimeout() throws Exception {
+        CommandLine cmdLine = CommandLine.parse(new String[]{
+                "--mcp", "--mcp-walk-timeout=5"
+        });
+        assertEquals(5, cmdLine.mcpWalkTimeout);
+
+        CommandLine separate = CommandLine.parse(new String[]{
+                "--mcp", "--mcp-walk-timeout", "0"
+        });
+        assertEquals(0, separate.mcpWalkTimeout);
+
+        CommandLine defaults = CommandLine.parse(new String[]{"--mcp"});
+        assertEquals(20, defaults.mcpWalkTimeout);
+
+        assertThrows(CommandLine.ParseError.class, () -> CommandLine.parse(new String[]{
+                "--mcp", "--mcp-walk-timeout=-1"
+        }));
+        assertThrows(CommandLine.ParseError.class, () -> CommandLine.parse(new String[]{
+                "--mcp", "--mcp-walk-timeout=soon"
+        }));
+    }
+
+    @Test
     public void rejectsInvalidBatchLimit() {
         assertThrows(CommandLine.ParseError.class, () -> CommandLine.parse(new String[]{
                 "--mcp", "--mcp-batch-limit=-1"

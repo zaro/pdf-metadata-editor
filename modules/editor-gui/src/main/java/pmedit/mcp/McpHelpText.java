@@ -51,6 +51,7 @@ public final class McpHelpText {
         out.append("- Add --mcp-root ").append(root).append(" to restrict file access. Without it, the client's working directory is used.\n");
         out.append("- Add --mcp-read-only to disable mutating tools.\n");
         out.append("- Add --mcp-batch-limit N to change the default limit of 100 (0 = unlimited).\n");
+        out.append("- Add --mcp-walk-timeout N to change the default 20 second directory walk limit (0 = unlimited).\n");
         out.append("- On Windows, use the command syntax required by your shell or client.\n");
 
         if (isFlatpak(launch)) {
@@ -124,6 +125,9 @@ public final class McpHelpText {
                 + "## --mcp-batch-limit N\n\n"
                 + "Maximum files or operations per batch. Default: 100. 0 = unlimited.\n"
                 + "Also accepted as --mcp-batch-limit=N.\n\n"
+                + "## --mcp-walk-timeout N\n\n"
+                + "Maximum seconds spent expanding directory inputs. Default: 20. 0 = unlimited.\n"
+                + "Also accepted as --mcp-walk-timeout=N.\n\n"
                 + "## --help-mcp\n\n"
                 + "Print this MCP configuration guide and exit.\n\n"
                 + "## Notes\n\n"

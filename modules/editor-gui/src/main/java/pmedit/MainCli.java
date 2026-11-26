@@ -29,6 +29,7 @@ public class MainCli {
                     "       --mcp-root=DIR             root directory for MCP file access (default: current directory)\n" +
                     "       --mcp-read-only            disable mutating MCP tools\n" +
                     "       --mcp-batch-limit=N        maximum files or operations per MCP batch (default: 100, 0 = unlimited)\n" +
+                    "       --mcp-walk-timeout=N       maximum seconds to expand directory inputs (default: 20, 0 = unlimited)\n" +
                     "       --help-mcp                 print MCP configuration for the installed desktop app\n" +
                     "\n" +
                     "COMMANDS\n" +
@@ -38,6 +39,7 @@ public class MainCli {
                     "MCP SERVER\n" +
                     "\n" +
                     "  pmedit-cli --mcp [--mcp-root=DIR] [--mcp-read-only] [--mcp-batch-limit=N]\n" +
+                    "              [--mcp-walk-timeout=N]\n" +
                     "\n" +
                     "  Starts a Model Context Protocol server over stdin/stdout. All paths passed\n" +
                     "  to MCP tools are resolved relative to --mcp-root (default: current working\n" +

@@ -48,6 +48,10 @@ This configuration applies to clients that use the *mcpServers* JSON shape:
 
 Other clients may use a different shape; OpenCode, VS Code/Copilot, and Codex are covered separately below.
 
+Directories in *paths* are walked recursively. A walk stops after the batch limit
+(default 100 files) or after the walk timeout (default 20 seconds), and the call
+fails instead of returning partial results.
+
 ```json
 {
   "mcpServers": {
@@ -199,6 +203,7 @@ directory; set `--mcp-root` there if you need a predictable scope.
 | `--mcp-root DIR` | Optional. Restrict file access to `DIR`; defaults to the current working directory. |
 | `--mcp-read-only` | Disable every mutating tool. |
 | `--mcp-batch-limit N` | Maximum files or operations per batch. Default `100`; `0` means unlimited. |
+| `--mcp-walk-timeout N` | Maximum seconds spent expanding a directory input. Default `20`; `0` means unlimited. |
 | `--doctor` | Print the selected runtime, JAR path, root, batch limit, and write mode. |
 | `--version` | Print the package version. |
 | `--help` | Print usage. |

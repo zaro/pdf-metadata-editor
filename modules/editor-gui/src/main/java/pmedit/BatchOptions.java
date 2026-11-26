@@ -15,6 +15,7 @@ import java.util.function.BooleanSupplier;
  * @param reportIgnoredFiles    report files ignored by the walker as per-file errors
  * @param ownerPassword         optional owner password passed to readers and writers
  * @param pathPolicy            input/output path policy
+ * @param walkLimits            directory walk limits; unlimited for CLI and GUI
  */
 public record BatchOptions(
         boolean checkLicense,
@@ -24,7 +25,21 @@ public record BatchOptions(
         boolean rejectExplicitNonPdf,
         boolean reportIgnoredFiles,
         String ownerPassword,
-        BatchPathPolicy pathPolicy) {
+        BatchPathPolicy pathPolicy,
+        WalkLimits walkLimits) {
+
+    public BatchOptions(
+            boolean checkLicense,
+            BooleanSupplier licenseGate,
+            int maxFiles,
+            boolean deduplicate,
+            boolean rejectExplicitNonPdf,
+            boolean reportIgnoredFiles,
+            String ownerPassword,
+            BatchPathPolicy pathPolicy) {
+        this(checkLicense, licenseGate, maxFiles, deduplicate, rejectExplicitNonPdf,
+                reportIgnoredFiles, ownerPassword, pathPolicy, WalkLimits.unlimited());
+    }
 
     public BatchOptions {
         if (licenseGate == null) {
@@ -35,6 +50,9 @@ public record BatchOptions(
         }
         if (maxFiles < 0) {
             maxFiles = 0;
+        }
+        if (walkLimits == null) {
+            walkLimits = WalkLimits.unlimited();
         }
     }
 

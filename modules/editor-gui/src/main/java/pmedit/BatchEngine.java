@@ -69,8 +69,17 @@ public final class BatchEngine {
             roots.add(validated);
         }
 
-        FilesWalker walker = new FilesWalker(extensions, roots, request.outputDir(), options.deduplicate());
+        FilesWalker walker = new FilesWalker(
+                extensions,
+                roots,
+                request.outputDir(),
+                options.deduplicate(),
+                options.walkLimits(),
+                enforceFileLimit ? options.maxFiles() : 0);
         List<File> files = walker.list();
+        if (walker.aborted() != null) {
+            throw new BatchException(walker.aborted().code(), walker.aborted().getMessage());
+        }
         for (File file : files) {
             options.pathPolicy().validateInput(file);
         }
@@ -108,8 +117,8 @@ public final class BatchEngine {
         }
 
         BatchPreflight preflight;
+        boolean isImport = isImportCommand(command);
         try {
-            boolean isImport = isImportCommand(command);
             preflight = preflight(command.inputFileExtensions, request, !isImport, !isImport);
         } catch (BatchException e) {
             listener.onBatchError(new BatchError("*", e.code(), e.getMessage(), e));
@@ -120,10 +129,14 @@ public final class BatchEngine {
                 command.inputFileExtensions,
                 preflight.roots(),
                 preflight.outputDir(),
-                options.deduplicate());
+                options.deduplicate(),
+                options.walkLimits(),
+                isImport ? 0 : options.maxFiles());
         PDFMetadataEditBatch batch = new PDFMetadataEditBatch(params, options);
         try {
             batch.runCommand(command, walker, preflight.outputDir(), listener);
+        } catch (FilesWalker.WalkAborted e) {
+            listener.onBatchError(new BatchError("*", e.code(), e.getMessage(), e));
         } catch (BatchAbortException e) {
             listener.onBatchError(e.error());
         } catch (RuntimeException e) {
